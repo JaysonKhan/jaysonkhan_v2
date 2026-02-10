@@ -1,0 +1,97 @@
+{% extends 'web/base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between">
+    <div class="md:w-1/2 space-y-6">
+        <h2 class="text-xl text-primary font-medium tracking-wide uppercase">Available for work</h2>
+        <h1 class="text-5xl md:text-7xl font-bold leading-tight">
+            I build <span class="text-gradient">high-performance</span> backend systems.
+        </h1>
+        <p class="text-slate-400 text-lg max-w-lg">
+            Senior Python Backend Architect specializing in Django, PostgreSQL, and Clean Architecture.
+        </p>
+        <div class="flex space-x-4">
+            <a href="{% url 'projects' %}"
+                class="bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold">View Projects</a>
+            <a href="{% url 'contact' %}"
+                class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold">Contact Me</a>
+        </div>
+    </div>
+    <div class="md:w-1/2 mt-12 md:mt-0 relative">
+        <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
+        <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
+        <img src="https://via.placeholder.com/600x600/0f172a/6366f1?text=JaysonKhan" alt="Hero Image"
+            class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
+    </div>
+</section>
+
+<!-- Skills Section -->
+<section class="max-w-7xl mx-auto px-6 py-20">
+    <h2 class="text-3xl font-bold mb-12 text-center">My <span class="text-gradient">Expertise</span></h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for skill in portfolio.skills %}
+        <div class="glass p-6 rounded-2xl text-center group hover:border-primary/50 transition">
+            <h3 class="text-lg font-bold mb-2">{{ skill.name }}</h3>
+            <div class="w-full bg-white/5 rounded-full h-2">
+                <div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: {{ skill.level }}%">
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-slate-500">{{ skill.level }}% Proficiency</p>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-center text-slate-500">No skills added yet. Check back soon!</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Projects Preview -->
+<section class="max-w-7xl mx-auto px-6 py-20">
+    <div class="flex justify-between items-end mb-12">
+        <div>
+            <h2 class="text-3xl font-bold">Featured <span class="text-gradient">Projects</span></h2>
+            <p class="text-slate-400 mt-2">Some of my best architectural work.</p>
+        </div>
+        <a href="{% url 'projects' %}" class="text-primary hover:text-white transition font-medium">View All &rarr;</a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+        {% for project in portfolio.projects|slice:":3" %}
+        <div class="glass rounded-3xl overflow-hidden group hover:scale-[1.02] transition duration-300">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-48 object-cover">
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-2">{{ project.title }}</h3>
+                <p class="text-slate-400 text-sm line-clamp-3 mb-4">{{ project.description }}</p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    {% for tech in project.technologies.all %}
+                    <span class="px-3 py-1 bg-white/5 rounded-lg text-xs font-medium">{{ tech.name }}</span>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'home' %}" class="text-primary font-semibold hover:underline">Read Case Study</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-center text-slate-500">No projects to show yet.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Latest Blog Posts -->
+<section class="max-w-7xl mx-auto px-6 py-20 bg-white/[0.02] rounded-[4rem] my-20">
+    <h2 class="text-3xl font-bold mb-12 text-center">Latest from the <span class="text-gradient">Blog</span></h2>
+    <div class="grid md:grid-cols-3 gap-8">
+        {% for post in latest_posts %}
+        <div class="group">
+            <span class="text-slate-500 text-sm">{{ post.created_at|date:"F d, Y" }}</span>
+            <h3 class="text-xl font-bold mt-2 group-hover:text-primary transition">
+                <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
+            </h3>
+            <p class="text-slate-400 mt-2 line-clamp-2">{{ post.excerpt }}</p>
+            <a href="{% url 'blog_detail' post.slug %}"
+                class="inline-block mt-4 text-sm font-bold border-b-2 border-primary text-primary">Read More</a>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-center text-slate-500">The blog is currently empty.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

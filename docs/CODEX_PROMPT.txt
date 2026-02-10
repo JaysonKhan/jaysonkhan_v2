@@ -1,0 +1,27 @@
+You are a senior Python backend architect.
+
+Build a production-ready portfolio web platform using Python and Django.
+
+Requirements:
+- Domain: jaysonkhan.com
+- Server IP: 144.91.69.225
+- Clean Architecture principles
+- PostgreSQL database
+- JWT authentication
+- Django Admin panel for admins
+- Public website for users (portfolio, blog, contact)
+- All data stored in database
+- Environment variables via .env
+- SSR frontend using Django Templates + TailwindCSS
+- SEO friendly
+- Production-ready settings (Nginx, Gunicorn)
+
+Deliver:
+- Django project structure
+- Models, serializers, services, repositories
+- Admin configuration
+- REST API
+- HTML templates
+- .env.example
+- requirements.txt
+- README.md with server deployment steps

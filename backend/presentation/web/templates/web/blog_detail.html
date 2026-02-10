@@ -1,0 +1,51 @@
+{% extends 'web/base.html' %}
+
+{% block title %}{{ post.title }} | JaysonKhan{% endblock %}
+
+{% block extra_head %}
+<!-- SEO Tags -->
+<meta name="description" content="{{ post.excerpt }}">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.excerpt }}">
+{% if post.featured_image %}
+<meta property="og:image" content="{{ post.featured_image.url }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<article class="max-w-4xl mx-auto px-6 py-20">
+    <div class="mb-12">
+        <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition mb-8 inline-block">&larr;
+            Back to Blog</a>
+        <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
+        <div class="flex items-center space-x-4 text-slate-400">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">JK
+                </div>
+                <span class="font-medium">By JaysonKhan</span>
+            </div>
+            <span>&bull;</span>
+            <span>{{ post.created_at|date:"F d, Y" }}</span>
+        </div>
+    </div>
+
+    {% if post.featured_image %}
+    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
+        class="w-full h-[400px] object-cover rounded-[2rem] border border-white/10 mb-12">
+    {% endif %}
+
+    <div
+        class="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-slate-300 prose-a:text-primary">
+        {{ post.content|safe }}
+    </div>
+
+    <div class="mt-20 pt-10 border-t border-white/10">
+        <h3 class="text-lg font-bold mb-4">Tags</h3>
+        <div class="flex flex-wrap gap-2">
+            {% for tag in post.tags.all %}
+            <span class="px-4 py-2 glass rounded-full text-sm">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+</article>
+{% endblock %}
