@@ -16,8 +16,8 @@ env = environ.Env(
     DATABASE_URL=(str, f'sqlite:///{BASE_DIR}/db.sqlite3'),
 )
 
-# Read .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# Read .env file from project root
+environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = env('DJANGO_DEBUG')
