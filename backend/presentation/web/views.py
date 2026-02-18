@@ -2,6 +2,7 @@ from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from portfolio.services import PortfolioService, PortfolioRepository
+from portfolio.models import Project
 from blog.services import BlogService, BlogRepository
 from contact.services import ContactService, ContactRepository
 from blog.models import Post
@@ -25,6 +26,15 @@ class ProjectListView(ListView):
     def get_queryset(self):
         portfolio_service = PortfolioService(PortfolioRepository())
         return portfolio_service.repository.get_all_projects()
+
+class ProjectDetailView(DetailView):
+    model = Project
+    template_name = 'web/project_detail.html'
+    context_object_name = 'project'
+
+    def get_queryset(self):
+        return Project.objects.prefetch_related('technologies')
+
 
 class BlogListView(ListView):
     template_name = 'web/blog_list.html'

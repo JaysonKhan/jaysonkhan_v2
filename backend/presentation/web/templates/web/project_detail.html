@@ -1,0 +1,55 @@
+{% extends 'web/base.html' %}
+
+{% block title %}{{ project.title }} | JaysonKhan{% endblock %}
+
+{% block extra_head %}
+<meta property="og:title" content="{{ project.title }} — JaysonKhan">
+<meta property="og:description" content="{{ project.description|truncatewords:30 }}">
+{% if project.image %}
+<meta property="og:image" content="{{ project.image.url }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-6 py-20">
+    <!-- Back Link -->
+    <a href="{% url 'projects' %}" class="text-primary hover:underline mb-8 inline-block">&larr; Back to Projects</a>
+
+    <!-- Project Header -->
+    <h1 class="text-4xl md:text-5xl font-bold mb-6">{{ project.title }}</h1>
+
+    <!-- Technologies -->
+    <div class="flex flex-wrap gap-2 mb-8">
+        {% for tech in project.technologies.all %}
+        <span class="px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-lg text-sm font-medium text-primary">{{ tech.name }}</span>
+        {% endfor %}
+    </div>
+
+    <!-- Project Image -->
+    {% if project.image %}
+    <img src="{{ project.image.url }}" alt="{{ project.title }}"
+         class="w-full rounded-3xl border border-white/10 shadow-2xl mb-12">
+    {% endif %}
+
+    <!-- Description -->
+    <div class="prose prose-invert prose-lg max-w-none text-slate-300 leading-relaxed">
+        {{ project.description|linebreaks }}
+    </div>
+
+    <!-- Links -->
+    <div class="flex space-x-6 mt-12 pt-8 border-t border-white/10">
+        {% if project.github_url %}
+        <a href="{{ project.github_url }}" target="_blank" rel="noopener"
+           class="glass px-6 py-3 rounded-xl hover:border-primary/50 transition font-semibold">
+            GitHub Repository &rarr;
+        </a>
+        {% endif %}
+        {% if project.live_url %}
+        <a href="{{ project.live_url }}" target="_blank" rel="noopener"
+           class="bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
+            Live Demo &rarr;
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

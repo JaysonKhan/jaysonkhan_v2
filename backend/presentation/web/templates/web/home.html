@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load static %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -21,8 +22,29 @@
     <div class="md:w-1/2 mt-12 md:mt-0 relative">
         <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
         <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
-        <img src="https://via.placeholder.com/600x600/0f172a/6366f1?text=JaysonKhan" alt="Hero Image"
+        <img src="{% static 'images/hero.jpg' %}" alt="JaysonKhan — Backend Developer"
             class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="max-w-7xl mx-auto px-6 py-20">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="space-y-6">
+            <h2 class="text-3xl font-bold">About <span class="text-gradient">Me</span></h2>
+            <p class="text-slate-400 text-lg leading-relaxed">
+                Men 5+ yillik tajribaga ega Python backend arxitektiman. Django, FastAPI, PostgreSQL,
+                Redis va Docker bilan professional darajada ishlayman. Clean Architecture va SOLID
+                tamoyillariga amal qilgan holda yuqori samarali backend tizimlarni loyihalayman.
+            </p>
+            <a href="{% static 'cv/jaysonkhan-cv.pdf' %}" download
+               class="inline-block bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
+                Download CV
+            </a>
+        </div>
+        <div>
+            <img src="{% static 'images/about.jpg' %}" alt="JaysonKhan" class="rounded-2xl border border-white/10">
+        </div>
     </div>
 </section>
 
@@ -66,7 +88,7 @@
                     <span class="px-3 py-1 bg-white/5 rounded-lg text-xs font-medium">{{ tech.name }}</span>
                     {% endfor %}
                 </div>
-                <a href="{% url 'projects' %}" class="text-primary font-semibold hover:underline">Read Case Study</a>
+                <a href="{% url 'project_detail' project.slug %}" class="text-primary font-semibold hover:underline">Read Case Study →</a>
             </div>
         </div>
         {% empty %}
