@@ -25,18 +25,21 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Third party
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    
+
     # Local apps
     'users',
     'portfolio',
@@ -136,4 +139,91 @@ from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env.int('JWT_ACCESS_TOKEN_LIFETIME', default=5)),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=env.int('JWT_REFRESH_TOKEN_LIFETIME', default=30)),
+}
+
+# Django Unfold Admin Theme
+UNFOLD = {
+    "SITE_TITLE": "JaysonKhan",
+    "SITE_HEADER": "Portfolio Admin",
+    "SITE_URL": "/",
+    "SITE_SYMBOL": "code",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "LOGIN": {
+        "image": lambda r: "/static/images/hero.jpg",
+        "redirect_after": lambda r: "/admin/",
+    },
+    "COLORS": {
+        "primary": {
+            "50":  "250 245 255",
+            "100": "243 232 255",
+            "200": "233 213 255",
+            "300": "216 180 254",
+            "400": "192 132 252",
+            "500": "168 85 247",
+            "600": "147 51 234",
+            "700": "126 34 206",
+            "800": "107 33 168",
+            "900": "88 28 135",
+            "950": "59 7 100",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Content",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Projects",
+                        "icon": "folder_open",
+                        "link": "/admin/portfolio/project/",
+                    },
+                    {
+                        "title": "Skills",
+                        "icon": "star",
+                        "link": "/admin/portfolio/skill/",
+                    },
+                    {
+                        "title": "Experience",
+                        "icon": "work",
+                        "link": "/admin/portfolio/experience/",
+                    },
+                    {
+                        "title": "Blog Posts",
+                        "icon": "article",
+                        "link": "/admin/blog/post/",
+                    },
+                    {
+                        "title": "Categories",
+                        "icon": "category",
+                        "link": "/admin/blog/category/",
+                    },
+                    {
+                        "title": "Tags",
+                        "icon": "label",
+                        "link": "/admin/blog/tag/",
+                    },
+                    {
+                        "title": "Contact Messages",
+                        "icon": "mail",
+                        "link": "/admin/contact/contactmessage/",
+                    },
+                ],
+            },
+            {
+                "title": "Authentication",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": "/admin/users/user/",
+                    },
+                ],
+            },
+        ],
+    },
 }
