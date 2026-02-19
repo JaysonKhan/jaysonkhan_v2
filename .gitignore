@@ -28,6 +28,7 @@ ENV/
 
 # Django
 *.log
+*.sqlite3
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -44,6 +45,7 @@ db.sqlite3-journal
 # OS
 .DS_Store
 Thumbs.db
+*.md
 
 # Media and Static
 /static/
