@@ -119,6 +119,18 @@ MEDIA_ROOT = env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cache — LocMemCache (single-process, per-worker).
+# Swap BACKEND to redis://... in production for shared multi-worker caching.
+CACHES = {
+    'default': {
+        'BACKEND': env(
+            'CACHE_BACKEND',
+            default='django.core.cache.backends.locmem.LocMemCache',
+        ),
+        'LOCATION': env('CACHE_LOCATION', default='jaysonkhan-default'),
+    }
+}
+
 # CORS Settings
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://localhost:3000',
