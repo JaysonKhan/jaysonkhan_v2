@@ -15,9 +15,6 @@ class SiteSettingsAdmin(ModelAdmin):
     - Changelist auto-redirects to the edit page.
     """
 
-    compressed_fields = True
-    warn_unsaved_form = True
-
     # ── Permissions ───────────────────────────────────────────────────────────
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
