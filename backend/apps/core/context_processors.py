@@ -1,21 +1,15 @@
 """
-Global context processor for site-wide settings.
-Makes SiteSettings available to all templates.
+Global context processor — injects SiteSettings into every template.
+Uses SiteSettingsService so the result is always served from cache.
 """
-from .models import SiteSettings
+from .services import SiteSettingsService
 
 
 def site_settings(request):
     """
-    Inject SiteSettings into template context.
-    Accessible as {{ site_settings }} in all templates.
+    Adds ``site_settings`` to all template contexts.
+    Safe: SiteSettingsService.get() never raises — returns defaults on failure.
     """
-    try:
-        settings = SiteSettings.load()
-    except Exception:
-        # Fallback if DB is unavailable (e.g., migrations running)
-        settings = None
-
     return {
-        'site_settings': settings,
+        "site_settings": SiteSettingsService.get(),
     }

@@ -1,21 +1,22 @@
 {% extends 'web/base.html' %}
 
-{% block title %}Projects | JaysonKhan{% endblock %}
+{% block title %}Projects | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
+{% block og_title %}{{ site_settings.projects_page_title }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
 
 {% block content %}
 <section class="max-w-7xl mx-auto px-6 py-20">
     <div class="text-center mb-16">
-        <h1 class="text-4xl md:text-6xl font-bold mb-4">Portfolio <span class="text-gradient">Projects</span></h1>
-        <p class="text-slate-400 max-w-2xl mx-auto">A detailed look at the systems and applications I've architected and
-            implemented.</p>
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.projects_page_title }}</h1>
+        <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.projects_page_subtitle }}</p>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for project in projects %}
         <div class="glass rounded-3xl overflow-hidden group hover:scale-[1.02] transition duration-300">
             {% if project.image %}
-            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-56 object-cover"
-                 onerror="this.parentElement.style.display='none'">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-56 object-cover">
             {% else %}
             <div class="w-full h-56 bg-primary/10 flex items-center justify-center text-slate-500 text-sm">No image</div>
             {% endif %}
@@ -30,11 +31,11 @@
                 <div class="flex space-x-4">
                     {% if project.github_url %}
                     <a href="{{ project.github_url }}" target="_blank"
-                        class="text-slate-300 hover:text-white transition">GitHub &rarr;</a>
+                       class="text-slate-300 hover:text-white transition">GitHub &rarr;</a>
                     {% endif %}
                     {% if project.live_url %}
                     <a href="{{ project.live_url }}" target="_blank"
-                        class="text-primary hover:underline transition">Live Demo</a>
+                       class="text-primary hover:underline transition">Live Demo</a>
                     {% endif %}
                 </div>
             </div>

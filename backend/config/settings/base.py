@@ -147,8 +147,8 @@ SIMPLE_JWT = {
 
 # Django Unfold Admin Theme
 UNFOLD = {
-    "SITE_TITLE": "JaysonKhan",
-    "SITE_HEADER": "Portfolio Admin",
+    "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Portfolio Admin"),
+    "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Portfolio Admin"),
     "SITE_URL": "/",
     "SITE_SYMBOL": "code",
     "SHOW_HISTORY": True,
@@ -176,6 +176,17 @@ UNFOLD = {
         "show_search": True,
         "show_all_applications": True,
         "navigation": [
+            {
+                "title": "Site",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Site Settings",
+                        "icon": "settings",
+                        "link": "/admin/core/sitesettings/",
+                    },
+                ],
+            },
             {
                 "title": "Content",
                 "separator": True,

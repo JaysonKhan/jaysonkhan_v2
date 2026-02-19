@@ -1,14 +1,17 @@
 {% extends 'web/base.html' %}
 
-{% block title %}{{ post.title }} | JaysonKhan{% endblock %}
+{% block title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ post.excerpt }}{% endblock %}
+{% block og_title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ post.excerpt }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block twitter_title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
+{% block twitter_description %}{{ post.excerpt }}{% endblock %}
 
 {% block extra_head %}
-<!-- SEO Tags -->
-<meta name="description" content="{{ post.excerpt }}">
-<meta property="og:title" content="{{ post.title }}">
-<meta property="og:description" content="{{ post.excerpt }}">
 {% if post.featured_image %}
 <meta property="og:image" content="{{ post.featured_image.url }}">
+<meta name="twitter:image" content="{{ post.featured_image.url }}">
 {% endif %}
 {% endblock %}
 
@@ -20,9 +23,9 @@
         <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
         <div class="flex items-center space-x-4 text-slate-400">
             <div class="flex items-center space-x-2">
-                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">JK
+                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{ site_settings.site_author_initials }}
                 </div>
-                <span class="font-medium">By JaysonKhan</span>
+                <span class="font-medium">By {{ site_settings.site_author }}</span>
             </div>
             <span>&bull;</span>
             <span>{{ post.created_at|date:"F d, Y" }}</span>

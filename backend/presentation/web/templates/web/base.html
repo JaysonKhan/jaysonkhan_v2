@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,62 +7,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ site_settings.site_title }}{% endblock %}</title>
 
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="{{ site_settings.meta_description }}">
-    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
-    <meta name="author" content="{{ site_settings.site_title }}">
+    <!-- Favicon -->
+    {% if site_settings.favicon %}
+    <link rel="icon" type="image/png" href="{{ site_settings.favicon.url }}">
+    {% endif %}
 
-    <!-- Open Graph (Facebook, Telegram, LinkedIn preview) -->
-    <meta property="og:title" content="{{ site_settings.site_title }}">
-    <meta property="og:description" content="{{ site_settings.meta_description }}">
+    <!-- SEO Meta -->
+    <meta name="description" content="{% block meta_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
+    <meta name="author" content="{{ site_settings.site_author }}">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="{{ site_settings.site_author }}">
+    <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     {% if site_settings.og_image %}
     <meta property="og:image" content="{{ site_settings.og_image.url }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     {% endif %}
-    <meta property="og:url" content="{{ site_settings.og_url }}">
-    <meta property="og:type" content="website">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ site_settings.site_title }}">
-    <meta name="twitter:description" content="{{ site_settings.meta_description }}">
+    {% if site_settings.twitter_handle %}
+    <meta name="twitter:site" content="@{{ site_settings.twitter_handle }}">
+    {% endif %}
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_title }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
     {% if site_settings.og_image %}
     <meta name="twitter:image" content="{{ site_settings.og_image.url }}">
     {% endif %}
 
-    {% load static %}
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "{{ site_settings.site_author }}",
+      "url": "{{ site_settings.og_url }}",
+      "email": "{{ site_settings.email }}"{% if site_settings.github_url or site_settings.linkedin_url %},
+      "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %},{% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}]{% endif %}
+    }
+    </script>
+
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="min-h-screen">
+
     <!-- Navigation -->
     <nav class="sticky top-0 z-50 glass border-b border-white/10 py-4 px-6">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">{{ site_settings.site_title|truncatewords:2 }}</a>
+            <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">
+                {{ site_settings.site_author }}
+            </a>
             <div class="hidden md:flex space-x-8">
                 <a href="{% url 'home' %}" class="hover:text-primary transition">Home</a>
                 <a href="{% url 'projects' %}" class="hover:text-primary transition">Projects</a>
                 <a href="{% url 'blog_list' %}" class="hover:text-primary transition">Blog</a>
                 <a href="{% url 'contact' %}" class="hover:text-primary transition">Contact</a>
             </div>
-            <!-- Hamburger Menu Button (Mobile) -->
             <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" aria-label="Menu">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
             </button>
-
-            <a href="{% url 'contact' %}"
-                class="hidden md:inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">Hire Me</a>
+            <a href="{{ site_settings.nav_cta_url }}"
+               class="hidden md:inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                {{ site_settings.nav_cta_text }}
+            </a>
         </div>
-        <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden px-6 py-4 space-y-4 border-t border-white/10 mt-4">
             <a href="{% url 'home' %}" class="block hover:text-primary transition">Home</a>
             <a href="{% url 'projects' %}" class="block hover:text-primary transition">Projects</a>
             <a href="{% url 'blog_list' %}" class="block hover:text-primary transition">Blog</a>
             <a href="{% url 'contact' %}" class="block hover:text-primary transition">Contact</a>
-            <a href="{% url 'contact' %}" class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">Hire Me</a>
+            <a href="{{ site_settings.nav_cta_url }}"
+               class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                {{ site_settings.nav_cta_text }}
+            </a>
         </div>
     </nav>
     <script>
@@ -70,15 +98,13 @@
         });
     </script>
 
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+    <main>{% block content %}{% endblock %}</main>
 
     <!-- Footer -->
     <footer class="glass mt-20 py-12 border-t border-white/10">
         <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
-                <h3 class="text-xl font-bold text-gradient mb-4">{{ site_settings.site_title|truncatewords:2 }}</h3>
+                <h3 class="text-xl font-bold text-gradient mb-4">{{ site_settings.site_author }}</h3>
                 <p class="text-slate-400">{{ site_settings.site_tagline }}</p>
             </div>
             <div class="flex flex-col space-y-2">
@@ -90,7 +116,11 @@
             </div>
             <div>
                 <h4 class="font-bold mb-2">Connect</h4>
-                <p class="text-slate-400">Email: {{ site_settings.email }}</p>
+                <p class="text-slate-400">
+                    <a href="mailto:{{ site_settings.email }}" class="hover:text-primary transition">
+                        {{ site_settings.email }}
+                    </a>
+                </p>
                 <div class="flex justify-center md:justify-start space-x-4 mt-4">
                     {% if site_settings.github_url %}
                     <a href="{{ site_settings.github_url }}" target="_blank" rel="noopener"
@@ -108,6 +138,22 @@
                         </svg>
                     </a>
                     {% endif %}
+                    {% if site_settings.twitter_url %}
+                    <a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"
+                       class="text-slate-400 hover:text-primary transition" aria-label="Twitter/X">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.telegram_url %}
+                    <a href="{{ site_settings.telegram_url }}" target="_blank" rel="noopener"
+                       class="text-slate-400 hover:text-primary transition" aria-label="Telegram">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -118,5 +164,4 @@
 
     {% block extra_js %}{% endblock %}
 </body>
-
 </html>

@@ -1,33 +1,49 @@
 {% extends 'web/base.html' %}
 
-{% block title %}Contact | JaysonKhan{% endblock %}
+{% block title %}Contact | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ site_settings.contact_page_subtitle }}{% endblock %}
+{% block og_title %}Contact | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ site_settings.contact_page_subtitle }}{% endblock %}
 
 {% block content %}
 <section class="max-w-7xl mx-auto px-6 py-20">
     <div class="grid md:grid-cols-2 gap-20">
         <div>
-            <h1 class="text-4xl md:text-6xl font-bold mb-8">Get in <span class="text-gradient">touch</span></h1>
-            <p class="text-slate-400 text-lg mb-12">Have a project in mind or just want to chat architectural patterns?
-                Drop me a message.</p>
+            <h1 class="text-4xl md:text-6xl font-bold mb-8">
+                {{ site_settings.contact_page_title }}
+            </h1>
+            <p class="text-slate-400 text-lg mb-12">{{ site_settings.contact_page_subtitle }}</p>
 
             <div class="space-y-8">
                 <div class="flex items-start space-x-6">
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">@
-                    </div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">@</div>
                     <div>
-                        <h4 class="font-bold text-lg">Email</h4>
-                        <p class="text-slate-400">jayson@jaysonkhan.com</p>
+                        <h4 class="font-bold text-lg">{{ site_settings.contact_email_label }}</h4>
+                        <a href="mailto:{{ site_settings.email }}" class="text-slate-400 hover:text-primary transition">
+                            {{ site_settings.email }}
+                        </a>
                     </div>
                 </div>
+                {% if site_settings.linkedin_url %}
                 <div class="flex items-start space-x-6">
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">L
-                    </div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">in</div>
                     <div>
-                        <h4 class="font-bold text-lg">LinkedIn</h4>
-                        <a href="https://linkedin.com/in/jaysonkhan" target="_blank" rel="noopener"
-                           class="text-primary hover:underline">linkedin.com/in/jaysonkhan</a>
+                        <h4 class="font-bold text-lg">{{ site_settings.contact_linkedin_label }}</h4>
+                        <a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener"
+                           class="text-primary hover:underline">{{ site_settings.linkedin_url }}</a>
                     </div>
                 </div>
+                {% endif %}
+                {% if site_settings.github_url %}
+                <div class="flex items-start space-x-6">
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">gh</div>
+                    <div>
+                        <h4 class="font-bold text-lg">GitHub</h4>
+                        <a href="{{ site_settings.github_url }}" target="_blank" rel="noopener"
+                           class="text-primary hover:underline">{{ site_settings.github_url }}</a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -45,27 +61,28 @@
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-400">Name</label>
                         <input type="text" name="name" required
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-400">Email</label>
                         <input type="email" name="email" required
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-400">Subject</label>
                     <input type="text" name="subject" required
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                           class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-400">Message</label>
                     <textarea name="message" rows="5" required
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition"></textarea>
+                              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition"></textarea>
                 </div>
                 <button type="submit"
-                    class="w-full bg-primary hover:bg-secondary py-4 rounded-xl transition font-bold text-lg">Send
-                    Message</button>
+                        class="w-full bg-primary hover:bg-secondary py-4 rounded-xl transition font-bold text-lg">
+                    Send Message
+                </button>
             </form>
         </div>
     </div>

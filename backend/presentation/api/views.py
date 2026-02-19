@@ -1,13 +1,16 @@
 from rest_framework import viewsets, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from .serializers import (
-    UserSerializer, SkillSerializer, ProjectSerializer, 
-    ExperienceSerializer, CategorySerializer, TagSerializer, 
-    PostSerializer, ContactMessageSerializer
+    UserSerializer, SkillSerializer, ProjectSerializer,
+    ExperienceSerializer, CategorySerializer, TagSerializer,
+    PostSerializer, ContactMessageSerializer, SiteSettingsSerializer,
 )
 from users.models import User
 from portfolio.models import Skill, Project, Experience
 from blog.models import Category, Tag, Post
 from contact.models import ContactMessage
+from core.services import SiteSettingsService
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
@@ -41,8 +44,23 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
     permission_classes = [permissions.AllowAny]
-    
+
     def get_permissions(self):
         if self.action == 'create':
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+
+
+class SiteSettingsView(APIView):
+    """
+    GET /api/site-settings/
+    Returns the singleton SiteSettings as JSON.
+    Public endpoint — no auth required (read-only, no secrets exposed).
+    Response served from cache; invalidated automatically on admin save.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        settings = SiteSettingsService.get()
+        serializer = SiteSettingsSerializer(settings, context={"request": request})
+        return Response(serializer.data)

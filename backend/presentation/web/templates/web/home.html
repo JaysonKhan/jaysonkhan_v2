@@ -1,33 +1,39 @@
 {% extends 'web/base.html' %}
 {% load static %}
 
+{% block title %}{{ site_settings.site_title }}{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
 <section class="max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between">
     <div class="md:w-1/2 space-y-6">
         <h2 class="text-xl text-primary font-medium tracking-wide uppercase">{{ site_settings.hero_availability_badge }}</h2>
         <h1 class="text-5xl md:text-7xl font-bold leading-tight">
-            {{ site_settings.hero_title|safe }}
+            {{ site_settings.hero_title }}
         </h1>
-        <p class="text-slate-400 text-lg max-w-lg">
-            {{ site_settings.hero_subtitle }}
-        </p>
+        <p class="text-slate-400 text-lg max-w-lg">{{ site_settings.hero_subtitle }}</p>
         <div class="flex space-x-4">
-            <a href="{% url 'projects' %}"
-                class="bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold">View Projects</a>
-            <a href="{% url 'contact' %}"
-                class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold">Contact Me</a>
+            <a href="{{ site_settings.hero_primary_cta_url }}"
+               class="bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold">
+                {{ site_settings.hero_primary_cta_text }}
+            </a>
+            <a href="{{ site_settings.hero_secondary_cta_url }}"
+               class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold">
+                {{ site_settings.hero_secondary_cta_text }}
+            </a>
         </div>
     </div>
     <div class="md:w-1/2 mt-12 md:mt-0 relative">
         <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
         <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
         {% if site_settings.hero_image %}
-        <img src="{{ site_settings.hero_image.url }}" alt="{{ site_settings.site_title }} — Backend Developer"
-            class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
+        <img src="{{ site_settings.hero_image.url }}"
+             alt="{{ site_settings.site_author }} — Backend Developer"
+             class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
         {% else %}
-        <img src="{% static 'images/hero.jpg' %}" alt="{{ site_settings.site_title }} — Backend Developer"
-            class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
+        <img src="{% static 'images/hero.jpg' %}"
+             alt="{{ site_settings.site_author }} — Backend Developer"
+             class="relative z-10 rounded-3xl border border-white/10 shadow-2xl mx-auto">
         {% endif %}
     </div>
 </section>
@@ -37,23 +43,21 @@
     <div class="grid md:grid-cols-2 gap-12 items-center">
         <div class="space-y-6">
             <h2 class="text-3xl font-bold">{{ site_settings.about_title }} <span class="text-gradient">Me</span></h2>
-            <p class="text-slate-400 text-lg leading-relaxed">
-                {{ site_settings.about_description }}
-            </p>
+            <p class="text-slate-400 text-lg leading-relaxed">{{ site_settings.about_description }}</p>
             {% if site_settings.resume_file %}
             <a href="{{ site_settings.resume_file.url }}" download
                class="inline-block bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
                 {{ site_settings.resume_button_text }}
             </a>
-            {% else %}
-            <div class="text-slate-500 italic text-sm">Resume not available</div>
             {% endif %}
         </div>
         <div>
             {% if site_settings.about_image %}
-            <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_title }}" class="rounded-2xl border border-white/10">
+            <img src="{{ site_settings.about_image.url }}"
+                 alt="{{ site_settings.site_author }}" class="rounded-2xl border border-white/10">
             {% else %}
-            <img src="{% static 'images/about.jpg' %}" alt="{{ site_settings.site_title }}" class="rounded-2xl border border-white/10">
+            <img src="{% static 'images/about.jpg' %}"
+                 alt="{{ site_settings.site_author }}" class="rounded-2xl border border-white/10">
             {% endif %}
         </div>
     </div>
@@ -61,29 +65,30 @@
 
 <!-- Skills Section -->
 <section class="max-w-7xl mx-auto px-6 py-20">
-    <h2 class="text-3xl font-bold mb-12 text-center">My <span class="text-gradient">Expertise</span></h2>
+    <h2 class="text-3xl font-bold mb-12 text-center">
+        My <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
+    </h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         {% for skill in portfolio.skills %}
         <div class="glass p-6 rounded-2xl text-center group hover:border-primary/50 transition">
             <h3 class="text-lg font-bold mb-2">{{ skill.name }}</h3>
             <div class="w-full bg-white/5 rounded-full h-2">
-                <div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: {{ skill.level }}%">
-                </div>
+                <div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: {{ skill.level }}%"></div>
             </div>
             <p class="mt-2 text-sm text-slate-500">{{ skill.level }}% Proficiency</p>
         </div>
         {% empty %}
-        <p class="col-span-full text-center text-slate-500">No skills added yet. Check back soon!</p>
+        <p class="col-span-full text-center text-slate-500">No skills added yet.</p>
         {% endfor %}
     </div>
 </section>
 
-<!-- Projects Preview -->
+<!-- Featured Projects Section -->
 <section class="max-w-7xl mx-auto px-6 py-20">
     <div class="flex justify-between items-end mb-12">
         <div>
-            <h2 class="text-3xl font-bold">Featured <span class="text-gradient">Projects</span></h2>
-            <p class="text-slate-400 mt-2">Some of my best architectural work.</p>
+            <h2 class="text-3xl font-bold">{{ site_settings.featured_projects_title }}</h2>
+            <p class="text-slate-400 mt-2">{{ site_settings.featured_projects_subtitle }}</p>
         </div>
         <a href="{% url 'projects' %}" class="text-primary hover:text-white transition font-medium">View All &rarr;</a>
     </div>
@@ -91,8 +96,7 @@
         {% for project in portfolio.projects|slice:":3" %}
         <div class="glass rounded-3xl overflow-hidden group hover:scale-[1.02] transition duration-300">
             {% if project.image %}
-            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-48 object-cover"
-                 onerror="this.parentElement.style.display='none'">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-48 object-cover">
             {% else %}
             <div class="w-full h-48 bg-primary/10 flex items-center justify-center text-slate-500 text-sm">No image</div>
             {% endif %}
@@ -113,9 +117,9 @@
     </div>
 </section>
 
-<!-- Latest Blog Posts -->
+<!-- Latest Blog Posts Section -->
 <section class="max-w-7xl mx-auto px-6 py-20 bg-white/[0.02] rounded-[4rem] my-20">
-    <h2 class="text-3xl font-bold mb-12 text-center">Latest from the <span class="text-gradient">Blog</span></h2>
+    <h2 class="text-3xl font-bold mb-12 text-center">{{ site_settings.latest_blog_title }}</h2>
     <div class="grid md:grid-cols-3 gap-8">
         {% for post in latest_posts %}
         <div class="group">
@@ -125,7 +129,7 @@
             </h3>
             <p class="text-slate-400 mt-2 line-clamp-2">{{ post.excerpt }}</p>
             <a href="{% url 'blog_detail' post.slug %}"
-                class="inline-block mt-4 text-sm font-bold border-b-2 border-primary text-primary">Read More</a>
+               class="inline-block mt-4 text-sm font-bold border-b-2 border-primary text-primary">Read More</a>
         </div>
         {% empty %}
         <p class="col-span-full text-center text-slate-500">The blog is currently empty.</p>

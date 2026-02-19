@@ -1,12 +1,16 @@
 {% extends 'web/base.html' %}
 
-{% block title %}{{ project.title }} | JaysonKhan{% endblock %}
+{% block title %}{{ project.title }} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ project.description|truncatewords:25 }}{% endblock %}
+{% block og_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ project.description|truncatewords:30 }}{% endblock %}
+{% block twitter_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
+{% block twitter_description %}{{ project.description|truncatewords:30 }}{% endblock %}
 
 {% block extra_head %}
-<meta property="og:title" content="{{ project.title }} — JaysonKhan">
-<meta property="og:description" content="{{ project.description|truncatewords:30 }}">
 {% if project.image %}
 <meta property="og:image" content="{{ project.image.url }}">
+<meta name="twitter:image" content="{{ project.image.url }}">
 {% endif %}
 {% endblock %}
 
