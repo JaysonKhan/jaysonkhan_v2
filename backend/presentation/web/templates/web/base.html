@@ -25,46 +25,8 @@
     <meta name="twitter:image" content="/static/images/og-preview.jpg">
 
     {% load static %}
-    <!-- TODO: Production uchun CDN o'rniga compiled CSS ishlating:
-         <link rel="stylesheet" href="/static/css/output.css">
-         Hozircha development uchun CDN versiyasi ishlatilmoqda -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#6366f1',
-                        secondary: '#4f46e5',
-                        accent: '#ec4899',
-                        dark: '#0f172a',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #f1f5f9;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .text-gradient {
-            background: linear-gradient(to right, #6366f1, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
     {% block extra_head %}{% endblock %}
 </head>
 

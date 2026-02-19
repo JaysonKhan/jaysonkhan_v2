@@ -108,10 +108,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = env('STATIC_ROOT', default=os.path.join(BASE_DIR, 'static'))
+# Source static files (project-level) — picked up by collectstatic
+STATICFILES_DIRS = [BASE_DIR / 'static']
+# Destination for collectstatic — must differ from STATICFILES_DIRS paths
+STATIC_ROOT = env('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles'))
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = env('MEDIA_ROOT', default=os.path.join(BASE_DIR, 'media'))
+MEDIA_ROOT = env('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
