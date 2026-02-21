@@ -42,7 +42,7 @@ class SiteSettingsAdmin(ModelAdmin):
 
     # ── Fieldsets ─────────────────────────────────────────────────────────────
     fieldsets = (
-        ('🏷️  Branding', {
+        ('Branding', {
             'fields': (
                 'site_title',
                 'site_author',
@@ -55,7 +55,7 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('🔍  SEO & Meta', {
+        ('SEO & Meta', {
             'fields': (
                 'meta_description',
                 'meta_keywords',
@@ -67,14 +67,14 @@ class SiteSettingsAdmin(ModelAdmin):
             'description': 'Controls Google snippets and social media link previews.',
         }),
 
-        ('🧭  Navigation', {
+        ('Navigation', {
             'fields': (
                 'nav_cta_text',
                 'nav_cta_url',
             ),
         }),
 
-        ('🦸  Hero Section', {
+        ('Hero Section', {
             'fields': (
                 'hero_availability_badge',
                 'hero_title',
@@ -88,7 +88,7 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('👤  About Section', {
+        ('About Section', {
             'fields': (
                 'about_title',
                 'about_description',
@@ -97,18 +97,22 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('⚡  Skills Section', {
+        ('Skills Section', {
             'fields': ('skills_section_title',),
         }),
 
-        ('💼  Featured Projects Section', {
+        ('Featured Projects Section', {
             'fields': (
                 'featured_projects_title',
                 'featured_projects_subtitle',
             ),
         }),
 
-        ('📝  Blog Sections', {
+        ('Experience Section', {
+            'fields': ('experience_section_title',),
+        }),
+
+        ('Blog Sections', {
             'fields': (
                 'latest_blog_title',
                 'blog_page_title',
@@ -116,14 +120,14 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('🗂️  Projects Page', {
+        ('Projects Page', {
             'fields': (
                 'projects_page_title',
                 'projects_page_subtitle',
             ),
         }),
 
-        ('📬  Contact Page', {
+        ('Contact Page', {
             'fields': (
                 'contact_page_title',
                 'contact_page_subtitle',
@@ -132,7 +136,7 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('📄  Resume / CV', {
+        ('Resume / CV', {
             'fields': (
                 'resume_file',
                 'resume_preview',
@@ -140,9 +144,10 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('🔗  Contact Info & Socials', {
+        ('Contact Info & Socials', {
             'fields': (
                 'email',
+                'phone',
                 'github_url',
                 'linkedin_url',
                 'twitter_url',
@@ -150,11 +155,11 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
         }),
 
-        ('🦶  Footer', {
+        ('Footer', {
             'fields': ('footer_text',),
         }),
 
-        ('🕐  Timestamps', {
+        ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),
         }),
@@ -188,7 +193,7 @@ class SiteSettingsAdmin(ModelAdmin):
                 obj.og_image.url,
             )
         return '—'
-    og_image_preview.short_description = 'Preview (1200×630)'
+    og_image_preview.short_description = 'Preview (1200x630)'
 
     def hero_image_preview(self, obj):
         if obj.pk and obj.hero_image:
@@ -214,7 +219,7 @@ class SiteSettingsAdmin(ModelAdmin):
         if obj.pk and obj.resume_file:
             return format_html(
                 '<a href="{}" target="_blank" rel="noopener" '
-                'class="button">📄 Open CV</a>',
+                'class="button">Open CV</a>',
                 obj.resume_file.url,
             )
         return '—'

@@ -11,11 +11,11 @@ class SiteSettings(models.Model):
 
     # ── Branding ──────────────────────────────────────────────────────────────
     site_title = models.CharField(
-        max_length=255, default="JaysonKhan | Portfolio",
+        max_length=255, default="Jahongir Kuziboev | Flutter Mobile Engineer",
         help_text="Full site name — used in <title> tag and nav logo"
     )
     site_author = models.CharField(
-        max_length=100, default="JaysonKhan",
+        max_length=100, default="Jahongir Kuziboev",
         help_text="Author name (used in blog byline and structured data)"
     )
     site_author_initials = models.CharField(
@@ -24,7 +24,7 @@ class SiteSettings(models.Model):
     )
     site_tagline = models.CharField(
         max_length=500,
-        default="Senior Python Backend Architect & Full-stack Developer.",
+        default="Flutter Mobile Engineer — building high-quality Android & iOS apps.",
         help_text="One-liner description — shown in footer"
     )
     favicon = models.ImageField(
@@ -39,13 +39,13 @@ class SiteSettings(models.Model):
     # ── SEO / Meta ────────────────────────────────────────────────────────────
     meta_description = models.TextField(
         max_length=160,
-        default="Senior Python Backend Architect specializing in Django, "
-                "PostgreSQL, and Clean Architecture. Available for freelance and full-time work.",
+        default="Flutter Mobile Engineer with 2+ years of experience developing "
+                "high-quality Android & iOS apps. Clean Architecture, BLoC, Dart.",
         help_text="Google snippet description (max 160 chars)"
     )
     meta_keywords = models.CharField(
         max_length=255,
-        default="Python, Django, PostgreSQL, Backend Developer, Software Architect, Portfolio",
+        default="Flutter, Dart, Mobile Developer, Android, iOS, BLoC, Clean Architecture, Portfolio",
         help_text="Comma-separated SEO keywords"
     )
     og_image = models.ImageField(
@@ -77,13 +77,13 @@ class SiteSettings(models.Model):
         help_text="Small badge text above the hero headline"
     )
     hero_title = models.CharField(
-        max_length=255, default="I build high-performance backend systems.",
+        max_length=255, default="I craft pixel-perfect mobile experiences.",
         help_text="Main hero headline"
     )
     hero_subtitle = models.TextField(
         max_length=500,
-        default="Senior Python Backend Architect specializing in Django, "
-                "PostgreSQL, and Clean Architecture.",
+        default="Flutter Mobile Engineer specializing in building scalable, "
+                "performance-oriented Android & iOS applications with Clean Architecture.",
         help_text="Hero sub-heading paragraph"
     )
     hero_image = models.ImageField(
@@ -91,7 +91,7 @@ class SiteSettings(models.Model):
         help_text="Hero section portrait/image"
     )
     hero_primary_cta_text = models.CharField(
-        max_length=50, default="View Projects",
+        max_length=50, default="View Apps",
         help_text="Primary CTA button text in hero"
     )
     hero_primary_cta_url = models.CharField(
@@ -113,10 +113,12 @@ class SiteSettings(models.Model):
         help_text="About section heading (template appends 'Me' with gradient)"
     )
     about_description = models.TextField(
-        default="Men 5+ yillik tajribaga ega Python backend arxitektiman. "
-                "Django, FastAPI, PostgreSQL, Redis va Docker bilan professional "
-                "darajada ishlayman. Clean Architecture va SOLID tamoyillariga "
-                "amal qilgan holda yuqori samarali backend tizimlarni loyihalayman.",
+        default="Flutter Mobile Engineer with 2+ years of experience developing "
+                "high-quality Android and iOS applications. Specialized in building "
+                "scalable, maintainable, and performance-oriented mobile solutions "
+                "using Clean Architecture and BLoC. Developed 15+ corporate mobile "
+                "apps with complex animations, REST API integrations, and cross-platform "
+                "adaptive user interfaces.",
         help_text="About section body text"
     )
     about_image = models.ImageField(
@@ -126,18 +128,24 @@ class SiteSettings(models.Model):
 
     # ── Skills Section ────────────────────────────────────────────────────────
     skills_section_title = models.CharField(
-        max_length=100, default="My Expertise",
+        max_length=100, default="Tech Stack",
         help_text="Skills section heading"
     )
 
     # ── Featured Projects Section ─────────────────────────────────────────────
     featured_projects_title = models.CharField(
-        max_length=100, default="Featured Projects",
+        max_length=100, default="Featured Apps",
         help_text="Featured projects section heading"
     )
     featured_projects_subtitle = models.CharField(
-        max_length=255, default="Some of my best architectural work.",
+        max_length=255, default="Apps I've built and shipped to production.",
         help_text="Featured projects section sub-heading"
+    )
+
+    # ── Experience Section ────────────────────────────────────────────────────
+    experience_section_title = models.CharField(
+        max_length=100, default="Experience",
+        help_text="Experience section heading on homepage"
     )
 
     # ── Latest Blog Section ───────────────────────────────────────────────────
@@ -148,12 +156,12 @@ class SiteSettings(models.Model):
 
     # ── Projects Page ─────────────────────────────────────────────────────────
     projects_page_title = models.CharField(
-        max_length=100, default="Portfolio Projects",
+        max_length=100, default="App Portfolio",
         help_text="Projects page <h1> heading"
     )
     projects_page_subtitle = models.CharField(
         max_length=255,
-        default="A detailed look at the systems and applications I've architected and implemented.",
+        default="A showcase of the mobile applications I've designed, developed, and shipped.",
         help_text="Projects page sub-heading"
     )
 
@@ -164,7 +172,7 @@ class SiteSettings(models.Model):
     )
     blog_page_subtitle = models.CharField(
         max_length=255,
-        default="Insights on software architecture, backend engineering, and the future of web development.",
+        default="Insights on mobile development, Flutter, and building production-ready apps.",
         help_text="Blog list page sub-heading"
     )
 
@@ -175,7 +183,7 @@ class SiteSettings(models.Model):
     )
     contact_page_subtitle = models.CharField(
         max_length=500,
-        default="Have a project in mind or just want to chat architectural patterns? Drop me a message.",
+        default="Have a mobile app idea or need a Flutter engineer? Drop me a message.",
         help_text="Contact page intro paragraph"
     )
     contact_email_label = models.CharField(
@@ -199,8 +207,12 @@ class SiteSettings(models.Model):
 
     # ── Contact Info & Socials ────────────────────────────────────────────────
     email = models.EmailField(
-        default="jayson@jaysonkhan.com",
+        default="bettaxacker@gmail.com",
         help_text="Primary contact email — shown in footer and contact page"
+    )
+    phone = models.CharField(
+        max_length=20, blank=True, default="",
+        help_text="Phone number (optional)"
     )
     github_url = models.URLField(
         default="https://github.com/jaysonkhan", blank=True,
@@ -221,7 +233,7 @@ class SiteSettings(models.Model):
 
     # ── Footer ────────────────────────────────────────────────────────────────
     footer_text = models.CharField(
-        max_length=255, default="© 2026 JaysonKhan. All rights reserved.",
+        max_length=255, default="© 2026 Jahongir Kuziboev. All rights reserved.",
         help_text="Footer copyright line"
     )
 

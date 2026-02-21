@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from users.models import User
-from portfolio.models import Skill, Project, Experience
+from portfolio.models import Skill, Project, ProjectScreenshot, Experience
 from blog.models import Category, Tag, Post
 from contact.models import ContactMessage
 from core.models import SiteSettings
+
 
 # Users
 class UserSerializer(serializers.ModelSerializer):
@@ -11,23 +12,38 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'bio', 'profile_picture')
 
+
 # Portfolio
 class SkillSerializer(serializers.ModelSerializer):
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+
     class Meta:
         model = Skill
         fields = '__all__'
 
+
+class ProjectScreenshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectScreenshot
+        fields = ('id', 'image', 'caption', 'order')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     technologies = SkillSerializer(many=True, read_only=True)
-    
+    screenshots = ProjectScreenshotSerializer(many=True, read_only=True)
+    tech_list = serializers.ListField(source='get_tech_list', read_only=True)
+    platform_display = serializers.CharField(source='get_platform_display', read_only=True)
+
     class Meta:
         model = Project
         fields = '__all__'
+
 
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
         fields = '__all__'
+
 
 # Blog
 class CategorySerializer(serializers.ModelSerializer):
@@ -35,19 +51,22 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
 
+
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Post
         fields = '__all__'
+
 
 # Contact
 class ContactMessageSerializer(serializers.ModelSerializer):

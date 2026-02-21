@@ -162,7 +162,7 @@ UNFOLD = {
     "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Portfolio Admin"),
     "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Portfolio Admin"),
     "SITE_URL": "/",
-    "SITE_SYMBOL": "code",
+    "SITE_SYMBOL": "smartphone",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "LOGIN": {

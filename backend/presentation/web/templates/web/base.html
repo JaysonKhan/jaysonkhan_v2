@@ -47,6 +47,7 @@
       "@type": "Person",
       "name": "{{ site_settings.site_author }}",
       "url": "{{ site_settings.og_url }}",
+      "jobTitle": "Flutter Mobile Engineer",
       "email": "{{ site_settings.email }}"{% if site_settings.github_url or site_settings.linkedin_url %},
       "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %},{% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}]{% endif %}
     }
@@ -54,20 +55,87 @@
 
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- iOS-style blur appbar styles -->
+    <style>
+        .nav-blur {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.72);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+        .nav-blur.scrolled {
+            background: rgba(15, 23, 42, 0.88);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+        }
+        .platform-badge.android { background: rgba(61, 220, 132, 0.12); color: #3ddc84; }
+        .platform-badge.ios { background: rgba(99, 102, 241, 0.12); color: #818cf8; }
+        .platform-badge.cross { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+        .platform-badge.web { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+        .store-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .store-btn.appstore { background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
+        .store-btn.appstore:hover { background: rgba(99, 102, 241, 0.2); }
+        .store-btn.playstore { background: rgba(61, 220, 132, 0.1); color: #3ddc84; border: 1px solid rgba(61, 220, 132, 0.2); }
+        .store-btn.playstore:hover { background: rgba(61, 220, 132, 0.2); }
+        .device-mockup {
+            position: relative;
+            border-radius: 2rem;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .skill-category-header {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: rgba(168, 85, 247, 0.1);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            margin-bottom: 1rem;
+        }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="min-h-screen">
 
-    <!-- Navigation -->
-    <nav class="sticky top-0 z-50 glass border-b border-white/10 py-4 px-6">
+    <!-- Navigation — iOS-style backdrop blur -->
+    <nav class="nav-blur py-4 px-6" id="main-nav">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">
                 {{ site_settings.site_author }}
             </a>
             <div class="hidden md:flex space-x-8">
                 <a href="{% url 'home' %}" class="hover:text-primary transition">Home</a>
-                <a href="{% url 'projects' %}" class="hover:text-primary transition">Projects</a>
+                <a href="{% url 'projects' %}" class="hover:text-primary transition">Apps</a>
                 <a href="{% url 'blog_list' %}" class="hover:text-primary transition">Blog</a>
                 <a href="{% url 'contact' %}" class="hover:text-primary transition">Contact</a>
             </div>
@@ -83,7 +151,7 @@
         </div>
         <div id="mobile-menu" class="hidden md:hidden px-6 py-4 space-y-4 border-t border-white/10 mt-4">
             <a href="{% url 'home' %}" class="block hover:text-primary transition">Home</a>
-            <a href="{% url 'projects' %}" class="block hover:text-primary transition">Projects</a>
+            <a href="{% url 'projects' %}" class="block hover:text-primary transition">Apps</a>
             <a href="{% url 'blog_list' %}" class="block hover:text-primary transition">Blog</a>
             <a href="{% url 'contact' %}" class="block hover:text-primary transition">Contact</a>
             <a href="{{ site_settings.nav_cta_url }}"
@@ -92,10 +160,27 @@
             </a>
         </div>
     </nav>
+
+    <!-- Navbar scroll behavior -->
     <script>
-        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
+        (() => {
+            const nav = document.getElementById('main-nav');
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            let ticking = false;
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        nav.classList.toggle('scrolled', window.scrollY > 20);
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+        })();
     </script>
 
     <main>{% block content %}{% endblock %}</main>
@@ -110,7 +195,7 @@
             <div class="flex flex-col space-y-2">
                 <h4 class="font-bold mb-2">Links</h4>
                 <a href="{% url 'home' %}" class="text-slate-400 hover:text-primary transition">Home</a>
-                <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition">Projects</a>
+                <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition">Apps</a>
                 <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition">Blog</a>
                 <a href="{% url 'contact' %}" class="text-slate-400 hover:text-primary transition">Contact</a>
             </div>
