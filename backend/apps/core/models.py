@@ -12,7 +12,7 @@ class SiteSettings(models.Model):
     # ── Branding ──────────────────────────────────────────────────────────────
     site_title = models.CharField(
         max_length=255, default="Jahongir Kuziboev | Flutter Mobile Engineer",
-        help_text="Full site name — used in <title> tag and nav logo"
+        help_text="Full site name — used in the page title tag and nav logo"
     )
     site_author = models.CharField(
         max_length=100, default="Jahongir Kuziboev",
