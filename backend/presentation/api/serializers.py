@@ -31,7 +31,6 @@ class ProjectScreenshotSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     technologies = SkillSerializer(many=True, read_only=True)
     screenshots = ProjectScreenshotSerializer(many=True, read_only=True)
-    tech_list = serializers.ListField(source='get_tech_list', read_only=True)
     platform_display = serializers.CharField(source='get_platform_display', read_only=True)
 
     class Meta:
@@ -61,8 +60,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
         return ''
 
     def get_tech_tags(self, obj):
-        if obj.tech_stack:
-            return [t.strip() for t in obj.tech_stack.split(',') if t.strip()][:6]
         return [t.name for t in obj.technologies.all()[:6]]
 
 

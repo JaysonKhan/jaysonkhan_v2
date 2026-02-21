@@ -53,7 +53,7 @@ class ProjectAdmin(UnfoldModelAdmin):
     list_editable = ('order', 'is_featured')
     list_filter = ('platform', 'is_featured', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
-    search_fields = ('title', 'description', 'tech_stack')
+    search_fields = ('title', 'description')
     filter_horizontal = ('technologies',)
     inlines = [ProjectScreenshotInline]
 
@@ -66,10 +66,10 @@ class ProjectAdmin(UnfoldModelAdmin):
         }),
         ('Mobile / Platform', {
             'fields': (
-                'platform', 'tech_stack',
+                'platform',
                 'app_store_url', 'play_store_url',
             ),
-            'description': 'Mobile-specific fields: platform, store links, tech stack.',
+            'description': 'Mobile-specific fields: platform, store links.',
         }),
         ('Links & Technologies', {
             'fields': ('github_url', 'live_url', 'technologies'),

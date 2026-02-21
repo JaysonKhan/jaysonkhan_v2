@@ -15,7 +15,7 @@
     </div>
 
     <!-- Platform filter tabs -->
-    <div class="flex justify-center gap-3 mb-12 flex-wrap">
+    <div class="flex justify-center gap-3 mb-12 flex-wrap pt-6">
         <a href="{% url 'projects' %}"
             class="px-5 py-2 rounded-full text-sm font-medium transition {% if not active_platform %}bg-primary text-white{% else %}glass hover:bg-white/10{% endif %}">
             All
@@ -37,8 +37,11 @@
     <div id="items-grid" class="grid md:grid-cols-2 lg:grid-cols-3" style="gap:var(--space-section-gap)"
         data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
         {% for project in projects %}
-        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 clickable-card"
-            style="border-radius:var(--radius-card);cursor:pointer" data-href="{% url 'project_detail' project.slug %}">
+        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative"
+            style="border-radius:var(--radius-card)">
+            <!-- Full card clickable link layer -->
+            <a href="{% url 'project_detail' project.slug %}" class="absolute inset-0 z-0"
+                aria-label="View {{ project.title }} details"></a>
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
@@ -60,23 +63,15 @@
                 <p class="text-slate-400 mb-5 line-clamp-3">{{ project.get_card_description }}</p>
 
                 <!-- Tech stack -->
-                {% if project.tech_stack %}
-                <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden relative">
-                    {% for tech in project.get_tech_list %}
-                    <span class="px-2.5 py-1 bg-white/5 text-xs font-medium"
-                        style="border-radius:var(--radius-badge)">{{ tech }}</span>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden relative">
+                <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden relative z-10">
                     {% for tech in project.technologies.all %}
-                    <span class="px-3 py-1 bg-white/5 text-sm font-medium" style="border-radius:var(--radius-badge)">{{ tech.name }}</span>
+                    <span class="px-3 py-1 bg-white/5 text-sm font-medium" style="border-radius:var(--radius-badge)">{{
+                        tech.name }}</span>
                     {% endfor %}
                 </div>
-                {% endif %}
 
                 <!-- Actions -->
-                <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-3 flex-wrap relative z-10">
                     {% if project.app_store_url %}
                     <a href="{{ project.app_store_url }}" target="_blank" class="store-btn appstore text-xs"
                         onclick="event.stopPropagation()">
@@ -102,7 +97,8 @@
                         class="text-slate-300 hover:text-white transition text-sm"
                         onclick="event.stopPropagation()">GitHub &rarr;</a>
                     {% endif %}
-                    <span class="text-primary text-sm font-semibold ml-auto">Details &rarr;</span>
+                    <a href="{% url 'project_detail' project.slug %}"
+                        class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details &rarr;</a>
                 </div>
             </div>
         </div>
@@ -132,42 +128,34 @@
             spinnerId: 'scroll-spinner',
             extraParams: platform ? { platform } : {},
             renderItem: (p) => `
-            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 clickable-card"
-                 style="border-radius:var(--radius-card);cursor:pointer"
-                 data-href="/projects/${p.slug}/">
+            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative"
+                 style="border-radius:var(--radius-card)">
+                 <a href="/projects/${p.slug}/" class="absolute inset-0 z-0" aria-label="View ${p.title} details"></a>
                 ${p.image_url
                     ? `<div class="relative overflow-hidden">
                         <img src="${p.image_url}" alt="${p.title}" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
-                        <div class="absolute top-3 left-3"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
+                        <div class="absolute top-3 left-3 z-10"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
                        </div>`
                     : `<div class="w-full h-56 bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative">
                         No image
-                        <div class="absolute top-3 left-3"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
+                        <div class="absolute top-3 left-3 z-10"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
                        </div>`
                 }
                 <div style="padding:var(--space-card-padding)">
-                    <h3 class="text-2xl font-bold mb-3">${p.title}</h3>
-                    <p class="text-slate-400 mb-5 line-clamp-3">${p.description}</p>
-                    <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden">
+                    <h3 class="text-2xl font-bold mb-3 relative z-10">${p.title}</h3>
+                    <p class="text-slate-400 mb-5 line-clamp-3 relative z-10">${p.description}</p>
+                    <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden relative z-10">
                         ${p.tech_tags.map(t => `<span class="px-2.5 py-1 bg-white/5 text-xs font-medium" style="border-radius:var(--radius-badge)">${t}</span>`).join('')}
                     </div>
-                    <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap relative z-10">
                         ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs" onclick="event.stopPropagation()">App Store</a>` : ''}
                         ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs" onclick="event.stopPropagation()">Google Play</a>` : ''}
                         ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm" onclick="event.stopPropagation()">GitHub →</a>` : ''}
-                        <span class="text-primary text-sm font-semibold ml-auto">Details →</span>
+                        <a href="/projects/${p.slug}/" class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details →</a>
                     </div>
                 </div>
             </div>
         `,
-        });
-
-        // Clickable card handler
-        document.addEventListener('click', (e) => {
-            const card = e.target.closest('.clickable-card');
-            if (card && !e.target.closest('a')) {
-                window.location.href = card.dataset.href;
-            }
         });
     });
 </script>

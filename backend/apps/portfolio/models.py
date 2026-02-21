@@ -70,10 +70,6 @@ class Project(models.Model):
     )
     app_store_url = models.URLField(blank=True, help_text="Apple App Store link")
     play_store_url = models.URLField(blank=True, help_text="Google Play Store link")
-    tech_stack = models.CharField(
-        max_length=500, blank=True,
-        help_text="Comma-separated tech stack (e.g. Flutter, BLoC, Dio, Firebase)"
-    )
     is_featured = models.BooleanField(
         default=False, help_text="Show on homepage featured section"
     )
@@ -92,12 +88,6 @@ class Project(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
-
-    def get_tech_list(self):
-        """Return tech_stack as a list."""
-        if self.tech_stack:
-            return [t.strip() for t in self.tech_stack.split(',') if t.strip()]
-        return []
 
     def get_card_description(self):
         """Short description for cards."""
