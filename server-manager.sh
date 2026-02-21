@@ -460,11 +460,22 @@ action_backup_db() {
     return
   fi
 
-  local db user host port ts out
-  db="$(grep -E '^POSTGRES_DB=' "$ENV_FILE" | tail -n1 | cut -d= -f2- || true)"
-  user="$(grep -E '^POSTGRES_USER=' "$ENV_FILE" | tail -n1 | cut -d= -f2- || true)"
-  host="$(grep -E '^POSTGRES_HOST=' "$ENV_FILE" | tail -n1 | cut -d= -f2- || true)"
-  port="$(grep -E '^POSTGRES_PORT=' "$ENV_FILE" | tail -n1 | cut -d= -f2- || true)"
+  local db user host port ts out pass
+  # Helper to clean .env values (strip \r and quotes)
+  clean_env() {
+    grep -E "^$1=" "$ENV_FILE" | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+  }
+
+  db="$(clean_env POSTGRES_DB)"
+  user="$(clean_env POSTGRES_USER)"
+  host="$(clean_env POSTGRES_HOST)"
+  port="$(clean_env POSTGRES_PORT)"
+  pass="$(clean_env POSTGRES_PASSWORD)"
+
+  # Force IPv4 if localhost to avoid ::1 authentication issues
+  if [[ "$host" == "localhost" || -z "$host" ]]; then
+    host="127.0.0.1"
+  fi
 
   if [[ -z "$db" || -z "$user" ]]; then
     err "POSTGRES_DB/POSTGRES_USER not found in .env"
@@ -475,14 +486,15 @@ action_backup_db() {
   ts="$(date +%Y%m%d_%H%M%S)"
   out="/var/backups/jaysonkhan/${db}_${ts}.dump"
 
-  info "Backup: db=${db}, user=${user}, host=${host:-localhost}, port=${port:-5432}"
+  info "Backup: db=${db}, user=${user}, host=${host}, port=${port:-5432}"
+  info "Debug: PGPASSWORD length is ${#pass} chars."
   info "Output: $out"
   echo
-  warn "You may be asked for DB password (unless .pgpass is configured)."
+  warn "Using PGPASSWORD environment variable for authentication."
 
   # Run pg_dump (custom format)
-  PGPASSWORD="$(grep -E '^POSTGRES_PASSWORD=' "$ENV_FILE" | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" || true)" \
-    pg_dump -Fc -h "${host:-localhost}" -p "${port:-5432}" -U "$user" "$db" -f "$out"
+  PGPASSWORD="$pass" \
+    pg_dump -Fc -h "$host" -p "${port:-5432}" -U "$user" "$db" -f "$out"
 
   ok "Backup created: $out"
   pause
