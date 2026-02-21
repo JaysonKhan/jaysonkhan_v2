@@ -28,16 +28,15 @@ class ProjectListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        portfolio_service = PortfolioService(PortfolioRepository())
-        return portfolio_service.repository.get_all_projects()
+        queryset = Project.objects.prefetch_related('technologies', 'screenshots')
+        platform = self.request.GET.get('platform')
+        if platform:
+            queryset = queryset.filter(platform=platform)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Platform filter
-        platform = self.request.GET.get('platform')
-        if platform:
-            context['projects'] = context['projects'].filter(platform=platform)
-            context['active_platform'] = platform
+        context['active_platform'] = self.request.GET.get('platform', '')
         return context
 
 

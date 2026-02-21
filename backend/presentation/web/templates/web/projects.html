@@ -15,21 +15,25 @@
     </div>
 
     <!-- Platform filter tabs -->
-    <div class="flex justify-center flex-wrap gap-4 mb-12 pt-8" style="gap: 1rem;">
+    <div class="flex justify-center flex-wrap gap-4 mb-12 pt-10" style="gap: 1rem;">
         <a href="{% url 'projects' %}"
-            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if not active_platform %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
+            style="padding: 0.6rem 1.5rem; display: inline-flex; align-items: center; justify-content: center; min-width: 80px;"
+            class="rounded-full text-sm font-semibold transition-all duration-300 {% if not active_platform %}bg-primary text-white shadow-xl shadow-primary/30{% else %}glass hover:bg-white/10 text-slate-400 hover:text-white{% endif %}">
             All
         </a>
         <a href="?platform=cross"
-            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'cross' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
+            style="padding: 0.6rem 1.5rem; display: inline-flex; align-items: center; justify-content: center;"
+            class="rounded-full text-sm font-semibold transition-all duration-300 {% if active_platform == 'cross' %}bg-primary text-white shadow-xl shadow-primary/30{% else %}glass hover:bg-white/10 text-slate-400 hover:text-white{% endif %}">
             Cross-platform
         </a>
         <a href="?platform=android"
-            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'android' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
+            style="padding: 0.6rem 1.5rem; display: inline-flex; align-items: center; justify-content: center;"
+            class="rounded-full text-sm font-semibold transition-all duration-300 {% if active_platform == 'android' %}bg-primary text-white shadow-xl shadow-primary/30{% else %}glass hover:bg-white/10 text-slate-400 hover:text-white{% endif %}">
             Android
         </a>
         <a href="?platform=ios"
-            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'ios' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
+            style="padding: 0.6rem 1.5rem; display: inline-flex; align-items: center; justify-content: center;"
+            class="rounded-full text-sm font-semibold transition-all duration-300 {% if active_platform == 'ios' %}bg-primary text-white shadow-xl shadow-primary/30{% else %}glass hover:bg-white/10 text-slate-400 hover:text-white{% endif %}">
             iOS
         </a>
     </div>
@@ -39,7 +43,7 @@
         {% for project in projects %}
         <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col"
             style="border-radius:var(--radius-card); cursor: pointer;"
-            onclick="location.href='{% url 'project_detail' project.slug %}'">
+            onclick="window.location.href='{% url 'project_detail' project.slug %}';">
 
             {% if project.image %}
             <div class="relative overflow-hidden">
@@ -130,7 +134,7 @@
             renderItem: (p) => `
             <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col"
                  style="border-radius:var(--radius-card); cursor: pointer;"
-                 onclick="location.href='/projects/${p.slug}/'">
+                 onclick="window.location.href='/projects/${p.slug}/';">
                  
                 ${p.image_url
                     ? `<div class="relative overflow-hidden">
