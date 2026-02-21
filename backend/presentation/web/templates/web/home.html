@@ -256,7 +256,7 @@
     </div>
 </section>
 
-<!-- ── Skills Section (Moved to bottom + animated) ────────────── -->
+<!-- ── Skills Section (Compact Pills & Accordion) ────────────── -->
 <section class="max-w-7xl mx-auto px-6 py-14">
     <h2 class="text-3xl font-bold mb-4 text-center">
         <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
@@ -265,58 +265,108 @@
         Technologies and tools I use to bring ideas to life.
     </p>
 
-    {% for category_name, skills in portfolio.skills_grouped.items %}
-    <div class="mb-8">
-        <span class="skill-category-header">{{ category_name }}</span>
-        <div class="flex flex-wrap gap-3 mt-3">
-            {% for skill in skills %}
-            <div class="glass skill-chip inline-flex items-center gap-3 px-4 py-2.5 group"
-                style="border-radius:var(--radius-card);cursor:default">
-                {% if skill.icon %}
-                <div
-                    class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm shrink-0">
-                    <i class="{{ skill.icon }}"></i>
-                </div>
-                {% else %}
-                <div
-                    class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0">
-                    {{ skill.name|slice:":2"|upper }}
-                </div>
-                {% endif %}
-                <div class="min-w-0">
-                    <span class="text-sm font-semibold transition block">{{ skill.name }}</span>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <div class="w-16 rounded-full overflow-hidden"
-                            style="background:rgba(255,255,255,0.05);height:4px">
-                            <div class="rounded-full"
-                                style="height:4px;width:{{ skill.level }}%;background:linear-gradient(90deg,var(--color-primary),var(--color-accent))">
-                            </div>
-                        </div>
-                        <span class="text-[10px] text-slate-500">{{ skill.level }}%</span>
+    <!-- Accordion Container -->
+    <div id="skills-accordion" class="max-w-4xl mx-auto space-y-6">
+        {% for category_name, skills in portfolio.skills_grouped.items %}
+        {% if forloop.counter <= 2 %} <!-- Default Visible Categories -->
+            <div class="skill-category-block">
+                <span class="skill-category-header">{{ category_name }}</span>
+                <div class="flex flex-wrap gap-2.5 mt-3">
+                    {% for skill in skills %}
+                    <div
+                        class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
+                        {% if skill.icon %}
+                        <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
+                        {% endif %}
+                        <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% empty %}
-    <div class="flex flex-wrap gap-3">
-        {% for skill in portfolio.skills %}
-        <div class="glass skill-chip inline-flex items-center gap-3 px-4 py-2.5"
-            style="border-radius:var(--radius-card)">
-            {% if skill.icon %}
-            <div
-                class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm">
-                <i class="{{ skill.icon }}"></i>
+            {% else %}
+            <!-- Hidden Categories (Expandable) -->
+            <div class="skill-category-block hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500">
+                <span class="skill-category-header">{{ category_name }}</span>
+                <div class="flex flex-wrap gap-2.5 mt-3">
+                    {% for skill in skills %}
+                    <div
+                        class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
+                        {% if skill.icon %}
+                        <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
+                        {% endif %}
+                        <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
-            <span class="text-sm font-semibold">{{ skill.name }}</span>
-        </div>
-        {% empty %}
-        <p class="text-center text-slate-500 w-full">No skills added yet.</p>
-        {% endfor %}
+            {% empty %}
+            <!-- Fallback if no categories -->
+            <div class="flex flex-wrap gap-2.5 max-w-4xl mx-auto">
+                {% for skill in portfolio.skills %}
+                <div
+                    class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
+                    {% if skill.icon %}
+                    <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
+                    {% endif %}
+                    <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
+                </div>
+                {% empty %}
+                <p class="text-center text-slate-500 w-full">No skills added yet.</p>
+                {% endfor %}
+            </div>
+            {% endfor %}
     </div>
-    {% endfor %}
+
+    <!-- Toggle Button -->
+    {% if portfolio.skills_grouped|length > 2 %}
+    <div class="flex justify-center mt-10">
+        <button id="toggle-skills-btn" onclick="toggleSkills()"
+            class="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all font-medium text-sm text-slate-300 hover:text-white shadow-lg shadow-black/20">
+            <span id="toggle-skills-text">View all skills</span>
+            <svg id="toggle-skills-icon" class="w-4 h-4 transition-transform duration-300" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+    </div>
+    {% endif %}
 </section>
+
+<!-- Accordion Script -->
+<script>
+    function toggleSkills() {
+        const hiddenBlocks = document.querySelectorAll('.hidden-skills');
+        const btnText = document.getElementById('toggle-skills-text');
+        const btnIcon = document.getElementById('toggle-skills-icon');
+
+        const isHidden = hiddenBlocks[0].classList.contains('hidden');
+
+        if (isHidden) {
+            // Show them
+            hiddenBlocks.forEach(block => {
+                block.classList.remove('hidden');
+                // Slight delay for smooth fade-in slide effect
+                setTimeout(() => {
+                    block.classList.remove('opacity-0', 'translate-y-4');
+                    block.classList.add('opacity-100', 'translate-y-0');
+                }, 10);
+            });
+            btnText.innerText = "Show less skills";
+            btnIcon.classList.add('rotate-180');
+        } else {
+            // Hide them (fade out then hide)
+            hiddenBlocks.forEach(block => {
+                block.classList.remove('opacity-100', 'translate-y-0');
+                block.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                    block.classList.add('hidden');
+                }, 300); // Wait for transition
+            });
+            btnText.innerText = "View all skills";
+            btnIcon.classList.remove('rotate-180');
+        }
+    }
+</script>
 
 {% endblock %}
