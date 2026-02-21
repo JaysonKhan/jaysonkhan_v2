@@ -481,7 +481,7 @@ action_backup_db() {
   warn "You may be asked for DB password (unless .pgpass is configured)."
 
   # Run pg_dump (custom format)
-  PGPASSWORD="$(grep -E '^POSTGRES_PASSWORD=' "$ENV_FILE" | tail -n1 | cut -d= -f2- || true)" \
+  PGPASSWORD="$(grep -E '^POSTGRES_PASSWORD=' "$ENV_FILE" | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" || true)" \
     pg_dump -Fc -h "${host:-localhost}" -p "${port:-5432}" -U "$user" "$db" -f "$out"
 
   ok "Backup created: $out"
