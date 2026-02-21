@@ -6,12 +6,12 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="max-w-7xl mx-auto px-6 py-14 md:py-24 flex flex-col md:flex-row items-center justify-between">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between">
     <div class="md:w-1/2 space-y-6">
         <div
-            class="w-fit inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            <span class="text-green-400 text-sm font-medium">{{ site_settings.hero_availability_badge }}</span>
+            class="inline-flex max-w-fit items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+            <span class="w-2 h-2 shrink-0 bg-green-400 rounded-full animate-pulse"></span>
+            <span class="text-green-400 text-sm font-medium pr-1">{{ site_settings.hero_availability_badge }}</span>
         </div>
         <h1 class="text-5xl md:text-7xl font-bold leading-tight">
             {{ site_settings.hero_title }}
@@ -76,7 +76,7 @@
 </section>
 
 <!-- About Section -->
-<section class="max-w-7xl mx-auto px-6 py-14">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
     <div class="grid md:grid-cols-2 gap-12 items-center">
         <div class="space-y-6">
             <h2 class="text-3xl font-bold"><span class="text-gradient">{{ site_settings.about_title }}</span></h2>
@@ -102,37 +102,41 @@
 
 <!-- Experience Section -->
 {% if portfolio.experience %}
-<section class="max-w-7xl mx-auto px-6 py-14">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
     <h2 class="text-3xl font-bold mb-12 text-center">
         <span class="text-gradient">{{ site_settings.experience_section_title }}</span>
     </h2>
-    <div class="max-w-3xl mx-auto space-y-0 relative">
+    <div class="max-w-3xl mx-auto space-y-8 relative">
         <!-- Timeline line -->
-        <div class="absolute left-6 top-0 bottom-0 w-px bg-white/10 hidden md:block"></div>
+        <div class="absolute left-[1.35rem] top-2 bottom-2 w-px bg-white/10 hidden md:block"></div>
 
         {% for exp in portfolio.experience %}
-        <div class="relative pl-0 md:pl-16 pb-10">
+        <div class="relative flex flex-col md:flex-row gap-6 md:gap-8 items-start">
             <!-- Timeline dot -->
-            <div class="hidden md:block absolute left-4 top-1 w-4 h-4 rounded-full bg-primary border-2 border-dark">
+            <div
+                class="hidden md:flex shrink-0 w-11 h-11 items-center justify-center rounded-full bg-dark border-4 border-dark z-10">
+                <div class="w-3 h-3 rounded-full bg-primary"></div>
             </div>
 
-            <div class="glass p-6 rounded-2xl">
-                <div class="flex items-start justify-between flex-wrap gap-2">
+            <!-- Content Card -->
+            <div class="glass p-6 md:p-8 rounded-2xl w-full">
+                <div class="flex items-start justify-between flex-wrap gap-4 md:gap-2">
                     <div>
-                        <h3 class="text-lg font-bold">{{ exp.position }}</h3>
-                        <p class="text-primary font-medium">
+                        <h3 class="text-xl font-bold">{{ exp.position }}</h3>
+                        <p class="text-primary font-medium mt-1">
                             {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener"
                                 class="hover:underline">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}
                             {% if exp.location %}<span class="text-slate-500"> · {{ exp.location }}</span>{% endif %}
                         </p>
                     </div>
-                    <span class="text-sm text-slate-500 whitespace-nowrap">
+                    <div
+                        class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300 font-medium whitespace-nowrap">
                         {{ exp.start_date|date:"M Y" }} —
-                        {% if exp.is_current %}<span class="text-green-400">Present</span>{% else %}{{
-                        exp.end_date|date:"M Y" }}{% endif %}
-                    </span>
+                        {% if exp.is_current %}<span class="text-green-400 ml-1">Present</span>{% else %}<span
+                            class="ml-1">{{ exp.end_date|date:"M Y" }}</span>{% endif %}
+                    </div>
                 </div>
-                <p class="text-slate-400 mt-3 text-sm leading-relaxed">{{ exp.description|truncatewords:40 }}</p>
+                <p class="text-slate-400 mt-4 text-sm leading-relaxed">{{ exp.description|truncatewords:40 }}</p>
             </div>
         </div>
         {% endfor %}
@@ -141,13 +145,15 @@
 {% endif %}
 
 <!-- ── Featured Apps Section (clickable cards) ──────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-14">
-    <div class="flex justify-between items-end mb-12">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
         <div>
             <h2 class="text-3xl font-bold">{{ site_settings.featured_projects_title }}</h2>
             <p class="text-slate-400 mt-2">{{ site_settings.featured_projects_subtitle }}</p>
         </div>
-        <a href="{% url 'projects' %}" class="text-primary hover:text-white transition font-medium">View All &rarr;</a>
+        <a href="{% url 'projects' %}"
+            class="text-primary hover:text-white transition font-medium inline-flex items-center gap-1">View All <span
+                class="text-lg leading-none">&rarr;</span></a>
     </div>
     <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
         {% for project in portfolio.featured_projects|slice:":6" %}
@@ -220,7 +226,7 @@
 </section>
 
 <!-- ── Latest Blog Posts Section (clickable cards, standardized padding) ── -->
-<section class="max-w-7xl mx-auto px-6 py-14 bg-white/[0.02] rounded-[3rem] my-10">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 bg-white/[0.02] rounded-[3rem] my-10">
     <h2 class="text-3xl font-bold mb-12 text-center">{{ site_settings.latest_blog_title }}</h2>
     <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
         {% for post in latest_posts %}
@@ -257,11 +263,11 @@
 </section>
 
 <!-- ── Skills Section (Compact Pills & Accordion) ────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-14">
+<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
     <h2 class="text-3xl font-bold mb-4 text-center">
         <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
     </h2>
-    <p class="text-slate-400 text-center mb-12" style="max-width:36rem;margin-left:auto;margin-right:auto">
+    <p class="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
         Technologies and tools I use to bring ideas to life.
     </p>
 
