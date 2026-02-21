@@ -38,9 +38,29 @@
             </a>
         </div>
     </div>
-    <div class="md:w-1/2 mt-12 md:mt-0 relative flex justify-center">
+    <div class="md:w-1/2 mt-12 md:mt-0 relative flex justify-center items-center">
         <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
         <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
+
+        {% with orbit_skills=portfolio.skills|slice:":6" %}
+        {% if orbit_skills %}
+        <!-- Hero Orbit Animation -->
+        <div class="hero-orbit-container hidden md:block" style="--total: {{ orbit_skills|length }};">
+            {% for skill in orbit_skills %}
+            <div class="orbit-item" style="--i: {{ forloop.counter0 }};">
+                <div class="orbit-icon">
+                    {% if skill.icon %}
+                    <i class="{{ skill.icon }}"></i>
+                    {% else %}
+                    <span class="text-xs font-bold">{{ skill.name|slice:":2"|upper }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         {% if site_settings.hero_image %}
         <div class="device-mockup relative z-10 w-64 md:w-72">
             <img src="{{ site_settings.hero_image.url }}" alt="{{ site_settings.site_author }} — Mobile Developer"
