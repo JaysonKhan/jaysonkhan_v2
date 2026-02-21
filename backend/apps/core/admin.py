@@ -1,9 +1,29 @@
+import logging
 from django.contrib import admin
+from django.db import connection
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 
 from .models import SiteSettings
+
+logger = logging.getLogger(__name__)
+
+
+def _table_columns():
+    """
+    Return the set of column names that actually exist in the
+    core_sitesettings table. Used to gracefully hide fields
+    whose migration hasn't been applied yet.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM core_sitesettings LIMIT 0"
+            )
+            return {col[0] for col in cursor.description}
+    except Exception:
+        return set()
 
 
 @admin.register(SiteSettings)
@@ -13,19 +33,26 @@ class SiteSettingsAdmin(ModelAdmin):
     - Add is blocked when a record already exists.
     - Delete is always blocked.
     - Changelist auto-redirects to the edit page.
+    - Fieldsets auto-adapt if migration 0006 hasn't been applied yet.
     """
 
     # ── Permissions ───────────────────────────────────────────────────────────
     def has_add_permission(self, request):
-        return not SiteSettings.objects.exists()
+        try:
+            return not SiteSettings.objects.exists()
+        except Exception:
+            return True
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        obj = SiteSettings.objects.first()
-        if obj:
-            return redirect('admin:core_sitesettings_change', obj.pk)
+        try:
+            obj = SiteSettings.objects.first()
+            if obj:
+                return redirect('admin:core_sitesettings_change', obj.pk)
+        except Exception:
+            pass
         return super().changelist_view(request, extra_context)
 
     # ── Read-only ─────────────────────────────────────────────────────────────
@@ -40,150 +67,153 @@ class SiteSettingsAdmin(ModelAdmin):
         'resume_preview',
     )
 
-    # ── Fieldsets ─────────────────────────────────────────────────────────────
-    fieldsets = (
-        ('Branding', {
-            'fields': (
-                'site_title',
-                'site_author',
-                'site_author_initials',
-                'site_tagline',
-                'favicon',
-                'favicon_preview',
-                'logo',
-                'logo_preview',
-            ),
-        }),
+    # ── Dynamic fieldsets ─────────────────────────────────────────────────────
+    def get_fieldsets(self, request, obj=None):
+        columns = _table_columns()
 
-        ('SEO & Meta', {
-            'fields': (
-                'meta_description',
-                'meta_keywords',
-                'og_url',
-                'og_image',
-                'og_image_preview',
-                'twitter_handle',
-            ),
-            'description': 'Controls Google snippets and social media link previews.',
-        }),
+        # ── Base fieldsets (always present) ────────────────────────────────
+        fieldsets = [
+            ('Branding', {
+                'fields': (
+                    'site_title',
+                    'site_author',
+                    'site_author_initials',
+                    'site_tagline',
+                    'favicon',
+                    'favicon_preview',
+                    'logo',
+                    'logo_preview',
+                ),
+            }),
+            ('SEO & Meta', {
+                'fields': (
+                    'meta_description',
+                    'meta_keywords',
+                    'og_url',
+                    'og_image',
+                    'og_image_preview',
+                    'twitter_handle',
+                ),
+                'description': 'Controls Google snippets and social media link previews.',
+            }),
+        ]
 
-        ('Header / Navigation', {
-            'fields': (
-                'logo_text',
-                'nav_cta_text',
-                'nav_cta_url',
-                'nav_links_json',
-            ),
+        # ── Header / Navigation (requires migration 0006) ────────────────
+        header_fields = ['nav_cta_text', 'nav_cta_url']
+        if 'logo_text' in columns:
+            header_fields.insert(0, 'logo_text')
+        if 'nav_links_json' in columns:
+            header_fields.append('nav_links_json')
+        fieldsets.append(('Header / Navigation', {
+            'fields': tuple(header_fields),
             'description': (
                 'Customise the site header. '
                 '"Logo text" overrides the author name in the navigation bar. '
                 '"Extra nav links" is a JSON list for additional links '
                 '(e.g. [{"label":"Resume","url":"/resume/"}]).'
             ),
-        }),
+        }))
 
-        ('Hero Section', {
-            'fields': (
-                'hero_availability_badge',
-                'hero_title',
-                'hero_subtitle',
-                'hero_image',
-                'hero_image_preview',
-                'hero_primary_cta_text',
-                'hero_primary_cta_url',
-                'hero_secondary_cta_text',
-                'hero_secondary_cta_url',
-            ),
-        }),
+        # ── Content sections (always present) ─────────────────────────────
+        fieldsets.extend([
+            ('Hero Section', {
+                'fields': (
+                    'hero_availability_badge',
+                    'hero_title',
+                    'hero_subtitle',
+                    'hero_image',
+                    'hero_image_preview',
+                    'hero_primary_cta_text',
+                    'hero_primary_cta_url',
+                    'hero_secondary_cta_text',
+                    'hero_secondary_cta_url',
+                ),
+            }),
+            ('About Section', {
+                'fields': (
+                    'about_title',
+                    'about_description',
+                    'about_image',
+                    'about_image_preview',
+                ),
+            }),
+            ('Skills Section', {
+                'fields': ('skills_section_title',),
+            }),
+            ('Featured Projects Section', {
+                'fields': (
+                    'featured_projects_title',
+                    'featured_projects_subtitle',
+                ),
+            }),
+            ('Experience Section', {
+                'fields': ('experience_section_title',),
+            }),
+            ('Blog Sections', {
+                'fields': (
+                    'latest_blog_title',
+                    'blog_page_title',
+                    'blog_page_subtitle',
+                ),
+            }),
+            ('Projects Page', {
+                'fields': (
+                    'projects_page_title',
+                    'projects_page_subtitle',
+                ),
+            }),
+            ('Contact Page', {
+                'fields': (
+                    'contact_page_title',
+                    'contact_page_subtitle',
+                    'contact_email_label',
+                    'contact_linkedin_label',
+                ),
+            }),
+            ('Resume / CV', {
+                'fields': (
+                    'resume_file',
+                    'resume_preview',
+                    'resume_button_text',
+                ),
+            }),
+            ('Contact Info & Socials', {
+                'fields': (
+                    'email',
+                    'phone',
+                    'github_url',
+                    'linkedin_url',
+                    'twitter_url',
+                    'telegram_url',
+                ),
+            }),
+        ])
 
-        ('About Section', {
-            'fields': (
-                'about_title',
-                'about_description',
-                'about_image',
-                'about_image_preview',
-            ),
-        }),
+        # ── Footer (requires migration 0006 for new fields) ──────────────
+        footer_fields = []
+        for fname in (
+            'footer_description', 'footer_email',
+            'footer_social_github', 'footer_social_linkedin',
+            'footer_social_twitter', 'footer_social_telegram',
+        ):
+            if fname in columns:
+                footer_fields.append(fname)
+        footer_fields.append('footer_text')  # always exists
 
-        ('Skills Section', {
-            'fields': ('skills_section_title',),
-        }),
-
-        ('Featured Projects Section', {
-            'fields': (
-                'featured_projects_title',
-                'featured_projects_subtitle',
-            ),
-        }),
-
-        ('Experience Section', {
-            'fields': ('experience_section_title',),
-        }),
-
-        ('Blog Sections', {
-            'fields': (
-                'latest_blog_title',
-                'blog_page_title',
-                'blog_page_subtitle',
-            ),
-        }),
-
-        ('Projects Page', {
-            'fields': (
-                'projects_page_title',
-                'projects_page_subtitle',
-            ),
-        }),
-
-        ('Contact Page', {
-            'fields': (
-                'contact_page_title',
-                'contact_page_subtitle',
-                'contact_email_label',
-                'contact_linkedin_label',
-            ),
-        }),
-
-        ('Resume / CV', {
-            'fields': (
-                'resume_file',
-                'resume_preview',
-                'resume_button_text',
-            ),
-        }),
-
-        ('Contact Info & Socials', {
-            'fields': (
-                'email',
-                'phone',
-                'github_url',
-                'linkedin_url',
-                'twitter_url',
-                'telegram_url',
-            ),
-        }),
-
-        ('Footer', {
-            'fields': (
-                'footer_description',
-                'footer_email',
-                'footer_social_github',
-                'footer_social_linkedin',
-                'footer_social_twitter',
-                'footer_social_telegram',
-                'footer_text',
-            ),
+        fieldsets.append(('Footer', {
+            'fields': tuple(footer_fields),
             'description': (
                 'Footer-specific overrides. Leave blank to inherit from '
                 'the main Contact Info & Socials section above.'
             ),
-        }),
+        }))
 
-        ('Timestamps', {
+        fieldsets.append(('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',),
-        }),
-    )
+        }))
+
+        return fieldsets
 
     # ── Preview helpers ───────────────────────────────────────────────────────
     def favicon_preview(self, obj):
