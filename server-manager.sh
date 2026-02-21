@@ -38,13 +38,23 @@ DJANGO_SETTINGS="config.settings.prod"
 
 # ------------------------------ UI / Colors -----------------------------------
 if command -v tput >/dev/null 2>&1; then
-  BOLD="$(tput bold)"; DIM="$(tput dim)"; RESET="$(tput sgr0)"
-  RED="$(tput setaf 1)"; GREEN="$(tput setaf 2)"; YELLOW="$(tput setaf 3)"
-  BLUE="$(tput setaf 4)"; MAGENTA="$(tput setaf 5)"; CYAN="$(tput setaf 6)"
-  GRAY="$(tput setaf 7)"
+  BOLD="$(tput bold)"
+  DIM="$(tput dim)"
+  RESET="$(tput sgr0)"
+
+  RED="$(tput setaf 1)"
+  GREEN="$(tput setaf 2)"
+  YELLOW="$(tput setaf 3)"
+  BLUE="$(tput setaf 4)"
+  MAGENTA="$(tput setaf 5)"
+  CYAN="$(tput setaf 6)"
+  WHITE="$(tput setaf 7)"   # ← ADD THIS
+  GRAY="$(tput setaf 8)"    # optional (may not work on all terminals)
 else
   BOLD=""; DIM=""; RESET=""
-  RED=""; GREEN=""; YELLOW=""; BLUE=""; MAGENTA=""; CYAN=""; GRAY=""
+  RED=""; GREEN=""; YELLOW=""
+  BLUE=""; MAGENTA=""; CYAN=""
+  WHITE=""; GRAY=""
 fi
 
 ok()   { echo -e "${GREEN}${BOLD}✔${RESET} $*"; }
