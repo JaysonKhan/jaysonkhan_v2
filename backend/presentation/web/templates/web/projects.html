@@ -15,21 +15,21 @@
     </div>
 
     <!-- Platform filter tabs -->
-    <div class="flex justify-center gap-3 mb-12 flex-wrap pt-6">
+    <div class="flex justify-center flex-wrap gap-4 mb-12 pt-8" style="gap: 1rem;">
         <a href="{% url 'projects' %}"
-            class="px-5 py-2 rounded-full text-sm font-medium transition {% if not active_platform %}bg-primary text-white{% else %}glass hover:bg-white/10{% endif %}">
+            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if not active_platform %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
             All
         </a>
         <a href="?platform=cross"
-            class="px-5 py-2 rounded-full text-sm font-medium transition {% if active_platform == 'cross' %}bg-primary text-white{% else %}glass hover:bg-white/10{% endif %}">
+            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'cross' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
             Cross-platform
         </a>
         <a href="?platform=android"
-            class="px-5 py-2 rounded-full text-sm font-medium transition {% if active_platform == 'android' %}bg-primary text-white{% else %}glass hover:bg-white/10{% endif %}">
+            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'android' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
             Android
         </a>
         <a href="?platform=ios"
-            class="px-5 py-2 rounded-full text-sm font-medium transition {% if active_platform == 'ios' %}bg-primary text-white{% else %}glass hover:bg-white/10{% endif %}">
+            class="px-5 py-2.5 mx-1 my-1 rounded-full text-sm font-medium transition duration-200 inline-block {% if active_platform == 'ios' %}bg-primary text-white shadow-lg shadow-primary/20{% else %}glass hover:bg-white/10 text-slate-300{% endif %}">
             iOS
         </a>
     </div>
@@ -37,11 +37,10 @@
     <div id="items-grid" class="grid md:grid-cols-2 lg:grid-cols-3" style="gap:var(--space-section-gap)"
         data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
         {% for project in projects %}
-        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative"
-            style="border-radius:var(--radius-card)">
-            <!-- Full card clickable link layer -->
-            <a href="{% url 'project_detail' project.slug %}" class="absolute inset-0 z-0"
-                aria-label="View {{ project.title }} details"></a>
+        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col"
+            style="border-radius:var(--radius-card); cursor: pointer;"
+            onclick="location.href='{% url 'project_detail' project.slug %}'">
+
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
@@ -58,12 +57,13 @@
                 </div>
             </div>
             {% endif %}
-            <div style="padding:var(--space-card-padding)">
+
+            <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
                 <h3 class="text-2xl font-bold mb-3">{{ project.title }}</h3>
                 <p class="text-slate-400 mb-5 line-clamp-3">{{ project.get_card_description }}</p>
 
                 <!-- Tech stack -->
-                <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden relative z-10">
+                <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden">
                     {% for tech in project.technologies.all %}
                     <span class="px-3 py-1 bg-white/5 text-sm font-medium" style="border-radius:var(--radius-badge)">{{
                         tech.name }}</span>
@@ -71,10 +71,10 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center gap-3 flex-wrap relative z-10">
+                <div class="flex items-center gap-3 flex-wrap mt-auto">
                     {% if project.app_store_url %}
-                    <a href="{{ project.app_store_url }}" target="_blank" class="store-btn appstore text-xs"
-                        onclick="event.stopPropagation()">
+                    <a href="{{ project.app_store_url }}" target="_blank"
+                        class="store-btn appstore text-xs relative z-10" onclick="event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
@@ -83,8 +83,8 @@
                     </a>
                     {% endif %}
                     {% if project.play_store_url %}
-                    <a href="{{ project.play_store_url }}" target="_blank" class="store-btn playstore text-xs"
-                        onclick="event.stopPropagation()">
+                    <a href="{{ project.play_store_url }}" target="_blank"
+                        class="store-btn playstore text-xs relative z-10" onclick="event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M3 20.5v-17c0-.59.34-1.11.84-1.35L13.69 12l-9.85 9.85c-.5-.24-.84-.76-.84-1.35m13.81-5.38L6.05 21.34l8.49-8.49 2.27 2.27m3.35-1.86c.56.32.84.82.84 1.25 0 .43-.28.93-.84 1.25l-2.04 1.15-2.5-2.5 2.5-2.5 2.04 1.35M6.05 2.66l10.76 6.22-2.27 2.27-8.49-8.49z" />
@@ -94,7 +94,7 @@
                     {% endif %}
                     {% if project.github_url %}
                     <a href="{{ project.github_url }}" target="_blank"
-                        class="text-slate-300 hover:text-white transition text-sm"
+                        class="text-slate-300 hover:text-white transition text-sm relative z-10"
                         onclick="event.stopPropagation()">GitHub &rarr;</a>
                     {% endif %}
                     <a href="{% url 'project_detail' project.slug %}"
@@ -128,9 +128,10 @@
             spinnerId: 'scroll-spinner',
             extraParams: platform ? { platform } : {},
             renderItem: (p) => `
-            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative"
-                 style="border-radius:var(--radius-card)">
-                 <a href="/projects/${p.slug}/" class="absolute inset-0 z-0" aria-label="View ${p.title} details"></a>
+            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col"
+                 style="border-radius:var(--radius-card); cursor: pointer;"
+                 onclick="location.href='/projects/${p.slug}/'">
+                 
                 ${p.image_url
                     ? `<div class="relative overflow-hidden">
                         <img src="${p.image_url}" alt="${p.title}" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
@@ -141,16 +142,17 @@
                         <div class="absolute top-3 left-3 z-10"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
                        </div>`
                 }
-                <div style="padding:var(--space-card-padding)">
-                    <h3 class="text-2xl font-bold mb-3 relative z-10">${p.title}</h3>
-                    <p class="text-slate-400 mb-5 line-clamp-3 relative z-10">${p.description}</p>
-                    <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden relative z-10">
-                        ${p.tech_tags.map(t => `<span class="px-2.5 py-1 bg-white/5 text-xs font-medium" style="border-radius:var(--radius-badge)">${t}</span>`).join('')}
+                
+                <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
+                    <h3 class="text-2xl font-bold mb-3">${p.title}</h3>
+                    <p class="text-slate-400 mb-5 line-clamp-3">${p.description}</p>
+                    <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden">
+                        ${p.tech_tags.map(t => `<span class="px-3 py-1 bg-white/5 text-sm font-medium" style="border-radius:var(--radius-badge)">${t}</span>`).join('')}
                     </div>
-                    <div class="flex items-center gap-3 flex-wrap relative z-10">
-                        ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs" onclick="event.stopPropagation()">App Store</a>` : ''}
-                        ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs" onclick="event.stopPropagation()">Google Play</a>` : ''}
-                        ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm" onclick="event.stopPropagation()">GitHub →</a>` : ''}
+                    <div class="flex items-center gap-3 flex-wrap mt-auto">
+                        ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs relative z-10" onclick="event.stopPropagation()">App Store</a>` : ''}
+                        ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs relative z-10" onclick="event.stopPropagation()">Google Play</a>` : ''}
+                        ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm relative z-10" onclick="event.stopPropagation()">GitHub →</a>` : ''}
                         <a href="/projects/${p.slug}/" class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details →</a>
                     </div>
                 </div>
