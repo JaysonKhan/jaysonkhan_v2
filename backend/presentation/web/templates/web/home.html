@@ -5,9 +5,9 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between">
+<section class="max-w-7xl mx-auto px-6 py-14 md:py-24 flex flex-col md:flex-row items-center justify-between">
     <div class="md:w-1/2 space-y-6">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+        <div class="w-fit inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
             <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
             <span class="text-green-400 text-sm font-medium">{{ site_settings.hero_availability_badge }}</span>
         </div>
@@ -54,10 +54,10 @@
 </section>
 
 <!-- About Section -->
-<section class="max-w-7xl mx-auto px-6 py-20">
+<section class="max-w-7xl mx-auto px-6 py-14">
     <div class="grid md:grid-cols-2 gap-12 items-center">
         <div class="space-y-6">
-            <h2 class="text-3xl font-bold">{{ site_settings.about_title }} <span class="text-gradient">Me</span></h2>
+            <h2 class="text-3xl font-bold"><span class="text-gradient">{{ site_settings.about_title }}</span></h2>
             <p class="text-slate-400 text-lg leading-relaxed">{{ site_settings.about_description }}</p>
             {% if site_settings.resume_file %}
             <a href="{{ site_settings.resume_file.url }}" download
@@ -79,7 +79,7 @@
 </section>
 
 <!-- Tech Stack Section (grouped by category) -->
-<section class="max-w-7xl mx-auto px-6 py-20">
+<section class="max-w-7xl mx-auto px-6 py-14">
     <h2 class="text-3xl font-bold mb-4 text-center">
         <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
     </h2>
@@ -89,8 +89,7 @@
     {% for category_name, skills in portfolio.skills_grouped.items %}
     <div class="mb-10">
         <span class="skill-category-header">{{ category_name }}</span>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4"
-            style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
             {% for skill in skills %}
             <div class="glass p-5 rounded-2xl text-center group hover:border-primary/50 transition-all duration-300"
                 style="cursor:default">
@@ -117,8 +116,7 @@
         </div>
     </div>
     {% empty %}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4"
-        style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
         {% for skill in portfolio.skills %}
         <div class="glass p-5 rounded-2xl text-center group hover:border-primary/50 transition-all duration-300">
             {% if skill.icon %}
@@ -144,7 +142,7 @@
 
 <!-- Experience Section -->
 {% if portfolio.experience %}
-<section class="max-w-7xl mx-auto px-6 py-20">
+<section class="max-w-7xl mx-auto px-6 py-14">
     <h2 class="text-3xl font-bold mb-12 text-center">
         <span class="text-gradient">{{ site_settings.experience_section_title }}</span>
     </h2>
@@ -182,7 +180,7 @@
 {% endif %}
 
 <!-- Featured Apps Section -->
-<section class="max-w-7xl mx-auto px-6 py-20">
+<section class="max-w-7xl mx-auto px-6 py-14">
     <div class="flex justify-between items-end mb-12">
         <div>
             <h2 class="text-3xl font-bold">{{ site_settings.featured_projects_title }}</h2>
@@ -277,7 +275,7 @@
 </section>
 
 <!-- Latest Blog Posts Section -->
-<section class="max-w-7xl mx-auto px-6 py-20 bg-white/[0.02] rounded-[4rem] my-20">
+<section class="max-w-7xl mx-auto px-6 py-14 bg-white/[0.02] rounded-[3rem] my-10">
     <h2 class="text-3xl font-bold mb-12 text-center">{{ site_settings.latest_blog_title }}</h2>
     <div class="grid md:grid-cols-3 gap-8">
         {% for post in latest_posts %}
