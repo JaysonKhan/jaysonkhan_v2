@@ -95,7 +95,6 @@ class ContactView(TemplateView):
         contact_service = ContactService(ContactRepository())
         contact_service.send_contact_message(name, email, subject, message)
 
-        messages.success(request, "Your message has been sent successfully!")
         return self.render_to_response(self.get_context_data(success=True))
 
     def get_context_data(self, **kwargs):
