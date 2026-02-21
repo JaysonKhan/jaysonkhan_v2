@@ -9,11 +9,11 @@ from .views import (
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'skills', SkillViewSet)
-router.register(r'projects', ProjectViewSet)
+router.register(r'projects', ProjectViewSet, basename='project')
 router.register(r'experience', ExperienceViewSet)
 router.register(r'categories', CategoryViewSet)
 router.register(r'tags', TagViewSet)
-router.register(r'posts', PostViewSet)
+router.register(r'posts', PostViewSet, basename='post')
 router.register(r'contact', ContactMessageViewSet)
 
 urlpatterns = [
