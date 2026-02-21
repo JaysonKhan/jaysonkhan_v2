@@ -5,6 +5,7 @@ from .models import Category, Tag, Post
 
 @admin.register(Category)
 class CategoryAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name',)
@@ -12,6 +13,7 @@ class CategoryAdmin(UnfoldModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name',)
@@ -19,6 +21,7 @@ class TagAdmin(UnfoldModelAdmin):
 
 @admin.register(Post)
 class PostAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('title', 'author', 'category', 'is_published', 'created_at')
     list_filter = ('is_published', 'category', 'author')
     search_fields = ('title', 'content')

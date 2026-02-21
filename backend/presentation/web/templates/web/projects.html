@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load static %}
 
 {% block title %}Apps | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
@@ -6,7 +7,8 @@
 {% block og_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
 
 {% block content %}
-<section class="max-w-7xl mx-auto px-6 py-20">
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
     <div class="text-center mb-12">
         <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.projects_page_title }}</h1>
         <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.projects_page_subtitle }}</p>
@@ -32,9 +34,11 @@
         </a>
     </div>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div id="items-grid" class="grid md:grid-cols-2 lg:grid-cols-3" style="gap:var(--space-section-gap)"
+        data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
         {% for project in projects %}
-        <div class="glass rounded-3xl overflow-hidden group hover:scale-[1.02] transition duration-300">
+        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300"
+            style="border-radius:var(--radius-card)">
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
@@ -51,21 +55,23 @@
                 </div>
             </div>
             {% endif %}
-            <div class="p-8">
+            <div style="padding:var(--space-card-padding)">
                 <h3 class="text-2xl font-bold mb-3">{{ project.title }}</h3>
                 <p class="text-slate-400 mb-5 line-clamp-3">{{ project.get_card_description }}</p>
 
-                <!-- Tech stack (clamped to 2 rows on list, full on detail) -->
+                <!-- Tech stack -->
                 {% if project.tech_stack %}
                 <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden relative">
                     {% for tech in project.get_tech_list %}
-                    <span class="px-2.5 py-1 bg-white/5 rounded-lg text-xs font-medium">{{ tech }}</span>
+                    <span class="px-2.5 py-1 bg-white/5 text-xs font-medium"
+                        style="border-radius:var(--radius-badge)">{{ tech }}</span>
                     {% endfor %}
                 </div>
                 {% else %}
                 <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden relative">
                     {% for tech in project.technologies.all %}
-                    <span class="px-3 py-1 bg-white/5 rounded-lg text-sm font-medium">{{ tech.name }}</span>
+                    <span class="px-3 py-1 bg-white/5 text-sm font-medium" style="border-radius:var(--radius-badge)">{{
+                        tech.name }}</span>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -103,5 +109,55 @@
         <p class="col-span-full text-center text-slate-500 py-20">No projects to display at the moment.</p>
         {% endfor %}
     </div>
+
+    <!-- Infinite scroll sentinel & spinner -->
+    <div id="scroll-sentinel" class="scroll-sentinel"></div>
+    <div id="scroll-spinner" class="scroll-spinner" style="display:none">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
 </section>
+
+<script src="{% static 'js/infinite-scroll.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const platform = new URLSearchParams(window.location.search).get('platform') || '';
+
+        InfiniteScroll.init({
+            apiUrl: '/api/projects/',
+            gridId: 'items-grid',
+            sentinelId: 'scroll-sentinel',
+            spinnerId: 'scroll-spinner',
+            extraParams: platform ? { platform } : {},
+            renderItem: (p) => `
+            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300" style="border-radius:var(--radius-card)">
+                ${p.image_url
+                    ? `<div class="relative overflow-hidden">
+                        <img src="${p.image_url}" alt="${p.title}" class="w-full h-56 object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-3 left-3"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
+                       </div>`
+                    : `<div class="w-full h-56 bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative">
+                        No image
+                        <div class="absolute top-3 left-3"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
+                       </div>`
+                }
+                <div style="padding:var(--space-card-padding)">
+                    <h3 class="text-2xl font-bold mb-3">${p.title}</h3>
+                    <p class="text-slate-400 mb-5 line-clamp-3">${p.description}</p>
+                    <div class="flex flex-wrap gap-1.5 mb-6 max-h-[3.5rem] overflow-hidden">
+                        ${p.tech_tags.map(t => `<span class="px-2.5 py-1 bg-white/5 text-xs font-medium" style="border-radius:var(--radius-badge)">${t}</span>`).join('')}
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs">App Store</a>` : ''}
+                        ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs">Google Play</a>` : ''}
+                        ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm">GitHub →</a>` : ''}
+                        <a href="/projects/${p.slug}/" class="text-primary hover:underline transition text-sm font-semibold ml-auto">Details →</a>
+                    </div>
+                </div>
+            </div>
+        `,
+        });
+    });
+</script>
 {% endblock %}

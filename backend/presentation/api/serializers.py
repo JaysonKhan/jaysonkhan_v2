@@ -39,6 +39,33 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProjectListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for infinite scroll list responses."""
+    image_url = serializers.SerializerMethodField()
+    platform_display = serializers.CharField(source='get_platform_display', read_only=True)
+    tech_tags = serializers.SerializerMethodField()
+    description = serializers.CharField(source='get_card_description', read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ('id', 'title', 'slug', 'description', 'image_url',
+                  'platform', 'platform_display', 'tech_tags',
+                  'app_store_url', 'play_store_url', 'github_url')
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return ''
+
+    def get_tech_tags(self, obj):
+        if obj.tech_stack:
+            return [t.strip() for t in obj.tech_stack.split(',') if t.strip()][:6]
+        return [t.name for t in obj.technologies.all()[:6]]
+
+
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
@@ -66,6 +93,26 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
+
+
+class PostListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for infinite scroll list responses."""
+    image_url = serializers.SerializerMethodField()
+    category_name = serializers.CharField(source='category.name', default='')
+    created_at = serializers.DateTimeField(format='%b %d, %Y')
+
+    class Meta:
+        model = Post
+        fields = ('id', 'title', 'slug', 'excerpt', 'image_url',
+                  'category_name', 'created_at')
+
+    def get_image_url(self, obj):
+        if obj.featured_image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.featured_image.url)
+            return obj.featured_image.url
+        return ''
 
 
 # Contact

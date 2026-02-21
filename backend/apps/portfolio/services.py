@@ -17,7 +17,7 @@ class PortfolioRepository:
 
     @staticmethod
     def get_all_skills():
-        return Skill.objects.all()
+        return Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order').all()
 
     @staticmethod
     def get_skills_grouped():

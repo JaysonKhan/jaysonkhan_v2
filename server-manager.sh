@@ -85,17 +85,22 @@ activate_venv() {
 
 title() {
   clear || true
+
   echo -e "${MAGENTA}${BOLD}"
   cat << "EOF"
-      _   _ __   ______  ___  _   _ _  ___  _   _   _   _ 
-     | | / \ \ / / ___|/ _ \| \ | | |/ / | | | / \ | \ | |
-  _  | |/ _ \ \ V /\___ \ | | |  \| | ' /| |_| |/ _ \|  \| |
- | |_| / ___ \ | |  ___) | |_| | |\  | . \|  _  / ___ \ |\  |
-  \___/_/   \_\_| |____/ \___/|_| \_|_| \_\_| |_/_/   \_\_| \_|
+      ██╗ █████╗ ██╗   ██╗███████╗ ██████╗ ███╗   ██╗
+      ██║██╔══██╗██║   ██║██╔════╝██╔═══██╗████╗  ██║
+      ██║███████║██║   ██║███████╗██║   ██║██╔██╗ ██║
+ ██   ██║██╔══██║╚██╗ ██╔╝╚════██║██║   ██║██║╚██╗██║
+ ╚█████╔╝██║  ██║ ╚████╔╝ ███████║╚██████╔╝██║ ╚████║
+  ╚════╝ ╚═╝  ╚═╝  ╚═══╝  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝
 EOF
   echo -e "${RESET}"
-  echo -e "${BOLD}Jaysonkhan Server Manager${RESET}  ${DIM}(Django + Gunicorn + Nginx + Postgres + Redis + Tailwind)${RESET}"
-  line
+
+  echo -e "${CYAN}${BOLD}                J A Y S O N K H A N . C O M${RESET}"
+  echo -e "${WHITE}────────────────────────────────────────────────────────────${RESET}"
+  echo -e "${BOLD}Jaysonkhan Server Manager${RESET} ${DIM}(Django + Gunicorn + Nginx + PostgreSQL + Redis + Tailwind)${RESET}"
+  echo -e "${WHITE}────────────────────────────────────────────────────────────${RESET}"
 }
 
 human_bytes() {

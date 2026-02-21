@@ -58,8 +58,59 @@
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- iOS-style blur appbar styles -->
+    <!-- Design system + component styles -->
     <style>
+        /* ── Design Tokens ──────────────────────────────────────────── */
+        :root {
+            --space-card-padding: 1.5rem;
+            --space-section-gap: 2rem;
+            --space-section-py: 5rem;
+            --radius-card: 1.5rem;
+            --radius-badge: 0.5rem;
+            --radius-button: 9999px;
+        }
+
+        /* ── Infinite Scroll ────────────────────────────────────────── */
+        .scroll-sentinel {
+            height: 1px;
+        }
+
+        .scroll-spinner {
+            display: flex;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+
+        .scroll-spinner .dot {
+            width: 8px;
+            height: 8px;
+            margin: 0 4px;
+            border-radius: 50%;
+            background: var(--color-primary, #a855f7);
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .scroll-spinner .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .scroll-spinner .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
         .nav-blur {
             position: sticky;
             top: 0;

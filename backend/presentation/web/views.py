@@ -25,6 +25,7 @@ class HomeView(TemplateView):
 class ProjectListView(ListView):
     template_name = 'web/projects.html'
     context_object_name = 'projects'
+    paginate_by = 10
 
     def get_queryset(self):
         portfolio_service = PortfolioService(PortfolioRepository())
@@ -52,7 +53,7 @@ class ProjectDetailView(DetailView):
 class BlogListView(ListView):
     template_name = 'web/blog_list.html'
     context_object_name = 'posts'
-    paginate_by = 6
+    paginate_by = 10
 
     def get_queryset(self):
         blog_service = BlogService(BlogRepository())

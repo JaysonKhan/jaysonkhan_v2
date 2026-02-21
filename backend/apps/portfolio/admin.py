@@ -23,6 +23,7 @@ class ProjectScreenshotInline(UnfoldTabularInline):
 
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('name', 'category', 'level', 'order')
     list_editable = ('category', 'level', 'order')
     list_filter = ('category',)
@@ -36,6 +37,7 @@ class SkillAdmin(UnfoldModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('title', 'platform', 'is_featured', 'order', 'created_at')
     list_editable = ('order', 'is_featured')
     list_filter = ('platform', 'is_featured', 'created_at')
@@ -66,6 +68,7 @@ class ProjectAdmin(UnfoldModelAdmin):
 
 @admin.register(Experience)
 class ExperienceAdmin(UnfoldModelAdmin):
+    list_per_page = 10
     list_display = ('position', 'company', 'location', 'start_date', 'is_current')
     list_filter = ('company', 'is_current')
     search_fields = ('position', 'company', 'location')
