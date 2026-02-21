@@ -80,67 +80,6 @@
     </div>
 </section>
 
-<!-- ── Skills Section (Redesigned — compact chip layout) ────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-14">
-    <h2 class="text-3xl font-bold mb-4 text-center">
-        <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
-    </h2>
-    <p class="text-slate-400 text-center mb-12" style="max-width:36rem;margin-left:auto;margin-right:auto">
-        Technologies and tools I use to bring ideas to life.
-    </p>
-
-    {% for category_name, skills in portfolio.skills_grouped.items %}
-    <div class="mb-8">
-        <span class="skill-category-header">{{ category_name }}</span>
-        <div class="flex flex-wrap gap-3 mt-3">
-            {% for skill in skills %}
-            <div class="glass inline-flex items-center gap-3 px-4 py-2.5 group hover:border-primary/50 transition-all duration-300"
-                style="border-radius:var(--radius-card);cursor:default">
-                {% if skill.icon %}
-                <div
-                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm shrink-0">
-                    <i class="{{ skill.icon }}"></i>
-                </div>
-                {% else %}
-                <div
-                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0">
-                    {{ skill.name|slice:":2"|upper }}
-                </div>
-                {% endif %}
-                <div class="min-w-0">
-                    <span class="text-sm font-semibold group-hover:text-primary transition block">{{ skill.name }}</span>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <div class="w-16 rounded-full overflow-hidden"
-                            style="background:rgba(255,255,255,0.05);height:4px">
-                            <div class="rounded-full"
-                                style="height:4px;width:{{ skill.level }}%;background:linear-gradient(90deg,var(--color-primary),var(--color-accent))">
-                            </div>
-                        </div>
-                        <span class="text-[10px] text-slate-500">{{ skill.level }}%</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% empty %}
-    <div class="flex flex-wrap gap-3">
-        {% for skill in portfolio.skills %}
-        <div class="glass inline-flex items-center gap-3 px-4 py-2.5" style="border-radius:var(--radius-card)">
-            {% if skill.icon %}
-            <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm">
-                <i class="{{ skill.icon }}"></i>
-            </div>
-            {% endif %}
-            <span class="text-sm font-semibold">{{ skill.name }}</span>
-        </div>
-        {% empty %}
-        <p class="text-center text-slate-500 w-full">No skills added yet.</p>
-        {% endfor %}
-    </div>
-    {% endfor %}
-</section>
-
 <!-- Experience Section -->
 {% if portfolio.experience %}
 <section class="max-w-7xl mx-auto px-6 py-14">
@@ -169,7 +108,8 @@
                     </div>
                     <span class="text-sm text-slate-500 whitespace-nowrap">
                         {{ exp.start_date|date:"M Y" }} —
-                        {% if exp.is_current %}<span class="text-green-400">Present</span>{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}
+                        {% if exp.is_current %}<span class="text-green-400">Present</span>{% else %}{{
+                        exp.end_date|date:"M Y" }}{% endif %}
                     </span>
                 </div>
                 <p class="text-slate-400 mt-3 text-sm leading-relaxed">{{ exp.description|truncatewords:40 }}</p>
@@ -295,4 +235,68 @@
         {% endfor %}
     </div>
 </section>
+
+<!-- ── Skills Section (Moved to bottom + animated) ────────────── -->
+<section class="max-w-7xl mx-auto px-6 py-14">
+    <h2 class="text-3xl font-bold mb-4 text-center">
+        <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
+    </h2>
+    <p class="text-slate-400 text-center mb-12" style="max-width:36rem;margin-left:auto;margin-right:auto">
+        Technologies and tools I use to bring ideas to life.
+    </p>
+
+    {% for category_name, skills in portfolio.skills_grouped.items %}
+    <div class="mb-8">
+        <span class="skill-category-header">{{ category_name }}</span>
+        <div class="flex flex-wrap gap-3 mt-3">
+            {% for skill in skills %}
+            <div class="glass skill-chip inline-flex items-center gap-3 px-4 py-2.5 group"
+                style="border-radius:var(--radius-card);cursor:default">
+                {% if skill.icon %}
+                <div
+                    class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm shrink-0">
+                    <i class="{{ skill.icon }}"></i>
+                </div>
+                {% else %}
+                <div
+                    class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0">
+                    {{ skill.name|slice:":2"|upper }}
+                </div>
+                {% endif %}
+                <div class="min-w-0">
+                    <span class="text-sm font-semibold transition block">{{ skill.name }}</span>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <div class="w-16 rounded-full overflow-hidden"
+                            style="background:rgba(255,255,255,0.05);height:4px">
+                            <div class="rounded-full"
+                                style="height:4px;width:{{ skill.level }}%;background:linear-gradient(90deg,var(--color-primary),var(--color-accent))">
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-500">{{ skill.level }}%</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="flex flex-wrap gap-3">
+        {% for skill in portfolio.skills %}
+        <div class="glass skill-chip inline-flex items-center gap-3 px-4 py-2.5"
+            style="border-radius:var(--radius-card)">
+            {% if skill.icon %}
+            <div
+                class="skill-icon-wrapper w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary text-sm">
+                <i class="{{ skill.icon }}"></i>
+            </div>
+            {% endif %}
+            <span class="text-sm font-semibold">{{ skill.name }}</span>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500 w-full">No skills added yet.</p>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</section>
+
 {% endblock %}
