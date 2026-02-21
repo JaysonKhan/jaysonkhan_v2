@@ -16,7 +16,8 @@
 
             <div class="space-y-8">
                 <div class="flex items-start space-x-6">
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">@</div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">@
+                    </div>
                     <div>
                         <h4 class="font-bold text-lg">{{ site_settings.contact_email_label }}</h4>
                         <a href="mailto:{{ site_settings.email }}" class="text-slate-400 hover:text-primary transition">
@@ -26,21 +27,23 @@
                 </div>
                 {% if site_settings.linkedin_url %}
                 <div class="flex items-start space-x-6">
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">in</div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">in
+                    </div>
                     <div>
                         <h4 class="font-bold text-lg">{{ site_settings.contact_linkedin_label }}</h4>
                         <a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener"
-                           class="text-primary hover:underline">{{ site_settings.linkedin_url }}</a>
+                            class="text-primary hover:underline">{{ site_settings.linkedin_url }}</a>
                     </div>
                 </div>
                 {% endif %}
                 {% if site_settings.github_url %}
                 <div class="flex items-start space-x-6">
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">gh</div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary font-bold">gh
+                    </div>
                     <div>
                         <h4 class="font-bold text-lg">GitHub</h4>
                         <a href="{{ site_settings.github_url }}" target="_blank" rel="noopener"
-                           class="text-primary hover:underline">{{ site_settings.github_url }}</a>
+                            class="text-primary hover:underline">{{ site_settings.github_url }}</a>
                     </div>
                 </div>
                 {% endif %}
@@ -57,30 +60,45 @@
 
             <form method="POST" class="space-y-6">
                 {% csrf_token %}
+                <!-- Honeypot: hidden from humans, bots will fill this -->
+                <div style="position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden;" aria-hidden="true">
+                    <label for="website">Website</label>
+                    <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                </div>
+
+                {% if messages %}
+                {% for msg in messages %}
+                <div
+                    class="{% if msg.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% else %}bg-green-500/10 border border-green-500/20 text-green-500{% endif %} p-4 rounded-2xl">
+                    <p class="font-medium">{{ msg }}</p>
+                </div>
+                {% endfor %}
+                {% endif %}
+
                 <div class="grid md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-400">Name</label>
                         <input type="text" name="name" required
-                               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                     </div>
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-400">Email</label>
                         <input type="email" name="email" required
-                               class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-400">Subject</label>
                     <input type="text" name="subject" required
-                           class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition">
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-slate-400">Message</label>
                     <textarea name="message" rows="5" required
-                              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition"></textarea>
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition"></textarea>
                 </div>
                 <button type="submit"
-                        class="w-full bg-primary hover:bg-secondary py-4 rounded-xl transition font-bold text-lg">
+                    class="w-full bg-primary hover:bg-secondary py-4 rounded-xl transition font-bold text-lg">
                     Send Message
                 </button>
             </form>

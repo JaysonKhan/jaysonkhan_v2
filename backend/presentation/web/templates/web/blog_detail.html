@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load markdown_extras %}
 
 {% block title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ post.excerpt }}{% endblock %}
@@ -39,7 +40,7 @@
 
     <div
         class="prose prose-invert prose-lg max-w-none prose-headings:text-white prose-p:text-slate-300 prose-a:text-primary">
-        {{ post.content|safe }}
+        {{ post.content|render_markdown }}
     </div>
 
     <div class="mt-20 pt-10 border-t border-white/10">

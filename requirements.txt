@@ -10,6 +10,7 @@ bidict==0.23.1
 certifi==2026.1.4
 click==8.3.1
 colorama==0.4.6
+bleach==6.2.0
 Django==6.0.2
 django-cors-headers==4.9.0
 django-environ==0.12.0

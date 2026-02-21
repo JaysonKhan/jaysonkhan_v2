@@ -5,6 +5,7 @@ from portfolio.services import PortfolioService, PortfolioRepository
 from portfolio.models import Project
 from blog.services import BlogService, BlogRepository
 from contact.services import ContactService, ContactRepository
+from contact.spam_protection import is_honeypot_filled, is_rate_limited
 from blog.models import Post
 
 
@@ -72,6 +73,19 @@ class ContactView(TemplateView):
     template_name = 'web/contact.html'
 
     def post(self, request, *args, **kwargs):
+        # ── Spam protection ──────────────────────────────────────────────────
+        if is_honeypot_filled(request):
+            # Silently reject: return success to not tip off bots
+            return self.render_to_response(self.get_context_data(success=True))
+
+        if is_rate_limited(request):
+            messages.error(
+                request,
+                "Too many messages sent. Please try again in a few minutes."
+            )
+            return self.render_to_response(self.get_context_data())
+
+        # ── Normal processing ────────────────────────────────────────────────
         name = request.POST.get('name')
         email = request.POST.get('email')
         subject = request.POST.get('subject')
@@ -86,3 +100,4 @@ class ContactView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+

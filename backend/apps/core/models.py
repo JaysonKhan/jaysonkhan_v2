@@ -61,7 +61,11 @@ class SiteSettings(models.Model):
         help_text="Twitter/X handle without @ — for twitter:site tag"
     )
 
-    # ── Navigation ────────────────────────────────────────────────────────────
+    # ── Navigation / Header ──────────────────────────────────────────────────
+    logo_text = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="Text next to logo (leave blank to use site_author)"
+    )
     nav_cta_text = models.CharField(
         max_length=50, default="Hire Me",
         help_text="Navigation CTA button label"
@@ -69,6 +73,10 @@ class SiteSettings(models.Model):
     nav_cta_url = models.CharField(
         max_length=200, default="/contact/",
         help_text="Navigation CTA button URL (relative or absolute)"
+    )
+    nav_links_json = models.JSONField(
+        blank=True, default=list,
+        help_text='Extra nav links as JSON list, e.g. [{"label":"Resume","url":"/resume/"}]. Leave empty for default nav.'
     )
 
     # ── Hero Section ──────────────────────────────────────────────────────────
@@ -232,6 +240,30 @@ class SiteSettings(models.Model):
     )
 
     # ── Footer ────────────────────────────────────────────────────────────────
+    footer_description = models.TextField(
+        max_length=500, blank=True, default="",
+        help_text="Footer description text (leave blank to use site_tagline)"
+    )
+    footer_email = models.EmailField(
+        blank=True, default="",
+        help_text="Footer contact email (leave blank to use main email)"
+    )
+    footer_social_github = models.URLField(
+        blank=True, default="",
+        help_text="Footer GitHub URL (leave blank to inherit from main socials)"
+    )
+    footer_social_linkedin = models.URLField(
+        blank=True, default="",
+        help_text="Footer LinkedIn URL (leave blank to inherit from main socials)"
+    )
+    footer_social_twitter = models.URLField(
+        blank=True, default="",
+        help_text="Footer Twitter/X URL (leave blank to inherit from main socials)"
+    )
+    footer_social_telegram = models.URLField(
+        blank=True, default="",
+        help_text="Footer Telegram URL (leave blank to inherit from main socials)"
+    )
     footer_text = models.CharField(
         max_length=255, default="© 2026 Jahongir Kuziboev. All rights reserved.",
         help_text="Footer copyright line"
@@ -260,3 +292,36 @@ class SiteSettings(models.Model):
         """Return singleton, creating with defaults if absent."""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+    # ── Computed properties (footer fallbacks) ────────────────────────────────
+
+    @property
+    def display_logo_text(self):
+        """Logo text with fallback to site_author."""
+        return self.logo_text or self.site_author
+
+    @property
+    def footer_display_description(self):
+        """Footer description with fallback to site_tagline."""
+        return self.footer_description or self.site_tagline
+
+    @property
+    def footer_display_email(self):
+        """Footer email with fallback to main email."""
+        return self.footer_email or self.email
+
+    @property
+    def footer_display_github(self):
+        return self.footer_social_github or self.github_url
+
+    @property
+    def footer_display_linkedin(self):
+        return self.footer_social_linkedin or self.linkedin_url
+
+    @property
+    def footer_display_twitter(self):
+        return self.footer_social_twitter or self.twitter_url
+
+    @property
+    def footer_display_telegram(self):
+        return self.footer_social_telegram or self.telegram_url

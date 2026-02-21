@@ -67,10 +67,18 @@ class SiteSettingsAdmin(ModelAdmin):
             'description': 'Controls Google snippets and social media link previews.',
         }),
 
-        ('Navigation', {
+        ('Header / Navigation', {
             'fields': (
+                'logo_text',
                 'nav_cta_text',
                 'nav_cta_url',
+                'nav_links_json',
+            ),
+            'description': (
+                'Customise the site header. '
+                '"Logo text" overrides the author name in the navigation bar. '
+                '"Extra nav links" is a JSON list for additional links '
+                '(e.g. [{"label":"Resume","url":"/resume/"}]).'
             ),
         }),
 
@@ -156,7 +164,19 @@ class SiteSettingsAdmin(ModelAdmin):
         }),
 
         ('Footer', {
-            'fields': ('footer_text',),
+            'fields': (
+                'footer_description',
+                'footer_email',
+                'footer_social_github',
+                'footer_social_linkedin',
+                'footer_social_twitter',
+                'footer_social_telegram',
+                'footer_text',
+            ),
+            'description': (
+                'Footer-specific overrides. Leave blank to inherit from '
+                'the main Contact Info & Socials section above.'
+            ),
         }),
 
         ('Timestamps', {

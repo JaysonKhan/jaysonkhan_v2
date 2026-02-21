@@ -20,7 +20,8 @@
     <!-- Open Graph -->
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta property="og:description"
+        content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     {% if site_settings.og_image %}
@@ -35,7 +36,8 @@
     <meta name="twitter:site" content="@{{ site_settings.twitter_handle }}">
     {% endif %}
     <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_title }}{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta name="twitter:description"
+        content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
     {% if site_settings.og_image %}
     <meta name="twitter:image" content="{{ site_settings.og_image.url }}">
     {% endif %}
@@ -69,10 +71,12 @@
             transition: background 0.3s ease, box-shadow 0.3s ease;
             will-change: transform;
         }
+
         .nav-blur.scrolled {
             background: rgba(15, 23, 42, 0.88);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
+
         .platform-badge {
             display: inline-flex;
             align-items: center;
@@ -83,10 +87,27 @@
             font-weight: 600;
             letter-spacing: 0.025em;
         }
-        .platform-badge.android { background: rgba(61, 220, 132, 0.12); color: #3ddc84; }
-        .platform-badge.ios { background: rgba(99, 102, 241, 0.12); color: #818cf8; }
-        .platform-badge.cross { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
-        .platform-badge.web { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+
+        .platform-badge.android {
+            background: rgba(61, 220, 132, 0.12);
+            color: #3ddc84;
+        }
+
+        .platform-badge.ios {
+            background: rgba(99, 102, 241, 0.12);
+            color: #818cf8;
+        }
+
+        .platform-badge.cross {
+            background: rgba(168, 85, 247, 0.12);
+            color: #c084fc;
+        }
+
+        .platform-badge.web {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fbbf24;
+        }
+
         .store-btn {
             display: inline-flex;
             align-items: center;
@@ -97,10 +118,27 @@
             font-weight: 600;
             transition: all 0.2s;
         }
-        .store-btn.appstore { background: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
-        .store-btn.appstore:hover { background: rgba(99, 102, 241, 0.2); }
-        .store-btn.playstore { background: rgba(61, 220, 132, 0.1); color: #3ddc84; border: 1px solid rgba(61, 220, 132, 0.2); }
-        .store-btn.playstore:hover { background: rgba(61, 220, 132, 0.2); }
+
+        .store-btn.appstore {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .store-btn.appstore:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .store-btn.playstore {
+            background: rgba(61, 220, 132, 0.1);
+            color: #3ddc84;
+            border: 1px solid rgba(61, 220, 132, 0.2);
+        }
+
+        .store-btn.playstore:hover {
+            background: rgba(61, 220, 132, 0.2);
+        }
+
         .device-mockup {
             position: relative;
             border-radius: 2rem;
@@ -108,6 +146,7 @@
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
+
         .skill-category-header {
             display: inline-block;
             padding: 4px 14px;
@@ -131,7 +170,7 @@
     <nav class="nav-blur py-4 px-6" id="main-nav">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">
-                {{ site_settings.site_author }}
+                {{ site_settings.display_logo_text }}
             </a>
             <div class="hidden md:flex space-x-8">
                 <a href="{% url 'home' %}" class="hover:text-primary transition">Home</a>
@@ -140,12 +179,13 @@
                 <a href="{% url 'contact' %}" class="hover:text-primary transition">Contact</a>
             </div>
             <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <a href="{{ site_settings.nav_cta_url }}"
-               class="hidden md:inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                class="hidden md:inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
@@ -155,7 +195,7 @@
             <a href="{% url 'blog_list' %}" class="block hover:text-primary transition">Blog</a>
             <a href="{% url 'contact' %}" class="block hover:text-primary transition">Contact</a>
             <a href="{{ site_settings.nav_cta_url }}"
-               class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
@@ -189,8 +229,8 @@
     <footer class="glass mt-20 py-12 border-t border-white/10">
         <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
-                <h3 class="text-xl font-bold text-gradient mb-4">{{ site_settings.site_author }}</h3>
-                <p class="text-slate-400">{{ site_settings.site_tagline }}</p>
+                <h3 class="text-xl font-bold text-gradient mb-4">{{ site_settings.display_logo_text }}</h3>
+                <p class="text-slate-400">{{ site_settings.footer_display_description }}</p>
             </div>
             <div class="flex flex-col space-y-2">
                 <h4 class="font-bold mb-2">Links</h4>
@@ -202,40 +242,48 @@
             <div>
                 <h4 class="font-bold mb-2">Connect</h4>
                 <p class="text-slate-400">
-                    <a href="mailto:{{ site_settings.email }}" class="hover:text-primary transition">
-                        {{ site_settings.email }}
+                    <a href="mailto:{{ site_settings.footer_display_email }}" class="hover:text-primary transition">
+                        {{ site_settings.footer_display_email }}
                     </a>
                 </p>
                 <div class="flex justify-center md:justify-start space-x-4 mt-4">
-                    {% if site_settings.github_url %}
-                    <a href="{{ site_settings.github_url }}" target="_blank" rel="noopener"
-                       class="text-slate-400 hover:text-primary transition" aria-label="GitHub">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    {% if site_settings.footer_display_github %}
+                    <a href="{{ site_settings.footer_display_github }}" target="_blank" rel="noopener"
+                        class="text-slate-400 hover:text-primary transition" aria-label="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
                         </svg>
                     </a>
                     {% endif %}
-                    {% if site_settings.linkedin_url %}
-                    <a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener"
-                       class="text-slate-400 hover:text-primary transition" aria-label="LinkedIn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    {% if site_settings.footer_display_linkedin %}
+                    <a href="{{ site_settings.footer_display_linkedin }}" target="_blank" rel="noopener"
+                        class="text-slate-400 hover:text-primary transition" aria-label="LinkedIn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                         </svg>
                     </a>
                     {% endif %}
-                    {% if site_settings.twitter_url %}
-                    <a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"
-                       class="text-slate-400 hover:text-primary transition" aria-label="Twitter/X">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    {% if site_settings.footer_display_twitter %}
+                    <a href="{{ site_settings.footer_display_twitter }}" target="_blank" rel="noopener"
+                        class="text-slate-400 hover:text-primary transition" aria-label="Twitter/X">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                         </svg>
                     </a>
                     {% endif %}
-                    {% if site_settings.telegram_url %}
-                    <a href="{{ site_settings.telegram_url }}" target="_blank" rel="noopener"
-                       class="text-slate-400 hover:text-primary transition" aria-label="Telegram">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    {% if site_settings.footer_display_telegram %}
+                    <a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener"
+                        class="text-slate-400 hover:text-primary transition" aria-label="Telegram">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
                     </a>
                     {% endif %}
@@ -249,4 +297,5 @@
 
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
