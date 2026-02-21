@@ -86,12 +86,13 @@ activate_venv() {
 title() {
   clear || true
   echo -e "${MAGENTA}${BOLD}"
-  echo "   __                 _              _                      "
-  echo "  / _| ___  _ __  ___| |__   __ _ __| | ___ _ __ ___  ___  "
-  echo " | |_ / _ \| '_ \/ __| '_ \ / _\` / _\` |/ _ \ '__/ __|/ _ \ "
-  echo " |  _| (_) | |_) \__ \ | | | (_| | (_| |  __/ |  \__ \  __/ "
-  echo " |_|  \___/| .__/|___/_| |_|\__,_|\__,_|\___|_|  |___/\___| "
-  echo "           |_|                                              "
+  cat << "EOF"
+      _   _ __   ______  ___  _   _ _  ___  _   _   _   _ 
+     | | / \ \ / / ___|/ _ \| \ | | |/ / | | | / \ | \ | |
+  _  | |/ _ \ \ V /\___ \ | | |  \| | ' /| |_| |/ _ \|  \| |
+ | |_| / ___ \ | |  ___) | |_| | |\  | . \|  _  / ___ \ |\  |
+  \___/_/   \_\_| |____/ \___/|_| \_|_| \_\_| |_/_/   \_\_| \_|
+EOF
   echo -e "${RESET}"
   echo -e "${BOLD}Jaysonkhan Server Manager${RESET}  ${DIM}(Django + Gunicorn + Nginx + Postgres + Redis + Tailwind)${RESET}"
   line
@@ -461,9 +462,9 @@ action_backup_db() {
   fi
 
   local db user host port ts out pass
-  # Helper to clean .env values (strip \r and quotes)
+  # Helper to clean .env values (strip \r, quotes, and trailing spaces)
   clean_env() {
-    grep -E "^$1=" "$ENV_FILE" | tail -n1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+    grep -E "^$1=" "$ENV_FILE" | tail -n1 | cut -d= -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
   }
 
   db="$(clean_env POSTGRES_DB)"
@@ -472,7 +473,7 @@ action_backup_db() {
   port="$(clean_env POSTGRES_PORT)"
   pass="$(clean_env POSTGRES_PASSWORD)"
 
-  # Force IPv4 if localhost to avoid ::1 authentication issues
+  # Force IPv4 if localhost to avoid ::1 authentication issues in Postgres
   if [[ "$host" == "localhost" || -z "$host" ]]; then
     host="127.0.0.1"
   fi
