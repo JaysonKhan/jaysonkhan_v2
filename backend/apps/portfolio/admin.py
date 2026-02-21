@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.text import Truncator
 from unfold.admin import ModelAdmin as UnfoldModelAdmin, TabularInline as UnfoldTabularInline
 from .models import Skill, Project, ProjectScreenshot, Experience
 
@@ -24,7 +25,7 @@ class ProjectScreenshotInline(UnfoldTabularInline):
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('name', 'category', 'level', 'order')
+    list_display = ('name', 'icon_display', 'category', 'level', 'order')
     list_editable = ('category', 'level', 'order')
     list_filter = ('category',)
     search_fields = ('name',)
@@ -34,11 +35,21 @@ class SkillAdmin(UnfoldModelAdmin):
         }),
     )
 
+    def icon_display(self, obj):
+        if obj.icon:
+            return format_html(
+                '<code style="font-size:11px;opacity:.7;">{}</code>',
+                obj.icon,
+            )
+        return '—'
+    icon_display.short_description = 'Icon'
+
 
 @admin.register(Project)
 class ProjectAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('title', 'platform', 'is_featured', 'order', 'created_at')
+    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_featured', 'order')
+    list_display_links = ('thumbnail', 'title')
     list_editable = ('order', 'is_featured')
     list_filter = ('platform', 'is_featured', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
@@ -65,12 +76,33 @@ class ProjectAdmin(UnfoldModelAdmin):
         }),
     )
 
+    def thumbnail(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" width="48" height="48" '
+                'style="border-radius:8px;object-fit:cover;'
+                'border:1px solid rgba(255,255,255,.12);" />',
+                obj.image.url,
+            )
+        return format_html(
+            '<div style="width:48px;height:48px;border-radius:8px;'
+            'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);'
+            'display:flex;align-items:center;justify-content:center;'
+            'font-size:18px;">📱</div>'
+        )
+    thumbnail.short_description = ''
+
+    def short_desc(self, obj):
+        text = obj.short_description or obj.description
+        return Truncator(text).chars(60)
+    short_desc.short_description = 'Description'
+
 
 @admin.register(Experience)
 class ExperienceAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('position', 'company', 'location', 'start_date', 'is_current')
-    list_filter = ('company', 'is_current')
+    list_display = ('position', 'company', 'location', 'start_date', 'end_date', 'is_current')
+    list_filter = ('is_current',)
     search_fields = ('position', 'company', 'location')
 
     fieldsets = (
