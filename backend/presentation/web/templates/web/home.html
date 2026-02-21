@@ -170,8 +170,7 @@
                     </div>
                     <span class="text-sm text-slate-500 whitespace-nowrap">
                         {{ exp.start_date|date:"M Y" }} —
-                        {% if exp.is_current %}<span class="text-green-400">Present</span>{% else %}{{
-                        exp.end_date|date:"M Y" }}{% endif %}
+                        {% if exp.is_current %}<span class="text-green-400">Present</span>{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}
                     </span>
                 </div>
                 <p class="text-slate-400 mt-3 text-sm leading-relaxed">{{ exp.description|truncatewords:40 }}</p>
