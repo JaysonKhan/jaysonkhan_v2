@@ -253,16 +253,53 @@
     </div>
 </section>
 
-<!-- ── Skills Section (Compact Pills & Accordion) ────────────── -->
+<!-- ── Skills Section (Globe Orbit Animation) ────────────── -->
 <section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
     <h2 class="text-3xl font-bold mb-4 text-center">
         <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
     </h2>
-    <p class="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
+    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto">
         Technologies and tools I use to bring ideas to life.
     </p>
 
-    <!-- Accordion Container -->
+    <!-- Globe + Orbiting Skills Container (Hidden on mobile for performance) -->
+    <div class="hidden md:flex justify-center mb-16 relative h-96">
+        <!-- Central Globe -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <!-- Glowing background circles -->
+            <div class="absolute w-16 h-16 bg-primary/30 rounded-full blur-2xl"></div>
+            <div class="absolute w-24 h-24 border border-primary/20 rounded-full"></div>
+            <div class="absolute w-40 h-40 border border-primary/10 rounded-full"></div>
+
+            <!-- Globe SVG -->
+            <svg class="w-20 h-20 text-primary drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" opacity="0.8"/>
+            </svg>
+        </div>
+
+        <!-- Orbiting Skills Container -->
+        {% with orbit_skills=portfolio.skills|slice:":12" %}
+        {% if orbit_skills %}
+        <div class="skills-orbit-container" style="--orbit-count: {{ orbit_skills|length }};">
+            {% for skill in orbit_skills %}
+            <div class="orbit-skill" style="--skill-index: {{ forloop.counter0 }};">
+                <div class="orbit-skill-icon">
+                    {% if skill.icon %}
+                    <i class="{{ skill.icon }}"></i>
+                    {% else %}
+                    <span class="text-xs font-bold">{{ skill.name|slice:":2"|upper }}</span>
+                    {% endif %}
+                </div>
+                <span class="orbit-skill-label">{{ skill.name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Skills Grid (All skills, organized by category) -->
     <div id="skills-accordion" class="max-w-4xl mx-auto space-y-6">
         {% for category_name, skills in portfolio.skills_grouped.items %}
         {% if forloop.counter <= 2 %} <!-- Default Visible Categories -->
