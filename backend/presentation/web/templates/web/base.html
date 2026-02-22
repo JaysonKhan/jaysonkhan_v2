@@ -155,11 +155,10 @@
 
         .sk-orbit-icon {
             position: absolute;
-            /* icon sits on the orbit ring edge: top = -(icon-height/2) */
-            top: -1.5rem;
-            left: calc(50% - 1.5rem);
-            width: 3rem;
-            height: 3rem;
+            top: -1.125rem;
+            left: calc(50% - 1.125rem);
+            width: 2.25rem;
+            height: 2.25rem;
             background: rgba(15, 23, 42, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(12px);
@@ -169,19 +168,25 @@
             align-items: center;
             justify-content: center;
             color: var(--color-primary, #a855f7);
-            font-size: 1rem;
+            font-size: 0.8rem;
             animation: sk-counter-orbit 45s linear infinite;
             animation-delay: calc(-45s / var(--n) * var(--i));
             will-change: transform;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-            /* pointer-events: auto allows hover on icon only */
             pointer-events: auto;
             cursor: default;
-            /* Use CSS `scale` property (not transform) to avoid  */
-            /* conflicting with the rotation animation             */
             scale: 1;
             transition: scale 0.25s ease, border-color 0.25s ease,
                 box-shadow 0.25s ease, background 0.25s ease;
+        }
+        @media (min-width: 768px) {
+            .sk-orbit-icon {
+                top: -1.5rem;
+                left: calc(50% - 1.5rem);
+                width: 3rem;
+                height: 3rem;
+                font-size: 1rem;
+            }
         }
 
         .sk-orbit-icon:hover {
@@ -232,16 +237,81 @@
             }
         }
 
-        /* Globe wrapper collapse animation (triggered via JS) */
+        /* Globe wrapper — total size includes icon bleed on all sides.
+           sk-orbit-body is inset by icon_r so icons never escape wrapper. */
+        .sk-globe-wrap {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+        /* Orbit body: inset by icon radius so icons stay inside wrapper box */
+        .sk-orbit-body {
+            position: absolute;
+            inset: 20px;   /* mobile icon-r = 18px, use 20px */
+        }
         #sk-globe-area {
-            transition: opacity 0.45s ease, max-height 0.5s ease;
-            overflow: hidden;
+            overflow: visible;
+        }
+        @media (min-width: 768px) {
+            .sk-globe-wrap {
+                width: 380px;
+                height: 380px;
+            }
+            .sk-orbit-body {
+                inset: 24px;   /* desktop icon-r = 24px */
+            }
         }
 
-        #sk-globe-area.collapsed {
-            opacity: 0;
-            max-height: 0 !important;
+        /* Orbit ring decorations */
+        .sk-ring-outer, .sk-ring-inner {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
         }
+        .sk-ring-outer {
+            inset: 0;
+            border: 1px dashed rgba(255,255,255,0.08);
+        }
+        .sk-ring-inner {
+            inset: 50px;
+            border: 1px dashed rgba(255,255,255,0.04);
+        }
+        @media (min-width: 768px) {
+            .sk-ring-inner { inset: 70px; }
+        }
+
+        /* Central globe */
+        .sk-globe-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .sk-globe-glow {
+            position: absolute;
+            width: 5rem;
+            height: 5rem;
+            background: rgba(168,85,247,0.22);
+            border-radius: 50%;
+            filter: blur(2rem);
+        }
+        .sk-globe-icon {
+            font-size: 2.75rem;
+            opacity: 0.88;
+            position: relative;
+            z-index: 1;
+        }
+        @media (min-width: 768px) {
+            .sk-globe-glow { width: 7rem; height: 7rem; }
+            .sk-globe-icon { font-size: 3.75rem; }
+        }
+
+        /* collapsed class no longer used — globe is always visible */
     </style>
 
     <!-- Design system + component styles -->
