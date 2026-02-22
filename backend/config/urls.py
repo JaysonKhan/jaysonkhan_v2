@@ -7,26 +7,29 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 import environ
+from presentation.web.views import custom_404_view, custom_500_view
 
 env = environ.Env()
 
 # ── Admin URL: read from env, fall back to a non-obvious slug ─────────────────
-# Set ADMIN_URL=secret-panel/ in your .env to obscure the admin path.
-# NEVER use the default 'admin/' in production.
 ADMIN_URL = env('ADMIN_URL', default='admin/')
 
 urlpatterns = [
     path(ADMIN_URL, admin.site.urls),
 
-    # ── API (all endpoints are admin-only by default via REST_FRAMEWORK settings) ──
+    # ── API ───────────────────────────────────────────────────────────────────
     path('api/', include('presentation.api.urls')),
-    # JWT token endpoints — these are behind IsAdminUser too (default permission)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # ── Web (SSR) ─────────────────────────────────────────────────────────────
     path('', include('presentation.web.urls')),
 ]
+
+# ── Custom error handlers ─────────────────────────────────────────────────────
+# MUST be in ROOT_URLCONF — Django ignores these in included urlconfs.
+handler404 = custom_404_view
+handler500 = custom_500_view
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
