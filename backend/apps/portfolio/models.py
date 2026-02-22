@@ -25,6 +25,10 @@ class Skill(models.Model):
         help_text="Skill category for grouped display"
     )
     order = models.IntegerField(default=0, help_text="Display order within category")
+    show_in_hero = models.BooleanField(
+        default=False,
+        help_text="Show this skill icon in the hero section orbit animation"
+    )
 
     class Meta:
         ordering = ['category', 'order', 'name']

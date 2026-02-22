@@ -17,7 +17,17 @@ class PortfolioRepository:
 
     @staticmethod
     def get_all_skills():
-        return Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order').all()
+        return Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order', 'show_in_hero').all()
+
+    @staticmethod
+    def get_hero_skills():
+        """Return skills marked for hero orbit display, ordered by order field."""
+        return (
+            Skill.objects
+            .filter(show_in_hero=True)
+            .only('id', 'name', 'icon', 'order')
+            .order_by('order', 'name')
+        )
 
     @staticmethod
     def get_skills_grouped():
