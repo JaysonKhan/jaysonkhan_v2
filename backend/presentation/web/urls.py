@@ -1,7 +1,9 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from .views import (
     HomeView, ProjectListView, ProjectDetailView,
-    BlogListView, BlogDetailView, ContactView
+    BlogListView, BlogDetailView, ContactView,
+    custom_404_view, custom_500_view,
 )
 
 urlpatterns = [
@@ -12,3 +14,7 @@ urlpatterns = [
     path('blog/<slug:slug>/', BlogDetailView.as_view(), name='blog_detail'),
     path('contact/', ContactView.as_view(), name='contact'),
 ]
+
+# Custom error handlers (active only when DEBUG=False)
+handler404 = custom_404_view
+handler500 = custom_500_view

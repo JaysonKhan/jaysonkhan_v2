@@ -1,19 +1,3 @@
-"""
-URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -22,16 +6,25 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+import environ
+
+env = environ.Env()
+
+# ── Admin URL: read from env, fall back to a non-obvious slug ─────────────────
+# Set ADMIN_URL=secret-panel/ in your .env to obscure the admin path.
+# NEVER use the default 'admin/' in production.
+ADMIN_URL = env('ADMIN_URL', default='admin/')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    # API
+    path(ADMIN_URL, admin.site.urls),
+
+    # ── API (all endpoints are admin-only by default via REST_FRAMEWORK settings) ──
     path('api/', include('presentation.api.urls')),
+    # JWT token endpoints — these are behind IsAdminUser too (default permission)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # Web (SSR)
+
+    # ── Web (SSR) ─────────────────────────────────────────────────────────────
     path('', include('presentation.web.urls')),
 ]
 

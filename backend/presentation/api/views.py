@@ -14,14 +14,17 @@ from core.services import SiteSettingsService
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """Admin-only: user list must never be public."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order').all()
     serializer_class = SkillSerializer
-    pagination_class = None  # Skills are always loaded fully
+    pagination_class = None
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
@@ -35,6 +38,7 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         qs = (
             Project.objects
+            .filter(is_visible=True)
             .prefetch_related('technologies', 'screenshots')
             .order_by('order', '-created_at')
         )
@@ -45,24 +49,28 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
         elif platform:
             qs = qs.filter(platform=platform)
         return qs
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class ExperienceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Experience.objects.all()
     serializer_class = ExperienceSerializer
-    pagination_class = None  # Experience is always loaded fully
+    pagination_class = None
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class PostViewSet(viewsets.ReadOnlyModelViewSet):
@@ -82,12 +90,16 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
             .defer('content')
             .order_by('-created_at')
         )
+    # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
 class ContactMessageViewSet(viewsets.ModelViewSet):
+    """
+    POST (create) is open to anyone — the public contact form.
+    All other actions (list, retrieve, update, delete) require admin.
+    """
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
-    permission_classes = [permissions.AllowAny]
 
     def get_permissions(self):
         if self.action == 'create':
@@ -97,14 +109,12 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
 
 class SiteSettingsView(APIView):
     """
-    GET /api/site-settings/
-    Returns the singleton SiteSettings as JSON.
-    Public endpoint — no auth required (read-only, no secrets exposed).
-    Response served from cache; invalidated automatically on admin save.
+    Admin-only. The SSR templates already have all site settings via
+    context_processors — there is no legitimate public use case for this endpoint.
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        settings = SiteSettingsService.get()
-        serializer = SiteSettingsSerializer(settings, context={"request": request})
+        site_settings = SiteSettingsService.get()
+        serializer = SiteSettingsSerializer(site_settings, context={"request": request})
         return Response(serializer.data)

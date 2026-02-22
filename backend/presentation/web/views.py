@@ -2,6 +2,7 @@ from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import Http404
+from django.shortcuts import render
 from portfolio.services import PortfolioService, PortfolioRepository
 from portfolio.models import Project
 from blog.services import BlogService, BlogRepository
@@ -9,6 +10,22 @@ from contact.services import ContactService, ContactRepository
 from contact.spam_protection import is_honeypot_filled, is_rate_limited
 from blog.models import Post
 from core.models import SiteSettings
+
+
+def custom_404_view(request, exception=None):
+    """
+    Custom 404 handler — shown instead of Django's debug 404 page when DEBUG=False.
+    Hides internal URL patterns and stack traces from unauthenticated users.
+    """
+    return render(request, 'web/404.html', status=404)
+
+
+def custom_500_view(request):
+    """
+    Custom 500 handler — shown instead of Django's debug 500 page when DEBUG=False.
+    Prevents leaking stack traces and settings to users.
+    """
+    return render(request, 'web/500.html', status=500)
 
 
 def _apps_visible():

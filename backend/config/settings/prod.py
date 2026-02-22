@@ -1,8 +1,9 @@
 from .base import *
+import os
 
 DEBUG = False
 
-# Production security settings
+# ── Security headers ──────────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -12,5 +13,34 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Add production domain to allowed hosts
+# Prevent clickjacking
+X_FRAME_OPTIONS = 'DENY'
+
+# ── Allowed hosts ─────────────────────────────────────────────────────────────
 ALLOWED_HOSTS = ['jaysonkhan.com', 'www.jaysonkhan.com', '144.91.69.225']
+
+# ── Logging: hide internal details from responses ─────────────────────────────
+# In prod Django already hides tracebacks (DEBUG=False).
+# Add server-side logging to a file so errors are still visible to you:
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django_errors.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['file'],
+        'level': 'ERROR',
+    },
+}

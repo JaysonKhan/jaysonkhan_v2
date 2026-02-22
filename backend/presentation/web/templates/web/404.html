@@ -1,0 +1,36 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Page Not Found — {{ site_settings.site_title }}{% endblock %}
+
+{% block content %}
+<section class="min-h-[70vh] flex items-center justify-center px-6 py-32">
+    <div class="text-center max-w-md mx-auto">
+
+        <!-- 404 number with glow -->
+        <div class="relative inline-block mb-6">
+            <span class="text-9xl font-black text-primary/10 select-none">404</span>
+            <span class="absolute inset-0 flex items-center justify-center
+                         text-6xl font-black text-gradient">404</span>
+        </div>
+
+        <h1 class="text-2xl font-bold mb-3 text-white">Page not found</h1>
+        <p class="text-slate-400 text-base leading-relaxed mb-8">
+            The page you're looking for doesn't exist or has been moved.
+        </p>
+
+        <div class="flex gap-3 justify-center flex-wrap">
+            <a href="{% url 'home' %}" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary
+                      px-6 py-3 rounded-xl transition font-semibold">
+                <i class="fa-solid fa-house text-sm"></i>
+                Go Home
+            </a>
+            <a href="{% url 'contact' %}" class="inline-flex items-center gap-2 glass hover:bg-white/10
+                      px-6 py-3 rounded-xl transition font-semibold border border-white/10">
+                <i class="fa-solid fa-envelope text-sm"></i>
+                Contact
+            </a>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
