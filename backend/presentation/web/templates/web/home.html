@@ -301,7 +301,7 @@
             <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
                 {% for skill in orbit_skills %}
                 <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
-                    <div class="sk-orbit-icon" title="{{ skill.name }}">
+                    <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}" aria-label="{{ skill.name }}">
                         {% if skill.icon %}
                         <i class="{{ skill.icon }}"></i>
                         {% else %}
