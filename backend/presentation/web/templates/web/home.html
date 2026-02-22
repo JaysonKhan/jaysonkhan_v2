@@ -262,41 +262,70 @@
         Technologies and tools I use to bring ideas to life.
     </p>
 
-    <!-- Globe + Orbiting Skills Container (Hidden on mobile for performance) -->
-    <div class="hidden md:flex justify-center mb-16 relative h-96">
-        <!-- Central Globe -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <!-- Glowing background circles -->
-            <div class="absolute w-16 h-16 bg-primary/30 rounded-full blur-2xl"></div>
-            <div class="absolute w-24 h-24 border border-primary/20 rounded-full"></div>
-            <div class="absolute w-40 h-40 border border-primary/10 rounded-full"></div>
+    <!-- Globe + Orbiting Skills (desktop only) -->
+    <div id="sk-globe-area" class="hidden md:flex flex-col items-center gap-6 mb-16"
+         style="max-height: 600px;">
 
-            <!-- Globe SVG -->
-            <svg class="w-20 h-20 text-primary drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"/>
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" opacity="0.8"/>
-            </svg>
-        </div>
+        <!-- Fixed-size globe wrapper: orbit items positioned relative to this -->
+        <div id="sk-globe-wrap"
+             style="position:relative; width:380px; height:380px; flex-shrink:0;">
 
-        <!-- Orbiting Skills Container -->
-        {% with orbit_skills=portfolio.skills|slice:":12" %}
-        {% if orbit_skills %}
-        <div class="skills-orbit-container" style="--orbit-count: {{ orbit_skills|length }};">
-            {% for skill in orbit_skills %}
-            <div class="orbit-skill" style="--skill-index: {{ forloop.counter0 }};">
-                <div class="orbit-skill-icon">
-                    {% if skill.icon %}
-                    <i class="{{ skill.icon }}"></i>
-                    {% else %}
-                    <span class="text-xs font-bold">{{ skill.name|slice:":2"|upper }}</span>
-                    {% endif %}
-                </div>
-                <span class="orbit-skill-label">{{ skill.name }}</span>
+            <!-- Orbit ring guides (decorative, not interactive) -->
+            <div style="position:absolute; inset:0; border-radius:50%;
+                        border:1px dashed rgba(255,255,255,0.08);
+                        pointer-events:none;"></div>
+            <div style="position:absolute; inset:70px; border-radius:50%;
+                        border:1px dashed rgba(255,255,255,0.04);
+                        pointer-events:none;"></div>
+
+            <!-- Central globe (static, no rotation) -->
+            <div style="position:absolute; inset:0; display:flex;
+                        align-items:center; justify-content:center;
+                        pointer-events:none; z-index:2;">
+                <!-- Ambient glow -->
+                <div style="position:absolute; width:7rem; height:7rem;
+                            background:rgba(168,85,247,0.22); border-radius:50%;
+                            filter:blur(2rem);"></div>
+                <!-- Globe FA icon — stays upright, never rotates -->
+                <i class="fa-solid fa-globe text-primary"
+                   style="font-size:3.75rem; opacity:0.88; position:relative; z-index:1;"></i>
             </div>
-            {% endfor %}
+
+            <!-- Orbit items: wrapper sets --n, each item sets --i -->
+            {% with orbit_skills=portfolio.skills|slice:":12" %}
+            {% if orbit_skills %}
+            <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
+                {% for skill in orbit_skills %}
+                <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
+                    <div class="sk-orbit-icon" title="{{ skill.name }}">
+                        {% if skill.icon %}
+                        <i class="{{ skill.icon }}"></i>
+                        {% else %}
+                        <span style="font-size:0.6rem; font-weight:700;
+                                     letter-spacing:0.03em;">{{ skill.name|slice:":2"|upper }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
         </div>
-        {% endif %}
-        {% endwith %}
+
+        <!-- "View all skills" button (below globe) -->
+        <button onclick="expandSkillsFromGlobe()"
+                class="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full
+                       bg-white/5 border border-white/10 hover:bg-white/10
+                       hover:border-white/20 transition-all font-medium text-sm
+                       text-slate-300 hover:text-white shadow-lg shadow-black/20">
+            <i class="fa-solid fa-grip text-primary/70 group-hover:text-primary transition"></i>
+            <span>View all skills</span>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition" fill="none"
+                 viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
     </div>
 
     <!-- Skills Grid (All skills, organized by category) -->
@@ -367,39 +396,79 @@
     {% endif %}
 </section>
 
-<!-- Accordion Script -->
+<!-- Skills Scripts -->
 <script>
+    /* ── Toggle accordion (existing behaviour) ──────────────── */
     function toggleSkills() {
         const hiddenBlocks = document.querySelectorAll('.hidden-skills');
         const btnText = document.getElementById('toggle-skills-text');
         const btnIcon = document.getElementById('toggle-skills-icon');
+        if (!hiddenBlocks.length) return;
 
         const isHidden = hiddenBlocks[0].classList.contains('hidden');
-
         if (isHidden) {
-            // Show them
-            hiddenBlocks.forEach(block => {
+            hiddenBlocks.forEach((block, i) => {
                 block.classList.remove('hidden');
-                // Slight delay for smooth fade-in slide effect
                 setTimeout(() => {
                     block.classList.remove('opacity-0', 'translate-y-4');
                     block.classList.add('opacity-100', 'translate-y-0');
-                }, 10);
+                }, i * 60 + 10);
             });
-            btnText.innerText = "Show less skills";
-            btnIcon.classList.add('rotate-180');
+            if (btnText) btnText.innerText = 'Show less skills';
+            if (btnIcon) btnIcon.classList.add('rotate-180');
         } else {
-            // Hide them (fade out then hide)
             hiddenBlocks.forEach(block => {
                 block.classList.remove('opacity-100', 'translate-y-0');
                 block.classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => {
-                    block.classList.add('hidden');
-                }, 300); // Wait for transition
+                setTimeout(() => block.classList.add('hidden'), 300);
             });
-            btnText.innerText = "View all skills";
-            btnIcon.classList.remove('rotate-180');
+            if (btnText) btnText.innerText = 'View all skills';
+            if (btnIcon) btnIcon.classList.remove('rotate-180');
         }
+    }
+
+    /* ── Globe → Accordion scatter transition ────────────────── */
+    function expandSkillsFromGlobe() {
+        const globeArea = document.getElementById('sk-globe-area');
+        const globeWrap = document.getElementById('sk-globe-wrap');
+        if (!globeArea) return;
+
+        /* 1. Shrink the orbit icons outward then fade globe container */
+        if (globeWrap) {
+            globeWrap.style.transition = 'transform 0.45s ease-in, opacity 0.45s ease-in';
+            globeWrap.style.transform  = 'scale(1.25)';
+            globeWrap.style.opacity    = '0';
+        }
+
+        /* 2. Collapse the globe area (CSS class handles max-height + opacity) */
+        setTimeout(() => {
+            const currentH = globeArea.scrollHeight;
+            globeArea.style.maxHeight = currentH + 'px'; // pin before collapse
+            requestAnimationFrame(() => {
+                globeArea.classList.add('collapsed');
+            });
+        }, 350);
+
+        /* 3. Cascade-reveal all hidden skill categories */
+        setTimeout(() => {
+            const hiddenBlocks = document.querySelectorAll('.hidden-skills');
+            hiddenBlocks.forEach((block, i) => {
+                block.classList.remove('hidden');
+                setTimeout(() => {
+                    block.classList.remove('opacity-0', 'translate-y-4');
+                    block.classList.add('opacity-100', 'translate-y-0');
+                }, i * 80 + 10);
+            });
+            /* sync bottom toggle button state */
+            const btnText = document.getElementById('toggle-skills-text');
+            const btnIcon = document.getElementById('toggle-skills-icon');
+            if (btnText) btnText.innerText = 'Show less skills';
+            if (btnIcon) btnIcon.classList.add('rotate-180');
+
+            /* smooth scroll to accordion */
+            const accordion = document.getElementById('skills-accordion');
+            if (accordion) accordion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 650);
     }
 </script>
 

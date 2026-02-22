@@ -138,95 +138,76 @@
             }
         }
 
-        /* ── Skills Orbit Animation ──────────────────────────── */
-        .skills-orbit-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20rem;
-            height: 20rem;
-            will-change: transform;
-        }
-
-        @media (min-width: 1024px) {
-            .skills-orbit-container {
-                width: 24rem;
-                height: 24rem;
-            }
-        }
-
-        .orbit-skill {
+        /* ── Skills Globe Orbit (sk- prefix, isolated) ──────── */
+        /* orbit wrappers are invisible — pointer-events: none  */
+        /* only the icon bubble captures mouse events            */
+        .sk-orbit-item {
             position: absolute;
             top: 0;
-            left: 50%;
+            left: 0;
             width: 100%;
             height: 100%;
-            margin-left: -50%;
-            animation: skills-orbit 45s linear infinite;
-            animation-delay: calc(-45s / var(--orbit-count) * var(--skill-index));
+            animation: sk-orbit 45s linear infinite;
+            animation-delay: calc(-45s / var(--n) * var(--i));
             will-change: transform;
+            pointer-events: none;
         }
 
-        .orbit-skill-icon {
+        .sk-orbit-icon {
             position: absolute;
-            top: -2.5rem;
-            left: 50%;
-            margin-left: -1.75rem;
-            width: 3.5rem;
-            height: 3.5rem;
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            /* icon sits on the orbit ring edge: top = -(icon-height/2) */
+            top: -1.5rem;
+            left: calc(50% - 1.5rem);
+            width: 3rem;
+            height: 3rem;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--color-primary, #a855f7);
-            font-size: 1.25rem;
-            animation: skills-counter-spin 45s linear infinite;
-            animation-delay: calc(-45s / var(--orbit-count) * var(--skill-index));
+            font-size: 1rem;
+            animation: sk-counter-orbit 45s linear infinite;
+            animation-delay: calc(-45s / var(--n) * var(--i));
             will-change: transform;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+            /* pointer-events: auto allows hover on icon only */
+            pointer-events: auto;
+            cursor: default;
+            /* Use CSS `scale` property (not transform) to avoid  */
+            /* conflicting with the rotation animation             */
+            scale: 1;
+            transition: scale 0.25s ease, border-color 0.25s ease,
+                        box-shadow 0.25s ease, background 0.25s ease;
         }
 
-        .orbit-skill:hover .orbit-skill-icon {
-            background: rgba(30, 41, 59, 0.9);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
-            transform: scale(1.15);
+        .sk-orbit-icon:hover {
+            scale: 1.22;
+            border-color: rgba(168, 85, 247, 0.55);
+            box-shadow: 0 0 22px rgba(168, 85, 247, 0.38),
+                        0 4px 20px rgba(0, 0, 0, 0.35);
+            background: rgba(25, 35, 70, 0.95);
         }
 
-        .orbit-skill-label {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.6);
-            white-space: nowrap;
+        @keyframes sk-orbit {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes sk-counter-orbit {
+            to { transform: rotate(-360deg); }
+        }
+
+        /* Globe wrapper collapse animation (triggered via JS) */
+        #sk-globe-area {
+            transition: opacity 0.45s ease, max-height 0.5s ease;
+            overflow: hidden;
+        }
+        #sk-globe-area.collapsed {
             opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .orbit-skill:hover .orbit-skill-label {
-            opacity: 1;
-        }
-
-        @keyframes skills-orbit {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes skills-counter-spin {
-            100% {
-                transform: rotate(-360deg);
-            }
+            max-height: 0 !important;
         }
     </style>
 
