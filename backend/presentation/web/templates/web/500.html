@@ -1,32 +1,349 @@
-{% extends 'web/base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block title %}Server Error — {{ site_settings.site_title }}{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — Server Error | {% if site_settings %}{{ site_settings.site_title }}{% else %}JaysonKhan{% endif %}
+    </title>
+    <meta name="robots" content="noindex, nofollow">
 
-{% block content %}
-<section class="min-h-[70vh] flex items-center justify-center px-6 py-32">
-    <div class="text-center max-w-md mx-auto">
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        <!-- Icon -->
-        <div class="relative inline-flex items-center justify-center mb-8">
-            <div class="absolute w-32 h-32 rounded-full bg-red-500/10 animate-pulse"></div>
-            <div class="relative w-24 h-24 rounded-full bg-white/5 border border-white/10
-                        flex items-center justify-center backdrop-blur-sm">
-                <i class="fa-solid fa-triangle-exclamation text-4xl text-red-400/70"></i>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0a0f1e;
+            font-family: 'Outfit', sans-serif;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ── Animated background grid ─────────────────────────────── */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(239, 68, 68, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(239, 68, 68, 0.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Glow blobs ───────────────────────────────────────────── */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob-1 {
+            width: 480px;
+            height: 480px;
+            background: rgba(239, 68, 68, 0.06);
+            top: -100px;
+            left: -100px;
+            animation: blob-drift 22s ease-in-out infinite alternate;
+        }
+
+        .blob-2 {
+            width: 360px;
+            height: 360px;
+            background: rgba(168, 85, 247, 0.06);
+            bottom: -80px;
+            right: -80px;
+            animation: blob-drift 28s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes blob-drift {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(40px, 30px) scale(1.08);
+            }
+        }
+
+        /* ── Main container ───────────────────────────────────────── */
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem 1.5rem;
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── Giant 500 with layered effect ────────────────────────── */
+        .error-number {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2rem;
+            line-height: 1;
+        }
+
+        .error-number .shadow-num {
+            font-size: clamp(6rem, 20vw, 10rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(239, 68, 68, 0.12);
+            user-select: none;
+            display: block;
+        }
+
+        .error-number .real-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(5rem, 18vw, 9rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #ef4444 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s linear infinite;
+            background-size: 200% auto;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* ── Warning icon ring ────────────────────────────────────── */
+        .icon-ring {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.75rem;
+        }
+
+        .icon-ring .pulse-ring {
+            position: absolute;
+            inset: -12px;
+            border-radius: 50%;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            animation: ping-slow 3s ease-in-out infinite;
+        }
+
+        .icon-ring .pulse-ring-2 {
+            animation-delay: 1.5s;
+            inset: -24px;
+            border-color: rgba(239, 68, 68, 0.08);
+        }
+
+        .icon-ring .icon-wrap {
+            width: 80px;
+            height: 80px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .icon-ring .icon-wrap i {
+            font-size: 2rem;
+            color: #f87171;
+        }
+
+        @keyframes ping-slow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0;
+            }
+        }
+
+        /* ── Text ─────────────────────────────────────────────────── */
+        .error-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 0.75rem;
+        }
+
+        .error-desc {
+            font-size: 1rem;
+            color: #94a3b8;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        /* ── CTA button ───────────────────────────────────────────── */
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.875rem 2rem;
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            box-shadow: 0 0 32px rgba(168, 85, 247, 0.3);
+            transition: all 0.25s ease;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 48px rgba(168, 85, 247, 0.45);
+        }
+
+        .btn-home:active {
+            transform: translateY(0);
+        }
+
+        /* ── Glitch scanline overlay ──────────────────────────────── */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* ── Floating particles ───────────────────────────────────── */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.5);
+            border-radius: 50%;
+            animation: float-up linear infinite;
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0);
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh) scale(1.5);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background -->
+    <div class="bg-grid"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="scanlines"></div>
+
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Main content -->
+    <div class="container">
+
+        <!-- Pulse icon -->
+        <div class="icon-ring">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring pulse-ring-2"></div>
+            <div class="icon-wrap">
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
 
-        <h1 class="text-2xl font-bold mb-3 text-white">Something went wrong</h1>
-        <p class="text-slate-400 text-base leading-relaxed mb-8">
-            An unexpected error occurred on the server.<br>
-            It's been noted — please try again in a moment.
+        <!-- Giant 500 -->
+        <div class="error-number">
+            <span class="shadow-num">500</span>
+            <span class="real-num">500</span>
+        </div>
+
+        <h1 class="error-title">Server error</h1>
+        <p class="error-desc">
+            Something went wrong on our end.<br>
+            We've been notified — please try again in a moment.
         </p>
 
-        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary
-                  px-6 py-3 rounded-xl transition font-semibold">
-            <i class="fa-solid fa-arrow-left text-sm"></i>
+        <a href="/" class="btn-home">
+            <i class="fa-solid fa-house" style="font-size: 0.9rem;"></i>
             Back to Home
         </a>
 
     </div>
-</section>
-{% endblock %}
+
+    <script>
+        // Generate floating red particles
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.bottom = '-4px';
+            p.style.animationDuration = (8 + Math.random() * 14) + 's';
+            p.style.animationDelay = (Math.random() * 12) + 's';
+            const size = (1 + Math.random() * 3) + 'px';
+            p.style.width = size;
+            p.style.height = size;
+            container.appendChild(p);
+        }
+    </script>
+
+</body>
+
+</html>
