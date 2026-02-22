@@ -22,6 +22,9 @@ ALLOWED_HOSTS = ['jaysonkhan.com', 'www.jaysonkhan.com', '144.91.69.225']
 # ── Logging: hide internal details from responses ─────────────────────────────
 # In prod Django already hides tracebacks (DEBUG=False).
 # Add server-side logging to a file so errors are still visible to you:
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)  # create the directory if it doesn't exist yet
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -35,8 +38,9 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django_errors.log'),
+            'filename': os.path.join(LOGS_DIR, 'django_errors.log'),
             'formatter': 'verbose',
+            'delay': True,  # don't open the file until the first log record is emitted
         },
     },
     'root': {
@@ -44,3 +48,4 @@ LOGGING = {
         'level': 'ERROR',
     },
 }
+
