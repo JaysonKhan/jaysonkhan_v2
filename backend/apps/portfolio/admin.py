@@ -25,13 +25,13 @@ class ProjectScreenshotInline(UnfoldTabularInline):
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('name', 'icon_display', 'category', 'level', 'order')
-    list_editable = ('category', 'level', 'order')
-    list_filter = ('category',)
+    list_display = ('name', 'icon_display', 'category', 'level', 'order', 'show_in_hero')
+    list_editable = ('category', 'level', 'order', 'show_in_hero')
+    list_filter = ('category', 'show_in_hero')
     search_fields = ('name',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'icon', 'category', 'level', 'order'),
+            'fields': ('name', 'icon', 'category', 'level', 'order', 'show_in_hero'),
         }),
     )
 

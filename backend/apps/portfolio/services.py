@@ -54,5 +54,6 @@ class PortfolioService:
             'featured_projects': self.repository.get_featured_projects(),
             'skills': self.repository.get_all_skills(),
             'skills_grouped': self.repository.get_skills_grouped(),
+            'hero_skills': self.repository.get_hero_skills(),
             'experience': self.repository.get_all_experience(),
         }

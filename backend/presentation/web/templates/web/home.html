@@ -42,7 +42,7 @@
         <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
         <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
 
-        {% with orbit_skills=portfolio.skills|slice:":6" %}
+        {% with orbit_skills=portfolio.hero_skills %}
         {% if orbit_skills %}
         <!-- Hero Orbit Animation -->
         <div class="hero-orbit-container hidden md:block" style="--total: {{ orbit_skills|length }};">
@@ -289,7 +289,7 @@
                 </div>
 
                 <!-- Orbit items: --n set on container, --i on each item -->
-                {% with orbit_skills=portfolio.skills|slice:":12" %}
+                {% with orbit_skills=portfolio.hero_skills %}
                 {% if orbit_skills %}
                 <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
                     {% for skill in orbit_skills %}
