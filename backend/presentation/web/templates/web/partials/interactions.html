@@ -9,28 +9,25 @@
 
 <section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10">
 
-    {# ── Like button ──────────────────────────────────────────────────────────── #}
     <div class="flex items-center gap-4 mb-12">
         {% if tg_profile %}
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
             data-liked="{{ user_liked|yesno:'true,false' }}"
-            class="like-btn flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-200
+            class="like-btn flex items-center gap-2 px-6 py-2.5 rounded-full border transition-all duration-300 transform active:scale-95
                      {% if user_liked %}liked border-pink-500/60 bg-pink-500/10 text-pink-400
                      {% else %}border-white/10 bg-white/5 text-slate-400 hover:border-pink-500/40 hover:text-pink-400{% endif %}">
             <i class="fa-{% if user_liked %}solid{% else %}regular{% endif %} fa-heart text-sm" id="like-icon"></i>
             <span id="like-count" class="text-sm font-semibold">{{ like_count }}</span>
+            <span class="text-xs opacity-70 ml-0.5">likes</span>
         </button>
         {% else %}
-        {# Not logged in — show passive like count + connect prompt #}
-        <div class="flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/5 text-slate-500">
+        {# Not logged in — show passive like count #}
+        <div class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-white/5 text-slate-500">
             <i class="fa-regular fa-heart text-sm"></i>
             <span class="text-sm font-semibold">{{ like_count }}</span>
+            <span class="text-xs opacity-70 ml-0.5">likes</span>
         </div>
         {% endif %}
-
-        <span class="text-slate-500 text-sm">
-            {{ like_count }} like{{ like_count|pluralize }}
-        </span>
     </div>
 
     {# ── Comments section ─────────────────────────────────────────────────────── #}
@@ -121,24 +118,31 @@
 
         {% else %}
         {# Not logged in — Telegram connect prompt #}
-        <div class="glass rounded-2xl border border-white/8 p-6 text-center">
-            <div class="w-14 h-14 rounded-full bg-[#2AABEE]/10 border border-[#2AABEE]/20
-                    flex items-center justify-center mx-auto mb-4">
-                <i class="fa-brands fa-telegram text-2xl text-[#2AABEE]"></i>
+        <div class="glass rounded-2xl border border-white/8 p-8 md:p-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-[#2AABEE]/10 border border-[#2AABEE]/20
+                    flex items-center justify-center mx-auto mb-6">
+                <i class="fa-brands fa-telegram text-3xl text-[#2AABEE]"></i>
             </div>
-            <h4 class="text-base font-semibold mb-1 text-white">Connect with Telegram to comment & like</h4>
-            <p class="text-slate-500 text-sm mb-5">Your Telegram name and photo will be shown with your comment.</p>
+            <h4 class="text-lg font-bold mb-2 text-white">Connect with Telegram to interact</h4>
+            <p class="text-slate-400 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
+                Join our community! Your Telegram name and photo will be displayed with your comments and likes.
+            </p>
 
             {# Telegram Login Widget #}
-            {% if telegram_bot_username %}
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                data-telegram-login="{{ telegram_bot_username }}" data-size="large"
-                data-auth-url="{{ request.scheme }}://{{ request.get_host }}{% url 'interactions:telegram_auth' %}?next={{ request.path|urlencode }}"
-                data-request-access="write" data-userpic="true" data-radius="10">
-                </script>
-            {% else %}
-            <p class="text-yellow-500/70 text-xs">Telegram bot not configured yet.</p>
-            {% endif %}
+            <div class="flex justify-center">
+                {% if telegram_bot_username %}
+                <script async src="https://telegram.org/js/telegram-widget.js?22"
+                    data-telegram-login="{{ telegram_bot_username }}" data-size="large"
+                    data-auth-url="{{ request.scheme }}://{{ request.get_host }}{% url 'interactions:telegram_auth' %}?next={{ request.path|urlencode }}"
+                    data-request-access="write" data-userpic="true" data-radius="12">
+                    </script>
+                {% else %}
+                <div
+                    class="px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500/80 text-xs">
+                    Telegram bot not configured yet.
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
 
