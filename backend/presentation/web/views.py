@@ -3,6 +3,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import render
+from django.contrib.contenttypes.models import ContentType
 from portfolio.services import PortfolioService, PortfolioRepository
 from portfolio.models import Project
 from blog.services import BlogService, BlogRepository
@@ -10,6 +11,8 @@ from contact.services import ContactService, ContactRepository
 from contact.spam_protection import is_honeypot_filled, is_rate_limited
 from blog.models import Post
 from core.models import SiteSettings
+from interactions.models import Comment, Like
+from interactions.views import get_tg_profile  # session helper
 
 
 def custom_404_view(request, exception=None):
@@ -26,6 +29,32 @@ def custom_500_view(request):
     Prevents leaking stack traces and settings to users.
     """
     return render(request, 'web/500.html', status=500)
+
+
+def _interactions_context(request, obj):
+    """
+    Returns like/comment data for a given model instance.
+    Passed to template context for BlogDetailView and ProjectDetailView.
+    """
+    ct = ContentType.objects.get_for_model(obj)
+    comments = Comment.objects.filter(
+        content_type=ct, object_id=obj.pk, is_approved=True
+    ).select_related('author').order_by('created_at')
+    like_count = Like.objects.filter(content_type=ct, object_id=obj.pk).count()
+
+    profile = get_tg_profile(request)
+    user_liked = (
+        Like.objects.filter(author=profile, content_type=ct, object_id=obj.pk).exists()
+        if profile else False
+    )
+    return {
+        'comments':   comments,
+        'like_count': like_count,
+        'user_liked': user_liked,
+        'app_label':  ct.app_label,
+        'model_name': ct.model,
+        'object_id':  obj.pk,
+    }
 
 
 def _apps_visible():
@@ -116,6 +145,10 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
         # Only visible projects are accessible
         return Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_interactions_context(self.request, self.object))
+        return context
 
 class BlogListView(ListView):
     template_name = 'web/blog_list.html'
@@ -136,6 +169,10 @@ class BlogDetailView(DetailView):
         blog_service = BlogService(BlogRepository())
         return blog_service.get_post_details(self.kwargs.get('slug'))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_interactions_context(self.request, self.object))
+        return context
 
 class ContactView(TemplateView):
     template_name = 'web/contact.html'

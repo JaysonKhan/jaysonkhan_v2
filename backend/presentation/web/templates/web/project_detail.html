@@ -93,5 +93,9 @@
         </a>
         {% endif %}
     </div>
+
+    {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id
+    comments=comments like_count=like_count user_liked=user_liked %}
+
 </section>
 {% endblock %}

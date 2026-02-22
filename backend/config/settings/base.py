@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'blog',
     'contact',
     'core',
+    'interactions',
 ]
 
 MIDDLEWARE = [
@@ -144,6 +145,10 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
+
+# Telegram Bot Token — used to verify Login Widget signatures
+TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_BOT_USERNAME = env('TELEGRAM_BOT_USERNAME', default='')
 
 # REST Framework settings
 REST_FRAMEWORK = {

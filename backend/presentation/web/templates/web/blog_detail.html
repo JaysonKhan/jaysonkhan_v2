@@ -23,7 +23,8 @@
         <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
         <div class="flex items-center space-x-4 text-slate-400">
             <div class="flex items-center space-x-2">
-                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{ site_settings.site_author_initials }}
+                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{
+                    site_settings.site_author_initials }}
                 </div>
                 <span class="font-medium">By {{ site_settings.site_author }}</span>
             </div>
@@ -49,5 +50,9 @@
             {% endfor %}
         </div>
     </div>
+
+    {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id
+    comments=comments like_count=like_count user_liked=user_liked %}
+
 </article>
 {% endblock %}
