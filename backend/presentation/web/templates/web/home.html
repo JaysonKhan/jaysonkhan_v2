@@ -163,13 +163,15 @@
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
-                    class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
+                    class="w-full object-cover group-hover:scale-105 transition duration-500"
+                    style="height:var(--img-card-h)">
                 <div class="absolute top-3 left-3">
                     <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
                 </div>
             </div>
             {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
+            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative"
+                style="height:var(--img-card-h)">
                 No image
                 <div class="absolute top-3 left-3">
                     <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
@@ -197,9 +199,11 @@
             class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit"
             style="border-radius:var(--radius-card)">
             {% if project.image %}
-            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full object-cover" style="height:var(--img-card-h)">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full object-cover"
+                style="height:var(--img-card-h)">
             {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm" style="height:var(--img-card-h)">No image
+            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm"
+                style="height:var(--img-card-h)">No image
             </div>
             {% endif %}
             <div style="padding:var(--space-card-padding)">
@@ -265,12 +269,10 @@
     </p>
 
     <!-- Globe + Orbiting Skills (desktop only) -->
-    <div id="sk-globe-area" class="hidden md:flex flex-col items-center gap-6 mb-16"
-         style="max-height: 600px;">
+    <div id="sk-globe-area" class="hidden md:flex flex-col items-center gap-6 mb-16" style="max-height: 600px;">
 
         <!-- Fixed-size globe wrapper: orbit items positioned relative to this -->
-        <div id="sk-globe-wrap"
-             style="position:relative; width:380px; height:380px; flex-shrink:0;">
+        <div id="sk-globe-wrap" style="position:relative; width:380px; height:380px; flex-shrink:0;">
 
             <!-- Orbit ring guides (decorative, not interactive) -->
             <div style="position:absolute; inset:0; border-radius:50%;
@@ -290,7 +292,7 @@
                             filter:blur(2rem);"></div>
                 <!-- Globe FA icon — stays upright, never rotates -->
                 <i class="fa-solid fa-globe text-primary"
-                   style="font-size:3.75rem; opacity:0.88; position:relative; z-index:1;"></i>
+                    style="font-size:3.75rem; opacity:0.88; position:relative; z-index:1;"></i>
             </div>
 
             <!-- Orbit items: wrapper sets --n, each item sets --i -->
@@ -315,71 +317,105 @@
         </div>
 
         <!-- "View all skills" button (below globe) -->
-        <button onclick="expandSkillsFromGlobe()"
-                class="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full
+        <button onclick="expandSkillsFromGlobe()" class="group inline-flex items-center gap-2 px-6 py-2.5 rounded-full
                        bg-white/5 border border-white/10 hover:bg-white/10
                        hover:border-white/20 transition-all font-medium text-sm
                        text-slate-300 hover:text-white shadow-lg shadow-black/20">
             <i class="fa-solid fa-grip text-primary/70 group-hover:text-primary transition"></i>
             <span>View all skills</span>
-            <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition" fill="none"
-                 viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M19 9l-7 7-7-7"/>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-white transition" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
         </button>
     </div>
 
-    <!-- Skills Grid (All skills, organized by category) -->
-    <div id="skills-accordion" class="max-w-4xl mx-auto space-y-8">
+    <!-- Skills Grid (Grouped by Category — collapsible cards + tile grid) -->
+    <div id="skills-accordion" class="max-w-4xl mx-auto space-y-4">
         {% for category_name, skills in portfolio.skills_grouped.items %}
-        {% if forloop.counter <= 2 %} <!-- Default Visible Categories -->
-            <div class="skill-category-block">
-                <span class="skill-category-header">{{ category_name }}</span>
-                <div class="flex flex-wrap gap-2 mt-3"
-                    {% for skill in skills %}
-                    <div
-                        class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
-                        {% if skill.icon %}
-                        <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
+
+        {% if forloop.counter <= 2 %} <!-- Default Visible Category Card -->
+            <div class="sk-cat-card">
+                <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
+                    onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
+                    <span class="sk-cat-label">
+                        {% with cat_key=skills.0.category %}
+                        {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen"></i>
+                        {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group"></i>
+                        {% elif cat_key == 'backend' %}<i class="fa-solid fa-server"></i>
+                        {% elif cat_key == 'database' %}<i class="fa-solid fa-database"></i>
+                        {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved"></i>
+                        {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high"></i>
+                        {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film"></i>
+                        {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker"></i>
+                        {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib"></i>
+                        {% else %}<i class="fa-solid fa-code"></i>
                         {% endif %}
-                        <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
+                        {% endwith %}
+                        {{ category_name }}
+                        <span class="sk-cat-count">{{ skills|length }}</span>
+                    </span>
+                    <svg class="sk-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                <div class="sk-cat-body sk-tile-grid">
+                    {% for skill in skills %}
+                    <div class="sk-tile" title="{{ skill.name }}">
+                        {% if skill.icon %}
+                        <i class="{{ skill.icon }} sk-tile-icon"></i>
+                        {% else %}
+                        <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
+                        {% endif %}
+                        <span class="sk-tile-name">{{ skill.name }}</span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+
             {% else %}
-            <!-- Hidden Categories (Expandable) -->
-            <div class="skill-category-block hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500">
-                <span class="skill-category-header">{{ category_name }}</span>
-                <div class="flex flex-wrap gap-2 mt-3"
-                    {% for skill in skills %}
-                    <div
-                        class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
-                        {% if skill.icon %}
-                        <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
+            <!-- Hidden Category Card (revealed by Show more) -->
+            <div class="sk-cat-card hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500">
+                <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
+                    onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
+                    <span class="sk-cat-label">
+                        {% with cat_key=skills.0.category %}
+                        {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen"></i>
+                        {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group"></i>
+                        {% elif cat_key == 'backend' %}<i class="fa-solid fa-server"></i>
+                        {% elif cat_key == 'database' %}<i class="fa-solid fa-database"></i>
+                        {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved"></i>
+                        {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high"></i>
+                        {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film"></i>
+                        {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker"></i>
+                        {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib"></i>
+                        {% else %}<i class="fa-solid fa-code"></i>
                         {% endif %}
-                        <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
+                        {% endwith %}
+                        {{ category_name }}
+                        <span class="sk-cat-count">{{ skills|length }}</span>
+                    </span>
+                    <svg class="sk-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                <div class="sk-cat-body sk-tile-grid">
+                    {% for skill in skills %}
+                    <div class="sk-tile" title="{{ skill.name }}">
+                        {% if skill.icon %}
+                        <i class="{{ skill.icon }} sk-tile-icon"></i>
+                        {% else %}
+                        <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
+                        {% endif %}
+                        <span class="sk-tile-name">{{ skill.name }}</span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
+
             {% endif %}
             {% empty %}
-            <!-- Fallback if no categories -->
-            <div class="flex flex-wrap gap-2 max-w-4xl mx-auto"
-                {% for skill in portfolio.skills %}
-                <div
-                    class="skill-pill flex items-center gap-2 px-3 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 hover:border-primary/50 text-slate-300 hover:text-white rounded-full cursor-default group skill-pill-glow">
-                    {% if skill.icon %}
-                    <i class="{{ skill.icon }} text-primary group-hover:scale-110 transition-transform text-sm"></i>
-                    {% endif %}
-                    <span class="text-sm font-medium tracking-wide">{{ skill.name }}</span>
-                </div>
-                {% empty %}
-                <p class="text-center text-slate-500 w-full">No skills added yet.</p>
-                {% endfor %}
-            </div>
+            <p class="text-center text-slate-500">No skills added yet.</p>
             {% endfor %}
     </div>
 
@@ -400,6 +436,10 @@
 
 <!-- Skills Scripts -->
 <script>
+    /* Per-category collapse/expand toggle */
+    function toggleSkCat(headerEl) {
+        headerEl.closest('.sk-cat-card').classList.toggle('collapsed');
+    }
     let skillsExpanded = false;
 
     /* Globe "View all skills" button → expand from globe */
@@ -410,8 +450,8 @@
 
         if (globeWrap) {
             globeWrap.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
-            globeWrap.style.transform  = 'scale(1.2)';
-            globeWrap.style.opacity    = '0';
+            globeWrap.style.transform = 'scale(1.2)';
+            globeWrap.style.opacity = '0';
         }
         setTimeout(() => {
             globeArea.style.maxHeight = globeArea.scrollHeight + 'px';
@@ -464,8 +504,8 @@
         globeArea.style.maxHeight = '';
         if (globeWrap) {
             globeWrap.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-            globeWrap.style.transform  = 'scale(1)';
-            globeWrap.style.opacity    = '1';
+            globeWrap.style.transform = 'scale(1)';
+            globeWrap.style.opacity = '1';
         }
     }
 
