@@ -233,10 +233,9 @@
     <div id="tg-chat-container" class="space-y-6">
         <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
             Comments
-            {% if comments %}
-            <span class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length
-                }}</span>
-            {% endif %}
+            {% if comments %}<span id="comments-counter"
+                class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length
+                }}</span>{% endif %}
         </h3>
 
         {% if comments %}
@@ -278,7 +277,13 @@
 
                         {# Content Row with Inline Meta #}
                         <div class="tg-content-row">
-                            <span class="tg-meta-inline">{{ comment.created_at|date:"H:i" }}</span>
+                            <span class="tg-meta-inline">
+                                {% if comment.is_reviewed %}
+                                <i class="fa-solid fa-check-double text-[10px] text-[#4da3ef] mr-0.5"
+                                    title="Seen by admin"></i>
+                                {% endif %}
+                                {{ comment.created_at|date:"H:i" }}
+                            </span>
                             <div class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap">{{ comment.text }}
                             </div>
                         </div>
@@ -425,6 +430,7 @@
     (function () {
         let parentCommentId = null;
         let selectedFile = null;
+        let isReacting = false;
 
         // ── Reply Logic ─────────────────────────────────────────────────────────
         window.setReply = function (id, name, snippet) {
@@ -469,17 +475,61 @@
         }
 
         window.toggleReaction = async function (commentId, emoji) {
+            if (isReacting) return;
+            isReacting = true;
+
             const url = `/interactions/comment/${commentId}/react/`;
+            const container = document.getElementById(`reactions-${commentId}`);
+
             try {
                 const resp = await fetch(url, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ emoji })
                 });
-                if (resp.ok) { location.reload(); } // Simple approach: reload to show updated counts
+
+                if (resp.status === 401) {
+                    alert("Please login with Telegram to react.");
+                    return;
+                }
+
+                const data = await resp.json();
+                if (resp.ok && data.status === 'ok') {
+                    // Update DOM based on returned reactions
+                    updateReactionDOM(commentId, data.reactions);
+                    // Hide any menus
+                    document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+                }
             } catch (e) {
                 console.error("Reaction failed", e);
+            } finally {
+                isReacting = false;
             }
+        }
+
+        function updateReactionDOM(commentId, reactions) {
+            const container = document.getElementById(`reactions-${commentId}`);
+            if (!container) return;
+
+            // We filter out buttons that are reactions (not the plus/reply trigger)
+            // Or just rebuild the list. Rebuilding is safer given the structure.
+            // But plus/reply trigger is usually at the end.
+
+            // Extract existing buttons to keep the PLUS/REPLY trigger
+            const triggerEl = container.querySelector('.flex.items-center');
+
+            // Clear current reactions (they are buttons not inside the triggerEl)
+            const reactionBtns = container.querySelectorAll('.tg-reaction-btn:not(.group-hover\\:opacity-100)');
+            reactionBtns.forEach(btn => btn.remove());
+
+            // Add new ones
+            Object.entries(reactions).forEach(([emoji, count]) => {
+                const btn = document.createElement('button');
+                btn.className = 'tg-reaction-btn';
+                btn.onclick = () => window.toggleReaction(commentId, emoji);
+                btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
+                container.insertBefore(btn, triggerEl);
+            });
         }
 
         // ── Form Submission (Multipart) ──────────────────────────────────────────
@@ -506,7 +556,7 @@
                     });
                     const data = await resp.json();
                     if (resp.status === 201) {
-                        location.reload(); // Show the message state or just reload if we auto-approve
+                        location.reload();
                     } else {
                         alert(data.error || "Error sending comment");
                     }

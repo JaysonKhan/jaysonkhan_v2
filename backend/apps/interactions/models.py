@@ -36,7 +36,8 @@ class TelegramProfile(models.Model):
 class Comment(models.Model):
     """
     Generic comment that can be attached to any model (Post, Project, …).
-    Requires admin approval (is_approved=False by default).
+    By default, comments are auto-approved (visible to all).
+    Admin can mark them as reviewed via the 'is_reviewed' field.
     """
     author       = models.ForeignKey(
         TelegramProfile, on_delete=models.CASCADE, related_name='comments'
@@ -52,8 +53,12 @@ class Comment(models.Model):
     image        = models.ImageField(upload_to='comments/images/', null=True, blank=True)
     
     is_approved  = models.BooleanField(
+        default=True,
+        help_text='If False, the comment is hidden from users.'
+    )
+    is_reviewed  = models.BooleanField(
         default=False,
-        help_text='Only approved comments are shown to other users.'
+        help_text='Marked as True when an admin has seen/approved this comment manually.'
     )
     created_at   = models.DateTimeField(auto_now_add=True)
 

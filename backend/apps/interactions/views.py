@@ -126,11 +126,12 @@ class AddCommentView(View):
             text=text,
             parent=parent,
             image=image,
-            is_approved=False, # Could auto-approve for testing, but keeping False for now (user usually needs manual app or auto-app logic)
+            is_approved=True, # Auto-approved as requested
+            is_reviewed=False, # Wait for admin to "see" it
         )
         return JsonResponse({
-            'status': 'pending',
-            'message': 'Your comment has been submitted and is awaiting moderation.',
+            'status': 'ok',
+            'message': 'Your comment has been posted successfully.',
         }, status=201)
 
 

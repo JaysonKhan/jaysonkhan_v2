@@ -13,13 +13,13 @@ class TelegramProfileAdmin(ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(ModelAdmin):
-    list_display   = ('author', 'short_text', 'parent', 'has_image', 'is_approved', 'created_at')
-    list_filter    = ('is_approved', 'content_type', 'created_at')
-    list_editable  = ('is_approved',)
+    list_display   = ('author', 'short_text', 'parent', 'has_image', 'is_approved', 'is_reviewed', 'created_at')
+    list_filter    = ('is_approved', 'is_reviewed', 'content_type', 'created_at')
+    list_editable  = ('is_approved', 'is_reviewed')
     search_fields  = ('author__first_name', 'author__username', 'text')
     readonly_fields = ('author', 'content_type', 'object_id', 'created_at')
     ordering       = ('-created_at',)
-    actions        = ['approve_comments', 'reject_comments']
+    actions        = ['mark_as_reviewed', 'approve_comments', 'reject_comments']
 
     @admin.display(description='Text')
     def short_text(self, obj):
@@ -29,11 +29,15 @@ class CommentAdmin(ModelAdmin):
     def has_image(self, obj):
         return bool(obj.image)
 
-    @admin.action(description='✅ Approve selected comments')
+    @admin.action(description='👀 Mark selected as Reviewed')
+    def mark_as_reviewed(self, request, queryset):
+        queryset.update(is_reviewed=True)
+
+    @admin.action(description='✅ Approve (Make visible)')
     def approve_comments(self, request, queryset):
         queryset.update(is_approved=True)
 
-    @admin.action(description='❌ Reject (unapprove) selected comments')
+    @admin.action(description='❌ Reject (Hide from site)')
     def reject_comments(self, request, queryset):
         queryset.update(is_approved=False)
 
