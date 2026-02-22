@@ -4,13 +4,15 @@ from django.utils.text import slugify
 
 class Skill(models.Model):
     CATEGORY_CHOICES = [
-        ('mobile', 'Mobile'),
-        ('architecture', 'Architecture'),
-        ('backend', 'Backend & Networking'),
-        ('database', 'Databases'),
-        ('devops', 'DevOps & Tools'),
-        ('uiux', 'UI/UX'),
-        ('other', 'Other'),
+    ('mobile', 'Mobile'),
+    ('architecture', 'Architecture'),
+    ('backend', 'Backend & Networking'),
+    ('database', 'Databases'),
+    ('security', 'Security'),
+    ('performance', 'Performance'),
+    ('media', 'Media & Streaming'),
+    ('devops', 'DevOps & Tools'),
+    ('uiux', 'UI/UX'),
     ]
 
     name = models.CharField(max_length=100)
