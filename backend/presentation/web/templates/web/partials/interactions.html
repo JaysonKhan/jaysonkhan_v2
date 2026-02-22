@@ -7,47 +7,63 @@
     .tg-bubble {
         position: relative;
         background: #18222d;
-        border-radius: 12px;
-        padding: 10px 14px;
+        border-radius: 14px 14px 14px 4px;
+        padding: 8px 12px;
         color: #fff;
         max-width: 85%;
+        min-width: 60px;
         width: fit-content;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .comment-wrapper:hover .tg-bubble {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .tg-avatar {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px;
-        min-height: 36px;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px;
+        min-height: 38px;
         border-radius: 50% !important;
         object-fit: cover !important;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     @media (max-width: 640px) {
         .tg-bubble {
-            max-width: 95%;
+            max-width: 92%;
         }
     }
 
     .tg-reply-preview {
-        background: rgba(43, 82, 120, 0.2);
-        border-left: 3px solid #4da3ef;
-        padding: 4px 8px;
+        background: rgba(77, 163, 239, 0.08);
+        border-left: 2px solid #4da3ef;
+        padding: 4px 10px;
         margin-bottom: 6px;
-        border-radius: 4px;
-        font-size: 0.85rem;
+        border-radius: 3px;
+        font-size: 0.8rem;
         cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .tg-reply-preview:hover {
+        background: rgba(77, 163, 239, 0.15);
     }
 
     .tg-reply-preview .author {
         color: #4da3ef;
-        font-weight: 600;
+        font-weight: 700;
         display: block;
+        font-size: 0.75rem;
+        margin-bottom: 1px;
     }
 
     .tg-reply-preview .text-snippet {
-        color: #aeb7c2;
+        color: rgba(255, 255, 255, 0.7);
         display: block;
         white-space: nowrap;
         overflow: hidden;
@@ -55,62 +71,97 @@
     }
 
     .tg-comment-image {
-        border-radius: 8px;
-        margin-top: 8px;
+        border-radius: 10px;
+        margin-top: 6px;
+        margin-bottom: 2px;
         max-width: 100%;
         display: block;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 8px;
+        gap: 6px;
+        margin-top: 6px;
+        padding-left: 4px;
     }
 
     .tg-reaction-btn {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
-        padding: 2px 8px;
-        font-size: 0.75rem;
+        padding: 3px 9px;
+        font-size: 0.7rem;
         color: #aeb7c2;
+        display: flex;
         align-items: center;
-        gap: 4px;
-        transition: all 0.2s;
+        gap: 5px;
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
 
     .tg-reaction-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-1px);
     }
 
     .tg-reaction-btn.active {
-        background: rgba(77, 163, 239, 0.2);
-        border-color: #4da3ef;
+        background: rgba(77, 163, 239, 0.15);
+        border-color: rgba(77, 163, 239, 0.4);
         color: #4da3ef;
+        font-weight: 600;
     }
 
-    .tg-meta {
-        font-size: 0.7rem;
+    .tg-content-row {
+        position: relative;
+        display: block;
+        /* Allows timestamp to float naturally or be placed corner */
+        padding-bottom: 4px;
+    }
+
+    .tg-meta-inline {
+        float: right;
+        margin-left: 8px;
+        margin-top: 4px;
+        font-size: 0.65rem;
         color: rgba(255, 255, 255, 0.4);
-        text-align: right;
-        margin-top: 2px;
+        user-select: none;
+        position: relative;
+        bottom: -2px;
     }
 
-    /* Simple emoji picker menu style */
+    /* Clearfix for the inline meta */
+    .tg-content-row::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .tg-author-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #4da3ef;
+        margin-bottom: 2px;
+        display: block;
+    }
+
+    /* Emoji Picker Refinement */
     .tg-emoji-menu {
         position: absolute;
-        bottom: 100%;
+        bottom: 110%;
         left: 0;
         background: #1c2935;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 10px;
         display: none;
         grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-        z-index: 50;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        gap: 8px;
+        z-index: 100;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
     }
 
     .tg-emoji-menu.show {
@@ -118,39 +169,40 @@
     }
 
     .tg-emoji-item {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         cursor: pointer;
-        padding: 4px;
-        border-radius: 6px;
-        transition: background 0.2s;
+        padding: 6px;
+        border-radius: 8px;
+        transition: background 0.2s, transform 0.2s;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .tg-emoji-item:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(1.15);
     }
 
-    /* Form Overlays */
-    #reply-context {
-        display: none;
-        align-items: center;
-        gap: 10px;
-        background: rgba(77, 163, 239, 0.1);
-        border-radius: 12px;
-        padding: 10px 15px;
-        border-left: 4px solid #4da3ef;
-        margin-bottom: 10px;
+    /* Reply Tooling Spacing */
+    .tg-action-link {
+        font-size: 0.7rem;
+        color: #4da3ef;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        margin-right: 8px;
     }
 
-    #image-preview-container {
-        display: none;
-        position: relative;
-        margin-bottom: 10px;
+    .comment-wrapper:hover .tg-action-link {
+        opacity: 0.8;
     }
 
-    #image-preview-container img {
-        max-height: 150px;
-        border-radius: 12px;
+    .tg-action-link:hover {
+        opacity: 1 !important;
+        text-decoration: underline;
     }
 </style>
 
@@ -203,15 +255,13 @@
                     {% endif %}
                 </div>
 
-                {# Bubble #}
+                {# Bubble Container #}
                 <div class="flex-1 min-w-0">
-                    <div class="tg-bubble group-hover:shadow-lg transition-shadow">
-                        {# Author Name #}
-                        <div class="text-sm font-bold text-[#4da3ef] mb-1 leading-none">
-                            {{ comment.author.display_name }}
-                        </div>
+                    <div class="tg-bubble">
+                        {# Author Header #}
+                        <span class="tg-author-name">{{ comment.author.display_name }}</span>
 
-                        {# Reply Context (if any) #}
+                        {# Reply Block #}
                         {% if comment.parent %}
                         <div class="tg-reply-preview"
                             onclick="document.getElementById('comment-{{ comment.parent.id }}').scrollIntoView({behavior: 'smooth'})">
@@ -220,67 +270,57 @@
                         </div>
                         {% endif %}
 
-                        {# Text #}
-                        <div class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap">{{ comment.text }}</div>
-
                         {# Image Attachment #}
                         {% if comment.image %}
                         <img src="{{ comment.image.url }}" class="tg-comment-image" alt="Attachment"
                             onclick="window.open(this.src)">
                         {% endif %}
 
-                        {# Meta / Reactions Row #}
-                        <div class="flex items-center justify-between mt-1 pt-1 border-t border-white/5">
-                            <div class="tg-reaction-bar" id="reactions-{{ comment.id }}">
-                                {# Standard Emojis toggle menu/buttons will be here #}
-                                {% regroup comment.reactions.all by emoji as reaction_list %}
-                                {% for group in reaction_list %}
-                                <button
-                                    class="tg-reaction-btn {% for r in group.list %}{% if r.author == tg_profile %}active{% endif %}{% endfor %}"
-                                    onclick="toggleReaction({{ comment.id }}, '{{ group.grouper|escapejs }}')">
-                                    {{ group.grouper }} <span class="count">{{ group.list|length }}</span>
-                                </button>
-                                {% endfor %}
-
-                                {% if tg_profile %}
-                                <div class="relative">
-                                    <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onclick="toggleEmojiMenu({{ comment.id }})">
-                                        <i class="fa-solid fa-face-smile text-[10px]"></i>
-                                    </button>
-                                    <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}">
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😂')">😂
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👏')">👏
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😱')">😱
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👎')">👎
-                                        </div>
-                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '⚡')">⚡
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="flex items-center gap-3">
-                                {% if tg_profile %}
-                                <button
-                                    class="text-[10px] text-[#4da3ef] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
-                                    onclick="setReply({{ comment.id }}, '{{ comment.author.display_name|escapejs }}', '{{ comment.text|truncatechars:50|escapejs }}')">
-                                    Reply
-                                </button>
-                                {% endif %}
-                                <div class="tg-meta">{{ comment.created_at|date:"H:i" }}</div>
+                        {# Content Row with Inline Meta #}
+                        <div class="tg-content-row">
+                            <span class="tg-meta-inline">{{ comment.created_at|date:"H:i" }}</span>
+                            <div class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap">{{ comment.text }}
                             </div>
                         </div>
+                    </div>
+
+                    {# Reactions List (Outside/Below Bubble) #}
+                    <div class="tg-reaction-bar" id="reactions-{{ comment.id }}">
+                        {% regroup comment.reactions.all by emoji as reaction_list %}
+                        {% for group in reaction_list %}
+                        <button
+                            class="tg-reaction-btn {% for r in group.list %}{% if r.author == tg_profile %}active{% endif %}{% endfor %}"
+                            onclick="toggleReaction({{ comment.id }}, '{{ group.grouper|escapejs }}')">
+                            {{ group.grouper }} <span class="count">{{ group.list|length }}</span>
+                        </button>
+                        {% endfor %}
+
+                        {# Plus Reaction / Reply Trigger #}
+                        {% if tg_profile %}
+                        <div class="flex items-center">
+                            <div class="relative">
+                                <button
+                                    class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                                    onclick="toggleEmojiMenu({{ comment.id }})">
+                                    <i class="fa-solid fa-face-smile text-[10px]"></i>
+                                </button>
+                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}">
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😂')">😂</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👏')">👏</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😱')">😱</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👎')">👎</div>
+                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '⚡')">⚡</div>
+                                </div>
+                            </div>
+                            <span class="tg-action-link ml-2"
+                                onclick="setReply({{ comment.id }}, '{{ comment.author.display_name|escapejs }}', '{{ comment.text|truncatechars:50|escapejs }}')">
+                                Reply
+                            </span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
