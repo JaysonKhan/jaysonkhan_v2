@@ -16,6 +16,9 @@ SECURE_HSTS_PRELOAD = True
 # Prevent clickjacking but allow Telegram widget callback (SAMEORIGIN allows our own iframes)
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+# Allow OAuth popups (Telegram) to communicate back to the parent window
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
 # ── Allowed hosts ─────────────────────────────────────────────────────────────
 ALLOWED_HOSTS = ['jaysonkhan.com', 'www.jaysonkhan.com', '144.91.69.225']
 
