@@ -1,4 +1,6 @@
 import json
+import logging
+
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.views import View
@@ -7,6 +9,8 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
 from .models import TelegramProfile, Comment, Like
 from .telegram_auth import verify_telegram_auth
+
+logger = logging.getLogger(__name__)
 
 
 # ── Session helpers ────────────────────────────────────────────────────────────
@@ -43,8 +47,15 @@ class TelegramAuthView(View):
 
         next_url = flat.pop('next', request.META.get('HTTP_REFERER', '/'))
 
+        # ── Debug logging ──────────────────────────────────────────────────────
+        safe_flat = {k: (v[:8] + '…' if k == 'hash' else v) for k, v in flat.items()}
+        logger.info('[TelegramAuth] incoming params: %s | next_url: %s', safe_flat, next_url)
+
         if not verify_telegram_auth(flat):
+            logger.warning('[TelegramAuth] FAILED verification. Params: %s', safe_flat)
             return JsonResponse({'error': 'Invalid Telegram authentication'}, status=400)
+
+        logger.info('[TelegramAuth] verification OK for id=%s', flat.get('id'))
 
         profile, _ = TelegramProfile.objects.update_or_create(
             telegram_id=int(flat['id']),
