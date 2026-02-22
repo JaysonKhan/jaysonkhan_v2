@@ -13,8 +13,8 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Prevent clickjacking
-X_FRAME_OPTIONS = 'DENY'
+# Prevent clickjacking but allow Telegram widget callback (SAMEORIGIN allows our own iframes)
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # ── Allowed hosts ─────────────────────────────────────────────────────────────
 ALLOWED_HOSTS = ['jaysonkhan.com', 'www.jaysonkhan.com', '144.91.69.225']
@@ -36,16 +36,16 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'ERROR',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOGS_DIR, 'django_errors.log'),
             'formatter': 'verbose',
-            'delay': True,  # don't open the file until the first log record is emitted
+            'delay': True,
         },
     },
     'root': {
         'handlers': ['file'],
-        'level': 'ERROR',
+        'level': 'WARNING',
     },
 }
 
