@@ -47,6 +47,10 @@ class Comment(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     text         = models.TextField(max_length=1000)
+    # Telegram-like features
+    parent       = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    image        = models.ImageField(upload_to='comments/images/', null=True, blank=True)
+    
     is_approved  = models.BooleanField(
         default=False,
         help_text='Only approved comments are shown to other users.'
@@ -63,6 +67,24 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.author.display_name}: {self.text[:50]}"
+
+
+class CommentReaction(models.Model):
+    """
+    Store specific emoji reactions for individual comments.
+    """
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='reactions')
+    author  = models.ForeignKey(TelegramProfile, on_delete=models.CASCADE)
+    emoji   = models.CharField(max_length=20) # e.g. 👍, ❤, 🔥, 😂, 👎, 😱
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('comment', 'author')
+        verbose_name = 'Comment Reaction'
+        verbose_name_plural = 'Comment Reactions'
+
+    def __str__(self):
+        return f"{self.author.display_name} reacted {self.emoji} on {self.comment.id}"
 
 
 class Like(models.Model):

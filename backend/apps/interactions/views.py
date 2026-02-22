@@ -96,15 +96,15 @@ class AddCommentView(View):
         if not profile:
             return JsonResponse({'error': 'Login with Telegram first'}, status=401)
 
-        try:
-            body = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        # Handle FormData for images and text
+        text = request.POST.get('text', '').strip()
+        parent_id = request.POST.get('parent_id')
+        image = request.FILES.get('image')
 
-        text = body.get('text', '').strip()
-        if not text:
-            return JsonResponse({'error': 'Comment text is required'}, status=400)
-        if len(text) > 1000:
+        if not text and not image:
+            return JsonResponse({'error': 'Comment must have text or an image'}, status=400)
+        
+        if text and len(text) > 1000:
             return JsonResponse({'error': 'Comment too long (max 1000 chars)'}, status=400)
 
         try:
@@ -112,17 +112,78 @@ class AddCommentView(View):
         except ContentType.DoesNotExist:
             return JsonResponse({'error': 'Invalid content type'}, status=404)
 
+        parent = None
+        if parent_id:
+            try:
+                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id)
+            except (ValueError, Comment.DoesNotExist):
+                return JsonResponse({'error': 'Invalid parent comment'}, status=400)
+
         Comment.objects.create(
             author=profile,
             content_type=ct,
             object_id=object_id,
             text=text,
-            is_approved=False,
+            parent=parent,
+            image=image,
+            is_approved=False, # Could auto-approve for testing, but keeping False for now (user usually needs manual app or auto-app logic)
         )
         return JsonResponse({
             'status': 'pending',
             'message': 'Your comment has been submitted and is awaiting moderation.',
         }, status=201)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ToggleCommentReactionView(View):
+    """
+    POST /interactions/comment/<int:comment_id>/react/
+    Body JSON or POST Form with `emoji`.
+    """
+    def post(self, request, comment_id):
+        profile = get_tg_profile(request)
+        if not profile:
+            return JsonResponse({'error': 'Login with Telegram first'}, status=401)
+
+        try:
+            body = json.loads(request.body)
+            emoji = body.get('emoji', '').strip()
+        except json.JSONDecodeError:
+            emoji = request.POST.get('emoji', '').strip()
+            
+        if not emoji:
+            return JsonResponse({'error': 'Emoji is required'}, status=400)
+
+        # Basic emoji validation can be added here, we keep it simple for now
+        
+        try:
+            comment = Comment.objects.get(id=comment_id)
+        except Comment.DoesNotExist:
+            return JsonResponse({'error': 'Comment not found'}, status=404)
+        
+        # Toggle: if the same reaction exists from this user, delete it.
+        # If the user has another reaction, update it. If they have none, create it.
+        from .models import CommentReaction
+        
+        reaction = CommentReaction.objects.filter(author=profile, comment=comment).first()
+        if reaction:
+            if reaction.emoji == emoji:
+                reaction.delete()
+                action = 'removed'
+            else:
+                reaction.emoji = emoji
+                reaction.save()
+                action = 'updated'
+        else:
+            CommentReaction.objects.create(author=profile, comment=comment, emoji=emoji)
+            action = 'added'
+
+        # Count reactions for this comment
+        reactions = CommentReaction.objects.filter(comment=comment).values_list('emoji', flat=True)
+        from collections import Counter
+        counts = dict(Counter(reactions))
+
+        return JsonResponse({'status': 'ok', 'action': action, 'reactions': counts}, status=200)
 
 
 # ── Like / Unlike (toggle) ─────────────────────────────────────────────────────

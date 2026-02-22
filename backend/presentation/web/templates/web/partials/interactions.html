@@ -1,14 +1,146 @@
 {# ─────────────────────────────────────────────────────────────────────────── #}
-{# Reusable interactions panel: Likes + Comments #}
-{# Usage: {% include 'web/partials/interactions.html' #}
-{# with app_label="blog" model_name="post" object_id=post.id #}
-{# comments=comments like_count=like_count #}
-{# user_liked=user_liked %} #}
+{# Telegram-style Interactions Panel: Likes + Rich Comments #}
 {# ─────────────────────────────────────────────────────────────────────────── #}
 {% load static %}
 
+<style>
+    .tg-bubble {
+        position: relative;
+        background: #18222d;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: #fff;
+        max-width: 90%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .tg-reply-preview {
+        background: rgba(43, 82, 120, 0.2);
+        border-left: 3px solid #4da3ef;
+        padding: 4px 8px;
+        margin-bottom: 6px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .tg-reply-preview .author {
+        color: #4da3ef;
+        font-weight: 600;
+        display: block;
+    }
+
+    .tg-reply-preview .text-snippet {
+        color: #aeb7c2;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .tg-comment-image {
+        border-radius: 8px;
+        margin-top: 8px;
+        max-width: 100%;
+        display: block;
+    }
+
+    .tg-reaction-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 8px;
+    }
+
+    .tg-reaction-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        color: #aeb7c2;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    }
+
+    .tg-reaction-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .tg-reaction-btn.active {
+        background: rgba(77, 163, 239, 0.2);
+        border-color: #4da3ef;
+        color: #4da3ef;
+    }
+
+    .tg-meta {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.4);
+        text-align: right;
+        margin-top: 2px;
+    }
+
+    /* Simple emoji picker menu style */
+    .tg-emoji-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background: #1c2935;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 8px;
+        display: none;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        z-index: 50;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .tg-emoji-menu.show {
+        display: grid;
+    }
+
+    .tg-emoji-item {
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 6px;
+        transition: background 0.2s;
+        text-align: center;
+    }
+
+    .tg-emoji-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Form Overlays */
+    #reply-context {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        background: rgba(77, 163, 239, 0.1);
+        border-radius: 12px;
+        padding: 10px 15px;
+        border-left: 4px solid #4da3ef;
+        margin-bottom: 10px;
+    }
+
+    #image-preview-container {
+        display: none;
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    #image-preview-container img {
+        max-height: 150px;
+        border-radius: 12px;
+    }
+</style>
+
 <section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10">
 
+    {# ── Like Header ─────────────────────────────────────────────────────────── #}
     <div class="flex items-center gap-4 mb-12">
         {% if tg_profile %}
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
@@ -21,7 +153,6 @@
             <span class="text-xs opacity-70 ml-0.5">likes</span>
         </button>
         {% else %}
-        {# Not logged in — show passive like count #}
         <div class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-white/5 text-slate-500">
             <i class="fa-regular fa-heart text-sm"></i>
             <span class="text-sm font-semibold">{{ like_count }}</span>
@@ -30,105 +161,191 @@
         {% endif %}
     </div>
 
-    {# ── Comments section ─────────────────────────────────────────────────────── #}
-    <div>
-        <h3 class="text-xl font-bold mb-8">
+    {# ── Comments Section ────────────────────────────────────────────────────── #}
+    <div id="tg-chat-container" class="space-y-6">
+        <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
             Comments
             {% if comments %}
-            <span class="text-slate-500 font-normal text-base ml-2">({{ comments|length }})</span>
+            <span class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length
+                }}</span>
             {% endif %}
         </h3>
 
-        {# Approved comments list #}
         {% if comments %}
-        <div class="space-y-5 mb-10" id="comments-list">
+        <div class="space-y-4" id="comments-list">
             {% for comment in comments %}
-            <div class="flex gap-4 p-5 glass rounded-2xl border border-white/5 comment-item">
+            <div class="flex gap-3 group comment-wrapper" id="comment-{{ comment.id }}">
                 {# Avatar #}
-                <div class="flex-shrink-0">
+                <div class="flex-shrink-0 mt-1">
                     {% if comment.author.photo_url %}
                     <img src="{{ comment.author.photo_url }}" alt="{{ comment.author.display_name }}"
-                        class="w-10 h-10 rounded-full object-cover border border-white/10">
+                        class="w-8 h-8 rounded-full object-cover">
                     {% else %}
-                    <div class="w-10 h-10 rounded-full bg-primary/20 border border-primary/30
-                          flex items-center justify-center text-primary font-bold text-sm">
+                    <div
+                        class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
                         {{ comment.author.first_name|first|upper }}
                     </div>
                     {% endif %}
                 </div>
-                {# Body #}
+
+                {# Bubble #}
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2 mb-1 flex-wrap">
-                        <span class="font-semibold text-white text-sm">{{ comment.author.display_name }}</span>
-                        {% if comment.author.username %}
-                        <span class="text-slate-500 text-xs">@{{ comment.author.username }}</span>
+                    <div class="tg-bubble group-hover:shadow-lg transition-shadow">
+                        {# Author Name #}
+                        <div class="text-sm font-bold text-[#4da3ef] mb-1 leading-none">
+                            {{ comment.author.display_name }}
+                        </div>
+
+                        {# Reply Context (if any) #}
+                        {% if comment.parent %}
+                        <div class="tg-reply-preview"
+                            onclick="document.getElementById('comment-{{ comment.parent.id }}').scrollIntoView({behavior: 'smooth'})">
+                            <span class="author">{{ comment.parent.author.display_name }}</span>
+                            <span class="text-snippet">{{ comment.parent.text|truncatechars:100 }}</span>
+                        </div>
                         {% endif %}
-                        <span class="text-slate-600 text-xs ml-auto">{{ comment.created_at|date:"M d, Y" }}</span>
+
+                        {# Text #}
+                        <div class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap">{{ comment.text }}</div>
+
+                        {# Image Attachment #}
+                        {% if comment.image %}
+                        <img src="{{ comment.image.url }}" class="tg-comment-image" alt="Attachment"
+                            onclick="window.open(this.src)">
+                        {% endif %}
+
+                        {# Meta / Reactions Row #}
+                        <div class="flex items-center justify-between mt-1 pt-1 border-t border-white/5">
+                            <div class="tg-reaction-bar" id="reactions-{{ comment.id }}">
+                                {# Standard Emojis toggle menu/buttons will be here #}
+                                {% regroup comment.reactions.all by emoji as reaction_list %}
+                                {% for group in reaction_list %}
+                                <button
+                                    class="tg-reaction-btn {% for r in group.list %}{% if r.author == tg_profile %}active{% endif %}{% endfor %}"
+                                    onclick="toggleReaction({{ comment.id }}, '{{ group.grouper|escapejs }}')">
+                                    {{ group.grouper }} <span class="count">{{ group.list|length }}</span>
+                                </button>
+                                {% endfor %}
+
+                                {% if tg_profile %}
+                                <div class="relative">
+                                    <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onclick="toggleEmojiMenu({{ comment.id }})">
+                                        <i class="fa-solid fa-face-smile text-[10px]"></i>
+                                    </button>
+                                    <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}">
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😂')">😂
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👏')">👏
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😱')">😱
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👎')">👎
+                                        </div>
+                                        <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '⚡')">⚡
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                {% if tg_profile %}
+                                <button
+                                    class="text-[10px] text-[#4da3ef] opacity-0 group-hover:opacity-100 transition-opacity hover:underline"
+                                    onclick="setReply({{ comment.id }}, '{{ comment.author.display_name|escapejs }}', '{{ comment.text|truncatechars:50|escapejs }}')">
+                                    Reply
+                                </button>
+                                {% endif %}
+                                <div class="tg-meta">{{ comment.created_at|date:"H:i" }}</div>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-slate-300 text-sm leading-relaxed">{{ comment.text }}</p>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-slate-500 text-sm mb-10">No comments yet. Be the first to share your thoughts!</p>
+        <p class="text-slate-500 text-sm py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
+            No comments yet. Start the conversation!
+        </p>
         {% endif %}
 
-        {# ── Comment form / Telegram Connect ─────────────────────────────────────── #}
+        {# ── Chat Input ──────────────────────────────────────────────────────── #}
         {% if tg_profile %}
-        {# Logged in — show form #}
-        <div class="glass rounded-2xl border border-white/8 p-6">
-            <div class="flex gap-3 mb-4">
-                {% if tg_profile.photo_url %}
-                <img src="{{ tg_profile.photo_url }}" alt="{{ tg_profile.display_name }}"
-                    class="w-9 h-9 rounded-full object-cover border border-white/10 flex-shrink-0">
-                {% else %}
-                <div class="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center
-                        justify-center text-primary font-bold text-sm flex-shrink-0">
-                    {{ tg_profile.first_name|first|upper }}
+        <div class="mt-10" id="comment-form-container">
+            {# Reply Header (hidden by default) #}
+            <div id="reply-context">
+                <div class="flex-1 min-w-0">
+                    <span class="text-xs font-bold text-[#4da3ef] block" id="reply-author-name"></span>
+                    <span class="text-xs text-slate-400 block truncate" id="reply-text-preview"></span>
                 </div>
-                {% endif %}
-                <span class="text-slate-300 text-sm self-center">
-                    Commenting as <strong class="text-white">{{ tg_profile.display_name }}</strong>
-                </span>
+                <button onclick="clearReply()" class="text-slate-500 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
-            <textarea id="comment-text" rows="3" maxlength="1000" placeholder="Write a comment…" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3
-                         text-slate-200 placeholder-slate-500 text-sm resize-none
-                         focus:outline-none focus:border-primary/50 transition"></textarea>
-            <div class="flex items-center justify-between mt-3 flex-wrap gap-3">
-                <span class="text-slate-500 text-xs">Your comment will appear after moderation.</span>
-                <div class="flex gap-2">
+
+            {# Image Preview #}
+            <div id="image-preview-container">
+                <img id="image-preview" src="" alt="Preview">
+                <button onclick="clearImage()"
+                    class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            </div>
+
+            <div class="relative bg-[#18222d] border border-white/10 rounded-2xl p-2 flex gap-3 items-end">
+                {# Attachment Btn #}
+                <div class="pb-1 pl-1">
+                    <label for="image-upload"
+                        class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-[#4da3ef] transition cursor-pointer">
+                        <i class="fa-solid fa-paperclip text-lg"></i>
+                        <input type="file" id="image-upload" class="hidden" accept="image/*"
+                            onchange="previewImage(this)">
+                    </label>
+                </div>
+
+                <textarea id="comment-text" rows="1" placeholder="Write a comment…"
+                    class="flex-1 bg-transparent border-none text-white text-sm focus:ring-0 resize-none py-2 px-1 max-h-48"
+                    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+
+                {# Icons / Send Btn #}
+                <div class="pb-1 pr-1 flex items-center gap-1">
+                    <button id="submit-comment"
+                        data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
+                        class="w-10 h-10 flex items-center justify-center bg-[#4da3ef] hover:bg-[#3d8ed6] text-white rounded-full transition-transform active:scale-95">
+                        <i class="fa-solid fa-paper-plane text-sm ml-0.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-3 px-2">
+                <p id="comment-status" class="text-xs hidden"></p>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{
+                        tg_profile.display_name }}</span>
                     <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.path }}">
                         <button type="submit"
-                            class="text-xs text-slate-500 hover:text-slate-300 transition px-3 py-1.5 rounded-lg border border-white/10">
-                            Disconnect
-                        </button>
+                            class="text-[10px] text-[#4da3ef] hover:underline font-bold">Logout</button>
                     </form>
-                    <button id="submit-comment"
-                        data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
-                        class="text-sm font-semibold px-5 py-2 rounded-xl bg-primary hover:bg-secondary transition text-white">
-                        Send
-                    </button>
                 </div>
             </div>
-            <p id="comment-status" class="text-xs mt-2 hidden"></p>
         </div>
 
         {% else %}
-        {# Not logged in — Telegram connect prompt #}
-        <div class="glass rounded-2xl border border-white/8 p-8 md:p-12 text-center">
-            <div class="w-16 h-16 rounded-full bg-[#2AABEE]/10 border border-[#2AABEE]/20
-                    flex items-center justify-center mx-auto mb-6">
-                <i class="fa-brands fa-telegram text-3xl text-[#2AABEE]"></i>
-            </div>
-            <h4 class="text-lg font-bold mb-2 text-white">Connect with Telegram to interact</h4>
-            <p class="text-slate-400 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
-                Join our community! Your Telegram name and photo will be displayed with your comments and likes.
-            </p>
+        {# Login Prompt #}
+        <div class="glass rounded-2xl border border-white/8 p-8 text-center mt-12">
+            <h4 class="text-lg font-bold mb-2 text-white">Connect with Telegram to chat</h4>
+            <p class="text-slate-400 text-sm mb-6">Join the discussion using your Telegram account.</p>
 
-            {# Telegram Login Widget #}
             <div class="flex justify-center">
                 {% if telegram_bot_username %}
                 <script async src="https://telegram.org/js/telegram-widget.js?22"
@@ -142,107 +359,119 @@
                         window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + nextUrl + "&" + params;
                     }
                 </script>
-                {% else %}
-                <div
-                    class="px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500/80 text-xs">
-                    Telegram bot not configured yet.
-                </div>
                 {% endif %}
             </div>
         </div>
         {% endif %}
-
     </div>
 </section>
 
-{# ── JavaScript for Like + Comment AJAX ──────────────────────────────────────── #}
 <script>
     (function () {
-        // ── Like button ──────────────────────────────────────────────────────────────
-        const likeBtn = document.getElementById('like-btn');
-        const likeIcon = document.getElementById('like-icon');
-        const likeCount = document.getElementById('like-count');
+        let parentCommentId = null;
+        let selectedFile = null;
 
-        if (likeBtn) {
-            likeBtn.addEventListener('click', async () => {
-                likeBtn.disabled = true;
-                try {
-                    const resp = await fetch(likeBtn.dataset.url, {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                    });
-                    const data = await resp.json();
-                    if (resp.ok) {
-                        // Update UI
-                        likeCount.textContent = data.count;
-                        if (data.liked) {
-                            likeBtn.classList.add('liked', 'border-pink-500/60', 'bg-pink-500/10', 'text-pink-400');
-                            likeBtn.classList.remove('border-white/10', 'bg-white/5', 'text-slate-400');
-                            likeIcon.className = 'fa-solid fa-heart text-sm';
-                        } else {
-                            likeBtn.classList.remove('liked', 'border-pink-500/60', 'bg-pink-500/10', 'text-pink-400');
-                            likeBtn.classList.add('border-white/10', 'bg-white/5', 'text-slate-400');
-                            likeIcon.className = 'fa-regular fa-heart text-sm';
-                        }
-                        // Sync the standalone count span
-                        const countSpans = document.querySelectorAll('[data-like-display]');
-                        countSpans.forEach(s => s.textContent = data.count + ' like' + (data.count !== 1 ? 's' : ''));
-                    }
-                } catch (e) {
-                    console.error('Like error:', e);
-                } finally {
-                    likeBtn.disabled = false;
-                }
-            });
+        // ── Reply Logic ─────────────────────────────────────────────────────────
+        window.setReply = function (id, name, snippet) {
+            parentCommentId = id;
+            document.getElementById('reply-author-name').textContent = name;
+            document.getElementById('reply-text-preview').textContent = snippet;
+            document.getElementById('reply-context').style.display = 'flex';
+            document.getElementById('comment-text').focus();
+            document.getElementById('comment-form-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // ── Comment submit ────────────────────────────────────────────────────────────
-        const submitBtn = document.getElementById('submit-comment');
-        const commentText = document.getElementById('comment-text');
-        const commentStatus = document.getElementById('comment-status');
+        window.clearReply = function () {
+            parentCommentId = null;
+            document.getElementById('reply-context').style.display = 'none';
+        }
 
+        // ── Image Preview ───────────────────────────────────────────────────────
+        window.previewImage = function (input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('image-preview').src = e.target.result;
+                    document.getElementById('image-preview-container').style.display = 'block';
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        window.clearImage = function () {
+            selectedFile = null;
+            document.getElementById('image-upload').value = '';
+            document.getElementById('image-preview-container').style.display = 'none';
+        }
+
+        // ── Reactions ───────────────────────────────────────────────────────────
+        window.toggleEmojiMenu = function (id) {
+            const menu = document.getElementById(`emoji-menu-${id}`);
+            const allMenus = document.querySelectorAll('.tg-emoji-menu');
+            allMenus.forEach(m => m !== menu && m.classList.remove('show'));
+            menu.classList.toggle('show');
+        }
+
+        window.toggleReaction = async function (commentId, emoji) {
+            const url = `/interactions/comment/${commentId}/react/`;
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji })
+                });
+                if (resp.ok) { location.reload(); } // Simple approach: reload to show updated counts
+            } catch (e) {
+                console.error("Reaction failed", e);
+            }
+        }
+
+        // ── Form Submission (Multipart) ──────────────────────────────────────────
+        const submitBtn = document.getElementById('submit-comment');
         if (submitBtn) {
             submitBtn.addEventListener('click', async () => {
-                const text = (commentText.value || '').trim();
-                if (!text) { showStatus('Please write something first.', 'error'); return; }
+                const text = (document.getElementById('comment-text').value || '').trim();
+                if (!text && !selectedFile) { alert("Comment cannot be empty"); return; }
 
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Sending…';
+                const originalContent = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
+
+                const formData = new FormData();
+                formData.append('text', text);
+                if (parentCommentId) formData.append('parent_id', parentCommentId);
+                if (selectedFile) formData.append('image', selectedFile);
 
                 try {
                     const resp = await fetch(submitBtn.dataset.url, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken'),
-                        },
-                        body: JSON.stringify({ text }),
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        body: formData
                     });
                     const data = await resp.json();
-
                     if (resp.status === 201) {
-                        commentText.value = '';
-                        showStatus('✅ Your comment is awaiting moderation. Thank you!', 'ok');
+                        location.reload(); // Show the message state or just reload if we auto-approve
                     } else {
-                        showStatus(data.error || 'Something went wrong.', 'error');
+                        alert(data.error || "Error sending comment");
                     }
                 } catch (e) {
-                    showStatus('Network error. Please try again.', 'error');
+                    alert("Network error");
                 } finally {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'Send';
+                    submitBtn.innerHTML = originalContent;
                 }
             });
         }
 
-        function showStatus(msg, type) {
-            if (!commentStatus) return;
-            commentStatus.textContent = msg;
-            commentStatus.className = 'text-xs mt-2 ' + (type === 'ok' ? 'text-green-400' : 'text-red-400');
-            commentStatus.classList.remove('hidden');
-            setTimeout(() => commentStatus.classList.add('hidden'), 6000);
-        }
+        // ── Global Clicks ────────────────────────────────────────────────────────
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+            }
+        });
 
+        // ── Helpers ─────────────────────────────────────────────────────────────
         function getCookie(name) {
             const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
             return m ? m.pop() : '';

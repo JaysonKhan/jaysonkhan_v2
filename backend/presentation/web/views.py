@@ -37,9 +37,14 @@ def _interactions_context(request, obj):
     Passed to template context for BlogDetailView and ProjectDetailView.
     """
     ct = ContentType.objects.get_for_model(obj)
+    # Get only top-level comments (parent=None) to build the tree in template, 
+    # or just prefetch all and handle nested in template. 
+    # Telegram style usually shows a thread or a simple flat list with 'reply' references.
+    # We'll prefetch all approved comments for this object.
     comments = Comment.objects.filter(
         content_type=ct, object_id=obj.pk, is_approved=True
-    ).select_related('author').order_by('created_at')
+    ).select_related('author', 'parent', 'parent__author').prefetch_related('reactions', 'reactions__author').order_by('created_at')
+    
     like_count = Like.objects.filter(content_type=ct, object_id=obj.pk).count()
 
     profile = get_tg_profile(request)
@@ -54,6 +59,7 @@ def _interactions_context(request, obj):
         'app_label':  ct.app_label,
         'model_name': ct.model,
         'object_id':  obj.pk,
+        'tg_profile': profile, # Ensure profile is always in context for the form
     }
 
 

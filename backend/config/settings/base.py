@@ -282,6 +282,27 @@ UNFOLD = {
                 ],
             },
             {
+                "title": "Interactions",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Comments",
+                        "icon": "forum",
+                        "link": "/admin/interactions/comment/",
+                    },
+                    {
+                        "title": "Likes",
+                        "icon": "favorite",
+                        "link": "/admin/interactions/like/",
+                    },
+                    {
+                        "title": "Telegram Profiles",
+                        "icon": "group",
+                        "link": "/admin/interactions/telegramprofile/",
+                    },
+                ],
+            },
+            {
                 "title": "Authentication",
                 "separator": True,
                 "items": [

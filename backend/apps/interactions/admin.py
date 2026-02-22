@@ -13,8 +13,7 @@ class TelegramProfileAdmin(ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(ModelAdmin):
-    list_display   = ('author', 'short_text', 'content_type', 'object_id',
-                      'is_approved', 'created_at')
+    list_display   = ('author', 'short_text', 'parent', 'has_image', 'is_approved', 'created_at')
     list_filter    = ('is_approved', 'content_type', 'created_at')
     list_editable  = ('is_approved',)
     search_fields  = ('author__first_name', 'author__username', 'text')
@@ -26,6 +25,10 @@ class CommentAdmin(ModelAdmin):
     def short_text(self, obj):
         return obj.text[:80] + ('…' if len(obj.text) > 80 else '')
 
+    @admin.display(description='Img', boolean=True)
+    def has_image(self, obj):
+        return bool(obj.image)
+
     @admin.action(description='✅ Approve selected comments')
     def approve_comments(self, request, queryset):
         queryset.update(is_approved=True)
@@ -33,6 +36,12 @@ class CommentAdmin(ModelAdmin):
     @admin.action(description='❌ Reject (unapprove) selected comments')
     def reject_comments(self, request, queryset):
         queryset.update(is_approved=False)
+
+
+@admin.register(CommentReaction)
+class CommentReactionAdmin(ModelAdmin):
+    list_display = ('comment', 'author', 'emoji', 'created_at')
+    list_filter = ('emoji', 'created_at')
 
 
 @admin.register(Like)

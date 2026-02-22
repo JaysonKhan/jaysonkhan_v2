@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TelegramAuthView, TelegramLogoutView, AddCommentView, ToggleLikeView
+from .views import TelegramAuthView, TelegramLogoutView, AddCommentView, ToggleLikeView, ToggleCommentReactionView
 
 app_name = 'interactions'
 
@@ -13,6 +13,12 @@ urlpatterns = [
         'interactions/comment/<str:app_label>/<str:model_name>/<int:object_id>/',
         AddCommentView.as_view(),
         name='add_comment',
+    ),
+    # Reaction toggle (AJAX)
+    path(
+        'interactions/comment/<int:comment_id>/react/',
+        ToggleCommentReactionView.as_view(),
+        name='toggle_comment_reaction',
     ),
     # Like toggle (AJAX)
     path(
