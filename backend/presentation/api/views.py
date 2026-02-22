@@ -39,7 +39,10 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
             .order_by('order', '-created_at')
         )
         platform = self.request.query_params.get('platform')
-        if platform:
+        is_bot = self.request.query_params.get('is_bot')
+        if is_bot:
+            qs = qs.filter(is_bot=True)
+        elif platform:
             qs = qs.filter(platform=platform)
         return qs
 

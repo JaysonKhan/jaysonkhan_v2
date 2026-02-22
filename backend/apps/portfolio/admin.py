@@ -48,10 +48,10 @@ class SkillAdmin(UnfoldModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_featured', 'order')
+    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_bot', 'is_featured', 'order')
     list_display_links = ('thumbnail', 'title')
-    list_editable = ('order', 'is_featured')
-    list_filter = ('platform', 'is_featured', 'created_at')
+    list_editable = ('order', 'is_featured', 'is_bot')
+    list_filter = ('platform', 'is_featured', 'is_bot', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title', 'description')
     filter_horizontal = ('technologies',)
@@ -64,15 +64,21 @@ class ProjectAdmin(UnfoldModelAdmin):
                 'image', 'is_featured', 'order',
             ),
         }),
-        ('Mobile / Platform', {
+        ('Platform & Store Links', {
             'fields': (
                 'platform',
                 'app_store_url', 'play_store_url',
+                'web_page_url',
+                'is_bot',
             ),
-            'description': 'Mobile-specific fields: platform, store links.',
+            'description': (
+                'platform=cross → shows both App Store & Play Store buttons. '
+                'platform=web + web_page_url → shows Web Page button. '
+                'is_bot=True → also shows in the Bot section.'
+            ),
         }),
         ('Links & Technologies', {
-            'fields': ('github_url', 'live_url', 'technologies'),
+            'fields': ('github_url', 'technologies'),
         }),
     )
 

@@ -16,6 +16,26 @@ class PortfolioRepository:
         )
 
     @staticmethod
+    def get_web_projects():
+        """Projects with platform='web'."""
+        return (
+            Project.objects
+            .filter(platform='web')
+            .prefetch_related('technologies', 'screenshots')
+            .order_by('order', '-created_at')
+        )
+
+    @staticmethod
+    def get_bot_projects():
+        """Projects marked as_bot or with platform='bot'."""
+        return (
+            Project.objects
+            .filter(is_bot=True)
+            .prefetch_related('technologies', 'screenshots')
+            .order_by('order', '-created_at')
+        )
+
+    @staticmethod
     def get_all_skills():
         return Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order', 'show_in_hero').all()
 
@@ -52,6 +72,8 @@ class PortfolioService:
         return {
             'projects': self.repository.get_all_projects(),
             'featured_projects': self.repository.get_featured_projects(),
+            'web_projects': self.repository.get_web_projects(),
+            'bot_projects': self.repository.get_bot_projects(),
             'skills': self.repository.get_all_skills(),
             'skills_grouped': self.repository.get_skills_grouped(),
             'hero_skills': self.repository.get_hero_skills(),

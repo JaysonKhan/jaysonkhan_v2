@@ -49,7 +49,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
         model = Project
         fields = ('id', 'title', 'slug', 'description', 'image_url',
                   'platform', 'platform_display', 'tech_tags',
-                  'app_store_url', 'play_store_url', 'github_url')
+                  'app_store_url', 'play_store_url', 'web_page_url',
+                  'is_bot', 'github_url')
 
     def get_image_url(self, obj):
         if obj.image:

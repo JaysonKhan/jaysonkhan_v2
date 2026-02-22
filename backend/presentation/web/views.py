@@ -27,16 +27,36 @@ class ProjectListView(ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
+    _FILTER_TABS = [
+        {'key': 'all',    'label': 'All',            'url': '/projects/'},
+        {'key': 'cross',  'label': 'Cross-platform', 'url': '/projects/?platform=cross'},
+        {'key': 'android','label': 'Android',        'url': '/projects/?platform=android'},
+        {'key': 'ios',    'label': 'iOS',             'url': '/projects/?platform=ios'},
+        {'key': 'web',    'label': 'Web',             'url': '/projects/?platform=web'},
+        {'key': 'bot',    'label': 'Telegram Bot',    'url': '/projects/?is_bot=1'},
+    ]
+
     def get_queryset(self):
         queryset = Project.objects.prefetch_related('technologies', 'screenshots')
         platform = self.request.GET.get('platform')
-        if platform:
+        is_bot = self.request.GET.get('is_bot')
+        if is_bot:
+            queryset = queryset.filter(is_bot=True)
+        elif platform:
             queryset = queryset.filter(platform=platform)
-        return queryset
+        return queryset.order_by('order', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['active_platform'] = self.request.GET.get('platform', '')
+        platform = self.request.GET.get('platform', '')
+        is_bot = self.request.GET.get('is_bot', '')
+        if is_bot:
+            context['active_filter'] = 'bot'
+        elif platform:
+            context['active_filter'] = platform
+        else:
+            context['active_filter'] = 'all'
+        context['filter_tabs'] = self._FILTER_TABS
         return context
 
 
