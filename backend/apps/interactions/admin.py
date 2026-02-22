@@ -1,6 +1,6 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
-from .models import TelegramProfile, Comment, Like
+from .models import TelegramProfile, Comment, Like, CommentReaction
 
 
 @admin.register(TelegramProfile)
