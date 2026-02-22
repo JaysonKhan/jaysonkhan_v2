@@ -17,10 +17,10 @@ class TelegramProfileAdmin(ModelAdmin):
         if obj.photo_url:
             return format_html(
                 '<div style="display: flex; align-items: center; gap: 10px;">'
-                '<span style="font-weight: 600;">{}</span>'
                 '<img src="{}" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);">'
+                '<span style="font-weight: 600;">{}</span>'
                 '</div>',
-                name, obj.photo_url
+                obj.photo_url, name
             )
         return name
 
