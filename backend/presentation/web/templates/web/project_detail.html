@@ -18,7 +18,7 @@
 {% block content %}
 <section class="max-w-4xl mx-auto px-6 py-20">
     <!-- Back Link -->
-    <a href="{% url 'projects' %}" class="text-primary hover:underline mb-8 inline-block">&larr; Back to Apps</a>
+    <a href="{% url 'projects' %}" class="back-link">&larr; Back to Apps</a>
 
     <!-- Project Header -->
     <div class="flex items-start gap-4 flex-wrap mb-6">
@@ -29,8 +29,7 @@
     <!-- Tech Stack -->
     <div class="flex flex-wrap gap-2 mb-8">
         {% for tech in project.technologies.all %}
-        <span class="px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-lg text-sm font-medium text-primary">{{
-            tech.name }}</span>
+        <span class="tech-tag-lg">{{ tech.name }}</span>
         {% endfor %}
     </div>
 
@@ -57,7 +56,7 @@
     {% endif %}
 
     <!-- Description -->
-    <div class="prose prose-invert prose-lg max-w-none text-slate-300 leading-relaxed">
+    <div class="prose prose-invert prose-lg prose-content">
         {{ project.description|render_markdown }}
     </div>
 

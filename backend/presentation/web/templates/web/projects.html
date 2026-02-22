@@ -48,13 +48,13 @@
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
-                    class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)"
+                    class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
                 <div class="absolute top-3 left-3">
                     <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
                 </div>
             </div>
             {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)"
+            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
                 No image
                 <div class="absolute top-3 left-3">
                     <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
@@ -69,8 +69,7 @@
                 <!-- Tech stack -->
                 <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden">
                     {% for tech in project.technologies.all %}
-                    <span class="tech-tag">{{
-                        tech.name }}</span>
+                    <span class="tech-tag">{{ tech.name }}</span>
                     {% endfor %}
                 </div>
 
