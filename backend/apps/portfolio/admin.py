@@ -48,10 +48,10 @@ class SkillAdmin(UnfoldModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_bot', 'is_featured', 'order')
+    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_bot', 'is_featured', 'is_visible', 'order')
     list_display_links = ('thumbnail', 'title')
-    list_editable = ('order', 'is_featured', 'is_bot')
-    list_filter = ('platform', 'is_featured', 'is_bot', 'created_at')
+    list_editable = ('order', 'is_featured', 'is_bot', 'is_visible')
+    list_filter = ('platform', 'is_featured', 'is_bot', 'is_visible', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title', 'description')
     filter_horizontal = ('technologies',)
@@ -61,7 +61,7 @@ class ProjectAdmin(UnfoldModelAdmin):
         ('Basic Info', {
             'fields': (
                 'title', 'slug', 'short_description', 'description',
-                'image', 'is_featured', 'order',
+                'image', 'is_featured', 'is_visible', 'order',
             ),
         }),
         ('Platform & Store Links', {

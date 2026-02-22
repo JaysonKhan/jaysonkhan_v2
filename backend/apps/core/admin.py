@@ -149,6 +149,14 @@ class SiteSettingsAdmin(ModelAdmin):
             ('Experience Section', {
                 'fields': ('experience_section_title',),
             }),
+            ('Visibility Controls', {
+                'fields': ('apps_section_visible',),
+                'description': (
+                    'Toggle major site sections on/off. '
+                    'Hiding a section removes its navigation link, footer link, '
+                    'homepage content, and any hero CTAs pointing to it.'
+                ),
+            }),
             ('Blog Sections', {
                 'fields': (
                     'latest_blog_title',

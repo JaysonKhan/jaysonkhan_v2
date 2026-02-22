@@ -162,6 +162,16 @@ class SiteSettings(models.Model):
         help_text="Latest blog section heading on homepage"
     )
 
+    # ── Visibility Flags ──────────────────────────────────────────────────────
+    apps_section_visible = models.BooleanField(
+        default=True,
+        help_text=(
+            "Show/hide the entire Apps section (navigation link, footer link, "
+            "homepage featured projects, and hero CTA). "
+            "Turn OFF to temporarily hide this section across the whole site."
+        )
+    )
+
     # ── Projects Page ─────────────────────────────────────────────────────────
     projects_page_title = models.CharField(
         max_length=100, default="App Portfolio",

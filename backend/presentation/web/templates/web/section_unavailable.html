@@ -1,0 +1,43 @@
+{% extends 'web/base.html' %}
+
+{% block title %}Section Unavailable — {{ site_settings.site_title }}{% endblock %}
+
+{% block content %}
+<section class="min-h-[70vh] flex items-center justify-center px-6 py-32">
+    <div class="text-center max-w-md mx-auto">
+
+        <!-- Animated icon -->
+        <div class="relative inline-flex items-center justify-center mb-8">
+            <!-- Glow ring -->
+            <div class="absolute w-32 h-32 rounded-full bg-primary/10 animate-pulse"></div>
+            <div class="relative w-24 h-24 rounded-full bg-white/5 border border-white/10
+                        flex items-center justify-center backdrop-blur-sm">
+                <i class="fa-solid fa-lock text-4xl text-primary/70"></i>
+            </div>
+        </div>
+
+        <!-- Heading -->
+        <h1 class="text-3xl font-bold mb-3">
+            <span class="text-gradient">This section is unavailable</span>
+        </h1>
+
+        <!-- Subtext -->
+        <p class="text-slate-400 text-base leading-relaxed mb-8">
+            {% if message %}
+            {{ message }}
+            {% else %}
+            This part of the site is temporarily offline.<br>
+            Check back soon — it should be back up shortly.
+            {% endif %}
+        </p>
+
+        <!-- CTA -->
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary
+                  px-6 py-3 rounded-xl transition font-semibold">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+            Back to Home
+        </a>
+
+    </div>
+</section>
+{% endblock %}

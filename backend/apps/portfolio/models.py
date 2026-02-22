@@ -88,6 +88,14 @@ class Project(models.Model):
     is_featured = models.BooleanField(
         default=False, help_text="Show on homepage featured section"
     )
+    is_visible = models.BooleanField(
+        default=True,
+        help_text=(
+            "Show this project in the Apps section. "
+            "Uncheck to hide it from the project list and detail page "
+            "even when the Apps section is enabled."
+        )
+    )
 
     # Existing fields preserved
     technologies = models.ManyToManyField(Skill, related_name='projects', blank=True)

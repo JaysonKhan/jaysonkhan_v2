@@ -179,6 +179,7 @@
             transition: scale 0.25s ease, border-color 0.25s ease,
                 box-shadow 0.25s ease, background 0.25s ease;
         }
+
         @media (min-width: 768px) {
             .sk-orbit-icon {
                 top: -1.5rem;
@@ -201,6 +202,7 @@
         .sk-orbit-icon[data-label] {
             position: relative;
         }
+
         .sk-orbit-icon[data-label]::after {
             content: attr(data-label);
             position: absolute;
@@ -221,6 +223,7 @@
             z-index: 100;
             backdrop-filter: blur(8px);
         }
+
         .sk-orbit-icon[data-label]:hover::after {
             opacity: 1;
         }
@@ -246,40 +249,52 @@
             flex-shrink: 0;
             overflow: visible;
         }
+
         /* Orbit body: inset by icon radius so icons stay inside wrapper box */
         .sk-orbit-body {
             position: absolute;
-            inset: 20px;   /* mobile icon-r = 18px, use 20px */
+            inset: 20px;
+            /* mobile icon-r = 18px, use 20px */
         }
+
         #sk-globe-area {
             overflow: visible;
         }
+
         @media (min-width: 768px) {
             .sk-globe-wrap {
                 width: 380px;
                 height: 380px;
             }
+
             .sk-orbit-body {
-                inset: 24px;   /* desktop icon-r = 24px */
+                inset: 24px;
+                /* desktop icon-r = 24px */
             }
         }
 
         /* Orbit ring decorations */
-        .sk-ring-outer, .sk-ring-inner {
+        .sk-ring-outer,
+        .sk-ring-inner {
             position: absolute;
             border-radius: 50%;
             pointer-events: none;
         }
+
         .sk-ring-outer {
             inset: 0;
-            border: 1px dashed rgba(255,255,255,0.08);
+            border: 1px dashed rgba(255, 255, 255, 0.08);
         }
+
         .sk-ring-inner {
             inset: 50px;
-            border: 1px dashed rgba(255,255,255,0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.04);
         }
+
         @media (min-width: 768px) {
-            .sk-ring-inner { inset: 70px; }
+            .sk-ring-inner {
+                inset: 70px;
+            }
         }
 
         /* Central globe */
@@ -292,23 +307,32 @@
             pointer-events: none;
             z-index: 2;
         }
+
         .sk-globe-glow {
             position: absolute;
             width: 5rem;
             height: 5rem;
-            background: rgba(168,85,247,0.22);
+            background: rgba(168, 85, 247, 0.22);
             border-radius: 50%;
             filter: blur(2rem);
         }
+
         .sk-globe-icon {
             font-size: 2.75rem;
             opacity: 0.88;
             position: relative;
             z-index: 1;
         }
+
         @media (min-width: 768px) {
-            .sk-globe-glow { width: 7rem; height: 7rem; }
-            .sk-globe-icon { font-size: 3.75rem; }
+            .sk-globe-glow {
+                width: 7rem;
+                height: 7rem;
+            }
+
+            .sk-globe-icon {
+                font-size: 3.75rem;
+            }
         }
 
         /* collapsed class no longer used — globe is always visible */
@@ -714,7 +738,9 @@
             </a>
             <div class="hidden md:flex space-x-8">
                 <a href="{% url 'home' %}" class="hover:text-primary transition">Home</a>
+                {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="hover:text-primary transition">Apps</a>
+                {% endif %}
                 <a href="{% url 'blog_list' %}" class="hover:text-primary transition">Blog</a>
                 <a href="{% url 'contact' %}" class="hover:text-primary transition">Contact</a>
             </div>
@@ -731,7 +757,9 @@
         </div>
         <div id="mobile-menu" class="hidden md:hidden px-6 py-4 space-y-4 border-t border-white/10 mt-4">
             <a href="{% url 'home' %}" class="block hover:text-primary transition">Home</a>
+            {% if site_settings.apps_section_visible %}
             <a href="{% url 'projects' %}" class="block hover:text-primary transition">Apps</a>
+            {% endif %}
             <a href="{% url 'blog_list' %}" class="block hover:text-primary transition">Blog</a>
             <a href="{% url 'contact' %}" class="block hover:text-primary transition">Contact</a>
             <a href="{{ site_settings.nav_cta_url }}"
@@ -775,7 +803,9 @@
             <div class="flex flex-col space-y-2">
                 <h4 class="font-bold mb-2">Links</h4>
                 <a href="{% url 'home' %}" class="text-slate-400 hover:text-primary transition">Home</a>
+                {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition">Apps</a>
+                {% endif %}
                 <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition">Blog</a>
                 <a href="{% url 'contact' %}" class="text-slate-400 hover:text-primary transition">Contact</a>
             </div>

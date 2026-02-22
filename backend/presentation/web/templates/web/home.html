@@ -28,10 +28,12 @@
             <span class="platform-badge ios">iOS</span>
         </div>
         <div class="flex space-x-4 pt-2">
+            {% if site_settings.apps_section_visible %}
             <a href="{{ site_settings.hero_primary_cta_url }}"
                 class="bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold">
                 {{ site_settings.hero_primary_cta_text }}
             </a>
+            {% endif %}
             <a href="{{ site_settings.hero_secondary_cta_url }}"
                 class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold">
                 {{ site_settings.hero_secondary_cta_text }}
@@ -144,6 +146,7 @@
 </section>
 {% endif %}
 
+{% if site_settings.apps_section_visible %}
 <!-- ── Featured Apps Section (clickable cards) ──────────────────────── -->
 <section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
@@ -218,6 +221,7 @@
         {% endfor %}
     </div>
 </section>
+{% endif %}
 
 <!-- ── Latest Blog Posts Section (clickable cards, standardized padding) ── -->
 <section class="max-w-7xl mx-auto px-6 py-20 md:py-32 bg-white/[0.02] my-10"
@@ -294,11 +298,13 @@
                 <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
                     {% for skill in orbit_skills %}
                     <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
-                        <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}" aria-label="{{ skill.name }}">
+                        <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}"
+                            aria-label="{{ skill.name }}">
                             {% if skill.icon %}
                             <i class="{{ skill.icon }}"></i>
                             {% else %}
-                            <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.03em;">{{ skill.name|slice:":2"|upper }}</span>
+                            <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.03em;">{{
+                                skill.name|slice:":2"|upper }}</span>
                             {% endif %}
                         </div>
                     </div>

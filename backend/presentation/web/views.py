@@ -1,12 +1,40 @@
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.http import Http404
 from portfolio.services import PortfolioService, PortfolioRepository
 from portfolio.models import Project
 from blog.services import BlogService, BlogRepository
 from contact.services import ContactService, ContactRepository
 from contact.spam_protection import is_honeypot_filled, is_rate_limited
 from blog.models import Post
+from core.models import SiteSettings
+
+
+def _apps_visible():
+    """Return True if the Apps section is enabled in SiteSettings."""
+    return SiteSettings.load().apps_section_visible
+
+
+class AppsGuardMixin:
+    """
+    Mixin that blocks access to Apps-related views when
+    site_settings.apps_section_visible is False.
+    Renders the 'section_unavailable' page instead (HTTP 200 so there's no
+    error log noise, but the content is clearly a 'coming soon' message).
+    """
+    apps_unavailable_message = (
+        "The Apps section is temporarily offline. "
+        "Come back soon — it'll be up again shortly."
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not _apps_visible():
+            return TemplateView.as_view(
+                template_name='web/section_unavailable.html',
+                extra_context={'message': self.apps_unavailable_message},
+            )(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class HomeView(TemplateView):
@@ -22,7 +50,7 @@ class HomeView(TemplateView):
         return context
 
 
-class ProjectListView(ListView):
+class ProjectListView(AppsGuardMixin, ListView):
     template_name = 'web/projects.html'
     context_object_name = 'projects'
     paginate_by = 10
@@ -37,7 +65,9 @@ class ProjectListView(ListView):
     ]
 
     def get_queryset(self):
-        queryset = Project.objects.prefetch_related('technologies', 'screenshots')
+        # is_visible filter is already applied in PortfolioRepository,
+        # but this view queries directly — keep consistent.
+        queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots')
         platform = self.request.GET.get('platform')
         is_bot = self.request.GET.get('is_bot')
         if is_bot:
@@ -60,13 +90,14 @@ class ProjectListView(ListView):
         return context
 
 
-class ProjectDetailView(DetailView):
+class ProjectDetailView(AppsGuardMixin, DetailView):
     model = Project
     template_name = 'web/project_detail.html'
     context_object_name = 'project'
 
     def get_queryset(self):
-        return Project.objects.prefetch_related('technologies', 'screenshots')
+        # Only visible projects are accessible
+        return Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots')
 
 
 class BlogListView(ListView):
@@ -119,4 +150,3 @@ class ContactView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-
