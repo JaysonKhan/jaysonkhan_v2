@@ -5,6 +5,7 @@ from .models import Category, Tag, Post
 
 from django import forms
 from core.widgets import RichTextWidget
+from django.utils.safestring import mark_safe
 @admin.register(Category)
 class CategoryAdmin(UnfoldModelAdmin):
     list_per_page = 10
@@ -48,7 +49,7 @@ class PostAdmin(UnfoldModelAdmin):
                 'border:1px solid rgba(255,255,255,.12);" />',
                 obj.featured_image.url,
             )
-        return format_html(
+        return mark_safe(
             '<div style="width:48px;height:48px;border-radius:8px;'
             'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);'
             'display:flex;align-items:center;justify-content:center;'
