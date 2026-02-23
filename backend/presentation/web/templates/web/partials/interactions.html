@@ -23,6 +23,11 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
+    .tg-bubble.own-bubble {
+        background: #2b5278; /* Telegram dark mode sent bubble */
+        border-radius: 14px 14px 4px 14px;
+    }
+
     .tg-avatar {
         width: 38px !important;
         height: 38px !important;
@@ -244,7 +249,7 @@
         {% if comments %}
         <div class="space-y-4" id="comments-list">
             {% for comment in comments %}
-            <div class="flex gap-3 group comment-wrapper" id="comment-{{ comment.id }}">
+            <div class="flex gap-3 group comment-wrapper {% if comment.author == tg_profile %}flex-row-reverse{% endif %}" id="comment-{{ comment.id }}">
                 {# Avatar #}
                 <div class="flex-shrink-0 mt-1">
                     {% if comment.author.photo_url %}
@@ -258,10 +263,12 @@
                 </div>
 
                 {# Bubble Container #}
-                <div class="flex-1 min-w-0">
-                    <div class="tg-bubble">
+                <div class="flex-1 min-w-0 flex flex-col {% if comment.author == tg_profile %}items-end{% else %}items-start{% endif %}">
+                    <div class="tg-bubble {% if comment.author == tg_profile %}own-bubble{% endif %}">
                         {# Author Header #}
+                        {% if comment.author != tg_profile %}
                         <span class="tg-author-name">{{ comment.author.display_name }}</span>
+                        {% endif %}
 
                         {# Reply Block #}
                         {% if comment.parent %}
@@ -312,7 +319,7 @@
                                     onclick="toggleEmojiMenu({{ comment.id }})">
                                     <i class="fa-solid fa-face-smile text-[10px]"></i>
                                 </button>
-                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}">
+                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}" {% if comment.author == tg_profile %}style="left: auto; right: 0;"{% endif %}>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍</div>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤</div>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥</div>
