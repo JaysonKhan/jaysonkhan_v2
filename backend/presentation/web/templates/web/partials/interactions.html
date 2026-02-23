@@ -7,7 +7,7 @@
         border-radius: 16px 16px 16px 4px; 
         padding: 8px 12px 6px 12px;
         color: #fff;
-        max-width: 85%;
+        max-width: 92%;
         min-width: 80px;
         width: fit-content;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -472,7 +472,10 @@
         div.className = `flex gap-3 group comment-wrapper ${comment.is_own ? 'flex-row-reverse' : ''}`;
         div.id = `comment-${comment.id}`;
 
-        let imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
+        let imgHtml = comment.image_url ? `
+            <div class="flex ${comment.is_own ? 'justify-end' : 'justify-start'} w-full">
+                <img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">
+            </div>` : '';
         let ownClass = comment.is_own ? 'own-bubble' : '';
         let alignClass = comment.is_own ? 'items-end' : 'items-start';
         
