@@ -2,155 +2,134 @@
 
 <style>
     /* ── UI Standardization & Bug Fixes ── */
-    .tg-bubble {
-        background: #18222d;
-        border-radius: 16px 16px 16px 4px; 
-        padding: 8px 12px 6px 12px;
-        color: #fff;
-        max-width: 92%;
-        min-width: 80px;
-        width: fit-content;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    /* ── Telegram Chat Architecture ── */
+    #tg-chat-container {
         display: flex;
         flex-direction: column;
-        transition: transform 0.2s, box-shadow 0.2s;
-        word-break: break-word; /* Strict break to prevent overflow */
-        overflow-wrap: anywhere;
-    }
-    
-    .tg-bubble.own-bubble {
-        background: #2b5278; 
-        border-radius: 16px 16px 4px 16px; 
+        gap: 16px;
+        width: 100%;
+        padding: 0 4px;
     }
 
-    .comment-wrapper:hover .tg-bubble {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .tg-avatar {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px;
-        min-height: 38px;
-        border-radius: 50% !important;
-        object-fit: cover !important;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* Thread Indentation Line */
-    .tg-replies-container {
-        margin-left: 19px;
-        padding-left: 20px;
-        border-left: 2px solid rgba(255, 255, 255, 0.05);
-        margin-top: 12px;
-    }
-
-    .tg-replies-container.replies-own {
-        margin-left: 0;
-        margin-right: 19px;
-        padding-left: 0;
-        padding-right: 20px;
-        border-left: none;
-        border-right: 2px solid rgba(255, 255, 255, 0.05);
+    .message-row {
         display: flex;
-        flex-direction: column;
+        width: 100%;
+        gap: 10px;
         align-items: flex-end;
     }
 
-    .tg-reply-preview {
-        background: rgba(77, 163, 239, 0.08);
-        border-left: 3px solid #4da3ef;
-        padding: 6px 10px;
-        margin-top: 4px;
-        margin-bottom: 6px;
-        border-radius: 4px 8px 8px 4px;
-        font-size: 0.8rem;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
+    .message--other {
+        justify-content: flex-start;
     }
-    .tg-reply-preview .author {
-        color: #4da3ef;
+
+    .message--own {
+        flex-direction: row-reverse;
+        justify-content: flex-start; /* flex-end equivalent in row-reverse */
+    }
+
+    .message-avatar {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-bottom: 2px;
+    }
+
+    .message-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .tg-bubble {
+        max-width: 72%;
+        min-width: 80px;
+        padding: 8px 12px 6px;
+        position: relative;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    .message--other .tg-bubble {
+        background: #18222d;
+        color: #fff;
+        border-radius: 16px 16px 16px 4px;
+    }
+
+    .message--own .tg-bubble {
+        background: #2b5278;
+        color: #fff;
+        border-radius: 16px 16px 4px 16px;
+    }
+
+    .tg-author-name {
+        display: block;
+        font-size: 0.8rem;
         font-weight: 600;
-        font-size: 0.75rem;
+        color: #4da3ef;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .tg-comment-image {
-        border-radius: 12px;
-        margin-top: 6px;
-        max-width: 100%;
         display: block;
+        border-radius: 10px;
+        margin-top: 4px;
+        max-width: 100%;
         cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .message-content-wrapper {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .tg-meta-inline {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 3px;
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 4px;
+        user-select: none;
+        line-height: 1;
     }
 
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin-top: 4px;
-        padding-left: 4px;
-    }
-    
-    .tg-reaction-btn {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px; 
-        padding: 4px 10px;
-        font-size: 0.75rem;
-        color: #aeb7c2;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        user-select: none;
-    }
-    .tg-reaction-btn.active {
-        background: rgba(77, 163, 239, 0.15);
-        border-color: rgba(77, 163, 239, 0.4);
-        color: #4da3ef;
-        font-weight: 600;
+        margin-top: 6px;
     }
 
-    /* Fixed Meta Info Logic */
-    .tg-meta-row {
-        display: flex;
+    .message--own .tg-reaction-bar {
         justify-content: flex-end;
-        align-items: center;
-        gap: 4px;
-        margin-top: 2px;
-        font-size: 0.65rem;
-        color: rgba(255,255,255,0.4);
     }
 
-    .tg-meta-inline-spacer {
-        float: left;
-        width: 38px;
-        height: 10px;
+    .tg-replies-container {
+        margin-top: 8px;
+        width: 100%;
     }
-    
-    .tg-meta-inline {
+
+    .message--other .tg-replies-container {
+        padding-left: 14px;
+        border-left: 2px solid rgba(255,255,255,0.05);
+    }
+
+    .message--own .tg-replies-container {
+        padding-right: 14px;
+        border-right: 2px solid rgba(255,255,255,0.05);
         display: flex;
+        flex-direction: column;
         align-items: flex-end;
-        float: right;
-        margin-left: 8px;
-        margin-top: 4px;
-        height: 100%;
-        font-size: 0.65rem;
-        line-height: 1;
-        color: rgba(255, 255, 255, 0.4);
-        user-select: none;
-    }
-
-    .tg-author-name {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #4da3ef;
-        margin-bottom: 3px;
-        display: block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
     
     .tg-emoji-menu {
@@ -468,73 +447,64 @@
 
     // Generates DOM dynamically keeping template purity
     function createCommentDOM(comment, depth = 0) {
-        const div = document.createElement('div');
-        div.className = `flex gap-3 group comment-wrapper ${comment.is_own ? 'flex-row-reverse' : ''}`;
-        div.id = `comment-${comment.id}`;
+        const row = document.createElement('div');
+        row.className = `message-row ${comment.is_own ? 'message--own' : 'message--other'}`;
+        row.id = `comment-${comment.id}`;
 
-        let imgHtml = comment.image_url ? `
-            <div class="flex ${comment.is_own ? 'justify-end' : 'justify-start'} w-full">
-                <img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">
-            </div>` : '';
-        let ownClass = comment.is_own ? 'own-bubble' : '';
-        let alignClass = comment.is_own ? 'items-end' : 'items-start';
+        const avatarHtml = `
+            <div class="message-avatar">
+                ${comment.author.photo_url 
+                    ? `<img src="${comment.author.photo_url}" alt="">` 
+                    : `<div class="w-full h-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
+            </div>`;
+
+        const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
         
-        let repliesHtml = '';
-        if(comment.reply_count > 0) {
-            repliesHtml = `
-            <div class="tg-replies-container ${comment.is_own ? 'replies-own' : ''}" id="replies-${comment.id}">
-                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#4da3ef] text-xs font-semibold hover:underline flex items-center gap-2 mt-2">
+        const repliesHtml = comment.reply_count > 0 ? `
+            <div class="tg-replies-container" id="replies-${comment.id}">
+                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#4da3ef] text-xs font-semibold hover:underline flex items-center gap-2">
                     <i class="fa-solid fa-reply"></i> View ${comment.reply_count} replies
                 </button>
-            </div>`;
-        }
+            </div>` : '';
 
-        let emojisHtml = Object.entries(comment.reaction_counts).map(([emj, cnt]) => `
+        const emojisHtml = Object.entries(comment.reaction_counts).map(([emj, cnt]) => `
             <button class="tg-reaction-btn ${comment.user_reaction === emj ? 'active' : ''}" onclick="toggleReaction(${comment.id}, '${emj}', this)">
                 ${emj} <span class="count">${cnt}</span>
-            </button>
-        `).join('');
-        
-        // Escape author name
+            </button>`).join('');
+
         const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
 
-        div.innerHTML = `
-            <div class="flex-shrink-0 mt-1">
-                ${comment.author.photo_url 
-                    ? `<img src="${comment.author.photo_url}" class="tg-avatar">`
-                    : `<div class="tg-avatar bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
-            </div>
-            <div class="flex-1 min-w-0 flex flex-col ${alignClass}">
-                <div class="tg-bubble ${ownClass}">
+        row.innerHTML = `
+            ${avatarHtml}
+            <div class="message-content-wrapper min-w-0">
+                <div class="tg-bubble">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
-                    
-                    <div class="text-sm text-white/95 leading-relaxed relative">
+                    <div class="text-sm text-white/95 leading-relaxed">
                         ${comment.text}
-                        <span class="tg-meta-inline-spacer"></span>
-                        <span class="tg-meta-inline flex items-center gap-1">
+                        <div class="tg-meta-inline">
                             ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>` : ''}
                             ${comment.created_at}
-                        </span>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="tg-reaction-bar ${comment.is_own ? 'flex-row-reverse' : ''}" id="reactions-${comment.id}">
+                <div class="tg-reaction-bar" id="reactions-${comment.id}">
                     ${emojisHtml}
                     ${document.getElementById('comment-form-container') ? `
-                    <div class="relative emoji-menu-wrapper">
-                        <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity mx-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
-                        <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
-                            ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
+                        <div class="relative emoji-menu-wrapper">
+                            <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity mx-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
+                            <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
+                                ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
+                            </div>
                         </div>
-                    </div>
-                    ${depth < 2 ? `<span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                        ${depth < 2 ? `<span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
             </div>
         `;
-        return div;
+        return row;
     }
 
     // ── Reply Logic ──
