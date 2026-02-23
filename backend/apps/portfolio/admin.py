@@ -3,7 +3,8 @@ from django.utils.html import format_html
 from django.utils.text import Truncator
 from unfold.admin import ModelAdmin as UnfoldModelAdmin, TabularInline as UnfoldTabularInline
 from .models import Skill, Project, ProjectScreenshot, Experience
-
+from django import forms
+from core.widgets import RichTextWidget
 
 class ProjectScreenshotInline(UnfoldTabularInline):
     model = ProjectScreenshot
@@ -45,8 +46,17 @@ class SkillAdmin(UnfoldModelAdmin):
     icon_display.short_description = 'Icon'
 
 
+class ProjectAdminForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = '__all__'
+        widgets = {
+            'description_rich': RichTextWidget(),
+        }
+
 @admin.register(Project)
 class ProjectAdmin(UnfoldModelAdmin):
+    form = ProjectAdminForm
     list_per_page = 10
     list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_bot', 'is_featured', 'is_visible', 'order')
     list_display_links = ('thumbnail', 'title')
@@ -60,7 +70,7 @@ class ProjectAdmin(UnfoldModelAdmin):
     fieldsets = (
         ('Basic Info', {
             'fields': (
-                'title', 'slug', 'short_description', 'description',
+                'title', 'slug', 'short_description', 'description', 'description_rich',
                 'image', 'is_featured', 'is_visible', 'order',
             ),
         }),

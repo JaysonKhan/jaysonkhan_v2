@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from core.utils import sanitize_rich_text
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -23,6 +24,7 @@ class Post(models.Model):
     slug = models.SlugField(unique=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='blog_posts')
     content = models.TextField()
+    content_rich = models.TextField(blank=True, null=True, help_text="Rich text content (HTML)")
     excerpt = models.TextField(max_length=500, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
     tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
@@ -36,3 +38,8 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if self.content_rich:
+            self.content_rich = sanitize_rich_text(self.content_rich)
+        super().save(*args, **kwargs)

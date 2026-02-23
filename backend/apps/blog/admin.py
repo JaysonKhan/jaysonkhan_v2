@@ -3,7 +3,8 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 from .models import Category, Tag, Post
 
-
+from django import forms
+from core.widgets import RichTextWidget
 @admin.register(Category)
 class CategoryAdmin(UnfoldModelAdmin):
     list_per_page = 10
@@ -20,8 +21,17 @@ class TagAdmin(UnfoldModelAdmin):
     search_fields = ('name',)
 
 
+class PostAdminForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = '__all__'
+        widgets = {
+            'content_rich': RichTextWidget(),
+        }
+
 @admin.register(Post)
 class PostAdmin(UnfoldModelAdmin):
+    form = PostAdminForm
     list_per_page = 10
     list_display = ('thumbnail', 'title', 'category', 'is_published', 'created_at')
     list_display_links = ('thumbnail', 'title')

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from core.utils import sanitize_rich_text
 
 
 class Skill(models.Model):
@@ -64,6 +65,7 @@ class Project(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField()
+    description_rich = models.TextField(blank=True, null=True, help_text="Rich text description (HTML)")
     short_description = models.CharField(
         max_length=300, blank=True,
         help_text="One-liner for project cards (falls back to truncated description)"
@@ -109,6 +111,8 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.description_rich:
+            self.description_rich = sanitize_rich_text(self.description_rich)
         super().save(*args, **kwargs)
 
     def get_card_description(self):

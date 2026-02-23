@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 import environ
 from presentation.web.views import custom_404_view, custom_500_view
+from core.views import upload_media_view
 
 env = environ.Env()
 
@@ -16,6 +17,7 @@ ADMIN_URL = env('ADMIN_URL', default='admin/')
 
 urlpatterns = [
     path(ADMIN_URL, admin.site.urls),
+    path('api/admin/media-upload/', upload_media_view, name='admin_media_upload'),
 
     # ── API ───────────────────────────────────────────────────────────────────
     path('api/', include('presentation.api.urls')),

@@ -13,6 +13,23 @@
 <meta property="og:image" content="{{ project.image.url }}">
 <meta name="twitter:image" content="{{ project.image.url }}">
 {% endif %}
+<style>
+    .rich-content-wrapper img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 2rem auto;
+        display: block;
+    }
+
+    .rich-content-wrapper iframe {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -56,8 +73,12 @@
     {% endif %}
 
     <!-- Description -->
-    <div class="prose prose-invert prose-lg prose-content">
+    <div class="prose prose-invert prose-lg prose-content rich-content-wrapper mt-8">
+        {% if project.description_rich %}
+        {{ project.description_rich|safe }}
+        {% else %}
         {{ project.description|render_markdown }}
+        {% endif %}
     </div>
 
     <!-- Store links + other links -->

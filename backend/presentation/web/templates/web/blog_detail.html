@@ -14,6 +14,23 @@
 <meta property="og:image" content="{{ post.featured_image.url }}">
 <meta name="twitter:image" content="{{ post.featured_image.url }}">
 {% endif %}
+<style>
+    .rich-content-wrapper img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 2rem auto;
+        display: block;
+    }
+
+    .rich-content-wrapper iframe {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -23,7 +40,8 @@
         <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
         <div class="flex items-center space-x-4 text-slate-400">
             <div class="flex items-center space-x-2">
-                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{ site_settings.site_author_initials }}</div>
+                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{
+                    site_settings.site_author_initials }}</div>
                 <span class="font-medium">By {{ site_settings.site_author }}</span>
             </div>
             <span>&bull;</span>
@@ -32,11 +50,16 @@
     </div>
 
     {% if post.featured_image %}
-    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="w-full h-[400px] object-cover border border-white/10 mb-12" style="border-radius:var(--radius-card)">
+    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
+        class="w-full h-[400px] object-cover border border-white/10 mb-12" style="border-radius:var(--radius-card)">
     {% endif %}
 
-    <div class="prose prose-invert prose-lg prose-content">
+    <div class="prose prose-invert prose-lg prose-content rich-content-wrapper">
+        {% if post.content_rich %}
+        {{ post.content_rich|safe }}
+        {% else %}
         {{ post.content|render_markdown }}
+        {% endif %}
     </div>
 
     <div class="mt-20 pt-10 border-t border-white/10">
@@ -48,7 +71,8 @@
         </div>
     </div>
 
-    {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id comments=comments like_count=like_count user_liked=user_liked %}
+    {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id
+    comments=comments like_count=like_count user_liked=user_liked %}
 
 </article>
 {% endblock %}
