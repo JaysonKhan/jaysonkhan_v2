@@ -1,32 +1,30 @@
-{# ─────────────────────────────────────────────────────────────────────────── #}
-{# Telegram-style Interactions Panel: Likes + Rich Comments #}
-{# ─────────────────────────────────────────────────────────────────────────── #}
 {% load static %}
 
 <style>
+    /* ── UI Standardization & Bug Fixes ── */
     .tg-bubble {
-        position: relative;
         background: #18222d;
-        border-radius: 16px 16px 16px 4px;
-        padding: 6px 10px 4px 12px;
+        border-radius: 16px 16px 16px 4px; 
+        padding: 8px 12px 6px 12px;
         color: #fff;
-        max-width: 75%;
+        max-width: 85%;
         min-width: 80px;
         width: fit-content;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         display: flex;
         flex-direction: column;
         transition: transform 0.2s, box-shadow 0.2s;
-        word-break: break-word;
+        word-break: break-word; /* Strict break to prevent overflow */
+        overflow-wrap: anywhere;
+    }
+    
+    .tg-bubble.own-bubble {
+        background: #2b5278; 
+        border-radius: 16px 16px 4px 16px; 
     }
 
     .comment-wrapper:hover .tg-bubble {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .tg-bubble.own-bubble {
-        background: #2b5278; /* Telegram dark mode sent bubble */
-        border-radius: 16px 16px 4px 16px; 
     }
 
     .tg-avatar {
@@ -39,50 +37,35 @@
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    @media (max-width: 640px) {
-        .tg-bubble {
-            max-width: 92%;
-        }
+    /* Thread Indentation Line */
+    .tg-replies-container {
+        margin-left: 19px;
+        padding-left: 20px;
+        border-left: 2px solid rgba(255, 255, 255, 0.05);
+        margin-top: 12px;
     }
 
     .tg-reply-preview {
         background: rgba(77, 163, 239, 0.08);
         border-left: 3px solid #4da3ef;
-        padding: 4px 10px;
+        padding: 6px 10px;
         margin-top: 4px;
         margin-bottom: 6px;
         border-radius: 4px 8px 8px 4px;
         font-size: 0.8rem;
         cursor: pointer;
-        transition: background 0.2s;
         display: flex;
         flex-direction: column;
     }
-
-    .tg-reply-preview:hover {
-        background: rgba(77, 163, 239, 0.15);
-    }
-
     .tg-reply-preview .author {
         color: #4da3ef;
-        font-weight: 700;
-        display: block;
+        font-weight: 600;
         font-size: 0.75rem;
-        margin-bottom: 1px;
-    }
-
-    .tg-reply-preview .text-snippet {
-        color: rgba(255, 255, 255, 0.7);
-        display: block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .tg-comment-image {
         border-radius: 12px;
         margin-top: 6px;
-        margin-bottom: 2px;
         max-width: 100%;
         display: block;
         cursor: pointer;
@@ -93,29 +76,23 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin-top: 6px;
+        margin-top: 4px;
         padding-left: 4px;
     }
-
+    
     .tg-reaction-btn {
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 3px 9px;
-        font-size: 0.7rem;
+        border-radius: 20px; 
+        padding: 4px 10px;
+        font-size: 0.75rem;
         color: #aeb7c2;
         display: flex;
         align-items: center;
-        gap: 5px;
-        transition: all 0.2s ease;
+        gap: 6px;
         cursor: pointer;
+        user-select: none;
     }
-
-    .tg-reaction-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-        transform: translateY(-1px);
-    }
-
     .tg-reaction-btn.active {
         background: rgba(77, 163, 239, 0.15);
         border-color: rgba(77, 163, 239, 0.4);
@@ -123,6 +100,23 @@
         font-weight: 600;
     }
 
+    /* Fixed Meta Info Logic */
+    .tg-meta-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.4);
+    }
+
+    .tg-meta-inline-spacer {
+        float: left;
+        width: 38px;
+        height: 10px;
+    }
+    
     .tg-meta-inline {
         display: flex;
         align-items: flex-end;
@@ -136,46 +130,35 @@
         user-select: none;
     }
 
-    .tg-meta-inline-spacer {
-        float: left;
-        width: 38px;
-        height: 10px;
-    }
-
     .tg-author-name {
-        font-size: 0.85rem;
-        font-weight: 700;
+        font-size: 0.8rem;
+        font-weight: 600;
         color: #4da3ef;
-        margin-bottom: 2px;
+        margin-bottom: 3px;
         display: block;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
-    /* Emoji Picker Refinement */
+    
     .tg-emoji-menu {
         position: absolute;
-        bottom: 110%;
-        left: 0;
+        bottom: 120%;
         background: #1c2935;
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 14px;
-        padding: 10px;
+        padding: 8px;
         display: none;
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        gap: 6px;
         z-index: 100;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
     }
-
-    .tg-emoji-menu.show {
-        display: grid;
-    }
+    .tg-emoji-menu.show { display: grid; }
 
     .tg-emoji-item {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         cursor: pointer;
         padding: 6px;
         border-radius: 8px;
@@ -185,15 +168,14 @@
         align-items: center;
         justify-content: center;
     }
-
     .tg-emoji-item:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
         transform: scale(1.15);
     }
 
-    /* Reply Tooling Spacing */
+    /* ── Reply Tooling ── */
     .tg-action-link {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         color: #4da3ef;
         font-weight: 600;
         opacity: 0;
@@ -201,18 +183,17 @@
         cursor: pointer;
         margin-right: 8px;
     }
+    .comment-wrapper:hover .tg-action-link { opacity: 0.8; }
+    .tg-action-link:hover { opacity: 1 !important; text-decoration: underline; }
 
-    .comment-wrapper:hover .tg-action-link {
-        opacity: 0.8;
-    }
-
-    .tg-action-link:hover {
-        opacity: 1 !important;
-        text-decoration: underline;
+    @media (max-width: 640px) {
+        .tg-bubble { max-width: 85%; }
+        /* Shift emoji menu to fit screen */
+        .tg-emoji-menu { right: 0; left: auto; }
     }
 </style>
 
-<section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10">
+<section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
 
     {# ── Like Header ─────────────────────────────────────────────────────────── #}
     <div class="flex items-center gap-4 mb-12">
@@ -235,362 +216,423 @@
         {% endif %}
     </div>
 
-    {# ── Comments Section ────────────────────────────────────────────────────── #}
-    <div id="tg-chat-container" class="space-y-6">
-        <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
+    <div class="flex items-center justify-between mb-8">
+        <h3 class="text-xl font-bold flex items-center gap-3">
             Comments
-            {% if comments %}<span id="comments-counter" class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length }}</span>{% endif %}
+            <span id="comments-counter" class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">0</span>
         </h3>
-
-        {% if comments %}
-        <div class="space-y-4" id="comments-list">
-            {% for comment in comments %}
-            <div class="flex gap-3 group comment-wrapper {% if tg_profile and comment.author.id == tg_profile.id %}flex-row-reverse{% endif %}" id="comment-{{ comment.id }}">
-                {# Avatar #}
-                <div class="flex-shrink-0 mt-1">
-                    {% if comment.author.photo_url %}
-                    <img src="{{ comment.author.photo_url }}" alt="{{ comment.author.display_name }}" class="tg-avatar">
-                    {% else %}
-                    <div
-                        class="tg-avatar bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
-                        {{ comment.author.first_name|first|upper }}
-                    </div>
-                    {% endif %}
-                </div>
-
-                {# Bubble Container #}
-                <div class="flex-1 min-w-0 flex flex-col {% if tg_profile and comment.author.id == tg_profile.id %}items-end{% else %}items-start{% endif %}">
-                    <div class="tg-bubble {% if tg_profile and comment.author.id == tg_profile.id %}own-bubble{% endif %}">
-                        {# Author Header #}
-                        {% if not tg_profile or comment.author.id != tg_profile.id %}
-                        <span class="tg-author-name">{{ comment.author.display_name }}</span>
-                        {% endif %}
-
-                        {# Reply Block #}
-                        {% if comment.parent %}
-                        <div class="tg-reply-preview"
-                            onclick="document.getElementById('comment-{{ comment.parent.id }}').scrollIntoView({behavior: 'smooth'})">
-                            <span class="author">{{ comment.parent.author.display_name }}</span>
-                            <span class="text-snippet">{{ comment.parent.text|truncatechars:100 }}</span>
-                        </div>
-                        {% endif %}
-
-                        {# Image Attachment #}
-                        {% if comment.image %}
-                        <img src="{{ comment.image.url }}" class="tg-comment-image" alt="Attachment"
-                            onclick="window.open(this.src)">
-                        {% endif %}
-
-                        {# Content Text & Meta Data Layout #}
-                        <div class="text-sm text-white/95 leading-relaxed relative">
-                            {{ comment.text }}
-                            <span class="tg-meta-inline-spacer"></span>
-                            <span class="tg-meta-inline flex items-center gap-1">
-                                {% if comment.is_reviewed %}
-                                <i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>
-                                {% endif %}
-                                {{ comment.created_at|date:"H:i" }}
-                            </span>
-                        </div>
-                    </div>
-
-                    {# Reactions List (Outside/Below Bubble) #}
-                    <div class="tg-reaction-bar" id="reactions-{{ comment.id }}">
-                        {% regroup comment.reactions.all by emoji as reaction_list %}
-                        {% for group in reaction_list %}
-                        <button
-                            class="tg-reaction-btn {% for r in group.list %}{% if tg_profile and r.author.id == tg_profile.id %}active{% endif %}{% endfor %}"
-                            onclick="toggleReaction({{ comment.id }}, '{{ group.grouper|escapejs }}', this)">
-                            {{ group.grouper }} <span class="count">{{ group.list|length }}</span>
-                        </button>
-                        {% endfor %}
-
-                        {# Plus Reaction / Reply Trigger #}
-                        {% if tg_profile %}
-                        <div class="flex items-center">
-                            <div class="relative emoji-menu-wrapper">
-                                <button
-                                    class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                                    onclick="toggleEmojiMenu({{ comment.id }}, event)">
-                                    <i class="fa-solid fa-face-smile text-[10px]"></i>
-                                </button>
-                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}" {% if tg_profile and comment.author.id == tg_profile.id %}style="right: 0; left: auto;"{% else %}style="left: 0;"{% endif %}>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😂')">😂</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👏')">👏</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '😱')">😱</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👎')">👎</div>
-                                    <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '⚡')">⚡</div>
-                                </div>
-                            </div>
-                            <span class="tg-action-link ml-2"
-                                onclick="setReply({{ comment.id }}, '{{ comment.author.display_name|escapejs }}', '{{ comment.text|truncatechars:50|escapejs }}')">
-                                Reply
-                            </span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+        
+        <!-- Sorting -->
+        <div class="relative">
+            <select id="sort-selector" class="bg-transparent text-sm text-slate-300 font-semibold border-none focus:ring-0 cursor-pointer" onchange="resetAndFetchComments()">
+                <option value="top">Top Comments</option>
+                <option value="newest">Newest First</option>
+            </select>
         </div>
-        {% else %}
-        <p class="text-slate-500 text-sm py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
-            No comments yet. Start the conversation!
-        </p>
-        {% endif %}
-
-        {# ── Chat Input ──────────────────────────────────────────────────────── #}
-        {% if tg_profile %}
-        <div class="mt-10" id="comment-form-container">
-            {# Reply Header (hidden by default) #}
-            <div id="reply-context">
-                <div class="flex-1 min-w-0">
-                    <span class="text-xs font-bold text-[#4da3ef] block" id="reply-author-name"></span>
-                    <span class="text-xs text-slate-400 block truncate" id="reply-text-preview"></span>
-                </div>
-                <button onclick="clearReply()" class="text-slate-500 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                </button>
-            </div>
-
-            {# Image Preview #}
-            <div id="image-preview-container">
-                <img id="image-preview" src="" alt="Preview">
-                <button onclick="clearImage()"
-                    class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            </div>
-
-            <div class="relative bg-[#18222d] border border-white/10 rounded-2xl p-2 flex gap-3 items-end">
-                {# Attachment Btn #}
-                <div class="pb-1 pl-1">
-                    <label for="image-upload"
-                        class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-[#4da3ef] transition cursor-pointer">
-                        <i class="fa-solid fa-paperclip text-lg"></i>
-                        <input type="file" id="image-upload" class="hidden" accept="image/*"
-                            onchange="previewImage(this)">
-                    </label>
-                </div>
-
-                <textarea id="comment-text" rows="1" placeholder="Write a comment…"
-                    class="flex-1 bg-transparent border-none text-white text-sm focus:ring-0 resize-none py-2 px-1 max-h-48"
-                    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-
-                {# Icons / Send Btn #}
-                <div class="pb-1 pr-1 flex items-center gap-1">
-                    <button id="submit-comment"
-                        data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
-                        class="w-10 h-10 flex items-center justify-center bg-[#4da3ef] hover:bg-[#3d8ed6] text-white rounded-full transition-transform active:scale-95">
-                        <i class="fa-solid fa-paper-plane text-sm ml-0.5"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center mt-3 px-2">
-                <p id="comment-status" class="text-xs hidden"></p>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{ tg_profile.display_name }}</span>
-                    <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button type="submit"
-                            class="text-[10px] text-[#4da3ef] hover:underline font-bold">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        {% else %}
-        {# Login Prompt #}
-        <div class="glass rounded-2xl border border-white/8 p-8 text-center mt-12">
-            <h4 class="text-lg font-bold mb-2 text-white">Connect with Telegram to chat</h4>
-            <p class="text-slate-400 text-sm mb-6">Join the discussion using your Telegram account.</p>
-
-            <div class="flex justify-center">
-                {% if telegram_bot_username %}
-                <script async src="https://telegram.org/js/telegram-widget.js?22"
-                    data-telegram-login="{{ telegram_bot_username }}" data-size="large"
-                    data-onauth="onTelegramAuth(user)" data-request-access="write" data-userpic="true" data-radius="12">
-                    </script>
-                <script type="text/javascript">
-                    function onTelegramAuth(user) {
-                        const params = new URLSearchParams(user).toString();
-                        const nextUrl = encodeURIComponent("{{ request.path }}");
-                        window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + nextUrl + "&" + params;
-                    }
-                </script>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
     </div>
+
+    {# ── Composer Always At Top Like YouTube ── #}
+    {% if tg_profile %}
+    <div id="comment-form-container" class="mb-10 p-4 bg-white/5 border border-white/10 rounded-2xl relative">
+        <div id="reply-context" class="hidden relative pb-3 mb-3 border-b border-white/10 items-start justify-between">
+            <div class="flex-1 min-w-0">
+                <span class="text-xs font-bold text-[#4da3ef] block">Replying to <span id="reply-author-name"></span></span>
+            </div>
+            <button onclick="clearReply()" class="text-slate-500 hover:text-white transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+        </div>
+
+        {# Image Preview (Fixed: display none by default) #}
+        <div id="image-preview-container" class="hidden relative inline-block mb-3">
+            <img id="image-preview" src="" class="rounded-xl max-h-40 border border-white/10" alt="">
+            <button onclick="clearImage()" class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-trash-can text-xs"></i></button>
+        </div>
+
+        <div class="flex gap-3 items-end">
+            <label for="image-upload" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#4da3ef] transition cursor-pointer mb-1">
+                <i class="fa-solid fa-paperclip text-lg"></i>
+                <input type="file" id="image-upload" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" onchange="previewImage(this)">
+            </label>
+
+            <textarea id="comment-text" rows="1" placeholder="Add a comment..." class="flex-1 bg-transparent border-none text-white text-sm focus:ring-0 resize-none py-2 px-1 max-h-48" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+
+            <button id="submit-comment" data-url="{% url 'interactions:add_comment' app_label model_name object_id %}" class="w-10 h-10 flex items-center justify-center bg-[#4da3ef] hover:bg-[#3d8ed6] text-white rounded-full transition-transform active:scale-95 mb-1">
+                <i class="fa-solid fa-paper-plane text-sm ml-0.5"></i>
+            </button>
+        </div>
+        
+        <div class="flex justify-between items-center mt-3 px-2">
+            <p id="comment-status" class="text-xs hidden"></p>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{ tg_profile.display_name }}</span>
+                <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="text-[10px] text-[#4da3ef] hover:underline font-bold">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="glass rounded-2xl border border-white/8 p-8 text-center mb-10">
+        <h4 class="text-lg font-bold mb-2 text-white">Join the Discussion</h4>
+        <div class="flex justify-center mt-4">
+            {% if telegram_bot_username %}
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ telegram_bot_username }}" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write" data-radius="12"></script>
+            <script>function onTelegramAuth(user) { window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + encodeURIComponent(window.location.pathname) + "&" + new URLSearchParams(user).toString(); }</script>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Render Area ── #}
+    <div id="tg-chat-container" class="space-y-6"></div>
+    <div id="loading-spinner" class="text-center text-slate-500 py-6 hidden"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></div>
 </section>
 
 <script>
-    (function () {
-        let parentCommentId = null;
-        let selectedFile = null;
-        let reactionLocks = {}; // Per-comment locking to prevent duplicate reaction requests
+    let currentPage = 1;
+    let hasNext = true;
+    let isFetching = false;
+    let parentCommentId = null;
+    let selectedFile = null;
+    let reactionLocks = {}; 
 
-        // ── Reply Logic ─────────────────────────────────────────────────────────
-        window.setReply = function (id, name, snippet) {
-            parentCommentId = id;
-            document.getElementById('reply-author-name').textContent = name;
-            document.getElementById('reply-text-preview').textContent = snippet;
-            document.getElementById('reply-context').style.display = 'flex';
-            document.getElementById('comment-text').focus();
-            document.getElementById('comment-form-container').scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
+    const chatContainer = document.getElementById('tg-chat-container');
+    const panel = document.getElementById('comments-section');
 
-        window.clearReply = function () {
-            parentCommentId = null;
-            document.getElementById('reply-context').style.display = 'none';
-        }
+    // Init Logic & Intersection Observer limit
+    const observer = new IntersectionObserver((entries) => {
+        if(entries[0].isIntersecting && hasNext && !isFetching) { fetchComments(); }
+    }, { rootMargin: "100px" });
 
-        // ── Image Preview ───────────────────────────────────────────────────────
-        window.previewImage = function (input) {
-            if (input.files && input.files[0]) {
-                selectedFile = input.files[0];
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('image-preview').src = e.target.result;
-                    document.getElementById('image-preview-container').style.display = 'block';
-                };
-                reader.readAsDataURL(selectedFile);
-            }
-        }
-
-        window.clearImage = function () {
-            selectedFile = null;
-            document.getElementById('image-upload').value = '';
-            document.getElementById('image-preview-container').style.display = 'none';
-        }
-
-        // ── Reactions ───────────────────────────────────────────────────────────
-        window.toggleEmojiMenu = function (id, event) {
-            event.stopPropagation();
-            const menu = document.getElementById(`emoji-menu-${id}`);
-            const allMenus = document.querySelectorAll('.tg-emoji-menu');
-            allMenus.forEach(m => m !== menu && m.classList.remove('show'));
-            menu.classList.toggle('show');
-        }
-
-        window.toggleReaction = async function (commentId, emoji, btnElem = null) {
-            if (reactionLocks[commentId]) return;
-            reactionLocks[commentId] = true;
-
-            const url = `/interactions/comment/${commentId}/react/`;
-            
-            // Hide menus
-            document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
-
-            try {
-                const resp = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ emoji })
-                });
-
-                if (resp.status === 401) {
-                    alert("Please login with Telegram to react.");
-                    reactionLocks[commentId] = false;
-                    return;
-                }
-
-                const data = await resp.json();
-                if (resp.ok && data.status === 'ok') {
-                    // Update DOM based on returned reactions
-                    updateReactionDOM(commentId, data.reactions, data.action, emoji);
-                }
-            } catch (e) {
-                console.error("Reaction failed", e);
-            } finally {
-                reactionLocks[commentId] = false;
-            }
-        }
-
-        function updateReactionDOM(commentId, reactions, action, currentEmoji) {
-            const container = document.getElementById(`reactions-${commentId}`);
-            if (!container) return;
-
-            // Extract existing buttons to keep the PLUS/REPLY trigger
-            const triggerEl = container.querySelector('.flex.items-center');
-
-            // Clear current reactions (they are buttons not inside the triggerEl)
-            const reactionBtns = container.querySelectorAll('.tg-reaction-btn:not(.opacity-0)');
-            reactionBtns.forEach(btn => btn.remove());
-
-            // Add new ones
-            Object.entries(reactions).forEach(([emoji, count]) => {
-                const btn = document.createElement('button');
-                btn.className = 'tg-reaction-btn';
-                
-                // Optimistically mark the current user emoji as active
-                if (emoji === currentEmoji && action !== 'removed') {
-                    btn.classList.add('active');
-                }
-
-                btn.onclick = () => window.toggleReaction(commentId, emoji, btn);
-                btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
-                container.insertBefore(btn, triggerEl);
-            });
-        }
-
-        // ── Form Submission (Multipart) ──────────────────────────────────────────
-        const submitBtn = document.getElementById('submit-comment');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', async () => {
-                const text = (document.getElementById('comment-text').value || '').trim();
-                if (!text && !selectedFile) { alert("Comment cannot be empty"); return; }
-
-                submitBtn.disabled = true;
-                const originalContent = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
-
-                const formData = new FormData();
-                formData.append('text', text);
-                if (parentCommentId) formData.append('parent_id', parentCommentId);
-                if (selectedFile) formData.append('image', selectedFile);
-
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchComments();
+        
+        // Setup Likes
+        const likeBtn = document.getElementById('like-btn');
+        if (likeBtn) {
+            likeBtn.addEventListener('click', async function() {
+                const url = this.dataset.url;
+                const isLiked = this.dataset.liked === 'true';
                 try {
-                    const resp = await fetch(submitBtn.dataset.url, {
+                    const resp = await fetch(url, {
                         method: 'POST',
-                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                        body: formData
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') }
                     });
+                    if (resp.status === 401) {
+                        alert("Please login with Telegram to like.");
+                        return;
+                    }
                     const data = await resp.json();
-                    if (resp.status === 201) {
-                        if (data.status === 'pending') {
-                            alert(data.message);
-                        }
-                        location.reload();
+                    
+                    this.dataset.liked = data.liked;
+                    document.getElementById('like-count').innerText = data.count;
+                    const icon = document.getElementById('like-icon');
+                    
+                    if (data.liked) {
+                        this.classList.replace('border-white/10', 'border-pink-500/60');
+                        this.classList.replace('bg-white/5', 'bg-pink-500/10');
+                        this.classList.replace('text-slate-400', 'text-pink-400');
+                        this.classList.remove('hover:border-pink-500/40', 'hover:text-pink-400');
+                        icon.classList.replace('fa-regular', 'fa-solid');
                     } else {
-                        alert(data.error || "Error sending comment");
+                        this.classList.replace('border-pink-500/60', 'border-white/10');
+                        this.classList.replace('bg-pink-500/10', 'bg-white/5');
+                        this.classList.replace('text-pink-400', 'text-slate-400');
+                        this.classList.add('hover:border-pink-500/40', 'hover:text-pink-400');
+                        icon.classList.replace('fa-solid', 'fa-regular');
                     }
                 } catch (e) {
-                    alert("Network error");
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalContent;
+                    console.error("Like failed", e);
                 }
             });
         }
+    });
 
-        // ── Global Clicks ────────────────────────────────────────────────────────
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.emoji-menu-wrapper')) {
-                document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+    function resetAndFetchComments() {
+        chatContainer.innerHTML = '';
+        currentPage = 1;
+        hasNext = true;
+        fetchComments();
+    }
+
+    async function fetchComments() {
+        if (isFetching || !hasNext) return;
+        isFetching = true;
+        document.getElementById('loading-spinner').classList.remove('hidden');
+
+        try {
+            const qs = new URLSearchParams({
+                app_label: panel.dataset.app,
+                model: panel.dataset.model,
+                object_id: panel.dataset.oid,
+                sort: document.getElementById('sort-selector').value,
+                page: currentPage
+            });
+            const req = await fetch(`/interactions/comments/?${qs.toString()}`);
+            const res = await req.json();
+            
+            document.getElementById('comments-counter').textContent = res.total_count || 0;
+            res.comments.forEach(c => chatContainer.appendChild(createCommentDOM(c)));
+            
+            hasNext = res.has_next;
+            if (hasNext) {
+                currentPage++;
+                const sentinel = document.createElement('div');
+                sentinel.className = 'fetch-sentinel';
+                chatContainer.appendChild(sentinel);
+                observer.observe(sentinel);
+            }
+        } finally {
+            isFetching = false;
+            document.getElementById('loading-spinner').classList.add('hidden');
+        }
+    }
+
+    async function loadReplies(parentId, btnElem) {
+        btnElem.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Loading...`;
+        try {
+            const req = await fetch(`/interactions/comments/${parentId}/replies/?page=1`);
+            const res = await req.json();
+            const container = document.getElementById(`replies-${parentId}`);
+            container.innerHTML = '';
+            res.replies.forEach(c => container.appendChild(createCommentDOM(c, true)));
+            btnElem.style.display = 'none'; // hide once loaded
+        } catch(e) { console.error('Failed fetching replies'); }
+    }
+
+    // Generates DOM dynamically keeping template purity
+    function createCommentDOM(comment, isReply = false) {
+        const div = document.createElement('div');
+        div.className = `flex gap-3 group comment-wrapper ${comment.is_own ? 'flex-row-reverse' : ''}`;
+        div.id = `comment-${comment.id}`;
+
+        let imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
+        let ownClass = comment.is_own ? 'own-bubble' : '';
+        let alignClass = comment.is_own ? 'items-end' : 'items-start';
+        
+        let repliesHtml = '';
+        if(!isReply && comment.reply_count > 0) {
+            repliesHtml = `
+            <div class="tg-replies-container" id="replies-${comment.id}">
+                <button onclick="loadReplies(${comment.id}, this)" class="text-[#4da3ef] text-xs font-semibold hover:underline flex items-center gap-2 mt-2">
+                    <i class="fa-solid fa-reply"></i> View ${comment.reply_count} replies
+                </button>
+            </div>`;
+        }
+
+        let emojisHtml = Object.entries(comment.reaction_counts).map(([emj, cnt]) => `
+            <button class="tg-reaction-btn ${comment.user_reaction === emj ? 'active' : ''}" onclick="toggleReaction(${comment.id}, '${emj}', this)">
+                ${emj} <span class="count">${cnt}</span>
+            </button>
+        `).join('');
+        
+        // Escape author name
+        const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
+
+        div.innerHTML = `
+            <div class="flex-shrink-0 mt-1">
+                ${comment.author.photo_url 
+                    ? `<img src="${comment.author.photo_url}" class="tg-avatar">`
+                    : `<div class="tg-avatar bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col ${alignClass}">
+                <div class="tg-bubble ${ownClass}">
+                    ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
+                    ${imgHtml}
+                    
+                    <div class="text-sm text-white/95 leading-relaxed relative">
+                        ${comment.text}
+                        <span class="tg-meta-inline-spacer"></span>
+                        <span class="tg-meta-inline flex items-center gap-1">
+                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>` : ''}
+                            ${comment.created_at}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="tg-reaction-bar" id="reactions-${comment.id}">
+                    ${emojisHtml}
+                    ${document.getElementById('comment-form-container') ? `
+                    <div class="relative emoji-menu-wrapper">
+                        <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity ml-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
+                        <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
+                            ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
+                        </div>
+                    </div>
+                    <span class="tg-action-link ml-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>
+                    ` : ''}
+                </div>
+                ${repliesHtml}
+            </div>
+        `;
+        return div;
+    }
+
+    // ── Reply Logic ──
+    window.setReply = function (id, name, snippet) {
+        parentCommentId = id;
+        document.getElementById('reply-author-name').textContent = name;
+        document.getElementById('reply-text-preview').textContent = snippet;
+        document.getElementById('reply-context').style.display = 'flex';
+        document.getElementById('comment-text').focus();
+        document.getElementById('comment-form-container').scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+    window.clearReply = function () {
+        parentCommentId = null;
+        document.getElementById('reply-context').style.display = 'none';
+        document.getElementById('reply-author-name').textContent = '';
+        document.getElementById('reply-text-preview').textContent = '';
+    }
+
+    // ── Image Preview ──
+    window.previewImage = function (input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('image-preview-container').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    }
+
+    window.clearImage = function () {
+        selectedFile = null;
+        document.getElementById('image-upload').value = '';
+        document.getElementById('image-preview').src = '';
+        document.getElementById('image-preview-container').style.display = 'none';
+    }
+
+    // ── Reactions ──
+    window.toggleEmojiMenu = function (id, event) {
+        event.stopPropagation();
+        const menu = document.getElementById(`emoji-menu-${id}`);
+        const allMenus = document.querySelectorAll('.tg-emoji-menu');
+        allMenus.forEach(m => m !== menu && m.classList.remove('show'));
+        menu.classList.toggle('show');
+    }
+
+    window.toggleReaction = async function (commentId, emoji, btnElem = null) {
+        if (reactionLocks[commentId]) return;
+        reactionLocks[commentId] = true;
+
+        document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+
+        const url = `/interactions/comment/${commentId}/react/`;
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emoji })
+            });
+
+            if (resp.status === 401) {
+                alert("Please login with Telegram to react.");
+                reactionLocks[commentId] = false;
+                return;
+            }
+
+            const data = await resp.json();
+            if (resp.ok && data.status === 'ok') {
+                updateReactionDOM(commentId, data.reactions, data.action, emoji);
+            }
+        } catch (e) {
+            console.error("Reaction failed", e);
+        } finally {
+            reactionLocks[commentId] = false;
+        }
+    }
+
+    function updateReactionDOM(commentId, reactions, action, currentEmoji) {
+        const container = document.getElementById(`reactions-${commentId}`);
+        if (!container) return;
+
+        const triggerEl = container.querySelector('.emoji-menu-wrapper');
+        
+        const reactionBtns = container.querySelectorAll('.tg-reaction-btn:not(.opacity-0)');
+        reactionBtns.forEach(btn => btn.remove());
+
+        Object.entries(reactions).forEach(([emoji, count]) => {
+            const btn = document.createElement('button');
+            btn.className = 'tg-reaction-btn';
+            
+            if (emoji === currentEmoji && action !== 'removed') {
+                btn.classList.add('active');
+            } else if (emoji !== currentEmoji && action === 'added') {
+                // Determine if they were already active from another emoji click previously. 
+                // Full state should come from backend, but optimistic works fine for now.
+            }
+
+            btn.onclick = () => window.toggleReaction(commentId, emoji, btn);
+            btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
+            if(triggerEl) {
+                container.insertBefore(btn, triggerEl);
+            } else {
+                container.appendChild(btn);
             }
         });
+    }
 
-        // ── Helpers ─────────────────────────────────────────────────────────────
-        function getCookie(name) {
-            const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-            return m ? m.pop() : '';
+    // ── Form Submit ──
+    const submitBtn = document.getElementById('submit-comment');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            const textElem = document.getElementById('comment-text');
+            const text = (textElem.value || '').trim();
+            if (!text && !selectedFile) { alert("Comment cannot be empty"); return; }
+
+            submitBtn.disabled = true;
+            const originalContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
+
+            const formData = new FormData();
+            formData.append('text', text);
+            if (parentCommentId) formData.append('parent_id', parentCommentId);
+            if (selectedFile) formData.append('image', selectedFile);
+
+            try {
+                const resp = await fetch(submitBtn.dataset.url, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                });
+                const data = await resp.json();
+                if (resp.status === 201) {
+                    if (data.status === 'pending') {
+                        alert(data.message);
+                    }
+                    
+                    // Optimistic update - reset and just re-fetch currently
+                    textElem.value = '';
+                    textElem.style.height = 'auto';
+                    clearImage();
+                    clearReply();
+                    resetAndFetchComments();
+                } else {
+                    alert(data.error || "Error sending comment");
+                }
+            } catch (e) {
+                alert("Network error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalContent;
+            }
+        });
+    }
+
+    // ── Global Document Click ──
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.emoji-menu-wrapper')) {
+            document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
         }
-    })();
+    });
+
+    // ── Util ──
+    function getCookie(name) {
+        const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return m ? m.pop() : '';
+    }
 </script>

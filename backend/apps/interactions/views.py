@@ -12,6 +12,8 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.views import View
+from django.db.models import Count
+from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
@@ -306,3 +308,105 @@ class ToggleLikeView(View):
 
         count = Like.objects.filter(content_type=ct, object_id=object_id).count()
         return JsonResponse({'liked': liked, 'count': count})
+
+
+def serialize_comment(comment, tg_profile_id=None):
+    # Determine the requester's reaction if logged in
+    user_reaction = None
+    if tg_profile_id:
+        for r in comment.reactions.all():
+            if r.author_id == tg_profile_id:
+                user_reaction = r.emoji
+                break
+
+    # Build group reactions
+    reaction_counts = {}
+    for r in comment.reactions.all():
+        reaction_counts[r.emoji] = reaction_counts.get(r.emoji, 0) + 1
+
+    return {
+        "id": comment.id,
+        "author": {
+            "id": comment.author.id,
+            "display_name": comment.author.display_name,
+            "photo_url": comment.author.photo_url,
+            "initial": comment.author.first_name[0].upper() if comment.author.first_name else 'U',
+        },
+        "text": comment.text,
+        "image_url": comment.image.url if getattr(comment, 'image', None) and hasattr(comment.image, 'url') else None,
+        "created_at": comment.created_at.strftime('%H:%M'),
+        "is_reviewed": comment.is_reviewed,
+        "is_own": tg_profile_id == comment.author.id,
+        "reaction_counts": reaction_counts,
+        "user_reaction": user_reaction,
+        "reply_count": getattr(comment, 'reply_count', comment.replies.filter(is_approved=True).count()),
+        "parent_id": comment.parent_id
+    }
+
+
+class ListCommentsView(View):
+    """
+    GET /interactions/comments/?app_label=...&model=...&object_id=...&page=1&sort=top
+    """
+    def get(self, request):
+        app_label = request.GET.get('app_label')
+        model = request.GET.get('model')
+        object_id = request.GET.get('object_id')
+        sort = request.GET.get('sort', 'top')
+        page = int(request.GET.get('page', 1))
+
+        try:
+            ct = ContentType.objects.get(app_label=app_label, model=model)
+        except ContentType.DoesNotExist:
+            return JsonResponse({'error': 'Invalid content type'}, status=404)
+
+        # Get parent comments only
+        qs = Comment.objects.filter(
+            content_type=ct, 
+            object_id=object_id, 
+            is_approved=True, 
+            parent__isnull=True
+        ).select_related('author').prefetch_related('reactions', 'reactions__author')
+
+        if sort == 'top':
+            # Sorting formula: Score interactions dynamically
+            qs = qs.annotate(
+                rcount=Count('reactions', distinct=True),
+                pcount=Count('replies', distinct=True)
+            ).order_by('-rcount', '-pcount', '-created_at')
+        else:
+            qs = qs.order_by('-created_at')
+
+        paginator = Paginator(qs, 10)
+        page_obj = paginator.get_page(page)
+
+        tg_profile_id = request.session.get('tg_profile_id')
+        data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
+
+        return JsonResponse({
+            'comments': data,
+            'has_next': page_obj.has_next(),
+            'total_count': paginator.count
+        })
+
+class ListRepliesView(View):
+    """
+    GET /interactions/comments/<parent_id>/replies/?page=1
+    """
+    def get(self, request, parent_id):
+        page = int(request.GET.get('page', 1))
+        qs = Comment.objects.filter(
+            parent_id=parent_id, 
+            is_approved=True
+        ).select_related('author').prefetch_related('reactions', 'reactions__author').order_by('created_at')
+        
+        paginator = Paginator(qs, 10)
+        page_obj = paginator.get_page(page)
+
+        tg_profile_id = request.session.get('tg_profile_id')
+        data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
+
+        return JsonResponse({
+            'replies': data,
+            'has_next': page_obj.has_next()
+        })

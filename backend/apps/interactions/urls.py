@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import TelegramAuthView, TelegramLogoutView, AddCommentView, ToggleLikeView, ToggleCommentReactionView
+from .views import (TelegramAuthView, TelegramLogoutView, AddCommentView, ToggleLikeView, 
+                    ToggleCommentReactionView, ListCommentsView, ListRepliesView)
 
 app_name = 'interactions'
 
@@ -26,4 +27,8 @@ urlpatterns = [
         ToggleLikeView.as_view(),
         name='toggle_like',
     ),
+    
+    # Pagination & Threading Endpoints
+    path('interactions/comments/', ListCommentsView.as_view(), name='list_comments'),
+    path('interactions/comments/<int:parent_id>/replies/', ListRepliesView.as_view(), name='list_replies'),
 ]
