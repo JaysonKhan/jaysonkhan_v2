@@ -21,13 +21,30 @@ ALLOWED_STYLES = [
     'max-width', 'max-height', 'border', 'border-radius', 'display'
 ]
 
+try:
+    from bleach.css_sanitizer import CSSSanitizer
+    css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_STYLES)
+except ImportError:
+    css_sanitizer = None
+
 def sanitize_rich_text(text):
     if not text:
         return text
-    return bleach.clean(
-        text,
-        tags=ALLOWED_TAGS,
-        attributes=ALLOWED_ATTRIBUTES,
-        styles=ALLOWED_STYLES,
-        strip=True
-    )
+        
+    kwargs = {
+        'tags': ALLOWED_TAGS,
+        'attributes': ALLOWED_ATTRIBUTES,
+        'strip': True
+    }
+    
+    if css_sanitizer:
+        kwargs['css_sanitizer'] = css_sanitizer
+    else:
+        # Older bleach uses 'styles'
+        # To avoid error in older versions or new version without css_sanitizer,
+        # we try using 'styles' if it doesn't raise TypeError, 
+        # but to be safe we just pass 'styles' only if bleach version < 6
+        if int(bleach.__version__.split('.')[0]) < 6:
+            kwargs['styles'] = ALLOWED_STYLES
+
+    return bleach.clean(text, **kwargs)
