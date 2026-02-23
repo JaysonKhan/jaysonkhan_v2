@@ -525,7 +525,7 @@
                             ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                         </div>
                     </div>
-                    ${depth < 3 ? `<span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                    ${depth < 2 ? `<span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
