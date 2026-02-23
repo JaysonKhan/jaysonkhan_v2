@@ -233,44 +233,97 @@
 
     {# ── Composer Always At Top Like YouTube ── #}
     {% if tg_profile %}
-    <div id="comment-form-container" class="mb-10 p-4 bg-white/5 border border-white/10 rounded-2xl relative">
-        <div id="reply-context" class="hidden relative pb-3 mb-3 border-b border-white/10 items-start justify-between">
-            <div class="flex-1 min-w-0">
-                <span class="text-xs font-bold text-[#4da3ef] block">Replying to <span id="reply-author-name"></span></span>
+    <div class="mb-10" id="comment-form-container">
+        <!-- Reply Context -->
+        <div id="reply-context"
+             class="hidden items-center justify-between mb-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+            <div class="min-w-0">
+                <p class="text-xs font-semibold text-[#4da3ef]" id="reply-author-name"></p>
+                <p class="text-xs text-slate-400 truncate" id="reply-text-preview"></p>
             </div>
-            <button onclick="clearReply()" class="text-slate-500 hover:text-white transition"><i class="fa-solid fa-xmark text-sm"></i></button>
-        </div>
-
-        {# Image Preview (Fixed: display none by default) #}
-        <div id="image-preview-container" class="hidden relative inline-block mb-3">
-            <img id="image-preview" src="" class="rounded-xl max-h-40 border border-white/10" alt="">
-            <button onclick="clearImage()" class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-trash-can text-xs"></i></button>
-        </div>
-
-        <div class="flex gap-3 items-end">
-            <label for="image-upload" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-[#4da3ef] transition cursor-pointer mb-1">
-                <i class="fa-solid fa-paperclip text-lg"></i>
-                <input type="file" id="image-upload" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" onchange="previewImage(this)">
-            </label>
-
-            <textarea id="comment-text" rows="1" placeholder="Add a comment..." class="flex-1 bg-transparent border-none text-white text-sm focus:ring-0 resize-none py-2 px-1 max-h-48" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-
-            <button id="submit-comment" data-url="{% url 'interactions:add_comment' app_label model_name object_id %}" class="w-10 h-10 flex items-center justify-center bg-[#4da3ef] hover:bg-[#3d8ed6] text-white rounded-full transition-transform active:scale-95 mb-1">
-                <i class="fa-solid fa-paper-plane text-sm ml-0.5"></i>
+            <button onclick="clearReply()" 
+                    class="text-slate-400 hover:text-white transition"
+                    aria-label="Cancel reply">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        
-        <div class="flex justify-between items-center mt-3 px-2">
-            <p id="comment-status" class="text-xs hidden"></p>
-            <div class="flex items-center gap-2">
-                <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{ tg_profile.display_name }}</span>
+
+        <!-- Image Preview -->
+        <div id="image-preview-container" class="hidden relative inline-block mb-3 p-1 bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+            <img id="image-preview" src="" class="rounded-lg max-h-40 object-contain" alt="">
+            <button onclick="clearImage()" class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-red-500/80 transition shadow-lg">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+        </div>
+
+        <!-- Composer -->
+        <div class="relative flex items-end gap-3 bg-[#18222d] 
+                    border border-white/10 
+                    rounded-2xl px-3 py-2
+                    focus-within:border-[#4da3ef] 
+                    focus-within:ring-2 focus-within:ring-[#4da3ef]/20 
+                    transition-all duration-200">
+
+            <!-- Attachment -->
+            <label for="image-upload"
+                   class="w-9 h-9 flex-shrink-0 flex items-center justify-center
+                          text-slate-400 hover:text-[#4da3ef]
+                          bg-white/5 hover:bg-white/10
+                          rounded-xl cursor-pointer transition"
+                   aria-label="Attach file">
+                <i class="fa-solid fa-paperclip text-sm"></i>
+                <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
+            </label>
+
+            <!-- Textarea -->
+            <textarea id="comment-text"
+                      rows="1"
+                      placeholder="Komment yozing..."
+                      class="flex-1 bg-transparent border-none text-white text-sm
+                             placeholder:text-slate-500
+                             resize-none outline-none py-2 focus:ring-0"
+                      aria-label="Write a comment"
+                      oninput="onCommentInput(this)"></textarea>
+
+            <!-- Send -->
+            <button id="submit-comment"
+                    disabled
+                    data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
+                    class="w-10 h-10 flex-shrink-0 flex items-center justify-center
+                           rounded-full bg-[#4da3ef]
+                           text-white transition-all
+                           disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale
+                           hover:bg-[#3d8ed6] active:scale-95"
+                    aria-label="Send comment">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-between items-center mt-2 px-2">
+            <span id="char-counter"
+                  class="text-[11px] text-slate-500 transition-colors">
+                0 / 1000
+            </span>
+
+            <div class="text-[11px] text-slate-500">
+                Logged in as 
+                <span class="text-slate-300 font-semibold mr-1">
+                    {{ tg_profile.display_name }}
+                </span>
                 <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit" class="text-[10px] text-[#4da3ef] hover:underline font-bold">Logout</button>
+                    <button type="submit"
+                            class="text-[#4da3ef] hover:underline font-bold">
+                        Logout
+                    </button>
                 </form>
             </div>
         </div>
+
+        <!-- Error feedback -->
+        <p id="comment-error" class="hidden text-[10px] text-red-400 mt-1 px-2"></p>
     </div>
     {% else %}
     <div class="glass rounded-2xl border border-white/8 p-8 text-center mb-10">
@@ -577,12 +630,62 @@
     }
 
     // ── Form Submit ──
+    // ── Form Submit ──
+    window.onCommentInput = function (elem) {
+        // Auto-resize
+        elem.style.height = 'auto';
+        elem.style.height = elem.scrollHeight + 'px';
+
+        const text = elem.value.trim();
+        const counter = document.getElementById('char-counter');
+        const error = document.getElementById('comment-error');
+        const submitBtn = document.getElementById('submit-comment');
+
+        // Character Counting
+        const len = elem.value.length;
+        counter.textContent = `${len} / 1000`;
+        
+        if (len >= 1000) {
+            counter.classList.replace('text-slate-500', 'text-red-400');
+            counter.classList.remove('text-yellow-400');
+        } else if (len >= 900) {
+            counter.classList.replace('text-slate-500', 'text-yellow-400');
+            counter.classList.remove('text-red-400');
+        } else {
+            counter.classList.remove('text-red-400', 'text-yellow-400');
+            counter.classList.add('text-slate-500');
+        }
+
+        // Validation & Error state
+        if (text.length > 0 && text.length < 3) {
+            error.textContent = "Komment kamida 3ta belgidan iborat bo'lishi kerak";
+            error.classList.remove('hidden');
+        } else {
+            error.classList.add('hidden');
+        }
+
+        // Send button disabled state
+        submitBtn.disabled = (text.length < 3 && !selectedFile);
+    }
+
+    const commentTextarea = document.getElementById('comment-text');
+    if (commentTextarea) {
+        commentTextarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!document.getElementById('submit-comment').disabled) {
+                    document.getElementById('submit-comment').click();
+                }
+            }
+        });
+    }
+
     const submitBtn = document.getElementById('submit-comment');
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
             const textElem = document.getElementById('comment-text');
             const text = (textElem.value || '').trim();
-            if (!text && !selectedFile) { alert("Comment cannot be empty"); return; }
+            if (!text && !selectedFile) return;
 
             submitBtn.disabled = true;
             const originalContent = submitBtn.innerHTML;
@@ -601,15 +704,27 @@
                 });
                 const data = await resp.json();
                 if (resp.status === 201) {
+                    // Update global counter UI instantly
+                    const globalCounter = document.getElementById('comments-counter');
+                    if (globalCounter) {
+                        globalCounter.textContent = parseInt(globalCounter.textContent) + 1;
+                    }
+
                     if (data.status === 'pending') {
                         alert(data.message);
                     }
                     
-                    // Optimistic update - reset and just re-fetch currently
+                    // Reset composer
                     textElem.value = '';
                     textElem.style.height = 'auto';
                     clearImage();
                     clearReply();
+                    
+                    // Reset counter
+                    const counter = document.getElementById('char-counter');
+                    if (counter) counter.textContent = '0 / 1000';
+                    
+                    // Refresh parent list
                     resetAndFetchComments();
                 } else {
                     alert(data.error || "Error sending comment");
@@ -619,6 +734,8 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalContent;
+                // re-evaluate state
+                onCommentInput(textElem);
             }
         });
     }
