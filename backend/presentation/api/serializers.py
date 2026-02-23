@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from users.models import User
-from portfolio.models import Skill, Project, ProjectScreenshot, Experience
+from portfolio.models import Skill, Project, Experience
 from blog.models import Category, Tag, Post
 from contact.models import ContactMessage
 from core.models import SiteSettings
@@ -22,15 +22,9 @@ class SkillSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectScreenshotSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProjectScreenshot
-        fields = ('id', 'image', 'caption', 'order')
-
 
 class ProjectSerializer(serializers.ModelSerializer):
     technologies = SkillSerializer(many=True, read_only=True)
-    screenshots = ProjectScreenshotSerializer(many=True, read_only=True)
     platform_display = serializers.CharField(source='get_platform_display', read_only=True)
 
     class Meta:

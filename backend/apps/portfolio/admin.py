@@ -1,27 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.text import Truncator
-from unfold.admin import ModelAdmin as UnfoldModelAdmin, TabularInline as UnfoldTabularInline
-from .models import Skill, Project, ProjectScreenshot, Experience
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
+from .models import Skill, Project, Experience
 from django import forms
 from core.widgets import RichTextWidget
-
-class ProjectScreenshotInline(UnfoldTabularInline):
-    model = ProjectScreenshot
-    extra = 1
-    fields = ('image', 'caption', 'order', 'screenshot_preview')
-    readonly_fields = ('screenshot_preview',)
-
-    def screenshot_preview(self, obj):
-        if obj.pk and obj.image:
-            return format_html(
-                '<img src="{}" height="80" style="border-radius:8px;'
-                'border:1px solid rgba(255,255,255,.15);" />',
-                obj.image.url,
-            )
-        return '—'
-    screenshot_preview.short_description = 'Preview'
-
 
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
@@ -63,14 +46,13 @@ class ProjectAdmin(UnfoldModelAdmin):
     list_editable = ('order', 'is_featured', 'is_bot', 'is_visible')
     list_filter = ('platform', 'is_featured', 'is_bot', 'is_visible', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
-    search_fields = ('title', 'description')
+    search_fields = ('title', 'description_rich')
     filter_horizontal = ('technologies',)
-    inlines = [ProjectScreenshotInline]
 
     fieldsets = (
         ('Basic Info', {
             'fields': (
-                'title', 'slug', 'short_description', 'description', 'description_rich',
+                'title', 'slug', 'short_description', 'description_rich',
                 'image', 'is_featured', 'is_visible', 'order',
             ),
         }),
@@ -109,7 +91,7 @@ class ProjectAdmin(UnfoldModelAdmin):
     thumbnail.short_description = ''
 
     def short_desc(self, obj):
-        text = obj.short_description or obj.description
+        text = obj.get_card_description()
         return Truncator(text).chars(60)
     short_desc.short_description = 'Description'
 

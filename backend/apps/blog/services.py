@@ -3,7 +3,7 @@ from .models import Post, Category, Tag
 class BlogRepository:
     @staticmethod
     def get_published_posts():
-        return Post.objects.filter(is_published=True).select_related('category', 'author').prefetch_related('tags').defer('content')
+        return Post.objects.filter(is_published=True).select_related('category', 'author').prefetch_related('tags').defer('content_rich')
 
     @staticmethod
     def get_post_by_slug(slug):

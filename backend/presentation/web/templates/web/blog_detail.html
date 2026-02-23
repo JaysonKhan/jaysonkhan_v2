@@ -54,11 +54,7 @@
     {% endif %}
 
     <div class="prose prose-invert prose-lg prose-content rich-content-wrapper">
-        {% if post.content_rich %}
         {{ post.content_rich|safe }}
-        {% else %}
-        {{ post.content|render_markdown }}
-        {% endif %}
     </div>
 
     <div class="mt-20 pt-10 border-t border-white/10">

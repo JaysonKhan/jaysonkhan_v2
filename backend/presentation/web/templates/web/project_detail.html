@@ -2,11 +2,11 @@
 {% load markdown_extras %}
 
 {% block title %}{{ project.title }} | {{ site_settings.site_author }}{% endblock %}
-{% block meta_description %}{{ project.description|truncatewords:25 }}{% endblock %}
+{% block meta_description %}{{ project.get_card_description|truncatewords:25 }}{% endblock %}
 {% block og_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
-{% block og_description %}{{ project.description|truncatewords:30 }}{% endblock %}
+{% block og_description %}{{ project.get_card_description|truncatewords:30 }}{% endblock %}
 {% block twitter_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
-{% block twitter_description %}{{ project.description|truncatewords:30 }}{% endblock %}
+{% block twitter_description %}{{ project.get_card_description|truncatewords:30 }}{% endblock %}
 
 {% block extra_head %}
 {% if project.image %}
@@ -57,28 +57,11 @@
     </div>
     {% endif %}
 
-    <!-- Screenshots gallery -->
-    {% if project.screenshots.all %}
-    <div class="mb-12">
-        <h3 class="text-xl font-bold mb-6">Screenshots</h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {% for screenshot in project.screenshots.all %}
-            <div class="device-mockup">
-                <img src="{{ screenshot.image.url }}" alt="{{ screenshot.caption|default:project.title }}"
-                    class="w-full">
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+
 
     <!-- Description -->
     <div class="prose prose-invert prose-lg prose-content rich-content-wrapper mt-8">
-        {% if project.description_rich %}
         {{ project.description_rich|safe }}
-        {% else %}
-        {{ project.description|render_markdown }}
-        {% endif %}
     </div>
 
     <!-- Store links + other links -->

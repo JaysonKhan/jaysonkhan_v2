@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils.html import strip_tags
 from core.utils import sanitize_rich_text
 
 
@@ -38,19 +39,7 @@ class Skill(models.Model):
         return self.name
 
 
-class ProjectScreenshot(models.Model):
-    project = models.ForeignKey(
-        'Project', on_delete=models.CASCADE, related_name='screenshots'
-    )
-    image = models.ImageField(upload_to='projects/screenshots/')
-    caption = models.CharField(max_length=200, blank=True)
-    order = models.IntegerField(default=0)
 
-    class Meta:
-        ordering = ['order']
-
-    def __str__(self):
-        return f"{self.project.title} — screenshot {self.order}"
 
 
 class Project(models.Model):
@@ -64,7 +53,6 @@ class Project(models.Model):
 
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
-    description = models.TextField()
     description_rich = models.TextField(blank=True, null=True, help_text="Rich text description (HTML)")
     short_description = models.CharField(
         max_length=300, blank=True,
@@ -117,7 +105,8 @@ class Project(models.Model):
 
     def get_card_description(self):
         """Short description for cards."""
-        return self.short_description or self.description[:200]
+        rich_text_content = strip_tags(self.description_rich or '')
+        return self.short_description or rich_text_content[:200]
 
     def __str__(self):
         return self.title

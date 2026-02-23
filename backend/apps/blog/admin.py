@@ -36,7 +36,7 @@ class PostAdmin(UnfoldModelAdmin):
     list_display = ('thumbnail', 'title', 'category', 'is_published', 'created_at')
     list_display_links = ('thumbnail', 'title')
     list_filter = ('is_published', 'category', 'author')
-    search_fields = ('title', 'content')
+    search_fields = ('title', 'content_rich')
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ('tags',)
 

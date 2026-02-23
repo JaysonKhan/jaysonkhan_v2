@@ -5,14 +5,14 @@ from .models import Project, Skill, Experience
 class PortfolioRepository:
     @staticmethod
     def get_all_projects():
-        return Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots').all()
+        return Project.objects.filter(is_visible=True).prefetch_related('technologies').all()
 
     @staticmethod
     def get_featured_projects():
         return (
             Project.objects
             .filter(is_featured=True, is_visible=True)
-            .prefetch_related('technologies', 'screenshots')
+            .prefetch_related('technologies')
         )
 
     @staticmethod
@@ -21,7 +21,7 @@ class PortfolioRepository:
         return (
             Project.objects
             .filter(platform='web', is_visible=True)
-            .prefetch_related('technologies', 'screenshots')
+            .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
 
@@ -31,7 +31,7 @@ class PortfolioRepository:
         return (
             Project.objects
             .filter(is_bot=True, is_visible=True)
-            .prefetch_related('technologies', 'screenshots')
+            .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
 
