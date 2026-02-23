@@ -1,16 +1,19 @@
-{# ─────────────────────────────────────────────────────────────────────────── #}
-{# Telegram-style Interactions Panel: Likes + Rich Comments #}
-{# ─────────────────────────────────────────────────────────────────────────── #}
-{% load static %}
+import re
 
-<style>
+with open('/Users/mac/GravityProjects/jaysonkhan_v2/backend/presentation/web/templates/web/partials/interactions.html', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Replace CSS
+css_start = content.find('<style>')
+css_end = content.find('</style>') + 8
+new_css = """<style>
+    /* ── Layout & Bubbles ── */
     .tg-bubble {
-        position: relative;
         background: #18222d;
-        border-radius: 16px 16px 16px 4px;
+        border-radius: 16px 16px 16px 4px; /* Consistent 16px radius */
         padding: 6px 10px 4px 12px;
         color: #fff;
-        max-width: 75%;
+        max-width: 75%; /* Mobile max-width */
         min-width: 80px;
         width: fit-content;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -19,14 +22,14 @@
         transition: transform 0.2s, box-shadow 0.2s;
         word-break: break-word;
     }
+    
+    .tg-bubble.own-bubble {
+        background: #2b5278; /* Sent bubble color */
+        border-radius: 16px 16px 4px 16px; 
+    }
 
     .comment-wrapper:hover .tg-bubble {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .tg-bubble.own-bubble {
-        background: #2b5278; /* Telegram dark mode sent bubble */
-        border-radius: 16px 16px 4px 16px; 
     }
 
     .tg-avatar {
@@ -39,12 +42,7 @@
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    @media (max-width: 640px) {
-        .tg-bubble {
-            max-width: 92%;
-        }
-    }
-
+    /* ── Reply Preview ── */
     .tg-reply-preview {
         background: rgba(77, 163, 239, 0.08);
         border-left: 3px solid #4da3ef;
@@ -58,29 +56,25 @@
         display: flex;
         flex-direction: column;
     }
-
     .tg-reply-preview:hover {
         background: rgba(77, 163, 239, 0.15);
     }
-
     .tg-reply-preview .author {
         color: #4da3ef;
-        font-weight: 700;
-        display: block;
+        font-weight: 600;
         font-size: 0.75rem;
-        margin-bottom: 1px;
+        margin-bottom: 2px;
     }
-
     .tg-reply-preview .text-snippet {
-        color: rgba(255, 255, 255, 0.7);
-        display: block;
+        color: rgba(255, 255, 255, 0.8);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
+    /* ── Images ── */
     .tg-comment-image {
-        border-radius: 12px;
+        border-radius: 12px; /* Consistent image radius */
         margin-top: 6px;
         margin-bottom: 2px;
         max-width: 100%;
@@ -89,33 +83,31 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    /* ── Reactions ── */
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin-top: 6px;
+        margin-top: 4px;
         padding-left: 4px;
     }
-
     .tg-reaction-btn {
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 3px 9px;
-        font-size: 0.7rem;
+        border-radius: 20px; /* Consistent pill radius */
+        padding: 4px 10px;
+        font-size: 0.75rem;
         color: #aeb7c2;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
         transition: all 0.2s ease;
         cursor: pointer;
+        user-select: none;
     }
-
     .tg-reaction-btn:hover {
         background: rgba(255, 255, 255, 0.12);
-        transform: translateY(-1px);
     }
-
     .tg-reaction-btn.active {
         background: rgba(77, 163, 239, 0.15);
         border-color: rgba(77, 163, 239, 0.4);
@@ -123,6 +115,18 @@
         font-weight: 600;
     }
 
+    /* ── Typography & Meta ── */
+    .tg-author-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4da3ef;
+        margin-bottom: 3px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
     .tg-meta-inline {
         display: flex;
         align-items: flex-end;
@@ -135,47 +139,30 @@
         color: rgba(255, 255, 255, 0.4);
         user-select: none;
     }
-
     .tg-meta-inline-spacer {
         float: left;
-        width: 38px;
+        width: 38px; /* Spacer to push text so meta can fit bottom right */
         height: 10px;
     }
 
-    .tg-author-name {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #4da3ef;
-        margin-bottom: 2px;
-        display: block;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* Emoji Picker Refinement */
+    /* ── Emoji Picker ── */
     .tg-emoji-menu {
         position: absolute;
-        bottom: 110%;
-        left: 0;
+        bottom: 120%;
         background: #1c2935;
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 14px;
-        padding: 10px;
+        padding: 8px;
         display: none;
         grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        gap: 6px;
         z-index: 100;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
     }
-
-    .tg-emoji-menu.show {
-        display: grid;
-    }
-
+    .tg-emoji-menu.show { display: grid; }
     .tg-emoji-item {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         cursor: pointer;
         padding: 6px;
         border-radius: 8px;
@@ -185,15 +172,14 @@
         align-items: center;
         justify-content: center;
     }
-
     .tg-emoji-item:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.1);
         transform: scale(1.15);
     }
 
-    /* Reply Tooling Spacing */
+    /* ── Reply Tooling ── */
     .tg-action-link {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         color: #4da3ef;
         font-weight: 600;
         opacity: 0;
@@ -201,58 +187,31 @@
         cursor: pointer;
         margin-right: 8px;
     }
-
-    .comment-wrapper:hover .tg-action-link {
-        opacity: 0.8;
+    .comment-wrapper:hover .tg-action-link { opacity: 0.8; }
+    .tg-action-link:hover { opacity: 1 !important; text-decoration: underline; }
+    
+    @media (max-width: 640px) {
+        .tg-bubble { max-width: 85%; }
+        /* Shift emoji menu to fit screen */
+        .tg-emoji-menu { right: 0; left: auto; }
     }
+</style>"""
 
-    .tg-action-link:hover {
-        opacity: 1 !important;
-        text-decoration: underline;
-    }
-</style>
+content = content[:css_start] + new_css + content[css_end:]
 
-<section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10">
+# Replace HTML loop logic
+import re
+html_regex = re.compile(r'({% for comment in comments %})(.*?)({% endfor %})', re.DOTALL)
 
-    {# ── Like Header ─────────────────────────────────────────────────────────── #}
-    <div class="flex items-center gap-4 mb-12">
-        {% if tg_profile %}
-        <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
-            data-liked="{{ user_liked|yesno:'true,false' }}"
-            class="like-btn flex items-center gap-2 px-6 py-2.5 rounded-full border transition-all duration-300 transform active:scale-95
-                     {% if user_liked %}liked border-pink-500/60 bg-pink-500/10 text-pink-400
-                     {% else %}border-white/10 bg-white/5 text-slate-400 hover:border-pink-500/40 hover:text-pink-400{% endif %}">
-            <i class="fa-{% if user_liked %}solid{% else %}regular{% endif %} fa-heart text-sm" id="like-icon"></i>
-            <span id="like-count" class="text-sm font-semibold">{{ like_count }}</span>
-            <span class="text-xs opacity-70 ml-0.5">likes</span>
-        </button>
-        {% else %}
-        <div class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-white/5 text-slate-500">
-            <i class="fa-regular fa-heart text-sm"></i>
-            <span class="text-sm font-semibold">{{ like_count }}</span>
-            <span class="text-xs opacity-70 ml-0.5">likes</span>
-        </div>
-        {% endif %}
-    </div>
-
-    {# ── Comments Section ────────────────────────────────────────────────────── #}
-    <div id="tg-chat-container" class="space-y-6">
-        <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
-            Comments
-            {% if comments %}<span id="comments-counter" class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length }}</span>{% endif %}
-        </h3>
-
-        {% if comments %}
-        <div class="space-y-4" id="comments-list">
-            {% for comment in comments %}
+def replace_html(m):
+    return """{% for comment in comments %}
             <div class="flex gap-3 group comment-wrapper {% if tg_profile and comment.author.id == tg_profile.id %}flex-row-reverse{% endif %}" id="comment-{{ comment.id }}">
                 {# Avatar #}
                 <div class="flex-shrink-0 mt-1">
                     {% if comment.author.photo_url %}
                     <img src="{{ comment.author.photo_url }}" alt="{{ comment.author.display_name }}" class="tg-avatar">
                     {% else %}
-                    <div
-                        class="tg-avatar bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                    <div class="tg-avatar bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
                         {{ comment.author.first_name|first|upper }}
                     </div>
                     {% endif %}
@@ -261,24 +220,22 @@
                 {# Bubble Container #}
                 <div class="flex-1 min-w-0 flex flex-col {% if tg_profile and comment.author.id == tg_profile.id %}items-end{% else %}items-start{% endif %}">
                     <div class="tg-bubble {% if tg_profile and comment.author.id == tg_profile.id %}own-bubble{% endif %}">
-                        {# Author Header #}
+                        {# Author Header (only show for others) #}
                         {% if not tg_profile or comment.author.id != tg_profile.id %}
                         <span class="tg-author-name">{{ comment.author.display_name }}</span>
                         {% endif %}
 
                         {# Reply Block #}
                         {% if comment.parent %}
-                        <div class="tg-reply-preview"
-                            onclick="document.getElementById('comment-{{ comment.parent.id }}').scrollIntoView({behavior: 'smooth'})">
+                        <div class="tg-reply-preview" onclick="document.getElementById('comment-{{ comment.parent.id }}').scrollIntoView({behavior: 'smooth'})">
                             <span class="author">{{ comment.parent.author.display_name }}</span>
-                            <span class="text-snippet">{{ comment.parent.text|truncatechars:100 }}</span>
+                            <span class="text-snippet">{{ comment.parent.text|truncatechars:80 }}</span>
                         </div>
                         {% endif %}
 
                         {# Image Attachment #}
                         {% if comment.image %}
-                        <img src="{{ comment.image.url }}" class="tg-comment-image" alt="Attachment"
-                            onclick="window.open(this.src)">
+                        <img src="{{ comment.image.url }}" class="tg-comment-image" alt="Attachment" onclick="window.open(this.src)">
                         {% endif %}
 
                         {# Content Text & Meta Data Layout #}
@@ -287,7 +244,7 @@
                             <span class="tg-meta-inline-spacer"></span>
                             <span class="tg-meta-inline flex items-center gap-1">
                                 {% if comment.is_reviewed %}
-                                <i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>
+                                <i class="fa-solid fa-check-double text-[#4da3ef]"></i>
                                 {% endif %}
                                 {{ comment.created_at|date:"H:i" }}
                             </span>
@@ -334,104 +291,15 @@
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-slate-500 text-sm py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
-            No comments yet. Start the conversation!
-        </p>
-        {% endif %}
+            {% endfor %}"""
 
-        {# ── Chat Input ──────────────────────────────────────────────────────── #}
-        {% if tg_profile %}
-        <div class="mt-10" id="comment-form-container">
-            {# Reply Header (hidden by default) #}
-            <div id="reply-context">
-                <div class="flex-1 min-w-0">
-                    <span class="text-xs font-bold text-[#4da3ef] block" id="reply-author-name"></span>
-                    <span class="text-xs text-slate-400 block truncate" id="reply-text-preview"></span>
-                </div>
-                <button onclick="clearReply()" class="text-slate-500 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                </button>
-            </div>
+content = html_regex.sub(replace_html, content)
 
-            {# Image Preview #}
-            <div id="image-preview-container">
-                <img id="image-preview" src="" alt="Preview">
-                <button onclick="clearImage()"
-                    class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            </div>
 
-            <div class="relative bg-[#18222d] border border-white/10 rounded-2xl p-2 flex gap-3 items-end">
-                {# Attachment Btn #}
-                <div class="pb-1 pl-1">
-                    <label for="image-upload"
-                        class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-[#4da3ef] transition cursor-pointer">
-                        <i class="fa-solid fa-paperclip text-lg"></i>
-                        <input type="file" id="image-upload" class="hidden" accept="image/*"
-                            onchange="previewImage(this)">
-                    </label>
-                </div>
+js_regex = re.compile(r'(\(function \(\) \{)(.*?)(\}\)\(\);)', re.DOTALL)
 
-                <textarea id="comment-text" rows="1" placeholder="Write a comment…"
-                    class="flex-1 bg-transparent border-none text-white text-sm focus:ring-0 resize-none py-2 px-1 max-h-48"
-                    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
-
-                {# Icons / Send Btn #}
-                <div class="pb-1 pr-1 flex items-center gap-1">
-                    <button id="submit-comment"
-                        data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
-                        class="w-10 h-10 flex items-center justify-center bg-[#4da3ef] hover:bg-[#3d8ed6] text-white rounded-full transition-transform active:scale-95">
-                        <i class="fa-solid fa-paper-plane text-sm ml-0.5"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center mt-3 px-2">
-                <p id="comment-status" class="text-xs hidden"></p>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{ tg_profile.display_name }}</span>
-                    <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button type="submit"
-                            class="text-[10px] text-[#4da3ef] hover:underline font-bold">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        {% else %}
-        {# Login Prompt #}
-        <div class="glass rounded-2xl border border-white/8 p-8 text-center mt-12">
-            <h4 class="text-lg font-bold mb-2 text-white">Connect with Telegram to chat</h4>
-            <p class="text-slate-400 text-sm mb-6">Join the discussion using your Telegram account.</p>
-
-            <div class="flex justify-center">
-                {% if telegram_bot_username %}
-                <script async src="https://telegram.org/js/telegram-widget.js?22"
-                    data-telegram-login="{{ telegram_bot_username }}" data-size="large"
-                    data-onauth="onTelegramAuth(user)" data-request-access="write" data-userpic="true" data-radius="12">
-                    </script>
-                <script type="text/javascript">
-                    function onTelegramAuth(user) {
-                        const params = new URLSearchParams(user).toString();
-                        const nextUrl = encodeURIComponent("{{ request.path }}");
-                        window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + nextUrl + "&" + params;
-                    }
-                </script>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</section>
-
-<script>
-    (function () {
+def replace_js(m):
+    return """(function () {
         let parentCommentId = null;
         let selectedFile = null;
         let reactionLocks = {}; // Per-comment locking to prevent duplicate reaction requests
@@ -483,11 +351,12 @@
             if (reactionLocks[commentId]) return;
             reactionLocks[commentId] = true;
 
-            const url = `/interactions/comment/${commentId}/react/`;
-            
             // Hide menus
             document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
 
+            // Optimistic UI update could be implemented here (optional but complex)
+            
+            const url = `/interactions/comment/${commentId}/react/`;
             try {
                 const resp = await fetch(url, {
                     method: 'POST',
@@ -503,7 +372,6 @@
 
                 const data = await resp.json();
                 if (resp.ok && data.status === 'ok') {
-                    // Update DOM based on returned reactions
                     updateReactionDOM(commentId, data.reactions, data.action, emoji);
                 }
             } catch (e) {
@@ -517,24 +385,25 @@
             const container = document.getElementById(`reactions-${commentId}`);
             if (!container) return;
 
-            // Extract existing buttons to keep the PLUS/REPLY trigger
             const triggerEl = container.querySelector('.flex.items-center');
-
-            // Clear current reactions (they are buttons not inside the triggerEl)
+            
+            // Remove all existing reaction buttons
             const reactionBtns = container.querySelectorAll('.tg-reaction-btn:not(.opacity-0)');
             reactionBtns.forEach(btn => btn.remove());
 
-            // Add new ones
+            // Add new buttons based on backend state
             Object.entries(reactions).forEach(([emoji, count]) => {
                 const btn = document.createElement('button');
                 btn.className = 'tg-reaction-btn';
                 
-                // Optimistically mark the current user emoji as active
+                // If this is the emoji the user just acted upon and it was an 'added' or 'updated' action, mark active
+                // For proper tracking across page reloads, server should return user's active emoji. 
+                // We fake it optimistically here: if it's the one we just clicked, and it wasn't removed.
                 if (emoji === currentEmoji && action !== 'removed') {
                     btn.classList.add('active');
                 }
-
-                btn.onclick = () => window.toggleReaction(commentId, emoji, btn);
+                
+                btn.onclick = () => window.toggleReaction(commentId, emoji);
                 btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
                 container.insertBefore(btn, triggerEl);
             });
@@ -589,5 +458,10 @@
             const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
             return m ? m.pop() : '';
         }
-    })();
-</script>
+    })();"""
+
+content = js_regex.sub(replace_js, content)
+
+with open('/Users/mac/GravityProjects/jaysonkhan_v2/backend/presentation/web/templates/web/partials/interactions.html', 'w', encoding='utf-8') as f:
+    f.write(content)
+
