@@ -211,7 +211,7 @@
             {% endif %}
             <div style="padding:var(--space-card-padding)">
                 <h3 class="text-xl font-bold mb-2">{{ project.title }}</h3>
-                <p class="text-slate-400 text-sm line-clamp-3 mb-4">{{ project.description|truncatewords:25 }}</p>
+                <p class="text-slate-400 text-sm line-clamp-3 mb-4">{{ project.get_card_description|truncatewords:25 }}</p>
                 <span class="text-primary font-semibold">Details &rarr;</span>
             </div>
         </a>

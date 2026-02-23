@@ -119,7 +119,7 @@ class ProjectListView(AppsGuardMixin, ListView):
     def get_queryset(self):
         # is_visible filter is already applied in PortfolioRepository,
         # but this view queries directly — keep consistent.
-        queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots')
+        queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies')
         platform = self.request.GET.get('platform')
         is_bot = self.request.GET.get('is_bot')
         if is_bot:
@@ -149,7 +149,7 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
 
     def get_queryset(self):
         # Only visible projects are accessible
-        return Project.objects.filter(is_visible=True).prefetch_related('technologies', 'screenshots')
+        return Project.objects.filter(is_visible=True).prefetch_related('technologies')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

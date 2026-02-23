@@ -39,7 +39,7 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
         qs = (
             Project.objects
             .filter(is_visible=True)
-            .prefetch_related('technologies', 'screenshots')
+            .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
         platform = self.request.query_params.get('platform')
@@ -87,7 +87,7 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
             .filter(is_published=True)
             .select_related('category', 'author')
             .prefetch_related('tags')
-            .defer('content')
+            .defer('content_rich')
             .order_by('-created_at')
         )
     # Inherits IsAdminUser from REST_FRAMEWORK default
