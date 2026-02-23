@@ -6,9 +6,11 @@
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        width: 100%;
-        padding: 0 4px;
+        gap: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 16px;
+        margin: 0 auto;
     }
 
     .message-row {
@@ -23,7 +25,7 @@
     }
 
     .message--own {
-        flex-direction: row-reverse;
+        justify-content: flex-end;
     }
 
     .message-avatar {
@@ -42,13 +44,14 @@
     }
 
     .tg-bubble {
-        max-width: 72%;
-        min-width: 80px;
-        padding: 8px 12px 6px;
+        max-width: 68%;
+        min-width: 60px;
+        padding: 6px 10px 4px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        transition: transform 0.1s;
     }
 
     .message--other .tg-bubble {
@@ -58,15 +61,14 @@
     }
 
     .message--own .tg-bubble {
-        background: #2b5278;
+        background: linear-gradient(to bottom, #2b5278, #264a6c);
         color: #fff;
-        border-radius: 16px 16px 4px 16px;
-        margin-right: 2px; /* Small nudge to stick better */
+        border-radius: 14px 14px 4px 14px;
     }
 
     .tg-author-name {
         display: block;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: #4da3ef;
         margin-bottom: 2px;
@@ -95,19 +97,19 @@
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 3px;
-        font-size: 0.65rem;
+        gap: 2px;
+        font-size: 0.6rem;
         color: rgba(255, 255, 255, 0.4);
-        margin-top: 4px;
+        margin-top: 2px;
         user-select: none;
-        line-height: 1;
+        line-height: normal;
     }
 
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 6px;
+        gap: 4px;
+        margin-top: 2px; /* Pull closer to bubble */
     }
 
     .message--own .tg-reaction-bar {
@@ -120,13 +122,13 @@
     }
 
     .message--other .tg-replies-container {
-        padding-left: 14px;
-        border-left: 2px solid rgba(255,255,255,0.05);
+        padding-left: 10px;
+        border-left: 1.5px solid rgba(255,255,255,0.05);
     }
 
     .message--own .tg-replies-container {
-        padding-right: 14px;
-        border-right: 2px solid rgba(255,255,255,0.05);
+        padding-right: 10px;
+        border-right: 1.5px solid rgba(255,255,255,0.05);
         display: flex;
         flex-direction: column;
         align-items: flex-end;
@@ -211,24 +213,28 @@
         {% endif %}
     </div>
 
-    <div class="flex items-center justify-between mb-8">
-        <h3 class="text-xl font-bold flex items-center gap-3">
+    <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-bold flex items-center gap-2">
             Comments
-            <span id="comments-counter" class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">0</span>
+            <span id="comments-counter" class="text-slate-500 font-normal">0</span>
         </h3>
         
-        <!-- Sorting -->
-        <div class="relative">
-            <select id="sort-selector" class="bg-transparent text-sm text-slate-300 font-semibold border-none focus:ring-0 cursor-pointer" onchange="resetAndFetchComments()">
-                <option value="top">Top Comments</option>
-                <option value="newest">Newest First</option>
-            </select>
+        <!-- Sorting dropdown more compact toggle style -->
+        <div class="flex items-center gap-1 group cursor-pointer" onclick="toggleSortDropdown()">
+            <span id="active-sort" class="text-[12px] text-[#4da3ef] font-semibold">Top Comments</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-[#4da3ef]/60"></i>
+            <div id="sort-dropdown" class="hidden absolute top-8 right-0 bg-[#1c2935] border border-white/10 rounded-xl py-2 w-40 z-50 shadow-2xl">
+                <div class="px-4 py-1.5 hover:bg-white/5 text-[12px] text-white cursor-pointer" onclick="selectSort('top', 'Top Comments')">Top Comments</div>
+                <div class="px-4 py-1.5 hover:bg-white/5 text-[12px] text-white cursor-pointer" onclick="selectSort('newest', 'Newest First')">Newest First</div>
+            </div>
+            <select id="sort-selector" class="hidden"><option value="top"></option><option value="newest"></option></select>
         </div>
     </div>
+    <div class="h-px bg-white/5 w-full mb-6"></div>
 
     {# ── Composer Always At Top Like YouTube ── #}
     {% if tg_profile %}
-    <div class="mb-10" id="comment-form-container">
+    <div class="mb-8" id="comment-form-container">
         <!-- Reply Context -->
         <div id="reply-context"
              class="hidden items-center justify-between mb-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
@@ -290,19 +296,16 @@
                            rounded-full bg-[#4da3ef]
                            text-white transition-all
                            disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale
-                           hover:bg-[#3d8ed6] active:scale-95 ml-auto"
+                           hover:bg-[#3d8ed6] active:scale-95 ml-auto relative"
                     aria-label="Send comment">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
+                <!-- Char counter inside send area button/input area -->
+                <span id="char-counter" class="absolute -bottom-6 right-2 text-[10px] text-slate-500 whitespace-nowrap">0 / 1000</span>
             </button>
         </div>
 
         <!-- Footer -->
-        <div class="flex justify-between items-center mt-2 px-2">
-            <span id="char-counter"
-                  class="text-[11px] text-slate-500 transition-colors">
-                0 / 1000
-            </span>
-
+        <div class="flex justify-end items-center mt-2 px-1">
             <div class="text-[11px] text-slate-500">
                 Logged in as 
                 <span class="text-slate-300 font-semibold mr-1">
@@ -452,27 +455,25 @@
     }
 
     // Generates DOM dynamically keeping template purity
+    // Generates DOM dynamically keeping template purity
     function createCommentDOM(comment, depth = 0) {
         const row = document.createElement('div');
         row.className = `message-row ${comment.is_own ? 'message--own' : 'message--other'}`;
         row.id = `comment-${comment.id}`;
 
-        let avatarHtml = '';
-        if (!(depth > 0 && comment.is_own)) {
-            avatarHtml = `
-                <div class="message-avatar">
-                    ${comment.author.photo_url 
-                        ? `<img src="${comment.author.photo_url}" alt="">` 
-                        : `<div class="w-full h-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
-                </div>`;
-        }
+        const avatarHtml = `
+            <div class="message-avatar">
+                ${comment.author.photo_url 
+                    ? `<img src="${comment.author.photo_url}" alt="">` 
+                    : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-blue-400">${comment.author.initial}</div>`}
+            </div>`;
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
         
         const repliesHtml = comment.reply_count > 0 ? `
             <div class="tg-replies-container" id="replies-${comment.id}">
-                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#4da3ef] text-xs font-semibold hover:underline flex items-center gap-2">
-                    <i class="fa-solid fa-reply"></i> View ${comment.reply_count} replies
+                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#4da3ef] text-[11px] font-semibold hover:underline flex items-center gap-1.5 py-1">
+                    <i class="fa-solid fa-reply rotate-180"></i> View ${comment.reply_count} replies
                 </button>
             </div>` : '';
 
@@ -483,10 +484,9 @@
 
         const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
 
-        row.innerHTML = `
-            ${avatarHtml}
+        const content = `
             <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end ml-auto' : 'items-start mr-auto'}">
-                <div class="tg-bubble flex flex-col">
+                <div class="tg-bubble flex flex-col items-start">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
                     <div class="text-sm text-white/95 leading-relaxed w-full">
@@ -500,19 +500,25 @@
                 
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">
                     ${emojisHtml}
-                    ${document.getElementById('comment-form-container') ? `
+                    ${document.getElementById('submit-comment') ? `
                         <div class="relative emoji-menu-wrapper">
-                            <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity mx-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
+                            <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile"></i></button>
                             <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
                                 ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                             </div>
                         </div>
-                        ${depth < 2 ? `<span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                        ${depth < 2 ? `<span class="text-[11px] text-[#4da3ef]/70 hover:text-[#4da3ef] cursor-pointer ml-1 font-medium transition" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
             </div>
         `;
+
+        if (comment.is_own) {
+            row.innerHTML = content + avatarHtml;
+        } else {
+            row.innerHTML = avatarHtml + content;
+        }
         return row;
     }
 
@@ -739,7 +745,21 @@
         if (!e.target.closest('.emoji-menu-wrapper')) {
             document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
         }
+        if (!e.target.closest('.group')) {
+            document.getElementById('sort-dropdown').classList.add('hidden');
+        }
     });
+
+    window.toggleSortDropdown = function() {
+        document.getElementById('sort-dropdown').classList.toggle('hidden');
+    }
+
+    window.selectSort = function(val, label) {
+        document.getElementById('sort-selector').value = val;
+        document.getElementById('active-sort').textContent = label;
+        document.getElementById('sort-dropdown').classList.add('hidden');
+        resetAndFetchComments();
+    }
 
     // ── Util ──
     function getCookie(name) {
