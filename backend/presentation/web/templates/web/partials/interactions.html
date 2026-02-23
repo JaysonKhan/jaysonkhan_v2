@@ -241,15 +241,13 @@
     <div id="tg-chat-container" class="space-y-6">
         <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
             Comments
-            {% if comments %}<span id="comments-counter"
-                class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length
-                }}</span>{% endif %}
+            {% if comments %}<span id="comments-counter" class="bg-white/5 px-2.5 py-0.5 rounded-full text-sm font-normal text-slate-400">{{ comments|length }}</span>{% endif %}
         </h3>
 
         {% if comments %}
         <div class="space-y-4" id="comments-list">
             {% for comment in comments %}
-            <div class="flex gap-3 group comment-wrapper {% if comment.author == tg_profile %}flex-row-reverse{% endif %}" id="comment-{{ comment.id }}">
+            <div class="flex gap-3 group comment-wrapper" style="{% if tg_profile and comment.author.id == tg_profile.id %}flex-direction: row-reverse;{% endif %}" id="comment-{{ comment.id }}">
                 {# Avatar #}
                 <div class="flex-shrink-0 mt-1">
                     {% if comment.author.photo_url %}
@@ -263,10 +261,10 @@
                 </div>
 
                 {# Bubble Container #}
-                <div class="flex-1 min-w-0 flex flex-col {% if comment.author == tg_profile %}items-end{% else %}items-start{% endif %}">
-                    <div class="tg-bubble {% if comment.author == tg_profile %}own-bubble{% endif %}">
+                <div class="flex-1 min-w-0 flex flex-col" style="{% if tg_profile and comment.author.id == tg_profile.id %}align-items: flex-end;{% else %}align-items: flex-start;{% endif %}">
+                    <div class="tg-bubble {% if tg_profile and comment.author.id == tg_profile.id %}own-bubble{% endif %}">
                         {# Author Header #}
-                        {% if comment.author != tg_profile %}
+                        {% if not tg_profile or comment.author.id != tg_profile.id %}
                         <span class="tg-author-name">{{ comment.author.display_name }}</span>
                         {% endif %}
 
@@ -286,16 +284,15 @@
                         {% endif %}
 
                         {# Content Row with Inline Meta #}
-                        <div class="tg-content-row">
-                            <span class="tg-meta-inline">
+                        <div class="relative min-w-[60px]">
+                            <span class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap break-words">{{ comment.text }}<span class="inline-block w-10"></span></span>
+                            <span class="absolute bottom-0 right-0 text-[10px] text-white/40 select-none flex items-center gap-1">
                                 {% if comment.is_reviewed %}
-                                <i class="fa-solid fa-check-double text-[10px] text-[#4da3ef] mr-0.5"
+                                <i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"
                                     title="Seen by admin"></i>
                                 {% endif %}
                                 {{ comment.created_at|date:"H:i" }}
                             </span>
-                            <div class="text-sm text-white/95 leading-relaxed whitespace-pre-wrap">{{ comment.text }}
-                            </div>
                         </div>
                     </div>
 
@@ -304,7 +301,7 @@
                         {% regroup comment.reactions.all by emoji as reaction_list %}
                         {% for group in reaction_list %}
                         <button
-                            class="tg-reaction-btn {% for r in group.list %}{% if r.author == tg_profile %}active{% endif %}{% endfor %}"
+                            class="tg-reaction-btn {% for r in group.list %}{% if tg_profile and r.author.id == tg_profile.id %}active{% endif %}{% endfor %}"
                             onclick="toggleReaction({{ comment.id }}, '{{ group.grouper|escapejs }}')">
                             {{ group.grouper }} <span class="count">{{ group.list|length }}</span>
                         </button>
@@ -319,7 +316,7 @@
                                     onclick="toggleEmojiMenu({{ comment.id }})">
                                     <i class="fa-solid fa-face-smile text-[10px]"></i>
                                 </button>
-                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}" {% if comment.author == tg_profile %}style="left: auto; right: 0;"{% endif %}>
+                                <div class="tg-emoji-menu" id="emoji-menu-{{ comment.id }}" {% if tg_profile and comment.author.id == tg_profile.id %}style="left: auto; right: 0;"{% endif %}>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '👍')">👍</div>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '❤')">❤</div>
                                     <div class="tg-emoji-item" onclick="toggleReaction({{ comment.id }}, '🔥')">🔥</div>
