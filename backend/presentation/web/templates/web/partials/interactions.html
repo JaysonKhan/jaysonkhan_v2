@@ -27,13 +27,12 @@
     }
 
     .message-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         flex-shrink: 0;
         border-radius: 50%;
         overflow: hidden;
         border: 1px solid rgba(255,255,255,0.05);
-        margin-bottom: 2px;
     }
 
     .message-avatar img {
@@ -62,6 +61,7 @@
         background: #2b5278;
         color: #fff;
         border-radius: 16px 16px 4px 16px;
+        margin-right: 2px; /* Small nudge to stick better */
     }
 
     .tg-author-name {
@@ -88,6 +88,7 @@
         display: flex;
         flex-direction: column;
         position: relative;
+        max-width: 85%; /* Contain the bubble group */
     }
 
     .tg-meta-inline {
@@ -261,9 +262,10 @@
 
             <!-- Attachment -->
             <label for="image-upload"
-                   class="w-9 h-9 flex-shrink-0 flex items-center justify-center
+                   class="w-10 h-10 flex-shrink-0 flex items-center justify-center
                           text-slate-400 hover:text-[#4da3ef]
                           bg-white/5 hover:bg-white/10
+                          border border-white/5
                           rounded-xl cursor-pointer transition"
                    aria-label="Attach file">
                 <i class="fa-solid fa-paperclip text-sm"></i>
@@ -288,7 +290,7 @@
                            rounded-full bg-[#4da3ef]
                            text-white transition-all
                            disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale
-                           hover:bg-[#3d8ed6] active:scale-95"
+                           hover:bg-[#3d8ed6] active:scale-95 ml-auto"
                     aria-label="Send comment">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
             </button>
@@ -483,7 +485,7 @@
 
         row.innerHTML = `
             ${avatarHtml}
-            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end' : 'items-start'}">
+            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end ml-auto' : 'items-start mr-auto'}">
                 <div class="tg-bubble flex flex-col">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
