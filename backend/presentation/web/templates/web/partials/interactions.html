@@ -391,8 +391,7 @@
             <div class="flex justify-between items-center mt-3 px-2">
                 <p id="comment-status" class="text-xs hidden"></p>
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{
-                        tg_profile.display_name }}</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-wider">Logged in as {{ tg_profile.display_name }}</span>
                     <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{{ request.path }}">
