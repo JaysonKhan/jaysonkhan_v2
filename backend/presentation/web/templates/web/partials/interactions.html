@@ -23,8 +23,7 @@
     }
 
     .message--own {
-        flex-direction: row-reverse;
-        justify-content: flex-start; /* flex-end equivalent in row-reverse */
+        justify-content: flex-end;
     }
 
     .message-avatar {
@@ -451,12 +450,15 @@
         row.className = `message-row ${comment.is_own ? 'message--own' : 'message--other'}`;
         row.id = `comment-${comment.id}`;
 
-        const avatarHtml = `
-            <div class="message-avatar">
-                ${comment.author.photo_url 
-                    ? `<img src="${comment.author.photo_url}" alt="">` 
-                    : `<div class="w-full h-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
-            </div>`;
+        let avatarHtml = '';
+        if (!(depth > 0 && comment.is_own)) {
+            avatarHtml = `
+                <div class="message-avatar">
+                    ${comment.author.photo_url 
+                        ? `<img src="${comment.author.photo_url}" alt="">` 
+                        : `<div class="w-full h-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">${comment.author.initial}</div>`}
+                </div>`;
+        }
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
         
