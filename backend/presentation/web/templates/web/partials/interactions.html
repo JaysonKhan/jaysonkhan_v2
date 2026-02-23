@@ -23,7 +23,7 @@
     }
 
     .message--own {
-        justify-content: flex-end;
+        flex-direction: row-reverse;
     }
 
     .message-avatar {
@@ -128,6 +128,10 @@
         border-right: 2px solid rgba(255,255,255,0.05);
         display: flex;
         flex-direction: column;
+        align-items: flex-end;
+    }
+    
+    .message--own .tg-bubble {
         align-items: flex-end;
     }
     
@@ -478,11 +482,11 @@
 
         row.innerHTML = `
             ${avatarHtml}
-            <div class="message-content-wrapper min-w-0">
-                <div class="tg-bubble">
+            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end' : 'items-start'}">
+                <div class="tg-bubble flex flex-col">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
-                    <div class="text-sm text-white/95 leading-relaxed">
+                    <div class="text-sm text-white/95 leading-relaxed w-full">
                         ${comment.text}
                         <div class="tg-meta-inline">
                             ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>` : ''}
