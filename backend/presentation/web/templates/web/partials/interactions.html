@@ -45,6 +45,18 @@
         margin-top: 12px;
     }
 
+    .tg-replies-container.replies-own {
+        margin-left: 0;
+        margin-right: 19px;
+        padding-left: 0;
+        padding-right: 20px;
+        border-left: none;
+        border-right: 2px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
     .tg-reply-preview {
         background: rgba(77, 163, 239, 0.08);
         border-left: 3px solid #4da3ef;
@@ -467,7 +479,7 @@
         let repliesHtml = '';
         if(!isReply && comment.reply_count > 0) {
             repliesHtml = `
-            <div class="tg-replies-container" id="replies-${comment.id}">
+            <div class="tg-replies-container ${comment.is_own ? 'replies-own' : ''}" id="replies-${comment.id}">
                 <button onclick="loadReplies(${comment.id}, this)" class="text-[#4da3ef] text-xs font-semibold hover:underline flex items-center gap-2 mt-2">
                     <i class="fa-solid fa-reply"></i> View ${comment.reply_count} replies
                 </button>
@@ -504,16 +516,16 @@
                     </div>
                 </div>
                 
-                <div class="tg-reaction-bar" id="reactions-${comment.id}">
+                <div class="tg-reaction-bar ${comment.is_own ? 'flex-row-reverse' : ''}" id="reactions-${comment.id}">
                     ${emojisHtml}
                     ${document.getElementById('comment-form-container') ? `
                     <div class="relative emoji-menu-wrapper">
-                        <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity ml-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
+                        <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity mx-1" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile text-[10px]"></i></button>
                         <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
                             ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                         </div>
                     </div>
-                    <span class="tg-action-link ml-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>
+                    <span class="tg-action-link mx-2" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>
                     ` : ''}
                 </div>
                 ${repliesHtml}
