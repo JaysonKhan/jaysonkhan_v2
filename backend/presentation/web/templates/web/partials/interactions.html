@@ -82,13 +82,14 @@
     }
 
     .message--other .tg-bubble {
-        background: #18222d;
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.07);
         color: #fff;
         border-radius: 16px 16px 16px 4px;
     }
 
     .message--own .tg-bubble {
-        background: linear-gradient(to bottom, #2b5278, #264a6c);
+        background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
         color: #fff;
         border-radius: 14px 14px 4px 14px;
     }
@@ -97,7 +98,7 @@
         display: block;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #4da3ef;
+        color: #818cf8;
         margin-bottom: 2px;
         white-space: nowrap;
         overflow: hidden;
@@ -150,14 +151,14 @@
     }
 
     .tg-reaction-btn:hover {
-        border-color: rgba(77, 163, 239, 0.35);
+        border-color: rgba(99, 102, 241, 0.4);
         color: #ffffff;
     }
 
     .tg-reaction-btn.active {
-        border-color: rgba(77, 163, 239, 0.55);
-        background: rgba(77, 163, 239, 0.16);
-        color: #7cc3ff;
+        border-color: rgba(99, 102, 241, 0.6);
+        background: rgba(99, 102, 241, 0.18);
+        color: #a5b4fc;
     }
 
     .message--own .tg-reaction-bar {
@@ -189,8 +190,8 @@
     .tg-emoji-menu {
         position: absolute;
         bottom: 120%;
-        background: #1c2935;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 14px;
         padding: 8px;
         display: none;
@@ -221,7 +222,7 @@
     /* ── Reply Tooling ── */
     .tg-action-link {
         font-size: 0.75rem;
-        color: #4da3ef;
+        color: #818cf8;
         font-weight: 600;
         opacity: 0;
         transition: opacity 0.2s;
@@ -255,16 +256,16 @@
 
     .tg-compose-shell {
         width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 24px;
-        background: rgba(7, 22, 48, 0.92);
+        background: rgba(15, 23, 42, 0.95);
         padding: 10px 12px;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .tg-compose-shell:focus-within {
-        border-color: rgba(77, 163, 239, 0.55);
-        box-shadow: 0 0 0 2px rgba(77, 163, 239, 0.14);
+        border-color: rgba(99, 102, 241, 0.55);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.14);
     }
 
     .tg-compose-grid {
@@ -290,9 +291,9 @@
     }
 
     .tg-compose-attach:hover {
-        color: #4da3ef;
-        border-color: rgba(77, 163, 239, 0.45);
-        background: rgba(77, 163, 239, 0.08);
+        color: #818cf8;
+        border-color: rgba(99, 102, 241, 0.45);
+        background: rgba(99, 102, 241, 0.08);
     }
 
     .tg-compose-send {
@@ -302,13 +303,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #2ea6ff;
+        background: #6366f1;
         color: #ffffff;
         transition: all 0.2s ease;
     }
 
     .tg-compose-send:hover {
-        background: #1d9af7;
+        background: #4f46e5;
     }
 
     .tg-compose-send:disabled {
@@ -359,9 +360,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #7cc3ff;
-        background: rgba(46, 166, 255, 0.14);
-        border: 1px solid rgba(77, 163, 239, 0.35);
+        color: #a5b4fc;
+        background: rgba(99, 102, 241, 0.14);
+        border: 1px solid rgba(99, 102, 241, 0.35);
     }
 </style>
 
@@ -397,12 +398,12 @@
         <!-- Sorting dropdown more compact toggle style -->
         <div id="sort-wrap" class="relative">
             <button id="sort-toggle" type="button"
-                class="inline-flex items-center gap-1 text-[12px] text-[#4da3ef] font-semibold"
+                class="inline-flex items-center gap-1 text-[12px] text-[#818cf8] font-semibold"
                 onclick="toggleSortDropdown(event)">
                 <span id="active-sort">Top Comments</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-[#4da3ef]/60"></i>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#818cf8]/60"></i>
             </button>
-            <div id="sort-dropdown" class="hidden absolute top-full mt-2 right-0 bg-[#1c2935] border border-white/10 rounded-xl py-2 w-44 z-50 shadow-2xl">
+            <div id="sort-dropdown" class="hidden absolute top-full mt-2 right-0 bg-[#1e293b] border border-white/10 rounded-xl py-2 w-44 z-50 shadow-2xl">
                 <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
                 <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('newest', 'Newest First', event)">Newest First</button>
             </div>
@@ -418,7 +419,7 @@
         <div id="reply-context"
              class="hidden items-center justify-between mb-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
             <div class="min-w-0">
-                <p class="text-xs font-semibold text-[#4da3ef]" id="reply-author-name"></p>
+                <p class="text-xs font-semibold text-[#818cf8]" id="reply-author-name"></p>
                 <p class="text-xs text-slate-400 truncate" id="reply-text-preview"></p>
             </div>
             <button onclick="clearReply()" 
@@ -481,7 +482,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
                     <button type="submit"
-                            class="text-[#4da3ef] hover:underline font-bold">
+                            class="text-[#818cf8] hover:underline font-bold">
                         Logout
                     </button>
                 </form>
@@ -654,15 +655,15 @@
         const avatarHtml = `
             <div class="message-avatar">
                 ${comment.author.photo_url 
-                    ? `<img src="${comment.author.photo_url}" alt="">` 
-                    : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-blue-400">${comment.author.initial}</div>`}
+                    ? `<img src="${comment.author.photo_url}" alt="">`
+                    : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-indigo-300 bg-indigo-900/60">${comment.author.initial}</div>`}
             </div>`;
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
         
         const repliesHtml = comment.reply_count > 0 ? `
             <div class="tg-replies-container" id="replies-${comment.id}">
-                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#4da3ef] text-[11px] font-semibold hover:underline flex items-center gap-1.5 py-1">
+                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#818cf8] text-[11px] font-semibold hover:underline flex items-center gap-1.5 py-1">
                     <i class="fa-solid fa-reply rotate-180"></i> View ${comment.reply_count} replies
                 </button>
             </div>` : '';
@@ -682,7 +683,7 @@
                     <div class="text-sm text-white/95 leading-relaxed w-full" style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
                         ${comment.text}
                         <div class="tg-meta-inline">
-                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>` : ''}
+                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#818cf8]"></i>` : ''}
                             ${comment.created_at}
                         </div>
                     </div>
@@ -697,7 +698,7 @@
                                 ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                             </div>
                         </div>
-                        ${depth < 2 ? `<span class="text-[11px] text-[#4da3ef]/70 hover:text-[#4da3ef] cursor-pointer ml-1 font-medium transition" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                        ${depth < 2 ? `<span class="text-[11px] text-[#818cf8]/70 hover:text-[#818cf8] cursor-pointer ml-1 font-medium transition" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
