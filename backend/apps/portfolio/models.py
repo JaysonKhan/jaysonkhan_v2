@@ -23,7 +23,7 @@ class Skill(models.Model):
         max_length=50, help_text="Tailwind or FontAwesome icon class", blank=True
     )
     category = models.CharField(
-        max_length=20, choices=CATEGORY_CHOICES, default='other',
+        max_length=20, choices=CATEGORY_CHOICES, default='mobile',
         help_text="Skill category for grouped display"
     )
     order = models.IntegerField(default=0, help_text="Display order within category")

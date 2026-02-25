@@ -17,10 +17,15 @@ class InteractionsTest(TestCase):
         self.project = Project.objects.create(
             title="Test Project",
             slug="test-project",
-            description="Test Description",
+            description_rich="Test Description",
             is_visible=True
         )
         self.ct = ContentType.objects.get_for_model(self.project)
+
+    def test_add_comment_requires_telegram_session(self):
+        url = reverse('interactions:add_comment', args=['portfolio', 'project', self.project.pk])
+        response = self.client.post(url, {'text': 'Hello world'})
+        self.assertEqual(response.status_code, 401)
 
     def test_add_comment(self):
         # Setup session

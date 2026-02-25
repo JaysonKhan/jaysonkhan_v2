@@ -173,7 +173,10 @@ class BlogDetailView(DetailView):
 
     def get_object(self, queryset=None):
         blog_service = BlogService(BlogRepository())
-        return blog_service.get_post_details(self.kwargs.get('slug'))
+        post = blog_service.get_post_details(self.kwargs.get('slug'))
+        if post is None:
+            raise Http404("Post not found")
+        return post
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

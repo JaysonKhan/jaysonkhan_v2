@@ -1,4 +1,5 @@
 from itertools import groupby
+from django.db.models import Q
 from .models import Project, Skill, Experience
 
 
@@ -30,7 +31,7 @@ class PortfolioRepository:
         """Projects marked as_bot or with platform='bot'."""
         return (
             Project.objects
-            .filter(is_bot=True, is_visible=True)
+            .filter(Q(is_bot=True) | Q(platform='bot'), is_visible=True)
             .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )

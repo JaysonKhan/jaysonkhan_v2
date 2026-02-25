@@ -11,7 +11,7 @@ A production-ready portfolio web platform built with Python, Django, and Clean A
 - **Responsive Design**: Modern glassmorphism UI.
 
 ## Tech Stack
-- **Backend**: Python 3.11, Django 5.x, DRF
+- **Backend**: Python 3.9+, Django 4.2 LTS, DRF
 - **Database**: PostgreSQL (Production), SQLite (Development)
 - **Frontend**: TailwindCSS, HTMX
 - **DevOps**: Gunicorn, Nginx, Docker-ready

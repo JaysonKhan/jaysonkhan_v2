@@ -88,8 +88,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
+default_db = env.db()
+
+# Normalize relative sqlite paths to BASE_DIR so commands run from any cwd
+# always point to the same database file.
+if default_db.get('ENGINE') == 'django.db.backends.sqlite3':
+    db_name = default_db.get('NAME')
+    if db_name and not os.path.isabs(db_name):
+        default_db['NAME'] = str(BASE_DIR / db_name)
+
 DATABASES = {
-    'default': env.db(),
+    'default': default_db,
 }
 
 # Password validation
