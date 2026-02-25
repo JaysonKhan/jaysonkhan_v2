@@ -71,8 +71,8 @@
     }
 
     .tg-bubble {
-        max-width: 68%;
-        min-width: 60px;
+        max-width: min(78%, 560px);
+        min-width: 96px;
         padding: 6px 10px 4px;
         position: relative;
         word-break: break-word;
@@ -117,7 +117,7 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        max-width: 85%; /* Contain the bubble group */
+        max-width: min(86%, 620px); /* Contain the bubble group */
     }
 
     .tg-meta-inline {
@@ -330,28 +330,31 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 18px;
         background: rgba(255, 255, 255, 0.04);
-        padding: 18px 16px;
+        padding: 14px 14px;
         text-align: center;
         margin-bottom: 12px;
+        max-width: 620px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .tg-login-title {
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 700;
         color: #e2e8f0;
         margin-bottom: 4px;
     }
 
     .tg-login-subtitle {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: #94a3b8;
-        margin-bottom: 14px;
+        margin-bottom: 10px;
     }
 
     .tg-login-badge {
-        width: 42px;
-        height: 42px;
-        margin: 0 auto 10px;
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 8px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -392,12 +395,16 @@
         </h3>
         
         <!-- Sorting dropdown more compact toggle style -->
-        <div class="relative flex items-center gap-1 group cursor-pointer" onclick="toggleSortDropdown()">
-            <span id="active-sort" class="text-[12px] text-[#4da3ef] font-semibold">Top Comments</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-[#4da3ef]/60"></i>
-            <div id="sort-dropdown" class="hidden absolute top-8 right-0 bg-[#1c2935] border border-white/10 rounded-xl py-2 w-40 z-50 shadow-2xl">
-                <div class="px-4 py-1.5 hover:bg-white/5 text-[12px] text-white cursor-pointer" onclick="selectSort('top', 'Top Comments')">Top Comments</div>
-                <div class="px-4 py-1.5 hover:bg-white/5 text-[12px] text-white cursor-pointer" onclick="selectSort('newest', 'Newest First')">Newest First</div>
+        <div id="sort-wrap" class="relative">
+            <button id="sort-toggle" type="button"
+                class="inline-flex items-center gap-1 text-[12px] text-[#4da3ef] font-semibold"
+                onclick="toggleSortDropdown(event)">
+                <span id="active-sort">Top Comments</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#4da3ef]/60"></i>
+            </button>
+            <div id="sort-dropdown" class="hidden absolute top-full mt-2 right-0 bg-[#1c2935] border border-white/10 rounded-xl py-2 w-44 z-50 shadow-2xl">
+                <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
+                <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('newest', 'Newest First', event)">Newest First</button>
             </div>
             <select id="sort-selector" class="hidden"><option value="top"></option><option value="newest"></option></select>
         </div>
@@ -493,7 +500,7 @@
         <p class="tg-login-subtitle">Komment qoldirish uchun Telegram orqali kiring.</p>
         <div class="flex justify-center">
             {% if telegram_bot_username %}
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ telegram_bot_username }}" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write" data-radius="12"></script>
+            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ telegram_bot_username }}" data-size="large" data-lang="en" data-onauth="onTelegramAuth(user)" data-request-access="write" data-radius="12"></script>
             <script>function onTelegramAuth(user) { window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + encodeURIComponent(window.location.pathname) + "&" + new URLSearchParams(user).toString(); }</script>
             {% else %}
             <span class="text-sm text-slate-400">Telegram login hozircha mavjud emas.</span>
@@ -930,16 +937,18 @@
         if (!e.target.closest('.emoji-menu-wrapper')) {
             document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
         }
-        if (!e.target.closest('.group')) {
+        if (!e.target.closest('#sort-wrap')) {
             document.getElementById('sort-dropdown').classList.add('hidden');
         }
     });
 
-    window.toggleSortDropdown = function() {
+    window.toggleSortDropdown = function(event) {
+        if (event) event.stopPropagation();
         document.getElementById('sort-dropdown').classList.toggle('hidden');
     }
 
-    window.selectSort = function(val, label) {
+    window.selectSort = function(val, label, event) {
+        if (event) event.stopPropagation();
         document.getElementById('sort-selector').value = val;
         document.getElementById('active-sort').textContent = label;
         document.getElementById('sort-dropdown').classList.add('hidden');
