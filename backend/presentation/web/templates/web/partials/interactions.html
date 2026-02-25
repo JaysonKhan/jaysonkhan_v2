@@ -3,14 +3,40 @@
 <style>
     /* ── UI Standardization & Bug Fixes ── */
     /* ── Telegram Chat Architecture ── */
+    .interactions-panel {
+        position: relative;
+    }
+
+    .interactions-divider {
+        height: 1px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 16px;
+        gap: 14px;
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
         margin: 0 auto;
+    }
+
+    #comments-empty {
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 14px;
+        text-align: center;
+        color: rgba(148, 163, 184, 1);
+        font-size: 0.9rem;
+    }
+
+    .fetch-sentinel {
+        width: 100%;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
     }
 
     .message-row {
@@ -112,6 +138,27 @@
         margin-top: 2px; /* Pull closer to bubble */
     }
 
+    .tg-reaction-btn {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 9999px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        color: #cbd5e1;
+        transition: all 0.2s ease;
+    }
+
+    .tg-reaction-btn:hover {
+        border-color: rgba(77, 163, 239, 0.35);
+        color: #ffffff;
+    }
+
+    .tg-reaction-btn.active {
+        border-color: rgba(77, 163, 239, 0.55);
+        background: rgba(77, 163, 239, 0.16);
+        color: #7cc3ff;
+    }
+
     .message--own .tg-reaction-bar {
         justify-content: flex-end;
     }
@@ -188,6 +235,17 @@
         /* Shift emoji menu to fit screen */
         .tg-emoji-menu { right: 0; left: auto; }
     }
+
+    #comment-text {
+        resize: none !important;
+        min-height: 24px;
+        max-height: 160px;
+        line-height: 1.35;
+    }
+
+    #comment-text::-webkit-resizer {
+        display: none;
+    }
 </style>
 
 <section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
@@ -220,7 +278,7 @@
         </h3>
         
         <!-- Sorting dropdown more compact toggle style -->
-        <div class="flex items-center gap-1 group cursor-pointer" onclick="toggleSortDropdown()">
+        <div class="relative flex items-center gap-1 group cursor-pointer" onclick="toggleSortDropdown()">
             <span id="active-sort" class="text-[12px] text-[#4da3ef] font-semibold">Top Comments</span>
             <i class="fa-solid fa-chevron-down text-[10px] text-[#4da3ef]/60"></i>
             <div id="sort-dropdown" class="hidden absolute top-8 right-0 bg-[#1c2935] border border-white/10 rounded-xl py-2 w-40 z-50 shadow-2xl">
@@ -230,7 +288,7 @@
             <select id="sort-selector" class="hidden"><option value="top"></option><option value="newest"></option></select>
         </div>
     </div>
-    <div class="h-px bg-white/5 w-full mb-6"></div>
+    <div class="interactions-divider mb-6"></div>
 
     {# ── Composer Always At Top Like YouTube ── #}
     {% if tg_profile %}
@@ -296,16 +354,15 @@
                            rounded-full bg-[#4da3ef]
                            text-white transition-all
                            disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale
-                           hover:bg-[#3d8ed6] active:scale-95 ml-auto relative"
+                           hover:bg-[#3d8ed6] active:scale-95 ml-1"
                     aria-label="Send comment">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
-                <!-- Char counter inside send area button/input area -->
-                <span id="char-counter" class="absolute -bottom-6 right-2 text-[10px] text-slate-500 whitespace-nowrap">0 / 1000</span>
             </button>
         </div>
 
         <!-- Footer -->
-        <div class="flex justify-end items-center mt-2 px-1">
+        <div class="mt-2 px-1 flex items-center justify-between gap-3 flex-wrap">
+            <span id="char-counter" class="text-[11px] text-slate-500 whitespace-nowrap">0 / 1000</span>
             <div class="text-[11px] text-slate-500">
                 Logged in as 
                 <span class="text-slate-300 font-semibold mr-1">
@@ -323,7 +380,7 @@
         </div>
 
         <!-- Error feedback -->
-        <p id="comment-error" class="hidden text-[10px] text-red-400 mt-1 px-2"></p>
+        <p id="comment-error" class="hidden text-[11px] text-red-400 mt-1 px-1"></p>
     </div>
     {% else %}
     <div class="glass rounded-2xl border border-white/8 p-8 text-center mb-10">
@@ -424,11 +481,26 @@
             });
             const req = await fetch(`/interactions/comments/?${qs.toString()}`);
             const res = await req.json();
-            
+
             document.getElementById('comments-counter').textContent = res.total_count || 0;
-            res.comments.forEach(c => chatContainer.appendChild(createCommentDOM(c)));
-            
+            const comments = Array.isArray(res.comments) ? res.comments : [];
+
+            if (currentPage === 1 && comments.length === 0) {
+                chatContainer.innerHTML = '<div id="comments-empty">Hozircha komment yo‘q. Birinchi bo‘lib fikr qoldiring.</div>';
+                hasNext = false;
+                return;
+            }
+
+            const emptyState = document.getElementById('comments-empty');
+            if (emptyState) emptyState.remove();
+
+            comments.forEach(c => chatContainer.appendChild(createCommentDOM(c)));
+
             hasNext = res.has_next;
+            chatContainer.querySelectorAll('.fetch-sentinel').forEach((el) => {
+                observer.unobserve(el);
+                el.remove();
+            });
             if (hasNext) {
                 currentPage++;
                 const sentinel = document.createElement('div');
