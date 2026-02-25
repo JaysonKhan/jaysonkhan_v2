@@ -24,11 +24,12 @@
     }
 
     #comments-empty {
-        border: 1px dashed rgba(255, 255, 255, 0.15);
         border-radius: 14px;
-        padding: 14px;
+        padding: 12px 14px;
         text-align: center;
         color: rgba(148, 163, 184, 1);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         font-size: 0.9rem;
     }
 
@@ -238,13 +239,91 @@
 
     #comment-text {
         resize: none !important;
-        min-height: 24px;
-        max-height: 160px;
+        min-height: 26px;
+        max-height: 220px;
         line-height: 1.35;
+        width: 100%;
+        min-width: 0;
+        overflow-y: hidden;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     #comment-text::-webkit-resizer {
         display: none;
+    }
+
+    .tg-compose-shell {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        background: rgba(7, 22, 48, 0.92);
+        padding: 10px 12px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .tg-compose-shell:focus-within {
+        border-color: rgba(77, 163, 239, 0.55);
+        box-shadow: 0 0 0 2px rgba(77, 163, 239, 0.14);
+    }
+
+    .tg-compose-grid {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) 40px;
+        align-items: end;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .tg-compose-attach {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tg-compose-attach:hover {
+        color: #4da3ef;
+        border-color: rgba(77, 163, 239, 0.45);
+        background: rgba(77, 163, 239, 0.08);
+    }
+
+    .tg-compose-send {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #2ea6ff;
+        color: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .tg-compose-send:hover {
+        background: #1d9af7;
+    }
+
+    .tg-compose-send:disabled {
+        opacity: 0.45;
+        filter: grayscale(0.2);
+        cursor: not-allowed;
+    }
+
+    .tg-compose-meta {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 </style>
 
@@ -316,52 +395,40 @@
         </div>
 
         <!-- Composer -->
-        <div class="relative flex items-end gap-3 bg-[#18222d] 
-                    w-full
-                    border border-white/10 
-                    rounded-2xl px-3 py-2
-                    focus-within:border-[#4da3ef] 
-                    focus-within:ring-2 focus-within:ring-[#4da3ef]/20 
-                    transition-all duration-200">
+        <div class="tg-compose-shell">
+            <div class="tg-compose-grid">
 
-            <!-- Attachment -->
-            <label for="image-upload"
-                   class="w-10 h-10 flex-shrink-0 flex items-center justify-center
-                          text-slate-400 hover:text-[#4da3ef]
-                          bg-white/5 hover:bg-white/10
-                          border border-white/5
-                          rounded-xl cursor-pointer transition"
-                   aria-label="Attach file">
-                <i class="fa-solid fa-paperclip text-sm"></i>
-                <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
-            </label>
+                <!-- Attachment -->
+                <label for="image-upload"
+                       class="tg-compose-attach"
+                       aria-label="Attach file">
+                    <i class="fa-solid fa-paperclip text-sm"></i>
+                    <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
+                </label>
 
-            <!-- Textarea -->
-            <textarea id="comment-text"
-                      rows="1"
-                      placeholder="Komment yozing..."
-                      class="flex-1 bg-transparent border-none text-white text-sm
-                             placeholder:text-slate-500
-                             resize-none outline-none py-2 focus:ring-0"
-                      aria-label="Write a comment"
-                      oninput="onCommentInput(this)"></textarea>
+                <!-- Textarea -->
+                <textarea id="comment-text"
+                          rows="1"
+                          wrap="soft"
+                          spellcheck="false"
+                          placeholder="Message"
+                          class="bg-transparent border-none text-white text-[15px] placeholder:text-slate-500 resize-none outline-none py-2 focus:ring-0"
+                          aria-label="Write a comment"
+                          oninput="onCommentInput(this)"></textarea>
 
-            <!-- Send -->
-            <button id="submit-comment"
-                    disabled
-                    data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
-                    class="w-10 h-10 flex-shrink-0 flex items-center justify-center
-                           rounded-full bg-[#4da3ef]
-                           text-white transition-all
-                           disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale
-                           hover:bg-[#3d8ed6] active:scale-95 ml-1"
-                    aria-label="Send comment">
-                <i class="fa-solid fa-paper-plane text-sm"></i>
-            </button>
+                <!-- Send -->
+                <button id="submit-comment"
+                        disabled
+                        data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
+                        class="tg-compose-send"
+                        aria-label="Send comment">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Footer -->
-        <div class="mt-2 px-1 flex items-center justify-between gap-3 flex-wrap">
+        <div class="tg-compose-meta">
             <span id="char-counter" class="text-[11px] text-slate-500 whitespace-nowrap">0 / 1000</span>
             <div class="text-[11px] text-slate-500">
                 Logged in as 
@@ -561,7 +628,7 @@
                 <div class="tg-bubble flex flex-col items-start">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
-                    <div class="text-sm text-white/95 leading-relaxed w-full">
+                    <div class="text-sm text-white/95 leading-relaxed w-full" style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
                         ${comment.text}
                         <div class="tg-meta-inline">
                             ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#4da3ef]"></i>` : ''}
@@ -705,8 +772,10 @@
     // ── Form Submit ──
     window.onCommentInput = function (elem) {
         // Auto-resize
+        const maxHeight = 220;
         elem.style.height = 'auto';
-        elem.style.height = elem.scrollHeight + 'px';
+        elem.style.height = Math.min(elem.scrollHeight, maxHeight) + 'px';
+        elem.style.overflowY = elem.scrollHeight > maxHeight ? 'auto' : 'hidden';
 
         const text = elem.value.trim();
         const counter = document.getElementById('char-counter');
