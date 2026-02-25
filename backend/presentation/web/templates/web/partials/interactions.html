@@ -44,7 +44,7 @@
         display: flex;
         width: 100%;
         gap: 10px;
-        align-items: flex-end;
+        align-items: flex-start;
     }
 
     .message--other {
@@ -71,14 +71,22 @@
     }
 
     .tg-bubble {
-        max-width: min(78%, 560px);
-        min-width: 64px;
-        padding: 6px 10px 4px;
+        display: inline-flex;
+        flex-direction: column;
+        width: fit-content;
+        max-width: min(80vw, 420px);
+        min-width: 0;
+        min-height: 0;
+        padding: 8px 10px 6px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
         box-shadow: 0 1px 1px rgba(0,0,0,0.2);
         transition: transform 0.1s;
+    }
+
+    .tg-bubble.has-image {
+        max-width: min(86vw, 520px);
     }
 
     .message--other .tg-bubble {
@@ -118,7 +126,16 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        max-width: min(86%, 620px); /* Contain the bubble group */
+        width: auto;
+        max-width: min(88%, 520px); /* Contain the bubble group */
+    }
+
+    .tg-bubble-text {
+        font-size: 0.95rem;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .tg-meta-inline {
@@ -677,10 +694,10 @@
 
         const content = `
             <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end ml-auto' : 'items-start mr-auto'}">
-                <div class="tg-bubble flex flex-col items-start">
+                <div class="tg-bubble ${comment.image_url ? 'has-image' : ''}">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
-                    <div class="text-sm text-white/95 leading-relaxed w-full" style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">
+                    <div class="tg-bubble-text text-white/95">
                         ${comment.text}
                         <div class="tg-meta-inline">
                             ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#818cf8]"></i>` : ''}
