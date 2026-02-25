@@ -25,7 +25,7 @@
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 3px;
         width: 100%;
         max-width: 100%;
         padding: 0;
@@ -52,7 +52,7 @@
     .message-row {
         display: flex;
         width: 100%;
-        gap: 8px;
+        gap: 6px;
         align-items: flex-end;
     }
 
@@ -65,13 +65,13 @@
     }
 
     .message-avatar {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         flex-shrink: 0;
         border-radius: 50%;
         overflow: hidden;
         border: 1px solid rgba(255,255,255,0.08);
-        margin-bottom: 2px;
+        margin-bottom: 1px;
     }
 
     .message-avatar img {
@@ -83,26 +83,26 @@
     .tg-bubble {
         display: block;
         width: fit-content;
-        max-width: min(82vw, 520px);
+        max-width: min(75vw, 460px);
         min-width: 0;
         min-height: 0 !important;
         height: auto !important;
-        padding: 8px 12px 17px;
+        padding: 5px 10px 14px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
-        line-height: 1.32;
+        line-height: 1.3;
         box-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
         border: 1px solid transparent;
         isolation: isolate;
     }
 
     .tg-bubble.is-compact {
-        padding: 7px 11px 8px;
+        padding: 5px 9px 6px;
     }
 
     .tg-bubble.has-image {
-        max-width: min(88vw, 560px);
+        max-width: min(80vw, 500px);
     }
 
     .message--other .tg-bubble {
@@ -143,10 +143,10 @@
 
     .tg-author-name {
         display: block;
-        font-size: 0.76rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: var(--tg-name-color);
-        margin-bottom: 3px;
+        margin-bottom: 1px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -154,10 +154,10 @@
 
     .tg-comment-image {
         display: block;
-        border-radius: 12px;
-        margin-top: 5px;
+        border-radius: 10px;
+        margin-top: 3px;
         max-width: 100%;
-        max-height: min(48vh, 360px);
+        max-height: min(44vh, 320px);
         object-fit: cover;
         cursor: pointer;
         border: 1px solid rgba(255,255,255,0.14);
@@ -168,12 +168,12 @@
         flex-direction: column;
         position: relative;
         width: auto;
-        max-width: min(82%, 560px);
+        max-width: min(75%, 500px);
     }
 
     .tg-bubble-text {
-        font-size: 0.96rem;
-        line-height: 1.35;
+        font-size: 0.9rem;
+        line-height: 1.3;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         word-break: break-word;
@@ -181,12 +181,12 @@
 
     .tg-meta-inline {
         position: absolute;
-        right: 10px;
-        bottom: 5px;
+        right: 8px;
+        bottom: 3px;
         display: inline-flex;
         align-items: center;
         gap: 3px;
-        font-size: 0.68rem;
+        font-size: 0.64rem;
         color: var(--tg-time-incoming);
         margin-top: 0;
         user-select: none;
@@ -198,8 +198,8 @@
         position: static;
         right: auto;
         bottom: auto;
-        margin-left: 6px;
-        font-size: 0.72rem;
+        margin-left: 5px;
+        font-size: 0.66rem;
         vertical-align: baseline;
     }
 
@@ -219,8 +219,8 @@
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
-        gap: 5px;
-        margin-top: 4px;
+        gap: 4px;
+        margin-top: 2px;
     }
 
     .tg-reaction-bar:empty {
@@ -232,8 +232,8 @@
         border: 1px solid rgba(136, 164, 190, 0.26);
         background: rgba(31, 52, 73, 0.75);
         border-radius: 9999px;
-        padding: 2px 7px;
-        font-size: 0.72rem;
+        padding: 1px 6px;
+        font-size: 0.68rem;
         line-height: 1.2;
         color: #dbe8f8;
         transition: all 0.2s ease;
@@ -269,7 +269,7 @@
     }
 
     .tg-replies-container {
-        margin-top: 4px;
+        margin-top: 2px;
         width: fit-content;
         max-width: 100%;
     }
@@ -324,11 +324,11 @@
         bottom: 120%;
         background: #1e293b;
         border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 14px;
-        padding: 8px;
+        border-radius: 12px;
+        padding: 6px;
         display: none;
         grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
+        gap: 4px;
         z-index: 100;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
@@ -336,10 +336,10 @@
     .tg-emoji-menu.show { display: grid; }
 
     .tg-emoji-item {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         cursor: pointer;
-        padding: 6px;
-        border-radius: 8px;
+        padding: 5px;
+        border-radius: 7px;
         transition: background 0.2s, transform 0.2s;
         text-align: center;
         display: flex;
@@ -366,39 +366,47 @@
 
     @media (max-width: 640px) {
         .interactions-panel {
-            padding-left: 14px !important;
-            padding-right: 14px !important;
+            padding-left: 12px !important;
+            padding-right: 12px !important;
         }
 
         #tg-chat-container {
-            gap: 6px;
+            gap: 2px;
         }
 
         .message-row {
-            gap: 6px;
+            gap: 5px;
         }
 
         .message-content-wrapper {
-            max-width: 90%;
+            max-width: 85%;
         }
 
         .tg-bubble {
-            max-width: 84vw;
-            padding: 8px 10px 17px;
+            max-width: 80vw;
+            padding: 5px 8px 13px;
         }
 
         .tg-bubble.is-compact {
-            padding: 7px 9px 8px;
+            padding: 4px 8px 5px;
         }
 
         .message-avatar {
-            width: 30px;
-            height: 30px;
+            width: 26px;
+            height: 26px;
         }
 
         .tg-meta-inline {
-            right: 8px;
-            font-size: 0.64rem;
+            right: 6px;
+            font-size: 0.6rem;
+        }
+
+        .tg-bubble-text {
+            font-size: 0.86rem;
+        }
+
+        .tg-author-name {
+            font-size: 0.68rem;
         }
 
         /* Shift emoji menu to fit screen */
@@ -424,9 +432,9 @@
     .tg-compose-shell {
         width: 100%;
         border: 1px solid rgba(116, 150, 186, 0.34);
-        border-radius: 27px;
+        border-radius: 24px;
         background: linear-gradient(180deg, rgba(21, 40, 62, 0.97) 0%, rgba(14, 31, 50, 0.97) 100%);
-        padding: 7px 8px;
+        padding: 5px 6px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
@@ -438,16 +446,16 @@
 
     .tg-compose-grid {
         display: grid;
-        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        grid-template-columns: 36px minmax(0, 1fr) 36px;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         width: 100%;
     }
 
     .tg-compose-attach {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
         border: 1px solid rgba(132, 162, 192, 0.2);
         background: rgba(38, 58, 81, 0.85);
         color: #9db4ce;
@@ -465,8 +473,8 @@
     }
 
     .tg-compose-send {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -488,22 +496,22 @@
     }
 
     .tg-compose-meta {
-        margin-top: 10px;
+        margin-top: 6px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
     }
 
     .tg-login-card {
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 18px;
+        border-radius: 16px;
         background: rgba(255, 255, 255, 0.04);
-        padding: 14px 14px;
+        padding: 12px 12px;
         text-align: center;
-        margin-bottom: 12px;
-        max-width: 620px;
+        margin-bottom: 10px;
+        max-width: 540px;
         margin-left: auto;
         margin-right: auto;
     }
