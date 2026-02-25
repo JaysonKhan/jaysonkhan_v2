@@ -16,7 +16,7 @@
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 10px;
         width: 100%;
         max-width: 100%;
         padding: 0;
@@ -155,6 +155,11 @@
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 2px; /* Pull closer to bubble */
+    }
+
+    .tg-reaction-bar:empty {
+        display: none;
+        margin-top: 0;
     }
 
     .tg-reaction-btn {
@@ -528,7 +533,7 @@
     {% endif %}
 
     {# ── Render Area ── #}
-    <div id="tg-chat-container" class="space-y-6"></div>
+    <div id="tg-chat-container"></div>
     <div id="loading-spinner" class="text-center text-slate-500 py-6 hidden"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></div>
 </section>
 
