@@ -5,6 +5,15 @@
     /* ── Telegram Chat Architecture ── */
     .interactions-panel {
         position: relative;
+        --tg-bubble-incoming: #223548;
+        --tg-bubble-incoming-border: rgba(106, 134, 164, 0.22);
+        --tg-bubble-outgoing: #446f9d;
+        --tg-bubble-outgoing-2: #537fb0;
+        --tg-bubble-outgoing-border: rgba(134, 171, 208, 0.26);
+        --tg-name-color: #93bbff;
+        --tg-time-incoming: rgba(197, 214, 232, 0.58);
+        --tg-time-outgoing: rgba(222, 235, 252, 0.68);
+        --tg-reply-line: rgba(118, 150, 183, 0.25);
     }
 
     .interactions-divider {
@@ -16,7 +25,7 @@
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         width: 100%;
         max-width: 100%;
         padding: 0;
@@ -43,8 +52,8 @@
     .message-row {
         display: flex;
         width: 100%;
-        gap: 10px;
-        align-items: flex-start;
+        gap: 8px;
+        align-items: flex-end;
     }
 
     .message--other {
@@ -56,12 +65,13 @@
     }
 
     .message-avatar {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         flex-shrink: 0;
         border-radius: 50%;
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        margin-bottom: 2px;
     }
 
     .message-avatar img {
@@ -71,43 +81,68 @@
     }
 
     .tg-bubble {
-        display: inline-flex;
-        flex-direction: column;
+        display: block;
         width: fit-content;
-        max-width: min(80vw, 420px);
+        max-width: min(82vw, 520px);
         min-width: 0;
-        min-height: 0;
-        padding: 8px 10px 6px;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 8px 12px 17px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-        transition: transform 0.1s;
+        line-height: 1.32;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
+        border: 1px solid transparent;
+        isolation: isolate;
     }
 
     .tg-bubble.has-image {
-        max-width: min(86vw, 520px);
+        max-width: min(88vw, 560px);
     }
 
     .message--other .tg-bubble {
-        background: rgba(30, 41, 59, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: var(--tg-bubble-incoming);
+        border-color: var(--tg-bubble-incoming-border);
         color: #fff;
-        border-radius: 16px 16px 16px 4px;
+        border-radius: 16px 16px 16px 6px;
     }
 
     .message--own .tg-bubble {
-        background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+        background: linear-gradient(145deg, var(--tg-bubble-outgoing) 0%, var(--tg-bubble-outgoing-2) 100%);
+        border-color: var(--tg-bubble-outgoing-border);
         color: #fff;
-        border-radius: 14px 14px 4px 14px;
+        border-radius: 16px 16px 6px 16px;
+    }
+
+    .message--other .tg-bubble::after,
+    .message--own .tg-bubble::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        width: 9px;
+        height: 11px;
+        pointer-events: none;
+    }
+
+    .message--other .tg-bubble::after {
+        left: -5px;
+        background: var(--tg-bubble-incoming);
+        clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    }
+
+    .message--own .tg-bubble::after {
+        right: -5px;
+        background: var(--tg-bubble-outgoing-2);
+        clip-path: polygon(0 0, 0 100%, 100% 100%);
     }
 
     .tg-author-name {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.76rem;
         font-weight: 600;
-        color: #818cf8;
-        margin-bottom: 2px;
+        color: var(--tg-name-color);
+        margin-bottom: 3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -115,11 +150,13 @@
 
     .tg-comment-image {
         display: block;
-        border-radius: 10px;
-        margin-top: 4px;
+        border-radius: 12px;
+        margin-top: 5px;
         max-width: 100%;
+        max-height: min(48vh, 360px);
+        object-fit: cover;
         cursor: pointer;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.14);
     }
 
     .message-content-wrapper {
@@ -127,11 +164,11 @@
         flex-direction: column;
         position: relative;
         width: auto;
-        max-width: min(88%, 520px); /* Contain the bubble group */
+        max-width: min(82%, 560px);
     }
 
     .tg-bubble-text {
-        font-size: 0.95rem;
+        font-size: 0.96rem;
         line-height: 1.35;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
@@ -139,22 +176,34 @@
     }
 
     .tg-meta-inline {
-        display: flex;
+        position: absolute;
+        right: 10px;
+        bottom: 5px;
+        display: inline-flex;
         align-items: center;
-        justify-content: flex-end;
-        gap: 2px;
-        font-size: 0.6rem;
-        color: rgba(255, 255, 255, 0.4);
-        margin-top: 2px;
+        gap: 3px;
+        font-size: 0.68rem;
+        color: var(--tg-time-incoming);
+        margin-top: 0;
         user-select: none;
-        line-height: normal;
+        line-height: 1;
+        letter-spacing: 0.01em;
+    }
+
+    .message--own .tg-meta-inline {
+        color: var(--tg-time-outgoing);
+    }
+
+    .tg-meta-inline .fa-check-double {
+        font-size: 0.6rem;
+        transform: translateY(0.3px);
     }
 
     .tg-reaction-bar {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 2px; /* Pull closer to bubble */
+        gap: 5px;
+        margin-top: 4px;
     }
 
     .tg-reaction-bar:empty {
@@ -163,24 +212,39 @@
     }
 
     .tg-reaction-btn {
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(136, 164, 190, 0.26);
+        background: rgba(31, 52, 73, 0.75);
         border-radius: 9999px;
-        padding: 2px 8px;
-        font-size: 0.75rem;
-        color: #cbd5e1;
+        padding: 2px 7px;
+        font-size: 0.72rem;
+        line-height: 1.2;
+        color: #dbe8f8;
         transition: all 0.2s ease;
     }
 
     .tg-reaction-btn:hover {
-        border-color: rgba(99, 102, 241, 0.4);
+        border-color: rgba(120, 165, 214, 0.5);
+        background: rgba(43, 72, 101, 0.82);
         color: #ffffff;
     }
 
     .tg-reaction-btn.active {
-        border-color: rgba(99, 102, 241, 0.6);
-        background: rgba(99, 102, 241, 0.18);
-        color: #a5b4fc;
+        border-color: rgba(140, 190, 240, 0.62);
+        background: rgba(58, 95, 130, 0.88);
+        color: #f0f6ff;
+    }
+
+    .tg-reaction-btn .count {
+        opacity: 0.86;
+    }
+
+    .tg-reaction-trigger {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .comment-wrapper:hover .tg-reaction-trigger {
+        opacity: 1;
     }
 
     .message--own .tg-reaction-bar {
@@ -188,25 +252,54 @@
     }
 
     .tg-replies-container {
-        margin-top: 8px;
-        width: 100%;
+        margin-top: 4px;
+        width: fit-content;
+        max-width: 100%;
     }
 
     .message--other .tg-replies-container {
-        padding-left: 10px;
-        border-left: 1.5px solid rgba(255,255,255,0.05);
+        margin-left: 2px;
+        padding-left: 11px;
+        border-left: 2px solid var(--tg-reply-line);
     }
 
     .message--own .tg-replies-container {
-        padding-right: 10px;
-        border-right: 1.5px solid rgba(255,255,255,0.05);
+        margin-right: 2px;
+        padding-right: 11px;
+        border-right: 2px solid var(--tg-reply-line);
         display: flex;
         flex-direction: column;
         align-items: flex-end;
     }
-    
-    .message--own .tg-bubble {
-        align-items: flex-end;
+
+    .tg-view-replies {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #9bbce4;
+    }
+
+    .tg-view-replies:hover {
+        color: #bfd7f5;
+        text-decoration: underline;
+    }
+
+    .tg-reply-link {
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #9bbce4;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .tg-reply-link:hover {
+        color: #bfd7f5;
+        text-decoration: underline;
     }
     
     .tg-emoji-menu {
@@ -255,15 +348,33 @@
     .tg-action-link:hover { opacity: 1 !important; text-decoration: underline; }
 
     @media (max-width: 640px) {
-        .tg-bubble { max-width: 85%; }
+        .message-content-wrapper {
+            max-width: 88%;
+        }
+
+        .tg-bubble {
+            max-width: 88vw;
+            padding: 8px 10px 17px;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+        }
+
+        .tg-meta-inline {
+            right: 8px;
+            font-size: 0.64rem;
+        }
+
         /* Shift emoji menu to fit screen */
         .tg-emoji-menu { right: 0; left: auto; }
     }
 
     #comment-text {
         resize: none !important;
-        min-height: 26px;
-        max-height: 220px;
+        min-height: 22px;
+        max-height: 180px;
         line-height: 1.35;
         width: 100%;
         min-width: 0;
@@ -278,33 +389,34 @@
 
     .tg-compose-shell {
         width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        background: rgba(15, 23, 42, 0.95);
-        padding: 10px 12px;
+        border: 1px solid rgba(116, 150, 186, 0.34);
+        border-radius: 27px;
+        background: linear-gradient(180deg, rgba(21, 40, 62, 0.97) 0%, rgba(14, 31, 50, 0.97) 100%);
+        padding: 7px 8px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .tg-compose-shell:focus-within {
-        border-color: rgba(99, 102, 241, 0.55);
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.14);
+        border-color: rgba(130, 170, 210, 0.55);
+        box-shadow: 0 0 0 2px rgba(82, 130, 183, 0.18);
     }
 
     .tg-compose-grid {
         display: grid;
-        grid-template-columns: 40px minmax(0, 1fr) 40px;
-        align-items: end;
-        gap: 10px;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        align-items: center;
+        gap: 8px;
         width: 100%;
     }
 
     .tg-compose-attach {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.05);
-        color: #94a3b8;
+        border: 1px solid rgba(132, 162, 192, 0.2);
+        background: rgba(38, 58, 81, 0.85);
+        color: #9db4ce;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -313,35 +425,36 @@
     }
 
     .tg-compose-attach:hover {
-        color: #818cf8;
-        border-color: rgba(99, 102, 241, 0.45);
-        background: rgba(99, 102, 241, 0.08);
+        color: #d8e7fa;
+        border-color: rgba(135, 182, 233, 0.48);
+        background: rgba(53, 79, 109, 0.9);
     }
 
     .tg-compose-send {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #6366f1;
+        background: linear-gradient(145deg, #4b6f9f 0%, #5d89c0 100%);
         color: #ffffff;
+        box-shadow: 0 3px 10px rgba(25, 45, 68, 0.35);
         transition: all 0.2s ease;
     }
 
     .tg-compose-send:hover {
-        background: #4f46e5;
+        filter: brightness(1.08);
     }
 
     .tg-compose-send:disabled {
-        opacity: 0.45;
-        filter: grayscale(0.2);
+        opacity: 0.42;
+        filter: saturate(0.2);
         cursor: not-allowed;
     }
 
     .tg-compose-meta {
-        margin-top: 8px;
+        margin-top: 10px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -477,7 +590,7 @@
                           wrap="soft"
                           spellcheck="false"
                           placeholder="Message"
-                          class="bg-transparent border-none text-white text-[15px] placeholder:text-slate-500 resize-none outline-none py-2 focus:ring-0"
+                          class="bg-transparent border-none text-white text-[16px] placeholder:text-slate-500 resize-none outline-none py-0 focus:ring-0"
                           aria-label="Write a comment"
                           oninput="onCommentInput(this)"></textarea>
 
@@ -671,7 +784,7 @@
     // Generates DOM dynamically keeping template purity
     function createCommentDOM(comment, depth = 0) {
         const row = document.createElement('div');
-        row.className = `message-row ${comment.is_own ? 'message--own' : 'message--other'}`;
+        row.className = `message-row comment-wrapper group ${comment.is_own ? 'message--own' : 'message--other'}`;
         row.id = `comment-${comment.id}`;
 
         const avatarHtml = `
@@ -683,10 +796,11 @@
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
         
+        const repliesLabel = comment.reply_count === 1 ? 'reply' : 'replies';
         const repliesHtml = comment.reply_count > 0 ? `
             <div class="tg-replies-container" id="replies-${comment.id}">
-                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="text-[#818cf8] text-[11px] font-semibold hover:underline flex items-center gap-1.5 py-1">
-                    <i class="fa-solid fa-reply rotate-180"></i> View ${comment.reply_count} replies
+                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="tg-view-replies">
+                    <i class="fa-solid fa-reply rotate-180"></i> View ${comment.reply_count} ${repliesLabel}
                 </button>
             </div>` : '';
 
@@ -698,14 +812,14 @@
         const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
 
         const content = `
-            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'items-end ml-auto' : 'items-start mr-auto'}">
+            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'ml-auto' : 'mr-auto'}">
                 <div class="tg-bubble ${comment.image_url ? 'has-image' : ''}">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
                     <div class="tg-bubble-text text-white/95">
                         ${comment.text}
                         <div class="tg-meta-inline">
-                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double text-[10px] text-[#818cf8]"></i>` : ''}
+                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}
                             ${comment.created_at}
                         </div>
                     </div>
@@ -715,12 +829,12 @@
                     ${emojisHtml}
                     ${document.getElementById('submit-comment') ? `
                         <div class="relative emoji-menu-wrapper">
-                            <button class="tg-reaction-btn opacity-0 group-hover:opacity-100 transition-opacity" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile"></i></button>
+                            <button class="tg-reaction-btn tg-reaction-trigger" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile"></i></button>
                             <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
                                 ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                             </div>
                         </div>
-                        ${depth < 2 ? `<span class="text-[11px] text-[#818cf8]/70 hover:text-[#818cf8] cursor-pointer ml-1 font-medium transition" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                        ${depth < 2 ? `<span class="tg-reply-link" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
@@ -846,7 +960,7 @@
     // ── Form Submit ──
     window.onCommentInput = function (elem) {
         // Auto-resize
-        const maxHeight = 220;
+        const maxHeight = 180;
         elem.style.height = 'auto';
         elem.style.height = Math.min(elem.scrollHeight, maxHeight) + 'px';
         elem.style.overflowY = elem.scrollHeight > maxHeight ? 'auto' : 'hidden';
