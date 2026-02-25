@@ -97,6 +97,10 @@
         isolation: isolate;
     }
 
+    .tg-bubble.is-compact {
+        padding: 7px 11px 8px;
+    }
+
     .tg-bubble.has-image {
         max-width: min(88vw, 560px);
     }
@@ -188,6 +192,19 @@
         user-select: none;
         line-height: 1;
         letter-spacing: 0.01em;
+    }
+
+    .tg-bubble.is-compact .tg-meta-inline {
+        position: static;
+        right: auto;
+        bottom: auto;
+        margin-left: 6px;
+        font-size: 0.72rem;
+        vertical-align: baseline;
+    }
+
+    .tg-bubble.is-compact .tg-bubble-text {
+        display: inline;
     }
 
     .message--own .tg-meta-inline {
@@ -348,13 +365,30 @@
     .tg-action-link:hover { opacity: 1 !important; text-decoration: underline; }
 
     @media (max-width: 640px) {
+        .interactions-panel {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+        }
+
+        #tg-chat-container {
+            gap: 6px;
+        }
+
+        .message-row {
+            gap: 6px;
+        }
+
         .message-content-wrapper {
-            max-width: 88%;
+            max-width: 90%;
         }
 
         .tg-bubble {
-            max-width: 88vw;
+            max-width: 84vw;
             padding: 8px 10px 17px;
+        }
+
+        .tg-bubble.is-compact {
+            padding: 7px 9px 8px;
         }
 
         .message-avatar {
@@ -787,6 +821,10 @@
         row.className = `message-row comment-wrapper group ${comment.is_own ? 'message--own' : 'message--other'}`;
         row.id = `comment-${comment.id}`;
 
+        const commentText = (comment.text || '').toString();
+        const compactLen = commentText.replace(/\s+/g, ' ').trim().length;
+        const isCompactBubble = !comment.image_url && !/[\r\n]/.test(commentText) && compactLen > 0 && compactLen <= 30;
+
         const avatarHtml = `
             <div class="message-avatar">
                 ${comment.author.photo_url 
@@ -810,18 +848,19 @@
             </button>`).join('');
 
         const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
+        const commentSnippetSafe = commentText.slice(0, 50).replace(/'/g, "\\'");
 
         const content = `
             <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'ml-auto' : 'mr-auto'}">
-                <div class="tg-bubble ${comment.image_url ? 'has-image' : ''}">
+                <div class="tg-bubble ${comment.image_url ? 'has-image' : ''} ${isCompactBubble ? 'is-compact' : ''}">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
                     <div class="tg-bubble-text text-white/95">
-                        ${comment.text}
-                        <div class="tg-meta-inline">
+                        ${commentText}
+                        <span class="tg-meta-inline">
                             ${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}
                             ${comment.created_at}
-                        </div>
+                        </span>
                     </div>
                 </div>
                 
@@ -834,7 +873,7 @@
                                 ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                             </div>
                         </div>
-                        ${depth < 2 ? `<span class="tg-reply-link" onclick="setReply(${comment.id}, '${authorNameSafe}', '${comment.text.slice(0,50).replace(/'/g, "\\'")}')">Reply</span>` : ''}
+                        ${depth < 2 ? `<span class="tg-reply-link" onclick="setReply(${comment.id}, '${authorNameSafe}', '${commentSnippetSafe}')">Reply</span>` : ''}
                     ` : ''}
                 </div>
                 ${repliesHtml}
