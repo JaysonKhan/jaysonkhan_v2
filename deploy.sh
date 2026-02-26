@@ -16,7 +16,7 @@ VENV="$BACKEND_DIR/venv/bin/activate"      # Virtualenv activate
 PY="$BACKEND_DIR/venv/bin/python"          # Python binary
 PIP="$BACKEND_DIR/venv/bin/pip"            # Pip binary
 MANAGE="$BACKEND_DIR/manage.py"            # manage.py path
-BRANCH="main"
+DEPLOY_BRANCH="main"                      # Branch to deploy on server
 SERVICE="jaysonkhan"                       # systemd service name
 DJANGO_SETTINGS="config.settings.prod"
 DOMAIN="jaysonkhan.com"
@@ -47,7 +47,14 @@ echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━
 echo
 
 # ─── 1. Git add, commit, push ────────────────────────────────────────────────
-info "1/6  Git push..."
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+info "1/6  Git push... (branch: $CURRENT_BRANCH)"
+
+if [[ "$CURRENT_BRANCH" != "$DEPLOY_BRANCH" ]]; then
+    warn "  You are on '$CURRENT_BRANCH', not '$DEPLOY_BRANCH'"
+    warn "  Will push '$CURRENT_BRANCH' — make sure to merge into '$DEPLOY_BRANCH' for deploy!"
+fi
+
 git add -A
 if git diff --cached --quiet; then
     warn "  No changes to commit — pushing anyway"
@@ -55,13 +62,13 @@ else
     git commit -m "$MSG"
     ok "  Committed: $MSG"
 fi
-git push origin $BRANCH
-ok "  Pushed to origin/$BRANCH"
+git push origin $CURRENT_BRANCH
+ok "  Pushed to origin/$CURRENT_BRANCH"
 echo
 
 # ─── 2. Server: git pull ─────────────────────────────────────────────────────
-info "2/6  Server git pull..."
-ssh $SERVER "cd $REMOTE_DIR && git pull origin $BRANCH"
+info "2/6  Server git pull (branch: $DEPLOY_BRANCH)..."
+ssh $SERVER "cd $REMOTE_DIR && git pull origin $DEPLOY_BRANCH"
 ok "  Code updated on server"
 echo
 
