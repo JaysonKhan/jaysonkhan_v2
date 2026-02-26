@@ -6,17 +6,19 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between">
-    <div class="md:w-1/2 space-y-6">
-        <div
-            class="inline-flex max-w-fit items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+<section class="relative max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between overflow-visible">
+    <!-- Animated mesh background -->
+    <div class="hero-mesh"></div>
+
+    <div class="md:w-1/2 space-y-6 relative z-10">
+        <div class="inline-flex max-w-fit items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
             <span class="w-2 h-2 shrink-0 bg-green-400 rounded-full animate-pulse"></span>
             <span class="text-green-400 text-sm font-medium pr-1">{{ site_settings.hero_availability_badge }}</span>
         </div>
         <h1 class="text-5xl md:text-7xl font-bold leading-tight">
             {{ site_settings.hero_title }}
         </h1>
-        <p class="text-slate-400 text-lg max-w-lg">{{ site_settings.hero_subtitle }}</p>
+        <p class="text-slate-400 text-lg max-w-lg leading-relaxed">{{ site_settings.hero_subtitle }}</p>
         <div class="flex flex-wrap gap-3">
             <span class="platform-badge cross">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -27,15 +29,15 @@
             <span class="platform-badge android">Android</span>
             <span class="platform-badge ios">iOS</span>
         </div>
-        <div class="flex space-x-4 pt-2">
+        <div class="flex flex-wrap gap-4 pt-2">
             {% if site_settings.apps_section_visible %}
             <a href="{{ site_settings.hero_primary_cta_url }}"
-                class="bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold">
+                class="btn-primary-glow bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold shadow-lg">
                 {{ site_settings.hero_primary_cta_text }}
             </a>
             {% endif %}
             <a href="{{ site_settings.hero_secondary_cta_url }}"
-                class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold">
+                class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold border border-white/10 hover:border-white/20">
                 {{ site_settings.hero_secondary_cta_text }}
             </a>
         </div>
@@ -77,26 +79,55 @@
     </div>
 </section>
 
+<!-- ── Stats Bar ────────────────────────────────────────────────── -->
+<section class="max-w-7xl mx-auto px-6 pb-10 md:pb-16">
+    <div class="divider-gradient mb-10 reveal"></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 reveal">
+        <div class="stat-item glass rounded-2xl py-6 px-4">
+            <span class="stat-number" data-count="3" data-suffix="+">3+</span>
+            <span class="stat-label">Years Experience</span>
+        </div>
+        <div class="stat-item glass rounded-2xl py-6 px-4">
+            <span class="stat-number" data-count="30" data-suffix="+">30+</span>
+            <span class="stat-label">Apps Delivered</span>
+        </div>
+        <div class="stat-item glass rounded-2xl py-6 px-4">
+            <span class="stat-number" data-count="1" data-suffix="M+">1M+</span>
+            <span class="stat-label">App Downloads</span>
+        </div>
+        <div class="stat-item glass rounded-2xl py-6 px-4">
+            <span class="stat-number" data-count="100" data-suffix="%">100%</span>
+            <span class="stat-label">Clean Architecture</span>
+        </div>
+    </div>
+    <div class="divider-gradient mt-10 reveal"></div>
+</section>
+
 <!-- About Section -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
-    <div class="grid md:grid-cols-2 gap-12 items-center">
-        <div class="space-y-6">
-            <h2 class="text-3xl font-bold"><span class="text-gradient">{{ site_settings.about_title }}</span></h2>
+<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+    <div class="grid md:grid-cols-2 gap-14 items-center">
+        <div class="space-y-6 reveal">
+            <span class="section-tag">
+                <i class="fa-solid fa-user-tie"></i>
+                About Me
+            </span>
+            <h2 class="text-3xl md:text-4xl font-bold"><span class="text-gradient">{{ site_settings.about_title }}</span></h2>
             <p class="text-slate-400 text-lg leading-relaxed">{{ site_settings.about_description }}</p>
             {% if site_settings.resume_file %}
             <a href="{{ site_settings.resume_file.url }}" download
-                class="inline-block bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
+                class="inline-flex items-center gap-2 btn-primary-glow bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
+                <i class="fa-solid fa-download text-sm"></i>
                 {{ site_settings.resume_button_text }}
             </a>
             {% endif %}
         </div>
-        <div>
+        <div class="reveal delay-2">
             {% if site_settings.about_image %}
             <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}"
-                class="rounded-2xl border border-white/10">
+                class="rounded-2xl border border-white/10 shadow-2xl hover:border-primary/20 transition duration-500">
             {% else %}
             <img src="{% static 'images/about.jpg' %}" alt="{{ site_settings.site_author }}"
-                class="rounded-2xl border border-white/10">
+                class="rounded-2xl border border-white/10 shadow-2xl hover:border-primary/20 transition duration-500">
             {% endif %}
         </div>
     </div>
@@ -104,10 +135,16 @@
 
 <!-- Experience Section -->
 {% if portfolio.experience %}
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
-    <h2 class="text-3xl font-bold mb-12 text-center">
-        <span class="text-gradient">{{ site_settings.experience_section_title }}</span>
-    </h2>
+<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+    <div class="text-center mb-12 reveal">
+        <span class="section-tag">
+            <i class="fa-solid fa-briefcase"></i>
+            Career
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">
+            <span class="text-gradient">{{ site_settings.experience_section_title }}</span>
+        </h2>
+    </div>
     <div class="max-w-3xl mx-auto space-y-8 relative">
         <!-- Timeline line -->
         <div class="absolute left-[1.35rem] top-2 bottom-2 w-px bg-white/10 hidden md:block"></div>
@@ -121,7 +158,7 @@
             </div>
 
             <!-- Content Card -->
-            <div class="glass p-6 md:p-8 rounded-2xl w-full">
+            <div class="glass p-6 md:p-8 rounded-2xl w-full reveal">
                 <div class="flex items-start justify-between flex-wrap gap-4 md:gap-2">
                     <div>
                         <h3 class="text-xl font-bold">{{ exp.position }}</h3>
@@ -147,16 +184,22 @@
 {% endif %}
 
 {% if site_settings.apps_section_visible %}
-<!-- ── Featured Apps Section (clickable cards) ──────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+<!-- ── Featured Apps Section ──────────────────────────────────────── -->
+<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 reveal">
         <div>
-            <h2 class="text-3xl font-bold">{{ site_settings.featured_projects_title }}</h2>
+            <span class="section-tag">
+                <i class="fa-solid fa-mobile-screen"></i>
+                Portfolio
+            </span>
+            <h2 class="text-3xl md:text-4xl font-bold">{{ site_settings.featured_projects_title }}</h2>
             <p class="text-slate-400 mt-2">{{ site_settings.featured_projects_subtitle }}</p>
         </div>
         <a href="{% url 'projects' %}"
-            class="text-primary hover:text-white transition font-medium inline-flex items-center gap-1">View All <span
-                class="text-lg leading-none">&rarr;</span></a>
+            class="inline-flex items-center gap-1.5 text-primary hover:text-white transition font-medium group">
+            View All
+            <span class="transition-transform group-hover:translate-x-1">&rarr;</span>
+        </a>
     </div>
     <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
         {% for project in portfolio.featured_projects|slice:":6" %}
@@ -223,10 +266,16 @@
 </section>
 {% endif %}
 
-<!-- ── Latest Blog Posts Section (clickable cards, standardized padding) ── -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32 bg-white/[0.02] my-10"
+<!-- ── Latest Blog Posts Section ──────────────────────────────────── -->
+<section class="max-w-7xl mx-auto px-6 py-16 md:py-24 bg-white/[0.02] my-10"
     style="border-radius:var(--radius-section-bg)">
-    <h2 class="text-3xl font-bold mb-12 text-center">{{ site_settings.latest_blog_title }}</h2>
+    <div class="text-center mb-12 reveal">
+        <span class="section-tag">
+            <i class="fa-solid fa-pen-nib"></i>
+            Blog
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">{{ site_settings.latest_blog_title }}</h2>
+    </div>
     <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
         {% for post in latest_posts %}
         <a href="{% url 'blog_detail' post.slug %}"
@@ -264,11 +313,17 @@
 </section>
 
 <!-- ── Skills Section (Globe Orbit Animation) ────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-20 md:py-32">
-    <h2 class="text-3xl font-bold mb-4 text-center">
-        <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
-    </h2>
-    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto">
+<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+    <div class="text-center mb-4 reveal">
+        <span class="section-tag">
+            <i class="fa-solid fa-code"></i>
+            Tech Stack
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">
+            <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
+        </h2>
+    </div>
+    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto reveal">
         Technologies and tools I use to bring ideas to life.
     </p>
 

@@ -34,37 +34,47 @@
 {% endblock %}
 
 {% block content %}
-<article class="max-w-4xl mx-auto px-6 py-20">
-    <div class="mb-12">
+<article class="max-w-3xl mx-auto px-6 py-16 md:py-24">
+    <div class="mb-10 reveal">
         <a href="{% url 'blog_list' %}" class="back-link">&larr; Back to Blog</a>
-        <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
-        <div class="flex items-center space-x-4 text-slate-400">
-            <div class="flex items-center space-x-2">
-                <div class="w-10 h-10 rounded-full glass flex items-center justify-center font-bold text-primary">{{ site_settings.site_author_initials }}</div>
-                <span class="font-medium">By {{ site_settings.site_author }}</span>
+        <!-- Category + Date meta -->
+        <div class="flex items-center gap-3 mb-5">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 border border-primary/20 text-primary">
+                {{ post.category.name }}
+            </span>
+            <span class="text-slate-500 text-sm">{{ post.created_at|date:"F d, Y" }}</span>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">{{ post.title }}</h1>
+        <div class="flex items-center gap-4 p-4 glass rounded-2xl">
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary text-sm border border-primary/20">{{ site_settings.site_author_initials }}</div>
+            <div>
+                <p class="font-semibold text-sm text-slate-200">{{ site_settings.site_author }}</p>
+                <p class="text-xs text-slate-500">{{ post.created_at|date:"F d, Y" }}</p>
             </div>
-            <span>&bull;</span>
-            <span>{{ post.created_at|date:"F d, Y" }}</span>
         </div>
     </div>
 
     {% if post.featured_image %}
-    <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
-        class="w-full h-[400px] object-cover border border-white/10 mb-12" style="border-radius:var(--radius-card)">
+    <div class="overflow-hidden mb-12 reveal" style="border-radius:var(--radius-card)">
+        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
+            class="w-full h-[380px] object-cover border border-white/10">
+    </div>
     {% endif %}
 
     <div class="prose prose-invert prose-lg prose-content rich-content-wrapper">
         {{ post.content_rich|safe }}
     </div>
 
-    <div class="mt-20 pt-10 border-t border-white/10">
-        <h3 class="text-lg font-bold mb-4">Tags</h3>
+    {% if post.tags.all %}
+    <div class="mt-16 pt-8 border-t border-white/10">
+        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Tags</p>
         <div class="flex flex-wrap gap-2">
             {% for tag in post.tags.all %}
-            <span class="px-4 py-2 glass rounded-full text-sm">{{ tag.name }}</span>
+            <span class="px-3 py-1.5 glass rounded-full text-sm text-slate-300 hover:border-primary/30 transition">#{{ tag.name }}</span>
             {% endfor %}
         </div>
     </div>
+    {% endif %}
 
     {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id comments=comments like_count=like_count user_liked=user_liked %}
 

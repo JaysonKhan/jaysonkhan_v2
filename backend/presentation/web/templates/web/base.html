@@ -725,10 +725,209 @@
             word-break: break-word;
         }
     </style>
+
+    <!-- ── UI/UX Pro Enhancements ─────────────────────────────────────── -->
+    <style>
+        /* ── Scroll Progress Bar ──────────────────────────────────── */
+        #scroll-progress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #ec4899, #6366f1);
+            background-size: 200% 100%;
+            animation: progress-shimmer 2.5s linear infinite;
+            z-index: 10000;
+            width: 0%;
+            transition: width 0.08s linear;
+            border-radius: 0 2px 2px 0;
+        }
+        @keyframes progress-shimmer {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* ── Scroll To Top Button ─────────────────────────────────── */
+        #scroll-top-btn {
+            position: fixed;
+            bottom: 2rem; right: 2rem;
+            width: 2.75rem; height: 2.75rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 50%;
+            display: flex;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+            opacity: 0; transform: translateY(16px) scale(0.85);
+            transition: opacity 0.3s ease, transform 0.3s ease,
+                        background 0.2s ease, box-shadow 0.2s ease;
+            z-index: 999;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #a78bfa;
+        }
+        #scroll-top-btn.visible {
+            opacity: 1; transform: translateY(0) scale(1);
+        }
+        #scroll-top-btn:hover {
+            background: rgba(99, 102, 241, 0.28);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35), 0 4px 14px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        /* ── Active Nav Links ─────────────────────────────────────── */
+        .nav-link {
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #ec4899);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.25s ease;
+        }
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            transform: scaleX(1);
+        }
+        .nav-link.active { color: #fff !important; }
+
+        /* ── Mobile Menu Slide Animation ──────────────────────────── */
+        #mobile-menu:not(.hidden) {
+            animation: mobileMenuIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        @keyframes mobileMenuIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Page Entry Fade ──────────────────────────────────────── */
+        @keyframes pageEnter {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        main { animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+        /* ── Scroll Reveal System ─────────────────────────────────── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal.delay-1 { transition-delay: 0.1s; }
+        .reveal.delay-2 { transition-delay: 0.2s; }
+        .reveal.delay-3 { transition-delay: 0.3s; }
+        .reveal.delay-4 { transition-delay: 0.4s; }
+        .reveal.revealed { opacity: 1; transform: translateY(0); }
+
+        /* ── Section Tag / Label ──────────────────────────────────── */
+        .section-tag {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.25rem 0.875rem;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 9999px;
+            font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: #a78bfa; margin-bottom: 0.875rem;
+        }
+
+        /* ── Stats Bar Items ──────────────────────────────────────── */
+        .stat-item { text-align: center; }
+        .stat-number {
+            font-size: 2.25rem; font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1; display: block;
+        }
+        .stat-label {
+            font-size: 0.72rem; font-weight: 500;
+            color: rgba(148, 163, 184, 0.65);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-top: 0.35rem; display: block;
+        }
+
+        /* ── Gradient Divider ─────────────────────────────────────── */
+        .divider-gradient {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.25), rgba(236,72,153,0.25), transparent);
+            margin: 0;
+        }
+
+        /* ── Hero Animated Mesh Background ───────────────────────── */
+        .hero-mesh {
+            position: absolute; inset: 0;
+            overflow: hidden; pointer-events: none; z-index: 0;
+        }
+        .hero-mesh::before {
+            content: '';
+            position: absolute; top: -30%; left: -15%;
+            width: 55%; height: 150%;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 65%);
+            animation: meshFloat 9s ease-in-out infinite alternate;
+        }
+        .hero-mesh::after {
+            content: '';
+            position: absolute; bottom: -25%; right: -10%;
+            width: 50%; height: 130%;
+            background: radial-gradient(ellipse, rgba(236,72,153,0.06) 0%, transparent 65%);
+            animation: meshFloat 11s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes meshFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(4%, 3%) scale(1.06); }
+        }
+
+        /* ── Card Glow on Hover ───────────────────────────────────── */
+        .glass {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass:hover {
+            border-color: rgba(99, 102, 241, 0.18);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(99,102,241,0.06);
+        }
+
+        /* ── CTA Button Glow ──────────────────────────────────────── */
+        .btn-primary-glow {
+            position: relative; overflow: hidden;
+            transition: box-shadow 0.3s ease, background 0.2s ease;
+        }
+        .btn-primary-glow:hover {
+            box-shadow: 0 0 24px rgba(99,102,241,0.45), 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        /* ── Footer Top Gradient ──────────────────────────────────── */
+        .footer-enhanced {
+            background: linear-gradient(180deg, rgba(99,102,241,0.03) 0%, rgba(15,23,42,0) 40%),
+                        rgba(255,255,255,0.03);
+        }
+
+        /* ── Navbar Logo Pulse ────────────────────────────────────── */
+        .logo-pulse::before {
+            content: '';
+            position: absolute;
+            inset: -4px; border-radius: 50%;
+            background: rgba(99,102,241,0.15);
+            animation: logoPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0; }
+            50%       { transform: scale(1.15); opacity: 1; }
+        }
+    </style>
+
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="min-h-screen">
+
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress"></div>
 
     <!-- Navigation — iOS-style backdrop blur -->
     <nav class="nav-blur py-4 px-6" id="main-nav">
@@ -736,81 +935,77 @@
             <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">
                 {{ site_settings.display_logo_text }}
             </a>
-            <div class="hidden md:flex space-x-8">
-                <a href="{% url 'home' %}" class="hover:text-primary transition">Home</a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="{% url 'home' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
                 {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="hover:text-primary transition">Apps</a>
+                <a href="{% url 'projects' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Apps</a>
                 {% endif %}
-                <a href="{% url 'blog_list' %}" class="hover:text-primary transition">Blog</a>
-                <a href="{% url 'contact' %}" class="hover:text-primary transition">Contact</a>
+                <a href="{% url 'blog_list' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}active{% endif %}">Blog</a>
+                <a href="{% url 'contact' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none p-1" aria-label="Menu">
+                <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <a href="{{ site_settings.nav_cta_url }}"
-                class="hidden md:inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                class="hidden md:inline-block btn-primary-glow bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden px-6 py-4 space-y-4 border-t border-white/10 mt-4">
-            <a href="{% url 'home' %}" class="block hover:text-primary transition">Home</a>
+        <div id="mobile-menu" class="hidden md:hidden px-6 space-y-4 border-t border-white/10 mt-4 pt-4 pb-4">
+            <a href="{% url 'home' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'home' %}text-white font-semibold{% endif %}">Home</a>
             {% if site_settings.apps_section_visible %}
-            <a href="{% url 'projects' %}" class="block hover:text-primary transition">Apps</a>
+            <a href="{% url 'projects' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}text-white font-semibold{% endif %}">Apps</a>
             {% endif %}
-            <a href="{% url 'blog_list' %}" class="block hover:text-primary transition">Blog</a>
-            <a href="{% url 'contact' %}" class="block hover:text-primary transition">Contact</a>
+            <a href="{% url 'blog_list' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}text-white font-semibold{% endif %}">Blog</a>
+            <a href="{% url 'contact' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'contact' %}text-white font-semibold{% endif %}">Contact</a>
             <a href="{{ site_settings.nav_cta_url }}"
-                class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium mt-2">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
     </nav>
 
-    <!-- Navbar scroll behavior -->
+    <!-- Navbar mobile toggle -->
     <script>
         (() => {
-            const nav = document.getElementById('main-nav');
             const btn = document.getElementById('mobile-menu-btn');
             const menu = document.getElementById('mobile-menu');
-            let ticking = false;
-
-            window.addEventListener('scroll', () => {
-                if (!ticking) {
-                    window.requestAnimationFrame(() => {
-                        nav.classList.toggle('scrolled', window.scrollY > 20);
-                        ticking = false;
-                    });
-                    ticking = true;
-                }
-            });
-
-            btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+            if (btn && menu) {
+                btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+            }
         })();
     </script>
 
     <main>{% block content %}{% endblock %}</main>
 
+    <!-- Scroll To Top Button -->
+    <button id="scroll-top-btn" aria-label="Scroll to top" title="Back to top">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+        </svg>
+    </button>
+
     <!-- Footer -->
-    <footer class="glass mt-10 py-12 border-t border-white/10">
-        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-center md:text-left">
+    <div class="divider-gradient"></div>
+    <footer class="footer-enhanced mt-0 py-14 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-10 text-center md:text-left">
             <div>
-                <h3 class="text-xl font-bold text-gradient mb-4">{{ site_settings.display_logo_text }}</h3>
-                <p class="text-slate-400">{{ site_settings.footer_display_description }}</p>
+                <h3 class="text-xl font-bold text-gradient mb-3">{{ site_settings.display_logo_text }}</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">{{ site_settings.footer_display_description }}</p>
             </div>
             <div class="flex flex-col space-y-2">
-                <h4 class="font-bold mb-2">Links</h4>
-                <a href="{% url 'home' %}" class="text-slate-400 hover:text-primary transition">Home</a>
+                <h4 class="font-bold mb-3 text-sm uppercase tracking-widest text-slate-300">Navigation</h4>
+                <a href="{% url 'home' %}" class="text-slate-400 hover:text-primary transition text-sm">Home</a>
                 {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition">Apps</a>
+                <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition text-sm">Apps</a>
                 {% endif %}
-                <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition">Blog</a>
-                <a href="{% url 'contact' %}" class="text-slate-400 hover:text-primary transition">Contact</a>
+                <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition text-sm">Blog</a>
+                <a href="{% url 'contact' %}" class="text-slate-400 hover:text-primary transition text-sm">Contact</a>
             </div>
             <div>
-                <h4 class="font-bold mb-2">Connect</h4>
+                <h4 class="font-bold mb-3 text-sm uppercase tracking-widest text-slate-300">Connect</h4>
                 <p class="text-slate-400">
                     <a href="mailto:{{ site_settings.footer_display_email }}" class="hover:text-primary transition">
                         {{ site_settings.footer_display_email }}
@@ -860,12 +1055,97 @@
                 </div>
             </div>
         </div>
-        <div class="text-center mt-8 text-slate-500 text-sm">
+        <div class="divider-gradient mt-10 mb-6"></div>
+        <div class="text-center text-slate-500 text-xs">
             {{ site_settings.footer_text }}
         </div>
     </footer>
 
     {% block extra_js %}{% endblock %}
+
+    <!-- ── Global UI/UX Enhancement Scripts ──────────────────────────── -->
+    <script>
+    (() => {
+        // ── Scroll Progress Bar ──────────────────────────────
+        const progressBar = document.getElementById('scroll-progress');
+        if (progressBar) {
+            window.addEventListener('scroll', () => {
+                const docH = document.documentElement.scrollHeight - window.innerHeight;
+                progressBar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+            }, { passive: true });
+        }
+
+        // ── Scroll To Top ────────────────────────────────────
+        const scrollTopBtn = document.getElementById('scroll-top-btn');
+        if (scrollTopBtn) {
+            window.addEventListener('scroll', () => {
+                scrollTopBtn.classList.toggle('visible', window.scrollY > 450);
+            }, { passive: true });
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // ── Scroll Reveal ────────────────────────────────────
+        const revealObs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    revealObs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+        // ── Count-Up Animation ───────────────────────────────
+        const countObs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                const target = parseInt(el.dataset.count, 10);
+                const suffix = el.dataset.suffix || '';
+                if (isNaN(target)) return;
+                let start = 0;
+                const duration = 1600;
+                const step = target / (duration / 16);
+                const timer = setInterval(() => {
+                    start += step;
+                    if (start >= target) {
+                        el.textContent = target + suffix;
+                        clearInterval(timer);
+                    } else {
+                        el.textContent = Math.floor(start) + suffix;
+                    }
+                }, 16);
+                countObs.unobserve(el);
+            });
+        }, { threshold: 0.6 });
+        document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
+
+        // ── Mobile Menu Hamburger ↔ X Animation ─────────────
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = document.getElementById('menu-icon');
+        if (menuBtn && mobileMenu && menuIcon) {
+            menuBtn.addEventListener('click', () => {
+                const isOpen = !mobileMenu.classList.contains('hidden');
+                if (isOpen) {
+                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+                } else {
+                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+                }
+            });
+        }
+
+        // ── Navbar scroll class (override existing inline script) ──
+        const nav = document.getElementById('main-nav');
+        if (nav) {
+            window.addEventListener('scroll', () => {
+                nav.classList.toggle('scrolled', window.scrollY > 20);
+            }, { passive: true });
+        }
+    })();
+    </script>
 </body>
 
 </html>

@@ -9,37 +9,55 @@
 {% block content %}
 <section class="max-w-7xl mx-auto px-6"
     style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="text-center mb-16">
-        <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.blog_page_title }}</h1>
+
+    <!-- Page Header -->
+    <div class="text-center mb-16 reveal">
+        <span class="section-tag">
+            <i class="fa-solid fa-pen-nib"></i>
+            Writing
+        </span>
+        <h1 class="text-4xl md:text-6xl font-bold mt-2 mb-4">{{ site_settings.blog_page_title }}</h1>
         <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.blog_page_subtitle }}</p>
     </div>
 
     <div id="items-grid" class="grid md:grid-cols-2 lg:grid-cols-3" style="gap:var(--space-section-gap)"
         data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
         {% for post in posts %}
-        <article class="flex flex-col">
-            <a href="{% url 'blog_detail' post.slug %}" class="block mb-6 overflow-hidden border border-white/5"
-                style="border-radius:var(--radius-card)">
+        <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 reveal"
+            style="border-radius:var(--radius-card)">
+            <a href="{% url 'blog_detail' post.slug %}" class="block overflow-hidden relative">
                 {% if post.featured_image %}
                 <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
-                    class="w-full h-56 object-cover hover:scale-105 transition duration-500">
+                    class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">
                 {% else %}
-                <div class="w-full h-56 bg-white/5 flex items-center justify-center text-slate-600">No Image</div>
+                <div class="w-full h-52 bg-white/5 flex items-center justify-center text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
                 {% endif %}
+                <!-- Category badge overlay -->
+                <div class="absolute top-3 left-3">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-dark/70 backdrop-blur-sm border border-white/10 text-primary">
+                        {{ post.category.name }}
+                    </span>
+                </div>
             </a>
-            <div class="flex items-center space-x-2 text-primary font-medium text-sm mb-3">
-                <span>{{ post.category.name }}</span>
-                <span class="text-slate-600">&bull;</span>
-                <span class="text-slate-400">{{ post.created_at|date:"M d, Y" }}</span>
+            <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
+                <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span>{{ post.created_at|date:"M d, Y" }}</span>
+                </div>
+                <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition line-clamp-2 leading-snug">
+                    <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
+                </h2>
+                <p class="text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed">{{ post.excerpt }}</p>
+                <a href="{% url 'blog_detail' post.slug %}"
+                    class="mt-auto inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-white transition group/link">
+                    Read Article
+                    <span class="transition-transform group-hover/link:translate-x-1">&rarr;</span>
+                </a>
             </div>
-            <h2 class="text-2xl font-bold mb-4 hover:text-primary transition">
-                <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
-            </h2>
-            <p class="text-slate-400 mb-6 line-clamp-3">{{ post.excerpt }}</p>
-            <a href="{% url 'blog_detail' post.slug %}"
-                class="mt-auto font-bold border-b-2 border-primary/20 hover:border-primary transition inline-block">
-                Read Article &rarr;
-            </a>
         </article>
         {% empty %}
         <p class="col-span-full text-center text-slate-500 py-20">We haven't published any articles yet.</p>
@@ -64,27 +82,30 @@
             sentinelId: 'scroll-sentinel',
             spinnerId: 'scroll-spinner',
             renderItem: (post) => `
-            <article class="flex flex-col">
-                <a href="/blog/${post.slug}/"
-                   class="block mb-6 overflow-hidden border border-white/5" style="border-radius:var(--radius-card)">
+            <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300"
+                style="border-radius:var(--radius-card)">
+                <a href="/blog/${post.slug}/" class="block overflow-hidden relative">
                     ${post.image_url
-                    ? `<img src="${post.image_url}" alt="${post.title}" class="w-full h-56 object-cover hover:scale-105 transition duration-500">`
-                    : `<div class="w-full h-56 bg-white/5 flex items-center justify-center text-slate-600">No Image</div>`
-                }
+                    ? `<img src="${post.image_url}" alt="${post.title}" class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">`
+                    : `<div class="w-full h-52 bg-white/5 flex items-center justify-center text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg></div>`
+                    }
+                    <div class="absolute top-3 left-3">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/10 text-primary" style="background:rgba(15,23,42,0.7)">${post.category_name}</span>
+                    </div>
                 </a>
-                <div class="flex items-center space-x-2 text-primary font-medium text-sm mb-3">
-                    <span>${post.category_name}</span>
-                    <span class="text-slate-600">•</span>
-                    <span class="text-slate-400">${post.created_at}</span>
+                <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
+                    <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>${post.created_at}</span>
+                    </div>
+                    <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition line-clamp-2 leading-snug">
+                        <a href="/blog/${post.slug}/">${post.title}</a>
+                    </h2>
+                    <p class="text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed">${post.excerpt}</p>
+                    <a href="/blog/${post.slug}/" class="mt-auto inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-white transition">
+                        Read Article <span>&rarr;</span>
+                    </a>
                 </div>
-                <h2 class="text-2xl font-bold mb-4 hover:text-primary transition">
-                    <a href="/blog/${post.slug}/">${post.title}</a>
-                </h2>
-                <p class="text-slate-400 mb-6 line-clamp-3">${post.excerpt}</p>
-                <a href="/blog/${post.slug}/"
-                   class="mt-auto font-bold border-b-2 border-primary/20 hover:border-primary transition inline-block">
-                    Read Article →
-                </a>
             </article>
         `,
         });
