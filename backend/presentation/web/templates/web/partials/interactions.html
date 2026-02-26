@@ -73,18 +73,17 @@
     .message-content-wrapper {
         display: flex;
         flex-direction: column;
-        width: fit-content;
         max-width: min(72%, 480px);
     }
     .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; }
-    .message--other .message-content-wrapper { align-items: flex-start; margin-right: auto; }
+    .message--other .message-content-wrapper { align-items: flex-start; }
     .message-content-wrapper.has-image-wrapper { max-width: min(82%, 420px); }
 
     /* ── Bubble Base ── */
     .tg-bubble {
-        display: inline-block;
-        width: auto;
-        max-width: 100%;
+        display: block;
+        width: fit-content;
+        max-width: min(68%, 460px);
         min-width: 0;
         padding: 8px 12px 18px;
         position: relative;
@@ -100,8 +99,8 @@
     /* Compact: qisqa xabar — timestamp inline, minimal joy */
     .tg-bubble.is-compact { padding: 6px 10px 6px; }
 
-    /* Rasmli bubble: kenglik rasmga qarab, min-width yo'q */
-    .tg-bubble.has-image  { padding: 6px 6px 18px; display: block; width: fit-content; }
+    /* Rasmli bubble: kenglik rasmga qarab */
+    .tg-bubble.has-image  { padding: 6px 6px 18px; max-width: min(78%, 420px); }
 
     /* ── Incoming Bubble ── */
     .message--other .tg-bubble {
@@ -214,8 +213,17 @@
         box-shadow: 0 0 8px rgba(99,102,241,0.25);
     }
     .tg-reaction-btn .count { opacity: 0.85; }
-    .tg-reaction-trigger { opacity: 0; transition: opacity 0.2s ease; }
-    .comment-wrapper:hover .tg-reaction-trigger { opacity: 1; }
+    .tg-reaction-trigger {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        position: absolute;
+        pointer-events: none;
+    }
+    .comment-wrapper:hover .tg-reaction-trigger {
+        opacity: 1;
+        position: static;
+        pointer-events: auto;
+    }
 
     /* ── Emoji Menu ── */
     .tg-emoji-menu {
