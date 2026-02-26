@@ -369,8 +369,15 @@ action_deploy_full() {
   [[ "${yn,,}" == "y" ]] || { info "Cancelled."; pause; return; }
 
   cd_project
+  local current_branch
+  current_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown')"
   info "1) Git pull"
-  git pull
+  info "Current branch: ${current_branch}"
+  if [[ "$current_branch" != "main" ]]; then
+    warn "Deploying non-main branch (${current_branch}). Make sure this is intentional."
+  fi
+  git fetch --all --prune
+  git pull --ff-only
   ok "Git updated."
 
   info "2) Python deps (requirements.txt)"

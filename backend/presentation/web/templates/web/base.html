@@ -983,7 +983,7 @@
                 <a href="{% url 'blog_list' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}active{% endif %}">Blog</a>
                 <a href="{% url 'contact' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;" aria-label="Menu">
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
                 <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -1008,17 +1008,6 @@
             </a>
         </div>
     </nav>
-
-    <!-- Navbar mobile toggle -->
-    <script>
-        (() => {
-            const btn = document.getElementById('mobile-menu-btn');
-            const menu = document.getElementById('mobile-menu');
-            if (btn && menu) {
-                btn.addEventListener('click', () => menu.classList.toggle('hidden'));
-            }
-        })();
-    </script>
 
     <main class="flex-1">{% block content %}{% endblock %}</main>
 
@@ -1279,19 +1268,27 @@
         }, { threshold: 0.6 });
         document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
 
-        // ── Mobile Menu Hamburger ↔ X Animation ─────────────
+        // ── Mobile Menu Toggle + Hamburger/X Icon ───────────
         const menuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const menuIcon = document.getElementById('menu-icon');
         if (menuBtn && mobileMenu && menuIcon) {
             menuBtn.addEventListener('click', () => {
-                const isOpen = !mobileMenu.classList.contains('hidden');
-                if (isOpen) {
-                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
-                } else {
-                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
-                }
+                const willOpen = mobileMenu.classList.contains('hidden');
+                mobileMenu.classList.toggle('hidden');
+                menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                menuIcon.innerHTML = willOpen
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
             });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    mobileMenu.classList.add('hidden');
+                    menuBtn.setAttribute('aria-expanded', 'false');
+                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+                }
+            }, { passive: true });
         }
 
         // ── Navbar scroll class (override existing inline script) ──
