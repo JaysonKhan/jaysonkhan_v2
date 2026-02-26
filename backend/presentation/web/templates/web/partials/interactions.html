@@ -73,15 +73,17 @@
     .message-content-wrapper {
         display: flex;
         flex-direction: column;
+        width: fit-content;
         max-width: min(72%, 480px);
     }
-    .message--own .message-content-wrapper  { align-items: flex-end; }
-    .message--other .message-content-wrapper { align-items: flex-start; }
+    .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; }
+    .message--other .message-content-wrapper { align-items: flex-start; margin-right: auto; }
+    .message-content-wrapper.has-image-wrapper { max-width: min(82%, 420px); }
 
     /* ── Bubble Base ── */
     .tg-bubble {
-        display: block;
-        width: fit-content;
+        display: inline-block;
+        width: auto;
         max-width: 100%;
         min-width: 0;
         padding: 8px 12px 18px;
@@ -91,9 +93,15 @@
         line-height: 1.45;
         isolation: isolate;
         transition: box-shadow 0.2s ease;
+        align-self: flex-start;
     }
+    .message--own .tg-bubble { align-self: flex-end; }
+
+    /* Compact: qisqa xabar — timestamp inline, minimal joy */
     .tg-bubble.is-compact { padding: 6px 10px 6px; }
-    .tg-bubble.has-image  { max-width: min(82%, 420px); padding: 6px 6px 18px; }
+
+    /* Rasmli bubble: kenglik rasmga qarab, min-width yo'q */
+    .tg-bubble.has-image  { padding: 6px 6px 18px; display: block; width: fit-content; }
 
     /* ── Incoming Bubble ── */
     .message--other .tg-bubble {
@@ -355,8 +363,9 @@
         .interactions-panel { padding-left:10px !important; padding-right:10px !important; }
         #tg-chat-container  { gap: 3px; }
         .message-row        { gap: 6px; }
-        .message-content-wrapper { max-width: 84%; }
-        .tg-bubble          { max-width: 82vw; padding: 6px 10px 16px; }
+        .message-content-wrapper { max-width: 84%; width: fit-content; }
+        .message-content-wrapper.has-image-wrapper { max-width: 78vw; }
+        .tg-bubble          { max-width: 80vw; padding: 6px 10px 16px; }
         .tg-bubble.is-compact { padding: 5px 9px 5px; }
         .message-avatar     { width:28px; height:28px; }
         .tg-meta-inline     { right:6px; font-size:0.59rem; }
@@ -682,7 +691,7 @@
         const commentSnippetSafe = commentText.slice(0, 50).replace(/'/g, "\\'");
 
         const content = `
-            <div class="message-content-wrapper min-w-0 ${comment.is_own ? 'ml-auto' : 'mr-auto'}">
+            <div class="message-content-wrapper min-w-0 ${comment.image_url ? 'has-image-wrapper' : ''}">
                 <div class="tg-bubble ${comment.image_url ? 'has-image' : ''} ${isCompactBubble ? 'is-compact' : ''}">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
