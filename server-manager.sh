@@ -370,7 +370,7 @@ action_deploy_full() {
 
   cd_project
   info "1) Git pull"
-  git pull origin main
+  git pull
   ok "Git updated."
 
   info "2) Python deps (requirements.txt)"
