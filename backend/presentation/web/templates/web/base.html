@@ -343,30 +343,45 @@
         /* ── Design Tokens ──────────────────────────────────────────── */
         :root {
             /* Spacing */
-            --space-card-padding: 1.5rem;
-            /* 24px – card body  */
-            --space-section-gap: 2rem;
-            /* 32px – grid gap   */
-            --space-section-py: 5rem;
-            /* 80px – section y  */
-            --space-page-heading-mb: 3rem;
-            /* 48px – page title → content */
+            --space-card-padding: 1.75rem;
+            /* 28px – card body  */
+            --space-section-gap: 2.5rem;
+            /* 40px – grid gap   */
+            --space-section-py: 6rem;
+            /* 96px – section y  */
+            --space-page-heading-mb: 3.5rem;
+            /* 56px – page title → content */
 
             /* Border radius */
-            --radius-card: 1.5rem;
-            /* 24px – cards      */
+            --radius-card: 1.25rem;
+            /* 20px – cards      */
             --radius-badge: 0.5rem;
             /* 8px  – tech tags  */
             --radius-input: 0.75rem;
             /* 12px – inputs     */
             --radius-button: 9999px;
             /* pill buttons      */
-            --radius-section-bg: 2rem;
-            /* 32px – section bg */
+            --radius-section-bg: 1.5rem;
+            /* 24px – section bg */
 
             /* Card image heights */
             --img-card-h: 12rem;
             /* 192px – card thumbs */
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --space-card-padding: 1.25rem;
+                /* 20px */
+                --space-section-gap: 1.5rem;
+                /* 24px */
+                --space-section-py: 3.5rem;
+                /* 56px */
+                --space-page-heading-mb: 2rem;
+                /* 32px */
+                --img-card-h: 11rem;
+                /* 176px */
+            }
         }
 
         /* ── Reusable component classes ─────────────────────────────── */
@@ -795,6 +810,11 @@
             transform: scaleX(1);
         }
         .nav-link.active { color: #fff !important; }
+        .nav-link:focus-visible {
+            outline: 2px solid rgba(129, 140, 248, 0.85);
+            outline-offset: 4px;
+            border-radius: 0.5rem;
+        }
 
         /* ── Mobile Menu Slide Animation ──────────────────────────── */
         #mobile-menu:not(.hidden) {
@@ -846,8 +866,8 @@
             background-clip: text; line-height: 1; display: block;
         }
         .stat-label {
-            font-size: 0.72rem; font-weight: 500;
-            color: rgba(148, 163, 184, 0.65);
+            font-size: 0.8125rem; font-weight: 600;
+            color: rgba(148, 163, 184, 0.92);
             text-transform: uppercase; letter-spacing: 0.08em;
             margin-top: 0.35rem; display: block;
         }
@@ -900,6 +920,16 @@
         .btn-primary-glow:hover {
             box-shadow: 0 0 24px rgba(99,102,241,0.45), 0 4px 16px rgba(0,0,0,0.3);
         }
+        .btn-primary-glow:focus-visible,
+        .filter-chip:focus-visible,
+        .store-btn:focus-visible,
+        .send-btn:focus-visible,
+        .input-field:focus-visible,
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid rgba(129, 140, 248, 0.9);
+            outline-offset: 2px;
+        }
 
         /* ── Footer Top Gradient ──────────────────────────────────── */
         .footer-enhanced {
@@ -919,12 +949,22 @@
             0%, 100% { transform: scale(0.9); opacity: 0; }
             50%       { transform: scale(1.15); opacity: 1; }
         }
+
+        @media (max-width: 768px) {
+            .section-tag {
+                letter-spacing: 0.08em;
+            }
+            #scroll-top-btn {
+                bottom: 1.25rem;
+                right: 1.25rem;
+            }
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="min-h-screen">
+<body class="min-h-screen flex flex-col">
 
     <!-- Scroll Progress Bar -->
     <div id="scroll-progress"></div>
@@ -943,25 +983,27 @@
                 <a href="{% url 'blog_list' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}active{% endif %}">Blog</a>
                 <a href="{% url 'contact' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none p-1" aria-label="Menu">
+            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;" aria-label="Menu">
                 <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <a href="{{ site_settings.nav_cta_url }}"
-                class="hidden md:inline-block btn-primary-glow bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium">
+                class="hidden md:inline-block btn-primary-glow bg-primary hover:bg-secondary px-7 py-2.5 rounded-full transition font-semibold text-sm"
+                style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(99,102,241,0.35);">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
         <div id="mobile-menu" class="hidden md:hidden px-6 space-y-4 border-t border-white/10 mt-4 pt-4 pb-4">
-            <a href="{% url 'home' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'home' %}text-white font-semibold{% endif %}">Home</a>
+            <a href="{% url 'home' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'home' %}text-white font-semibold{% endif %}">Home</a>
             {% if site_settings.apps_section_visible %}
-            <a href="{% url 'projects' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}text-white font-semibold{% endif %}">Apps</a>
+            <a href="{% url 'projects' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}text-white font-semibold{% endif %}">Apps</a>
             {% endif %}
-            <a href="{% url 'blog_list' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}text-white font-semibold{% endif %}">Blog</a>
-            <a href="{% url 'contact' %}" class="block hover:text-primary transition py-1 {% if request.resolver_match.url_name == 'contact' %}text-white font-semibold{% endif %}">Contact</a>
+            <a href="{% url 'blog_list' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}text-white font-semibold{% endif %}">Blog</a>
+            <a href="{% url 'contact' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'contact' %}text-white font-semibold{% endif %}">Contact</a>
             <a href="{{ site_settings.nav_cta_url }}"
-                class="inline-block bg-primary hover:bg-secondary px-6 py-2 rounded-full transition font-medium mt-2">
+                class="inline-block bg-primary hover:bg-secondary px-6 py-2.5 rounded-full transition font-semibold mt-2"
+                style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;">
                 {{ site_settings.nav_cta_text }}
             </a>
         </div>
@@ -978,7 +1020,7 @@
         })();
     </script>
 
-    <main>{% block content %}{% endblock %}</main>
+    <main class="flex-1">{% block content %}{% endblock %}</main>
 
     <!-- Scroll To Top Button -->
     <button id="scroll-top-btn" aria-label="Scroll to top" title="Back to top">
@@ -989,8 +1031,8 @@
 
     <!-- Footer -->
     <div class="divider-gradient"></div>
-    <footer class="footer-enhanced mt-0 py-14 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-10 text-center md:text-left">
+    <footer class="footer-enhanced mt-0 py-16 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12 text-center md:text-left">
             <div>
                 <h3 class="text-xl font-bold text-gradient mb-3">{{ site_settings.display_logo_text }}</h3>
                 <p class="text-slate-400 text-sm leading-relaxed">{{ site_settings.footer_display_description }}</p>
@@ -1056,10 +1098,125 @@
             </div>
         </div>
         <div class="divider-gradient mt-10 mb-6"></div>
-        <div class="text-center text-slate-500 text-xs">
+        <div class="text-center text-slate-400 text-sm">
             {{ site_settings.footer_text }}
         </div>
     </footer>
+
+    <script>
+    window.InfiniteScroll = window.InfiniteScroll || (() => {
+        let page = 1;
+        let loading = false;
+        let hasNext = true;
+        let config = {};
+
+        function showSpinner() {
+            const el = document.getElementById(config.spinnerId);
+            if (el) el.style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            const el = document.getElementById(config.spinnerId);
+            if (el) el.style.display = 'none';
+        }
+
+        function hideSentinel() {
+            const el = document.getElementById(config.sentinelId);
+            if (el) el.style.display = 'none';
+        }
+
+        async function fetchNextPage() {
+            if (loading || !hasNext) return;
+            loading = true;
+            showSpinner();
+
+            try {
+                const params = new URLSearchParams({ page: page + 1 });
+                if (config.extraParams) {
+                    Object.entries(config.extraParams).forEach(([k, v]) => {
+                        if (v) params.set(k, v);
+                    });
+                }
+
+                const resp = await fetch(`${config.apiUrl}?${params.toString()}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                const data = await resp.json();
+                const items = data.results || data.items || [];
+                hasNext = !!data.next;
+                page += 1;
+
+                const grid = document.getElementById(config.gridId);
+                if (grid && items.length > 0) {
+                    const fragment = document.createDocumentFragment();
+                    items.forEach(item => {
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = config.renderItem(item).trim();
+                        const el = wrapper.firstElementChild;
+                        if (el) {
+                            el.style.opacity = '0';
+                            el.style.transform = 'translateY(20px)';
+                            fragment.appendChild(el);
+                        }
+                    });
+                    grid.appendChild(fragment);
+
+                    requestAnimationFrame(() => {
+                        grid.querySelectorAll('[style*="opacity: 0"]').forEach((el, i) => {
+                            setTimeout(() => {
+                                el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                                el.style.opacity = '1';
+                                el.style.transform = 'translateY(0)';
+                            }, i * 60);
+                        });
+                    });
+                }
+
+                if (!hasNext) {
+                    hideSentinel();
+                    hideSpinner();
+                }
+            } catch (err) {
+                console.error('InfiniteScroll fetch error:', err);
+            } finally {
+                loading = false;
+                hideSpinner();
+            }
+        }
+
+        function init(opts) {
+            config = opts;
+            page = 1;
+            loading = false;
+            hasNext = true;
+
+            const grid = document.getElementById(config.gridId);
+            if (grid && grid.dataset.hasNext === 'false') {
+                hasNext = false;
+                hideSentinel();
+                hideSpinner();
+                return;
+            }
+
+            const sentinel = document.getElementById(config.sentinelId);
+            if (!sentinel) return;
+
+            hideSpinner();
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0].isIntersecting && hasNext && !loading) {
+                        fetchNextPage();
+                    }
+                },
+                { rootMargin: '200px' }
+            );
+            observer.observe(sentinel);
+        }
+
+        return { init };
+    })();
+    </script>
 
     {% block extra_js %}{% endblock %}
 

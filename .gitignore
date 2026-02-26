@@ -52,3 +52,9 @@ Thumbs.db
 /media/
 backend/static/
 backend/media/
+
+# AI agent tools
+/output/
+/docs/
+/.playwright-cli/
+/.agent/

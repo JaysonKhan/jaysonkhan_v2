@@ -8,10 +8,10 @@
 
 {% block content %}
 <section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
+    style="max-width:72rem;padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
 
     <!-- Page Header -->
-    <div class="text-center mb-16 reveal">
+    <div class="text-center reveal" style="margin-bottom:var(--space-page-heading-mb)">
         <span class="section-tag">
             <i class="fa-solid fa-pen-nib"></i>
             Writing
@@ -20,11 +20,12 @@
         <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.blog_page_subtitle }}</p>
     </div>
 
-    <div id="items-grid" class="grid md:grid-cols-2 lg:grid-cols-3" style="gap:var(--space-section-gap)"
+    <div id="items-grid" class="grid"
+        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;"
         data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
         {% for post in posts %}
-        <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 reveal"
-            style="border-radius:var(--radius-card)">
+        <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 reveal w-full"
+            style="border-radius:var(--radius-card); max-width:420px; justify-self:center;">
             <a href="{% url 'blog_detail' post.slug %}" class="block overflow-hidden relative">
                 {% if post.featured_image %}
                 <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
@@ -73,17 +74,22 @@
     </div>
 </section>
 
-<script src="{% static 'js/infinite-scroll.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        if (!window.InfiniteScroll) {
+            document.getElementById('scroll-sentinel')?.remove();
+            document.getElementById('scroll-spinner')?.remove();
+            return;
+        }
+
         InfiniteScroll.init({
             apiUrl: '/api/posts/',
             gridId: 'items-grid',
             sentinelId: 'scroll-sentinel',
             spinnerId: 'scroll-spinner',
             renderItem: (post) => `
-            <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300"
-                style="border-radius:var(--radius-card)">
+            <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 w-full"
+                style="border-radius:var(--radius-card); max-width:420px; justify-self:center;">
                 <a href="/blog/${post.slug}/" class="block overflow-hidden relative">
                     ${post.image_url
                     ? `<img src="${post.image_url}" alt="${post.title}" class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">`

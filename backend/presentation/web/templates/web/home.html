@@ -6,7 +6,8 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="relative max-w-7xl mx-auto px-6 py-20 md:py-32 flex flex-col md:flex-row items-center justify-between overflow-visible">
+<section class="relative max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between overflow-visible"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
     <!-- Animated mesh background -->
     <div class="hero-mesh"></div>
 
@@ -15,7 +16,7 @@
             <span class="w-2 h-2 shrink-0 bg-green-400 rounded-full animate-pulse"></span>
             <span class="text-green-400 text-sm font-medium pr-1">{{ site_settings.hero_availability_badge }}</span>
         </div>
-        <h1 class="text-5xl md:text-7xl font-bold leading-tight">
+        <h1 class="text-4xl md:text-7xl font-bold leading-tight">
             {{ site_settings.hero_title }}
         </h1>
         <p class="text-slate-400 text-lg max-w-lg leading-relaxed">{{ site_settings.hero_subtitle }}</p>
@@ -80,7 +81,7 @@
 </section>
 
 <!-- ── Stats Bar ────────────────────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 pb-10 md:pb-16">
+<section class="max-w-7xl mx-auto px-6" style="padding-bottom:calc(var(--space-section-py) - 1.5rem)">
     <div class="divider-gradient mb-10 reveal"></div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 reveal">
         <div class="stat-item glass rounded-2xl py-6 px-4">
@@ -104,7 +105,8 @@
 </section>
 
 <!-- About Section -->
-<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
     <div class="grid md:grid-cols-2 gap-14 items-center">
         <div class="space-y-6 reveal">
             <span class="section-tag">
@@ -135,7 +137,8 @@
 
 <!-- Experience Section -->
 {% if portfolio.experience %}
-<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
     <div class="text-center mb-12 reveal">
         <span class="section-tag">
             <i class="fa-solid fa-briefcase"></i>
@@ -185,8 +188,10 @@
 
 {% if site_settings.apps_section_visible %}
 <!-- ── Featured Apps Section ──────────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 reveal">
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 reveal"
+        style="max-width:1040px;margin:0 auto 3rem;">
         <div>
             <span class="section-tag">
                 <i class="fa-solid fa-mobile-screen"></i>
@@ -201,11 +206,12 @@
             <span class="transition-transform group-hover:translate-x-1">&rarr;</span>
         </a>
     </div>
-    <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
+    <div class="grid"
+        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;">
         {% for project in portfolio.featured_projects|slice:":6" %}
         <a href="{% url 'project_detail' project.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit"
-            style="border-radius:var(--radius-card)">
+            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
+            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
             {% if project.image %}
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
@@ -242,8 +248,8 @@
         <!-- Fallback: show first 3 projects if none marked featured -->
         {% for project in portfolio.projects|slice:":3" %}
         <a href="{% url 'project_detail' project.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit"
-            style="border-radius:var(--radius-card)">
+            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
+            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
             {% if project.image %}
             <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full object-cover"
                 style="height:var(--img-card-h)">
@@ -267,20 +273,21 @@
 {% endif %}
 
 <!-- ── Latest Blog Posts Section ──────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-16 md:py-24 bg-white/[0.02] my-10"
-    style="border-radius:var(--radius-section-bg)">
-    <div class="text-center mb-12 reveal">
+<section class="max-w-7xl mx-auto px-6 bg-white/[0.02]"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);border-radius:var(--radius-section-bg)">
+    <div class="text-center reveal" style="margin-bottom:3rem;">
         <span class="section-tag">
             <i class="fa-solid fa-pen-nib"></i>
             Blog
         </span>
         <h2 class="text-3xl md:text-4xl font-bold">{{ site_settings.latest_blog_title }}</h2>
     </div>
-    <div class="grid md:grid-cols-3" style="gap:var(--space-section-gap)">
+    <div class="grid"
+        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;">
         {% for post in latest_posts %}
         <a href="{% url 'blog_detail' post.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit"
-            style="border-radius:var(--radius-card)">
+            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
+            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
             <div class="overflow-hidden">
                 {% if post.featured_image %}
                 <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
@@ -313,7 +320,8 @@
 </section>
 
 <!-- ── Skills Section (Globe Orbit Animation) ────────────── -->
-<section class="max-w-7xl mx-auto px-6 py-16 md:py-24">
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
     <div class="text-center mb-4 reveal">
         <span class="section-tag">
             <i class="fa-solid fa-code"></i>
