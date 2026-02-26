@@ -111,11 +111,15 @@ class AddCommentView(View):
         parent_id = request.POST.get('parent_id')
         image = request.FILES.get('image')
 
-        # ── 1. Sanitize text (Prevent XSS) ──
+        # ── 1. Sanitize & normalize text ──
         if text:
-            # Strip all HTML tags
             text = bleach.clean(text, tags=[], strip=True)
-            
+            # Har satrda ortiqcha bo'shliqlarni tozala, umumiy trim
+            text = '\n'.join(
+                re.sub(r'[ \t]+', ' ', line).strip()
+                for line in text.splitlines()
+            ).strip()
+
         if not text and not image:
             return JsonResponse({'error': 'Comment must have text or an image'}, status=400)
         
