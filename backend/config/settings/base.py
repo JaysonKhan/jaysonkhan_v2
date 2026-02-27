@@ -55,12 +55,15 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.security_middleware.RequestSanitizationMiddleware',  # Must be first: blocks malicious requests early
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'core.security_middleware.SecurityHeadersMiddleware',  # Additional security headers
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.security_middleware.AdminIPRestrictionMiddleware',  # Admin IP whitelist
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -152,9 +155,28 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ])
+CORS_ALLOW_ALL_ORIGINS = False  # NEVER set to True
+CORS_ALLOW_CREDENTIALS = True
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
+
+# ── Session & Cookie Security ────────────────────────────────────────────────
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# ── Admin IP Restriction (empty list = no restriction in dev) ────────────────
+ADMIN_ALLOWED_IPS = env.list('ADMIN_ALLOWED_IPS', default=[])
+ADMIN_URL_PREFIX = env('ADMIN_URL', default='admin/')
+
+# ── File Upload Security ─────────────────────────────────────────────────────
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 # Telegram Bot Token — used to verify Login Widget signatures
 TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN', default='')

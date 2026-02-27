@@ -1,0 +1,138 @@
+# ==============================================================================
+# Jaysonkhan Security CI/CD Pipeline
+# Runs on every push and PR: SAST, dependency scan, secrets detection
+# ==============================================================================
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ── Secrets Detection ──────────────────────────────────────────────────────
+  secrets-scan:
+    name: 🔐 Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks — Detect hardcoded secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── Python SAST ────────────────────────────────────────────────────────────
+  python-sast:
+    name: 🐍 Python SAST (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Bandit
+        run: pip install bandit[toml]
+
+      - name: Run Bandit (Python security linter)
+        run: |
+          bandit -r backend/ \
+            -ll \
+            -f json \
+            -o bandit-report.json \
+            --exclude "*/tests/*,*/migrations/*,*/venv/*" \
+            || true
+
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  # ── Dependency Vulnerability Scan ──────────────────────────────────────────
+  dependency-scan:
+    name: 📦 Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit Python dependencies
+        run: |
+          pip-audit \
+            -r requirements.txt \
+            --format json \
+            --output pip-audit-report.json \
+            || true
+
+      - name: Upload pip-audit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+
+  # ── Django Security Check ──────────────────────────────────────────────────
+  django-check:
+    name: 🛡️ Django Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Django check --deploy
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.prod
+          DJANGO_SECRET_KEY: test-key-for-ci-only
+        run: |
+          cd backend
+          python manage.py check --deploy --fail-level WARNING 2>&1 || true
+
+  # ── npm Audit (Node dependencies) ──────────────────────────────────────────
+  npm-audit:
+    name: 📋 npm Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and audit
+        run: |
+          npm install
+          npm audit --json > npm-audit-report.json || true
+
+      - name: Upload npm Audit Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json

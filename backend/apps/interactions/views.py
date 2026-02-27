@@ -93,7 +93,7 @@ class TelegramLogoutView(View):
 
 # ── Comment view ───────────────────────────────────────────────────────────────
 
-@method_decorator(csrf_exempt, name='dispatch')
+# CSRF protection is ACTIVE — JavaScript must send the CSRF token with requests
 class AddCommentView(View):
     """
     POST /interactions/comment/<app_label>/<model_name>/<object_id>/
@@ -228,7 +228,6 @@ class AddCommentView(View):
             'message': 'Your comment is pending admin review.' if not is_approved else 'Your comment has been posted successfully.',
         }, status=201)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ToggleCommentReactionView(View):
     """
     POST /interactions/comment/<int:comment_id>/react/
@@ -282,7 +281,6 @@ class ToggleCommentReactionView(View):
 
 # ── Like / Unlike (toggle) ─────────────────────────────────────────────────────
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ToggleLikeView(View):
     """
     POST /interactions/like/<app_label>/<model_name>/<object_id>/
@@ -357,7 +355,10 @@ class ListCommentsView(View):
         model = request.GET.get('model')
         object_id = request.GET.get('object_id')
         sort = request.GET.get('sort', 'top')
-        page = int(request.GET.get('page', 1))
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
 
         try:
             ct = ContentType.objects.get(app_label=app_label, model=model)
@@ -398,7 +399,10 @@ class ListRepliesView(View):
     GET /interactions/comments/<parent_id>/replies/?page=1
     """
     def get(self, request, parent_id):
-        page = int(request.GET.get('page', 1))
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1
         qs = Comment.objects.filter(
             parent_id=parent_id, 
             is_approved=True
