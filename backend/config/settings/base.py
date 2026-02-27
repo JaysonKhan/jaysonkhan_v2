@@ -231,6 +231,10 @@ EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@jaysonkhan.com')
 
 # Django Unfold Admin Theme
+# Admin URL prefix — read from .env so sidebar links always match the real URL.
+_ADMIN_URL = env('ADMIN_URL', default='admin/')
+_A = '/' + _ADMIN_URL  # e.g. '/jk-dinadmin/'
+
 UNFOLD = {
     "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Portfolio Admin"),
     "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Portfolio Admin"),
@@ -268,7 +272,7 @@ UNFOLD = {
                     {
                         "title": "Site Settings",
                         "icon": "settings",
-                        "link": "/admin/core/sitesettings/",
+                        "link": f"{_A}core/sitesettings/",
                     },
                 ],
             },
@@ -279,37 +283,37 @@ UNFOLD = {
                     {
                         "title": "Projects",
                         "icon": "folder_open",
-                        "link": "/admin/portfolio/project/",
+                        "link": f"{_A}portfolio/project/",
                     },
                     {
                         "title": "Skills",
                         "icon": "star",
-                        "link": "/admin/portfolio/skill/",
+                        "link": f"{_A}portfolio/skill/",
                     },
                     {
                         "title": "Experience",
                         "icon": "work",
-                        "link": "/admin/portfolio/experience/",
+                        "link": f"{_A}portfolio/experience/",
                     },
                     {
                         "title": "Blog Posts",
                         "icon": "article",
-                        "link": "/admin/blog/post/",
+                        "link": f"{_A}blog/post/",
                     },
                     {
                         "title": "Categories",
                         "icon": "category",
-                        "link": "/admin/blog/category/",
+                        "link": f"{_A}blog/category/",
                     },
                     {
                         "title": "Tags",
                         "icon": "label",
-                        "link": "/admin/blog/tag/",
+                        "link": f"{_A}blog/tag/",
                     },
                     {
                         "title": "Contact Messages",
                         "icon": "mail",
-                        "link": "/admin/contact/contactmessage/",
+                        "link": f"{_A}contact/contactmessage/",
                     },
                 ],
             },
@@ -320,17 +324,17 @@ UNFOLD = {
                     {
                         "title": "Comments",
                         "icon": "forum",
-                        "link": "/admin/interactions/comment/",
+                        "link": f"{_A}interactions/comment/",
                     },
                     {
                         "title": "Likes",
                         "icon": "favorite",
-                        "link": "/admin/interactions/like/",
+                        "link": f"{_A}interactions/like/",
                     },
                     {
                         "title": "Telegram Profiles",
                         "icon": "group",
-                        "link": "/admin/interactions/telegramprofile/",
+                        "link": f"{_A}interactions/telegramprofile/",
                     },
                 ],
             },
@@ -341,7 +345,7 @@ UNFOLD = {
                     {
                         "title": "Users",
                         "icon": "person",
-                        "link": "/admin/users/user/",
+                        "link": f"{_A}users/user/",
                     },
                 ],
             },
