@@ -258,7 +258,7 @@ UNFOLD = {
         },
     },
     "SIDEBAR": {
-        "show_search": True,
+        "show_search": False,
         "show_all_applications": True,
         "navigation": [
             {
