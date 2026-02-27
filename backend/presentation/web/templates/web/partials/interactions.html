@@ -387,10 +387,10 @@
     }
 </style>
 
-<section class="interactions-panel max-w-4xl mx-auto px-6 mt-16 pt-10 border-t border-white/10" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
+<section class="interactions-panel max-w-4xl mx-auto px-6 mt-8 pt-6 border-t border-white/10" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
 
     {# ── Like Header ─────────────────────────────────────────────────────────── #}
-    <div class="flex items-center gap-4 mb-12">
+    <div class="flex items-center gap-4 mb-4">
         {% if tg_profile %}
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
             data-liked="{{ user_liked|yesno:'true,false' }}"
@@ -707,13 +707,7 @@
                 <div class="tg-bubble ${comment.image_url ? 'has-image' : ''} ${isCompactBubble ? 'is-compact' : ''}">
                     ${!comment.is_own ? `<span class="tg-author-name">${comment.author.display_name}</span>` : ''}
                     ${imgHtml}
-                    <div class="tg-bubble-text text-white/95">
-                        ${commentText}
-                        <span class="tg-meta-inline">
-                            ${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}
-                            ${comment.created_at}
-                        </span>
-                    </div>
+                    <div class="tg-bubble-text text-white/95">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${comment.created_at}</span></div>
                 </div>
                 
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">

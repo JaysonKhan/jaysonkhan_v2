@@ -983,7 +983,7 @@
                 <a href="{% url 'blog_list' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}active{% endif %}">Blog</a>
                 <a href="{% url 'contact' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
             </div>
-            <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
+            <button id="mobile-menu-btn" class="flex md:hidden text-white focus:outline-none" style="width:44px;height:44px;align-items:center;justify-content:center;" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
                 <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
