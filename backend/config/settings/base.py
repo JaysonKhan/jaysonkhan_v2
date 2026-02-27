@@ -244,21 +244,23 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": True,
     "LOGIN": {
         "image": lambda r: "/static/images/hero.jpg",
-        "redirect_after": lambda r: "/admin/",
+        "redirect_after": lambda r: "/" + env('ADMIN_URL', default='admin/'),
     },
+    # Unfold 0.67 + Tailwind v4 — oklch format kerak (opacity utility'lari uchun).
+    # Bu ranglar avvalgi purple/violet (#7c3aed) ni saqlab qoladi.
     "COLORS": {
         "primary": {
-            "50":  "250 245 255",
-            "100": "243 232 255",
-            "200": "233 213 255",
-            "300": "216 180 254",
-            "400": "192 132 252",
-            "500": "168 85 247",
-            "600": "147 51 234",
-            "700": "126 34 206",
-            "800": "107 33 168",
-            "900": "88 28 135",
-            "950": "59 7 100",
+            "50":  "oklch(97.7% .014 308.299)",
+            "100": "oklch(94.1% .033 307.174)",
+            "200": "oklch(88.2% .065 306.703)",
+            "300": "oklch(79.5% .120 306.383)",
+            "400": "oklch(68.1% .195 305.504)",
+            "500": "oklch(57.8% .249 303.900)",  # ~#7c3aed (violet-600)
+            "600": "oklch(50.2% .266 302.321)",
+            "700": "oklch(43.5% .243 301.924)",
+            "800": "oklch(37.2% .200 303.724)",
+            "900": "oklch(31.5% .160 304.987)",
+            "950": "oklch(22.0% .130 302.717)",
         },
     },
     "SIDEBAR": {
