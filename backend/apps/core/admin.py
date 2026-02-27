@@ -18,9 +18,7 @@ def _table_columns():
     """
     try:
         with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM core_sitesettings LIMIT 0"
-            )
+            cursor.execute("SELECT * FROM core_sitesettings LIMIT 0")
             return {col[0] for col in cursor.description}
     except Exception:
         return set()
@@ -29,14 +27,20 @@ def _table_columns():
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(ModelAdmin):
     """
-    Singleton admin for SiteSettings.
-    - Add is blocked when a record already exists.
-    - Delete is always blocked.
-    - Changelist auto-redirects to the edit page.
-    - Fieldsets auto-adapt if migration 0006 hasn't been applied yet.
+    Singleton admin for SiteSettings — tab-based layout.
+
+    Tabs:
+      1. Branding         — site identity, logo, favicon
+      2. SEO & Meta       — meta tags, OG image, Twitter card
+      3. Navigation       — header links and CTA button
+      4. Homepage         — hero, about, section headings, visibility
+      5. Pages            — per-page titles/subtitles
+      6. Contact & Socials — email, social URLs, CV/resume
+      7. Footer           — footer overrides
+      8. System           — timestamps (read-only)
     """
 
-    # ── Permissions ───────────────────────────────────────────────────────────
+    # ── Permissions ────────────────────────────────────────────────────────────
     def has_add_permission(self, request):
         try:
             return not SiteSettings.objects.exists()
@@ -55,7 +59,7 @@ class SiteSettingsAdmin(ModelAdmin):
             pass
         return super().changelist_view(request, extra_context)
 
-    # ── Read-only ─────────────────────────────────────────────────────────────
+    # ── Read-only fields ───────────────────────────────────────────────────────
     readonly_fields = (
         'created_at',
         'updated_at',
@@ -67,13 +71,36 @@ class SiteSettingsAdmin(ModelAdmin):
         'resume_preview',
     )
 
-    # ── Dynamic fieldsets ─────────────────────────────────────────────────────
+    # ── Tab fieldsets ──────────────────────────────────────────────────────────
     def get_fieldsets(self, request, obj=None):
         columns = _table_columns()
 
-        # ── Base fieldsets (always present) ────────────────────────────────
-        fieldsets = [
+        # Navigation tab: add optional columns if migration applied
+        nav_fields = ['nav_cta_text', 'nav_cta_url']
+        if 'logo_text' in columns:
+            nav_fields.insert(0, 'logo_text')
+        if 'nav_links_json' in columns:
+            nav_fields.append('nav_links_json')
+
+        # Footer tab: add optional columns if migration applied
+        footer_fields = []
+        for fname in (
+            'footer_description', 'footer_email',
+            'footer_social_github', 'footer_social_linkedin',
+            'footer_social_twitter', 'footer_social_telegram',
+        ):
+            if fname in columns:
+                footer_fields.append(fname)
+        footer_fields.append('footer_text')   # always exists
+
+        return [
+
+            # ── Tab 1: Branding ────────────────────────────────────────────────
             ('Branding', {
+                'classes': ('tab',),
+                'description': (
+                    'Core site identity — name, author, tagline, logo and favicon.'
+                ),
                 'fields': (
                     'site_title',
                     'site_author',
@@ -85,7 +112,13 @@ class SiteSettingsAdmin(ModelAdmin):
                     'logo_preview',
                 ),
             }),
+
+            # ── Tab 2: SEO & Meta ──────────────────────────────────────────────
             ('SEO & Meta', {
+                'classes': ('tab',),
+                'description': (
+                    'Controls Google snippet, Open Graph preview and Twitter card.'
+                ),
                 'fields': (
                     'meta_description',
                     'meta_keywords',
@@ -94,30 +127,29 @@ class SiteSettingsAdmin(ModelAdmin):
                     'og_image_preview',
                     'twitter_handle',
                 ),
-                'description': 'Controls Google snippets and social media link previews.',
             }),
-        ]
 
-        # ── Header / Navigation (requires migration 0006) ────────────────
-        header_fields = ['nav_cta_text', 'nav_cta_url']
-        if 'logo_text' in columns:
-            header_fields.insert(0, 'logo_text')
-        if 'nav_links_json' in columns:
-            header_fields.append('nav_links_json')
-        fieldsets.append(('Header / Navigation', {
-            'fields': tuple(header_fields),
-            'description': (
-                'Customise the site header. '
-                '"Logo text" overrides the author name in the navigation bar. '
-                '"Extra nav links" is a JSON list for additional links '
-                '(e.g. [{"label":"Resume","url":"/resume/"}]).'
-            ),
-        }))
+            # ── Tab 3: Navigation ──────────────────────────────────────────────
+            ('Navigation', {
+                'classes': ('tab',),
+                'description': (
+                    'Header bar settings. '
+                    '"Logo text" overrides the author name in the navbar. '
+                    '"Extra nav links" accepts a JSON list, '
+                    'e.g. [{"label":"Resume","url":"/resume/"}].'
+                ),
+                'fields': tuple(nav_fields),
+            }),
 
-        # ── Content sections (always present) ─────────────────────────────
-        fieldsets.extend([
-            ('Hero Section', {
+            # ── Tab 4: Homepage ────────────────────────────────────────────────
+            ('Homepage', {
+                'classes': ('tab',),
+                'description': (
+                    'Hero banner, About section, section headings, and '
+                    'visibility toggles for homepage blocks.'
+                ),
                 'fields': (
+                    # — Hero ——————————————————————————————————————————————————
                     'hero_availability_badge',
                     'hero_title',
                     'hero_subtitle',
@@ -127,65 +159,51 @@ class SiteSettingsAdmin(ModelAdmin):
                     'hero_primary_cta_url',
                     'hero_secondary_cta_text',
                     'hero_secondary_cta_url',
-                ),
-            }),
-            ('About Section', {
-                'fields': (
+                    # — About ——————————————————————————————————————————————————
                     'about_title',
                     'about_description',
                     'about_image',
                     'about_image_preview',
-                ),
-            }),
-            ('Skills Section', {
-                'fields': ('skills_section_title',),
-            }),
-            ('Featured Projects Section', {
-                'fields': (
+                    # — Section headings ——————————————————————————————————————
+                    'skills_section_title',
                     'featured_projects_title',
                     'featured_projects_subtitle',
-                ),
-            }),
-            ('Experience Section', {
-                'fields': ('experience_section_title',),
-            }),
-            ('Visibility Controls', {
-                'fields': ('apps_section_visible',),
-                'description': (
-                    'Toggle major site sections on/off. '
-                    'Hiding a section removes its navigation link, footer link, '
-                    'homepage content, and any hero CTAs pointing to it.'
-                ),
-            }),
-            ('Blog Sections', {
-                'fields': (
+                    'experience_section_title',
                     'latest_blog_title',
-                    'blog_page_title',
-                    'blog_page_subtitle',
+                    # — Visibility ————————————————————————————————————————————
+                    'apps_section_visible',
                 ),
             }),
-            ('Projects Page', {
+
+            # ── Tab 5: Pages ───────────────────────────────────────────────────
+            ('Pages', {
+                'classes': ('tab',),
+                'description': (
+                    'Per-page <h1> headings and sub-headings for Apps, Blog '
+                    'and Contact pages.'
+                ),
                 'fields': (
+                    # — Apps / Projects ———————————————————————————————————————
                     'projects_page_title',
                     'projects_page_subtitle',
-                ),
-            }),
-            ('Contact Page', {
-                'fields': (
+                    # — Blog ———————————————————————————————————————————————————
+                    'blog_page_title',
+                    'blog_page_subtitle',
+                    # — Contact ————————————————————————————————————————————————
                     'contact_page_title',
                     'contact_page_subtitle',
                     'contact_email_label',
                     'contact_linkedin_label',
                 ),
             }),
-            ('Resume / CV', {
-                'fields': (
-                    'resume_file',
-                    'resume_preview',
-                    'resume_button_text',
+
+            # ── Tab 6: Contact & Socials ────────────────────────────────────────
+            ('Contact & Socials', {
+                'classes': ('tab',),
+                'description': (
+                    'Primary email, phone, social profile URLs, and '
+                    'CV/resume file used across the whole site.'
                 ),
-            }),
-            ('Contact Info & Socials', {
                 'fields': (
                     'email',
                     'phone',
@@ -193,37 +211,34 @@ class SiteSettingsAdmin(ModelAdmin):
                     'linkedin_url',
                     'twitter_url',
                     'telegram_url',
+                    'resume_file',
+                    'resume_preview',
+                    'resume_button_text',
                 ),
             }),
-        ])
 
-        # ── Footer (requires migration 0006 for new fields) ──────────────
-        footer_fields = []
-        for fname in (
-            'footer_description', 'footer_email',
-            'footer_social_github', 'footer_social_linkedin',
-            'footer_social_twitter', 'footer_social_telegram',
-        ):
-            if fname in columns:
-                footer_fields.append(fname)
-        footer_fields.append('footer_text')  # always exists
+            # ── Tab 7: Footer ──────────────────────────────────────────────────
+            ('Footer', {
+                'classes': ('tab',),
+                'description': (
+                    'Footer-specific overrides. '
+                    'Leave any field blank to inherit from Contact & Socials.'
+                ),
+                'fields': tuple(footer_fields),
+            }),
 
-        fieldsets.append(('Footer', {
-            'fields': tuple(footer_fields),
-            'description': (
-                'Footer-specific overrides. Leave blank to inherit from '
-                'the main Contact Info & Socials section above.'
-            ),
-        }))
+            # ── Tab 8: System ──────────────────────────────────────────────────
+            ('System', {
+                'classes': ('tab',),
+                'fields': (
+                    'created_at',
+                    'updated_at',
+                ),
+            }),
+        ]
 
-        fieldsets.append(('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }))
+    # ── Image / file preview helpers ───────────────────────────────────────────
 
-        return fieldsets
-
-    # ── Preview helpers ───────────────────────────────────────────────────────
     def favicon_preview(self, obj):
         if obj.pk and obj.favicon:
             return format_html(
@@ -251,7 +266,7 @@ class SiteSettingsAdmin(ModelAdmin):
                 obj.og_image.url,
             )
         return '—'
-    og_image_preview.short_description = 'Preview (1200x630)'
+    og_image_preview.short_description = 'Preview (1200×630)'
 
     def hero_image_preview(self, obj):
         if obj.pk and obj.hero_image:
