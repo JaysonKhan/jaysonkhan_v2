@@ -99,9 +99,9 @@ echo
 
 # ─── 5. Server: restart service ──────────────────────────────────────────────
 info "6/6  Restarting services..."
-ssh $SERVER "systemctl daemon-reload && \
-    systemctl restart $SERVICE && \
-    systemctl reload nginx"
+ssh $SERVER "sudo systemctl daemon-reload && \
+    sudo systemctl restart $SERVICE && \
+    sudo systemctl reload nginx"
 ok "  $SERVICE restarted, nginx reloaded"
 echo
 
@@ -144,7 +144,7 @@ else
         echo -e "${RED}${BOLD}❌ $err_msg${RESET}"
         echo
         echo -e "${DIM}Last 20 lines of service logs:${RESET}"
-        ssh $SERVER "journalctl -u $SERVICE -n 20 --no-pager" || true
+        ssh $SERVER "sudo journalctl -u $SERVICE -n 20 --no-pager" || true
         echo -e "${RED}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
         exit 1
     fi
