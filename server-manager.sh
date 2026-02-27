@@ -369,16 +369,38 @@ action_deploy_full() {
   [[ "${yn,,}" == "y" ]] || { info "Cancelled."; pause; return; }
 
   cd_project
+
+  # ── 1) Git: har doim origin/main ga sync bo'ladi ──────────────────────────
+  info "1) Git sync → origin/main"
+  git fetch --all --prune
+
   local current_branch
   current_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown')"
-  info "1) Git pull"
-  info "Current branch: ${current_branch}"
+  info "Hozirgi branch: ${current_branch}"
+
+  # Agar main da bo'lmasa — main ga o'tish
   if [[ "$current_branch" != "main" ]]; then
-    warn "Deploying non-main branch (${current_branch}). Make sure this is intentional."
+    warn "Main branchda emas (${current_branch}). Main ga o'tilmoqda..."
+
+    # node_modules branch switch ni bloklasa — o'chirib yuboramiz
+    if [[ -d "$PROJECT_DIR/node_modules" ]]; then
+      info "node_modules o'chirilmoqda (branch switch uchun)..."
+      rm -rf "$PROJECT_DIR/node_modules" "$PROJECT_DIR/package-lock.json"
+    fi
+
+    # Local o'zgarishlarni stash qilamiz (xato bo'lsa ham davom etadi)
+    git stash || true
+
+    # Main ga o'tish
+    git checkout main 2>/dev/null || {
+      err "git checkout main muvaffaqiyatsiz. Majburan o'tkazilmoqda..."
+      git checkout -B main origin/main
+    }
   fi
-  git fetch --all --prune
-  git pull --ff-only
-  ok "Git updated."
+
+  # Divergent branches / local commits — remote holati bilan mos keltiramiz
+  git reset --hard origin/main
+  ok "Git origin/main ga sinxronlandi."
 
   info "2) Python deps (requirements.txt)"
   cd "$BACKEND_DIR"
