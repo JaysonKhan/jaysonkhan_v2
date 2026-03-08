@@ -82,6 +82,68 @@ class TelegramAuthView(View):
         return redirect(next_url)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class TelegramLoginView(View):
+    """
+    POST /auth/telegram-login/
+    Body: { "telegram_payload": { "id": "123", "first_name": "Ali", "hash": "...", "auth_date": "..." } }
+    Called by the Telegram Login Widget via AJAX. Verifies the payload,
+    upserts TelegramProfile, stores session, returns JSON { status: "ok" }.
+    """
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body)
+        except (json.JSONDecodeError, Exception):
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        payload = body.get('telegram_payload', {})
+        if not payload:
+            return JsonResponse({'error': 'telegram_payload is required'}, status=400)
+
+        # Ensure all values are strings — Telegram widget may send integers (id, auth_date)
+        flat = {k: str(v) for k, v in payload.items()}
+
+        safe_flat = {k: (v[:8] + '…' if k == 'hash' else v) for k, v in flat.items()}
+        logger.info('[TelegramLogin] incoming payload: %s', safe_flat)
+
+        if not flat.get('hash') or not flat.get('auth_date') or not flat.get('id'):
+            return JsonResponse({'error': 'Missing required fields: id, hash, auth_date'}, status=400)
+
+        if not verify_telegram_auth(flat):
+            logger.warning('[TelegramLogin] FAILED verification. id=%s', flat.get('id'))
+            return JsonResponse({'error': 'Telegram authentication failed'}, status=401)
+
+        logger.info('[TelegramLogin] verification OK for id=%s', flat.get('id'))
+
+        try:
+            profile, created = TelegramProfile.objects.update_or_create(
+                telegram_id=int(flat['id']),
+                defaults={
+                    'first_name': flat.get('first_name', ''),
+                    'last_name':  flat.get('last_name', ''),
+                    'username':   flat.get('username', ''),
+                    'photo_url':  flat.get('photo_url', ''),
+                    'auth_date':  int(flat.get('auth_date', 0)),
+                }
+            )
+        except Exception as exc:
+            logger.error('[TelegramLogin] DB error: %s', exc)
+            return JsonResponse({'error': 'Server error'}, status=500)
+
+        request.session[SESSION_KEY] = profile.pk
+        request.session.modified = True
+        logger.info('[TelegramLogin] session set for profile pk=%s (created=%s)', profile.pk, created)
+
+        return JsonResponse({
+            'status': 'ok',
+            'user': {
+                'id': profile.telegram_id,
+                'display_name': profile.display_name,
+            }
+        })
+
+
 class TelegramLogoutView(View):
     """POST /auth/telegram/logout/ — clears the Telegram session."""
 

@@ -181,6 +181,8 @@ FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 # Telegram Bot Token — used to verify Login Widget signatures
 TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN', default='')
 TELEGRAM_BOT_USERNAME = env('TELEGRAM_BOT_USERNAME', default='')
+# Max age (seconds) for Telegram auth_date — reject older tokens (default 24h)
+TELEGRAM_AUTH_MAX_AGE_SECONDS = env.int('TELEGRAM_AUTH_MAX_AGE_SECONDS', default=86400)
 
 # REST Framework settings
 REST_FRAMEWORK = {

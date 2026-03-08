@@ -533,20 +533,49 @@
         </div>
         <h4 class="tg-login-title">Join the Discussion</h4>
         <p class="tg-login-subtitle">Komment qoldirish uchun Telegram orqali kiring.</p>
-        <div class="tg-widget-wrap">
+        <div class="tg-widget-wrap" id="tg-widget-wrap">
             {% if telegram_bot_username %}
+            {# onTelegramAuth must be a named global function before the widget script loads #}
             <script>
-            function onTelegramAuth(user) {
-                window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + encodeURIComponent(window.location.pathname) + "&" + new URLSearchParams(user).toString();
-            }
+            window.onTelegramAuth = function(user) {
+                var btn = document.getElementById('tg-login-btn-wrap');
+                if (btn) btn.innerHTML = '<span class="text-sm text-[#818cf8]"><i class="fa-solid fa-circle-notch fa-spin mr-1"></i>Logging in…</span>';
+
+                // Convert all values to strings (widget may send integers for id/auth_date)
+                var payload = {};
+                for (var k in user) { payload[k] = String(user[k]); }
+
+                fetch("{% url 'interactions:telegram_login' %}", {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_payload: payload })
+                })
+                .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+                .then(function(res) {
+                    if (res.ok && res.data.status === 'ok') {
+                        window.location.reload();
+                    } else {
+                        var msg = (res.data && res.data.error) ? res.data.error : 'Unknown error';
+                        if (btn) btn.innerHTML = '<span class="text-sm text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + msg + '</span>';
+                        console.error('[TelegramAuth] Failed:', msg);
+                    }
+                })
+                .catch(function(err) {
+                    if (btn) btn.innerHTML = '<span class="text-sm text-red-400">Network error. Please try again.</span>';
+                    console.error('[TelegramAuth] Network error:', err);
+                });
+            };
             </script>
-            <script async src="https://telegram.org/js/telegram-widget.js?22"
-                data-telegram-login="{{ telegram_bot_username }}"
-                data-size="large"
-                data-lang="en"
-                data-onauth="onTelegramAuth(user)"
-                data-request-access="write"
-                data-radius="12"></script>
+            <div id="tg-login-btn-wrap">
+                <script async src="https://telegram.org/js/telegram-widget.js?22"
+                    data-telegram-login="{{ telegram_bot_username }}"
+                    data-size="large"
+                    data-lang="en"
+                    data-onauth="onTelegramAuth(user)"
+                    data-request-access="write"
+                    data-radius="12"></script>
+            </div>
             {% else %}
             <span class="text-sm text-slate-400">Telegram login hozircha mavjud emas.</span>
             {% endif %}

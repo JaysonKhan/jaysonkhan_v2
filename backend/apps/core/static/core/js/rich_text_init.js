@@ -1,6 +1,6 @@
 /**
  * TinyMCE 6 — Rich text editor init for Django admin.
- * Self-hosted via cdnjs — no API key required.
+ * Loaded from jsDelivr CDN — no API key required.
  * Dark oxide skin matches the Unfold admin dark theme.
  */
 
@@ -74,7 +74,7 @@
         skin: 'oxide-dark',
         content_css: 'dark',
 
-        // Plugins (all included in TinyMCE 6 open-source cdnjs bundle)
+        // Plugins included in the TinyMCE 6 open-source bundle.
         plugins: 'advlist autolink lists link image charmap preview anchor searchreplace wordcount visualblocks code fullscreen insertdatetime media table emoticons codesample',
 
         // Toolbar — grouped by function

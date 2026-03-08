@@ -32,9 +32,10 @@ def verify_telegram_auth(data: dict) -> bool:
     if not hmac.compare_digest(expected_hash, check_hash):
         return False
 
-    # Reject auth data older than 24 hours
+    # Reject auth data older than TELEGRAM_AUTH_MAX_AGE_SECONDS (default 24h)
+    max_age = getattr(settings, 'TELEGRAM_AUTH_MAX_AGE_SECONDS', 86400)
     auth_date = int(data.get('auth_date', 0))
-    if time.time() - auth_date > 86400:
+    if time.time() - auth_date > max_age:
         return False
 
     return True

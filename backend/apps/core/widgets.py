@@ -3,7 +3,7 @@ from django import forms
 
 class RichTextWidget(forms.Textarea):
     """
-    Textarea that activates TinyMCE 6 (self-hosted via cdnjs — no API key required).
+    Textarea that activates TinyMCE 6 from jsDelivr CDN (no API key required).
     Dark oxide skin matches the Unfold admin theme.
     """
 
@@ -15,8 +15,8 @@ class RichTextWidget(forms.Textarea):
 
     class Media:
         js = (
-            # Self-hosted TinyMCE 6 — no API key, no domain restrictions.
+            # TinyMCE 6 from jsDelivr CDN.
             # Full bundle including all plugins and skins.
-            'https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.5/tinymce.min.js',
+            'https://cdn.jsdelivr.net/npm/tinymce@6.8.5/tinymce.min.js',
             'core/js/rich_text_init.js',
         )
