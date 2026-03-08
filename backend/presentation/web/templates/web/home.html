@@ -85,20 +85,20 @@
     <div class="divider-gradient mb-10 reveal"></div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 reveal">
         <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="3" data-suffix="+">3+</span>
-            <span class="stat-label">Years Experience</span>
+            <span class="stat-number" data-count="{{ site_settings.stat_1_count }}" data-suffix="{{ site_settings.stat_1_suffix }}">{{ site_settings.stat_1_count }}{{ site_settings.stat_1_suffix }}</span>
+            <span class="stat-label">{{ site_settings.stat_1_label }}</span>
         </div>
         <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="30" data-suffix="+">30+</span>
-            <span class="stat-label">Apps Delivered</span>
+            <span class="stat-number" data-count="{{ site_settings.stat_2_count }}" data-suffix="{{ site_settings.stat_2_suffix }}">{{ site_settings.stat_2_count }}{{ site_settings.stat_2_suffix }}</span>
+            <span class="stat-label">{{ site_settings.stat_2_label }}</span>
         </div>
         <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="1" data-suffix="M+">1M+</span>
-            <span class="stat-label">App Downloads</span>
+            <span class="stat-number" data-count="{{ site_settings.stat_3_count }}" data-suffix="{{ site_settings.stat_3_suffix }}">{{ site_settings.stat_3_count }}{{ site_settings.stat_3_suffix }}</span>
+            <span class="stat-label">{{ site_settings.stat_3_label }}</span>
         </div>
         <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="100" data-suffix="%">100%</span>
-            <span class="stat-label">Clean Architecture</span>
+            <span class="stat-number" data-count="{{ site_settings.stat_4_count }}" data-suffix="{{ site_settings.stat_4_suffix }}">{{ site_settings.stat_4_count }}{{ site_settings.stat_4_suffix }}</span>
+            <span class="stat-label">{{ site_settings.stat_4_label }}</span>
         </div>
     </div>
     <div class="divider-gradient mt-10 reveal"></div>
@@ -160,10 +160,13 @@
 
         {% for exp in portfolio.experience %}
         <div class="relative flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-            <!-- Timeline dot -->
-            <div
-                class="hidden md:flex shrink-0 w-11 h-11 items-center justify-center rounded-full bg-dark border-4 border-dark z-10">
+            <!-- Timeline dot / company logo -->
+            <div class="hidden md:flex shrink-0 w-11 h-11 items-center justify-center rounded-full bg-dark border-2 border-white/10 z-10 overflow-hidden">
+                {% if exp.company_logo %}
+                <img src="{{ exp.company_logo.url }}" alt="{{ exp.company }}" class="w-full h-full object-cover rounded-full">
+                {% else %}
                 <div class="w-3 h-3 rounded-full bg-primary"></div>
+                {% endif %}
             </div>
 
             <!-- Content Card -->

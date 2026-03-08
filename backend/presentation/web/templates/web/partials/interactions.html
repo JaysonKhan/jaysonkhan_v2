@@ -367,6 +367,19 @@
         color:#a5b4fc; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.35);
         font-size:1.2rem;
     }
+    /* ── Telegram widget iframe fix ── */
+    .tg-widget-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 60px;
+        overflow: visible !important;
+    }
+    .tg-widget-wrap iframe,
+    .tg-widget-wrap > span {
+        display: inline-block !important;
+        overflow: visible !important;
+    }
 
     /* ── Mobile ── */
     @media (max-width: 640px) {
@@ -520,10 +533,20 @@
         </div>
         <h4 class="tg-login-title">Join the Discussion</h4>
         <p class="tg-login-subtitle">Komment qoldirish uchun Telegram orqali kiring.</p>
-        <div class="flex justify-center">
+        <div class="tg-widget-wrap">
             {% if telegram_bot_username %}
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ telegram_bot_username }}" data-size="large" data-lang="en" data-onauth="onTelegramAuth(user)" data-request-access="write" data-radius="12"></script>
-            <script>function onTelegramAuth(user) { window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + encodeURIComponent(window.location.pathname) + "&" + new URLSearchParams(user).toString(); }</script>
+            <script>
+            function onTelegramAuth(user) {
+                window.location.href = "{% url 'interactions:telegram_auth' %}?next=" + encodeURIComponent(window.location.pathname) + "&" + new URLSearchParams(user).toString();
+            }
+            </script>
+            <script async src="https://telegram.org/js/telegram-widget.js?22"
+                data-telegram-login="{{ telegram_bot_username }}"
+                data-size="large"
+                data-lang="en"
+                data-onauth="onTelegramAuth(user)"
+                data-request-access="write"
+                data-radius="12"></script>
             {% else %}
             <span class="text-sm text-slate-400">Telegram login hozircha mavjud emas.</span>
             {% endif %}

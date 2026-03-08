@@ -1,12 +1,15 @@
-from itertools import groupby
-from django.db.models import Q
 from .models import Project, Skill, Experience
 
 
 class PortfolioRepository:
     @staticmethod
     def get_all_projects():
-        return Project.objects.filter(is_visible=True).prefetch_related('technologies').all()
+        return (
+            Project.objects
+            .filter(is_visible=True)
+            .prefetch_related('technologies')
+            .order_by('order', '-created_at')
+        )
 
     @staticmethod
     def get_featured_projects():
@@ -14,31 +17,36 @@ class PortfolioRepository:
             Project.objects
             .filter(is_featured=True, is_visible=True)
             .prefetch_related('technologies')
+            .order_by('order', '-created_at')
         )
 
     @staticmethod
     def get_web_projects():
-        """Projects with platform='web'."""
+        """Projects that have a web_page_url (URL-based, not platform field)."""
         return (
             Project.objects
-            .filter(platform='web', is_visible=True)
+            .filter(web_page_url__gt='', is_visible=True)
             .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
 
     @staticmethod
     def get_bot_projects():
-        """Projects marked as_bot or with platform='bot'."""
+        """Projects flagged as Telegram bots."""
         return (
             Project.objects
-            .filter(Q(is_bot=True) | Q(platform='bot'), is_visible=True)
+            .filter(is_bot=True, is_visible=True)
             .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
 
     @staticmethod
     def get_all_skills():
-        return Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order', 'show_in_hero').all()
+        return (
+            Skill.objects
+            .only('id', 'name', 'level', 'icon', 'category', 'order', 'show_in_hero')
+            .all()
+        )
 
     @staticmethod
     def get_hero_skills():
@@ -53,8 +61,12 @@ class PortfolioRepository:
     @staticmethod
     def get_skills_grouped():
         """Return skills grouped by category as {category_label: [skills]}."""
-        skills = Skill.objects.all()
-        grouped = {}
+        skills = (
+            Skill.objects
+            .only('id', 'name', 'icon', 'category', 'order')
+            .order_by('category', 'order', 'name')
+        )
+        grouped: dict = {}
         for skill in skills:
             label = skill.get_category_display()
             grouped.setdefault(label, []).append(skill)
@@ -62,14 +74,14 @@ class PortfolioRepository:
 
     @staticmethod
     def get_all_experience():
-        return Experience.objects.all()
+        return Experience.objects.select_related().order_by('-start_date')
 
 
 class PortfolioService:
     def __init__(self, repository: PortfolioRepository):
         self.repository = repository
 
-    def get_portfolio_data(self):
+    def get_portfolio_data(self) -> dict:
         return {
             'projects': self.repository.get_all_projects(),
             'featured_projects': self.repository.get_featured_projects(),

@@ -10,17 +10,18 @@ from .models import SiteSettings
 logger = logging.getLogger(__name__)
 
 
-def _table_columns():
+def _table_columns() -> set:
     """
-    Return the set of column names that actually exist in the
-    core_sitesettings table. Used to gracefully hide fields
-    whose migration hasn't been applied yet.
+    Return column names that exist in core_sitesettings.
+    Used to gracefully skip fields whose migration hasn't run yet.
+    Falls back to an empty set so the admin still loads without crashing.
     """
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM core_sitesettings LIMIT 0")
             return {col[0] for col in cursor.description}
-    except Exception:
+    except Exception as exc:
+        logger.warning("Could not introspect core_sitesettings columns: %s", exc)
         return set()
 
 
@@ -164,6 +165,11 @@ class SiteSettingsAdmin(ModelAdmin):
                     'about_description',
                     'about_image',
                     'about_image_preview',
+                    # — Stats Bar ——————————————————————————————————————————————
+                    'stat_1_count', 'stat_1_suffix', 'stat_1_label',
+                    'stat_2_count', 'stat_2_suffix', 'stat_2_label',
+                    'stat_3_count', 'stat_3_suffix', 'stat_3_label',
+                    'stat_4_count', 'stat_4_suffix', 'stat_4_label',
                     # — Section headings ——————————————————————————————————————
                     'skills_section_title',
                     'featured_projects_title',

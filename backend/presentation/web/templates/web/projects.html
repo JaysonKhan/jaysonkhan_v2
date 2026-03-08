@@ -124,10 +124,9 @@
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const platform = urlParams.get('platform') || '';
+        const filterKey = urlParams.get('filter') || '';
         const extraParams = {};
-        if (platform) extraParams.platform = platform;
-        if (urlParams.get('is_bot')) extraParams.is_bot = urlParams.get('is_bot');
+        if (filterKey) extraParams.filter = filterKey;
 
         InfiniteScroll.init({
             apiUrl: '/api/projects/',

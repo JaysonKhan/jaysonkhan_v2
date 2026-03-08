@@ -107,37 +107,43 @@ class ProjectListView(AppsGuardMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
+    # Filter tabs — filtering is now done by URL fields, not the platform type field.
+    # 'cross'   = has both play_store_url AND app_store_url
+    # 'android' = has play_store_url (includes cross-platform)
+    # 'ios'     = has app_store_url  (includes cross-platform)
+    # 'web'     = has web_page_url
+    # 'bot'     = is_bot flag is True
     _FILTER_TABS = [
-        {'key': 'all',    'label': 'All',            'url': '/projects/'},
-        {'key': 'cross',  'label': 'Cross-platform', 'url': '/projects/?platform=cross'},
-        {'key': 'android','label': 'Android',        'url': '/projects/?platform=android'},
-        {'key': 'ios',    'label': 'iOS',             'url': '/projects/?platform=ios'},
-        {'key': 'web',    'label': 'Web',             'url': '/projects/?platform=web'},
-        {'key': 'bot',    'label': 'Telegram Bot',    'url': '/projects/?is_bot=1'},
+        {'key': 'all',     'label': 'All',            'url': '/projects/'},
+        {'key': 'cross',   'label': 'Cross-platform', 'url': '/projects/?filter=cross'},
+        {'key': 'android', 'label': 'Android',        'url': '/projects/?filter=android'},
+        {'key': 'ios',     'label': 'iOS',             'url': '/projects/?filter=ios'},
+        {'key': 'web',     'label': 'Web',             'url': '/projects/?filter=web'},
+        {'key': 'bot',     'label': 'Telegram Bot',    'url': '/projects/?filter=bot'},
     ]
 
     def get_queryset(self):
-        # is_visible filter is already applied in PortfolioRepository,
-        # but this view queries directly — keep consistent.
         queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies')
-        platform = self.request.GET.get('platform')
-        is_bot = self.request.GET.get('is_bot')
-        if is_bot:
+        f = self.request.GET.get('filter', '')
+        if f == 'cross':
+            # Must have both store URLs
+            queryset = queryset.filter(
+                play_store_url__gt='', app_store_url__gt=''
+            )
+        elif f == 'android':
+            queryset = queryset.filter(play_store_url__gt='')
+        elif f == 'ios':
+            queryset = queryset.filter(app_store_url__gt='')
+        elif f == 'web':
+            queryset = queryset.filter(web_page_url__gt='')
+        elif f == 'bot':
             queryset = queryset.filter(is_bot=True)
-        elif platform:
-            queryset = queryset.filter(platform=platform)
         return queryset.order_by('order', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        platform = self.request.GET.get('platform', '')
-        is_bot = self.request.GET.get('is_bot', '')
-        if is_bot:
-            context['active_filter'] = 'bot'
-        elif platform:
-            context['active_filter'] = platform
-        else:
-            context['active_filter'] = 'all'
+        f = self.request.GET.get('filter', '')
+        context['active_filter'] = f if f in ('cross', 'android', 'ios', 'web', 'bot') else 'all'
         context['filter_tabs'] = self._FILTER_TABS
         return context
 

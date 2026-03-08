@@ -43,12 +43,18 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
             .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
-        platform = self.request.query_params.get('platform')
-        is_bot = self.request.query_params.get('is_bot')
-        if is_bot:
+        # URL-based filtering — mirrors ProjectListView logic.
+        f = self.request.query_params.get('filter', '')
+        if f == 'cross':
+            qs = qs.filter(play_store_url__gt='', app_store_url__gt='')
+        elif f == 'android':
+            qs = qs.filter(play_store_url__gt='')
+        elif f == 'ios':
+            qs = qs.filter(app_store_url__gt='')
+        elif f == 'web':
+            qs = qs.filter(web_page_url__gt='')
+        elif f == 'bot':
             qs = qs.filter(is_bot=True)
-        elif platform:
-            qs = qs.filter(platform=platform)
         return qs
     # Inherits IsAdminUser from REST_FRAMEWORK default
 

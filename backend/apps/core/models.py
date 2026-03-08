@@ -134,6 +134,29 @@ class SiteSettings(models.Model):
         help_text="About section portrait/image"
     )
 
+    # ── Stats Bar ─────────────────────────────────────────────────────────────
+    stat_1_count = models.IntegerField(
+        default=3,
+        help_text="Stat 1 — numeric value for animated counter (e.g. 3)"
+    )
+    stat_1_suffix = models.CharField(
+        max_length=10, default="+",
+        help_text="Stat 1 — suffix appended to count (e.g. '+', 'M+', '%')"
+    )
+    stat_1_label = models.CharField(
+        max_length=60, default="Years Experience",
+        help_text="Stat 1 — label below the number"
+    )
+    stat_2_count = models.IntegerField(default=30)
+    stat_2_suffix = models.CharField(max_length=10, default="+")
+    stat_2_label = models.CharField(max_length=60, default="Apps Delivered")
+    stat_3_count = models.IntegerField(default=1)
+    stat_3_suffix = models.CharField(max_length=10, default="M+")
+    stat_3_label = models.CharField(max_length=60, default="App Downloads")
+    stat_4_count = models.IntegerField(default=100)
+    stat_4_suffix = models.CharField(max_length=10, default="%")
+    stat_4_label = models.CharField(max_length=60, default="Clean Architecture")
+
     # ── Skills Section ────────────────────────────────────────────────────────
     skills_section_title = models.CharField(
         max_length=100, default="Tech Stack",
