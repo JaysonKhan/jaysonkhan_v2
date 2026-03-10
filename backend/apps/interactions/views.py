@@ -155,7 +155,7 @@ class TelegramLogoutView(View):
 
 # ── Comment view ───────────────────────────────────────────────────────────────
 
-# CSRF protection is ACTIVE — JavaScript must send the CSRF token with requests
+@method_decorator(csrf_exempt, name='dispatch')
 class AddCommentView(View):
     """
     POST /interactions/comment/<app_label>/<model_name>/<object_id>/
@@ -290,6 +290,7 @@ class AddCommentView(View):
             'message': 'Your comment is pending admin review.' if not is_approved else 'Your comment has been posted successfully.',
         }, status=201)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ToggleCommentReactionView(View):
     """
     POST /interactions/comment/<int:comment_id>/react/
@@ -343,6 +344,7 @@ class ToggleCommentReactionView(View):
 
 # ── Like / Unlike (toggle) ─────────────────────────────────────────────────────
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ToggleLikeView(View):
     """
     POST /interactions/like/<app_label>/<model_name>/<object_id>/
