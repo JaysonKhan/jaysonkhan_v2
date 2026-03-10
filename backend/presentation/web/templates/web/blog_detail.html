@@ -44,9 +44,11 @@
     </div>
     {% endif %}
 
+    {% if post.content_rich %}
     <div class="prose prose-invert prose-lg prose-content rich-content-wrapper">
         {{ post.content_rich|safe }}
     </div>
+    {% endif %}
 
     {% if post.tags.all %}
     <div class="mt-16 pt-8 border-t border-white/10">
