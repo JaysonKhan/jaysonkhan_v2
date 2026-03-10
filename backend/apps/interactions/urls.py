@@ -1,12 +1,14 @@
 from django.urls import path
-from .views import (TelegramAuthView, TelegramLoginView, TelegramLogoutView, AddCommentView, ToggleLikeView,
-                    ToggleCommentReactionView, ListCommentsView, ListRepliesView)
+from .views import (TelegramAuthView, TelegramLoginView, TelegramLogoutView, TelegramWebAppLoginView,
+                    AddCommentView, ToggleLikeView, ToggleCommentReactionView, ListCommentsView, ListRepliesView)
 
 app_name = 'interactions'
 
 urlpatterns = [
     # Telegram Login Widget — AJAX POST (primary, doc-recommended approach)
     path('auth/telegram-login/',  TelegramLoginView.as_view(),  name='telegram_login'),
+    # Telegram WebApp — auto-login via initData when opened in Telegram's in-app browser
+    path('auth/telegram-webapp/', TelegramWebAppLoginView.as_view(), name='telegram_webapp_login'),
     # Telegram Login Widget — GET redirect (legacy fallback, kept for compatibility)
     path('auth/telegram/',        TelegramAuthView.as_view(),   name='telegram_auth'),
     path('auth/telegram/logout/', TelegramLogoutView.as_view(), name='telegram_logout'),

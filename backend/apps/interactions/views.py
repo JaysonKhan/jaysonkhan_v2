@@ -18,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
 from .models import TelegramProfile, Comment, Like
-from .telegram_auth import verify_telegram_auth
+from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
 
 logger = logging.getLogger(__name__)
 
@@ -151,6 +151,59 @@ class TelegramLogoutView(View):
         request.session.pop(SESSION_KEY, None)
         next_url = request.POST.get('next', request.META.get('HTTP_REFERER', '/'))
         return redirect(next_url)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TelegramWebAppLoginView(View):
+    """
+    POST /auth/telegram-webapp/
+    Body: { "init_data": "<raw Telegram WebApp initData string>" }
+    Auto-login for users opening the site via Telegram's in-app browser (WebView).
+    """
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body)
+        except (json.JSONDecodeError, Exception):
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        init_data = body.get('init_data', '')
+        if not init_data:
+            return JsonResponse({'error': 'init_data is required'}, status=400)
+
+        user = verify_telegram_webapp_data(init_data)
+        if user is None:
+            logger.warning('[WebAppLogin] FAILED verification')
+            return JsonResponse({'error': 'WebApp authentication failed'}, status=401)
+
+        logger.info('[WebAppLogin] verification OK for id=%s', user.get('id'))
+
+        try:
+            profile, created = TelegramProfile.objects.update_or_create(
+                telegram_id=int(user['id']),
+                defaults={
+                    'first_name': user.get('first_name', ''),
+                    'last_name':  user.get('last_name', ''),
+                    'username':   user.get('username', ''),
+                    'photo_url':  user.get('photo_url', ''),
+                    'auth_date':  int(user.get('auth_date', 0)),
+                }
+            )
+        except Exception as exc:
+            logger.error('[WebAppLogin] DB error: %s', exc)
+            return JsonResponse({'error': 'Server error'}, status=500)
+
+        request.session[SESSION_KEY] = profile.pk
+        request.session.modified = True
+        logger.info('[WebAppLogin] session set for profile pk=%s (created=%s)', profile.pk, created)
+
+        return JsonResponse({
+            'status': 'ok',
+            'user': {
+                'id': profile.telegram_id,
+                'display_name': profile.display_name,
+            }
+        })
 
 
 # ── Comment view ───────────────────────────────────────────────────────────────
