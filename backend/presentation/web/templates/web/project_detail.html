@@ -30,6 +30,20 @@
         <p class="text-slate-400 text-lg mb-6">{{ project.get_card_description }}</p>
     </div>
 
+    <!-- Project Image -->
+    {% if project.image %}
+    <div class="device-mockup mb-12 max-w-sm mx-auto reveal">
+        <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full">
+    </div>
+    {% endif %}
+
+    <!-- Description -->
+    {% if project.description_rich %}
+    <div class="prose prose-invert prose-lg prose-content rich-content-wrapper mt-4 mb-10 reveal">
+        {{ project.description_rich|safe }}
+    </div>
+    {% endif %}
+
     <!-- Tech Stack -->
     <div class="flex flex-wrap gap-2 mb-10 reveal">
         {% for tech in project.technologies.all %}
@@ -69,20 +83,6 @@
         </a>
         {% endif %}
     </div>
-
-    <!-- Project Image -->
-    {% if project.image %}
-    <div class="device-mockup mb-12 max-w-sm mx-auto reveal">
-        <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full">
-    </div>
-    {% endif %}
-
-    <!-- Description -->
-    {% if project.description_rich %}
-    <div class="prose prose-invert prose-lg prose-content rich-content-wrapper mt-4 reveal">
-        {{ project.description_rich|safe }}
-    </div>
-    {% endif %}
 
     <!-- Bottom divider -->
     <div class="divider-gradient mt-12 mb-8"></div>
