@@ -10,9 +10,14 @@
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     function getCsrfToken() {
-        const cookies = document.cookie.split(';');
-        for (const c of cookies) {
-            const trimmed = c.trim();
+        // 1. Hidden input (works even with CSRF_COOKIE_HTTPONLY=True)
+        var input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (input) return input.value;
+
+        // 2. Fallback: cookie (only if CSRF_COOKIE_HTTPONLY=False)
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var trimmed = cookies[i].trim();
             if (trimmed.startsWith('csrftoken=')) {
                 return trimmed.slice('csrftoken='.length);
             }
