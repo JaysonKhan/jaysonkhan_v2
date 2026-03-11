@@ -108,14 +108,44 @@ class HomeView(TemplateView):
         context['visitor_count'] = PageView.objects.count()
         return context
 
+    @staticmethod
+    def _get_client_ip(request):
+        """Extract real client IP (handles reverse proxy X-Forwarded-For)."""
+        xff = request.META.get('HTTP_X_FORWARDED_FOR')
+        if xff:
+            return xff.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR')
+
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
 
         visitor_id = request.COOKIES.get(self.VISITOR_COOKIE)
-        if not visitor_id:
-            # New visitor — create record and set cookie
+        ip = self._get_client_ip(request)
+
+        if visitor_id:
+            # Case 1: Cookie exists — returning visitor (same browser)
+            # Ensure DB record still exists (cookie might outlive DB reset)
+            try:
+                uid = uuid.UUID(visitor_id)
+            except ValueError:
+                uid = uuid.uuid4()
+            if not PageView.objects.filter(visitor_id=uid).exists():
+                PageView.objects.create(visitor_id=uid, ip_address=ip)
+        elif ip and PageView.objects.filter(ip_address=ip).exists():
+            # Case 2: No cookie but IP already seen — different browser / incognito
+            # Link to existing record via cookie, don't create new
+            existing = PageView.objects.filter(ip_address=ip).first()
+            response.set_cookie(
+                self.VISITOR_COOKIE,
+                str(existing.visitor_id),
+                max_age=self.COOKIE_MAX_AGE,
+                httponly=True,
+                samesite='Lax',
+            )
+        else:
+            # Case 3: No cookie, new IP — genuinely new visitor
             new_id = uuid.uuid4()
-            PageView.objects.create(visitor_id=new_id)
+            PageView.objects.create(visitor_id=new_id, ip_address=ip)
             response.set_cookie(
                 self.VISITOR_COOKIE,
                 str(new_id),
@@ -123,14 +153,6 @@ class HomeView(TemplateView):
                 httponly=True,
                 samesite='Lax',
             )
-        else:
-            # Returning visitor — ensure record exists (cookie might outlive DB)
-            try:
-                uid = uuid.UUID(visitor_id)
-            except ValueError:
-                uid = uuid.uuid4()
-            if not PageView.objects.filter(visitor_id=uid).exists():
-                PageView.objects.create(visitor_id=uid)
 
         return response
 

@@ -307,9 +307,9 @@ class SiteSettingsAdmin(ModelAdmin):
 
 @admin.register(PageView)
 class PageViewAdmin(ModelAdmin):
-    list_display = ('visitor_id', 'created_at')
+    list_display = ('visitor_id', 'ip_address', 'created_at')
     list_filter = ('created_at',)
-    readonly_fields = ('visitor_id', 'created_at')
+    readonly_fields = ('visitor_id', 'ip_address', 'created_at')
     ordering = ('-created_at',)
 
     def has_add_permission(self, request):

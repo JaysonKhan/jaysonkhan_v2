@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "django-dev",
+      "runtimeExecutable": "backend/venv/bin/python",
+      "runtimeArgs": ["backend/manage.py", "runserver", "0.0.0.0:8000"],
+      "port": 8000
+    },
+    {
+      "name": "tailwind-watch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "css:watch"],
+      "port": 0
+    }
+  ]
+}

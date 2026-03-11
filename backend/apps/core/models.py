@@ -369,10 +369,14 @@ class SiteSettings(models.Model):
 
 class PageView(models.Model):
     """
-    Tracks unique site visitors via a cookie-based UUID.
-    One record per unique device — refresh / revisit won't create duplicates.
+    Tracks unique site visitors via cookie + IP deduplication.
+    - Same browser, refresh → cookie prevents duplicate
+    - Different browser, same device/network → IP prevents duplicate
+    - Incognito mode → IP prevents duplicate
+    - New device/network → new record
     """
     visitor_id = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -381,4 +385,4 @@ class PageView(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Visitor {self.visitor_id} — {self.created_at:%Y-%m-%d %H:%M}"
+        return f"Visitor {self.visitor_id} ({self.ip_address}) — {self.created_at:%Y-%m-%d %H:%M}"
