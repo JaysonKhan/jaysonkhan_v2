@@ -83,7 +83,7 @@
 <!-- ── Stats Bar ────────────────────────────────────────────────── -->
 <section class="max-w-7xl mx-auto px-6" style="padding-bottom:calc(var(--space-section-py) - 1.5rem)">
     <div class="divider-gradient mb-10 reveal"></div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 reveal">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-6 reveal">
         <div class="stat-item glass rounded-2xl py-6 px-4">
             <span class="stat-number" data-count="{{ site_settings.stat_1_count }}" data-suffix="{{ site_settings.stat_1_suffix }}">{{ site_settings.stat_1_count }}{{ site_settings.stat_1_suffix }}</span>
             <span class="stat-label">{{ site_settings.stat_1_label }}</span>
@@ -99,6 +99,10 @@
         <div class="stat-item glass rounded-2xl py-6 px-4">
             <span class="stat-number" data-count="{{ site_settings.stat_4_count }}" data-suffix="{{ site_settings.stat_4_suffix }}">{{ site_settings.stat_4_count }}{{ site_settings.stat_4_suffix }}</span>
             <span class="stat-label">{{ site_settings.stat_4_label }}</span>
+        </div>
+        <div class="stat-item glass rounded-2xl py-6 px-4 col-span-2 md:col-span-1">
+            <span class="stat-number" data-count="{{ visitor_count }}" data-suffix="">{{ visitor_count }}</span>
+            <span class="stat-label">Site Visitors</span>
         </div>
     </div>
     <div class="divider-gradient mt-10 reveal"></div>

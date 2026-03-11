@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 
-from .models import SiteSettings
+from .models import SiteSettings, PageView
 
 logger = logging.getLogger(__name__)
 
@@ -303,3 +303,17 @@ class SiteSettingsAdmin(ModelAdmin):
             )
         return '—'
     resume_preview.short_description = 'File'
+
+
+@admin.register(PageView)
+class PageViewAdmin(ModelAdmin):
+    list_display = ('visitor_id', 'created_at')
+    list_filter = ('created_at',)
+    readonly_fields = ('visitor_id', 'created_at')
+    ordering = ('-created_at',)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

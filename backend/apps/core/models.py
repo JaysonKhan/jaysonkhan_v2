@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -334,6 +336,11 @@ class SiteSettings(models.Model):
         return self.logo_text or self.site_author
 
     @property
+    def visitor_count(self):
+        """Total unique visitors tracked by PageView."""
+        return PageView.objects.count()
+
+    @property
     def footer_display_description(self):
         """Footer description with fallback to site_tagline."""
         return self.footer_description or self.site_tagline
@@ -358,3 +365,20 @@ class SiteSettings(models.Model):
     @property
     def footer_display_telegram(self):
         return self.footer_social_telegram or self.telegram_url
+
+
+class PageView(models.Model):
+    """
+    Tracks unique site visitors via a cookie-based UUID.
+    One record per unique device — refresh / revisit won't create duplicates.
+    """
+    visitor_id = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Site Visitor"
+        verbose_name_plural = "Site Visitors"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Visitor {self.visitor_id} — {self.created_at:%Y-%m-%d %H:%M}"

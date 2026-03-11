@@ -1,3 +1,5 @@
+import uuid
+
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -10,7 +12,7 @@ from blog.services import BlogService, BlogRepository
 from contact.services import ContactService, ContactRepository
 from contact.spam_protection import is_honeypot_filled, is_rate_limited
 from blog.models import Post
-from core.models import SiteSettings
+from core.models import SiteSettings, PageView
 from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
 
@@ -92,6 +94,9 @@ class AppsGuardMixin:
 class HomeView(TemplateView):
     template_name = 'web/home.html'
 
+    VISITOR_COOKIE = 'jk_visitor'
+    COOKIE_MAX_AGE = 365 * 24 * 60 * 60  # 1 year
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         portfolio_service = PortfolioService(PortfolioRepository())
@@ -99,7 +104,35 @@ class HomeView(TemplateView):
 
         blog_service = BlogService(BlogRepository())
         context['latest_posts'] = blog_service.get_all_published_posts()[:3]
+
+        context['visitor_count'] = PageView.objects.count()
         return context
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+
+        visitor_id = request.COOKIES.get(self.VISITOR_COOKIE)
+        if not visitor_id:
+            # New visitor — create record and set cookie
+            new_id = uuid.uuid4()
+            PageView.objects.create(visitor_id=new_id)
+            response.set_cookie(
+                self.VISITOR_COOKIE,
+                str(new_id),
+                max_age=self.COOKIE_MAX_AGE,
+                httponly=True,
+                samesite='Lax',
+            )
+        else:
+            # Returning visitor — ensure record exists (cookie might outlive DB)
+            try:
+                uid = uuid.UUID(visitor_id)
+            except ValueError:
+                uid = uuid.uuid4()
+            if not PageView.objects.filter(visitor_id=uid).exists():
+                PageView.objects.create(visitor_id=uid)
+
+        return response
 
 
 class ProjectListView(AppsGuardMixin, ListView):
