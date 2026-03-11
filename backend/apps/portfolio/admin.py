@@ -42,10 +42,10 @@ class ProjectAdminForm(forms.ModelForm):
 class ProjectAdmin(UnfoldModelAdmin):
     form = ProjectAdminForm
     list_per_page = 10
-    list_display = ('thumbnail', 'title', 'short_desc', 'platform', 'is_bot', 'is_featured', 'is_visible', 'order')
+    list_display = ('thumbnail', 'title', 'short_desc', 'is_bot', 'is_featured', 'is_visible', 'order')
     list_display_links = ('thumbnail', 'title')
     list_editable = ('order', 'is_featured', 'is_bot', 'is_visible')
-    list_filter = ('platform', 'is_featured', 'is_bot', 'is_visible', 'created_at')
+    list_filter = ('is_featured', 'is_bot', 'is_visible', 'created_at')
     prepopulated_fields = {'slug': ('title',)}
     search_fields = ('title', 'description_rich')
     filter_horizontal = ('technologies',)
@@ -57,16 +57,14 @@ class ProjectAdmin(UnfoldModelAdmin):
                 'image', 'is_featured', 'is_visible', 'order',
             ),
         }),
-        ('Platform & Store Links', {
+        ('Store Links', {
             'fields': (
-                'platform',
                 'app_store_url', 'play_store_url',
                 'web_page_url',
                 'is_bot',
             ),
             'description': (
-                'platform=cross → shows both App Store & Play Store buttons. '
-                'platform=web + web_page_url → shows Web Page button. '
+                'Fill in the relevant store URLs. '
                 'is_bot=True → also shows in the Bot section.'
             ),
         }),

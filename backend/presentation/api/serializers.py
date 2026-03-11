@@ -25,7 +25,6 @@ class SkillSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     technologies = SkillSerializer(many=True, read_only=True)
-    platform_display = serializers.CharField(source='get_platform_display', read_only=True)
 
     class Meta:
         model = Project
@@ -35,14 +34,13 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for infinite scroll list responses."""
     image_url = serializers.SerializerMethodField()
-    platform_display = serializers.CharField(source='get_platform_display', read_only=True)
     tech_tags = serializers.SerializerMethodField()
     description = serializers.CharField(source='get_card_description', read_only=True)
 
     class Meta:
         model = Project
         fields = ('id', 'title', 'slug', 'description', 'image_url',
-                  'platform', 'platform_display', 'tech_tags',
+                  'tech_tags',
                   'app_store_url', 'play_store_url', 'web_page_url',
                   'is_bot', 'github_url')
 

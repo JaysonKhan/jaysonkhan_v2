@@ -22,7 +22,7 @@ class PortfolioRepository:
 
     @staticmethod
     def get_web_projects():
-        """Projects that have a web_page_url (URL-based, not platform field)."""
+        """Projects that have a web_page_url."""
         return (
             Project.objects
             .filter(web_page_url__gt='', is_visible=True)

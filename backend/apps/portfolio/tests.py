@@ -13,39 +13,28 @@ class SkillModelTest(TestCase):
 
 class PortfolioRepositoryTest(TestCase):
     def setUp(self):
-        self.bot_by_platform = Project.objects.create(
-            title='Bot Platform',
-            slug='bot-platform',
-            platform='bot',
-            is_bot=False,
-            is_visible=True,
-        )
-        self.bot_by_flag = Project.objects.create(
-            title='Bot Flag',
-            slug='bot-flag',
-            platform='web',
+        self.bot_project = Project.objects.create(
+            title='Bot Project',
+            slug='bot-project',
             is_bot=True,
             is_visible=True,
         )
         self.hidden_bot = Project.objects.create(
             title='Hidden Bot',
             slug='hidden-bot',
-            platform='bot',
             is_bot=True,
             is_visible=False,
         )
         self.non_bot = Project.objects.create(
             title='Regular App',
             slug='regular-app',
-            platform='web',
             is_bot=False,
             is_visible=True,
         )
 
-    def test_get_bot_projects_includes_platform_or_flag_and_only_visible(self):
+    def test_get_bot_projects_includes_flag_and_only_visible(self):
         slugs = set(PortfolioRepository.get_bot_projects().values_list('slug', flat=True))
-        self.assertIn(self.bot_by_platform.slug, slugs)
-        self.assertIn(self.bot_by_flag.slug, slugs)
+        self.assertIn(self.bot_project.slug, slugs)
         self.assertNotIn(self.hidden_bot.slug, slugs)
         self.assertNotIn(self.non_bot.slug, slugs)
 

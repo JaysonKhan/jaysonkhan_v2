@@ -43,14 +43,6 @@ class Skill(models.Model):
 
 
 class Project(models.Model):
-    PLATFORM_CHOICES = [
-        ('android', 'Android'),
-        ('ios', 'iOS'),
-        ('cross', 'Cross-platform (Android & iOS)'),
-        ('web', 'Web'),
-        ('bot', 'Telegram Bot'),
-    ]
-
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description_rich = models.TextField(blank=True, null=True, help_text="Rich text description (HTML)")
@@ -60,20 +52,15 @@ class Project(models.Model):
     )
     image = models.ImageField(upload_to='projects/', blank=True, null=True)
 
-    # Platform
-    platform = models.CharField(
-        max_length=10, choices=PLATFORM_CHOICES, default='cross',
-        help_text="Target platform"
-    )
     app_store_url = models.URLField(blank=True, help_text="Apple App Store link")
     play_store_url = models.URLField(blank=True, help_text="Google Play Store link")
     web_page_url = models.URLField(
         blank=True,
-        help_text="Web page / live URL — shown only for Web platform projects"
+        help_text="Web page / live URL"
     )
     is_bot = models.BooleanField(
         default=False,
-        help_text="Show in the Telegram Bot section (overrides platform for section display)"
+        help_text="Show in the Telegram Bot section"
     )
     is_featured = models.BooleanField(
         default=False, help_text="Show on homepage featured section"

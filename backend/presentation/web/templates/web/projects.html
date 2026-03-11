@@ -37,16 +37,10 @@
             <div class="relative overflow-hidden">
                 <img src="{{ project.image.url }}" alt="{{ project.title }}"
                     class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
-                <div class="absolute top-3 left-3">
-                    <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
-                </div>
             </div>
             {% else %}
             <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
                 No image
-                <div class="absolute top-3 left-3">
-                    <span class="platform-badge {{ project.platform }}">{{ project.get_platform_display }}</span>
-                </div>
             </div>
             {% endif %}
 
@@ -81,7 +75,7 @@
                         Google Play
                     </a>
                     {% endif %}
-                    {% if project.platform == 'web' and project.web_page_url %}
+                    {% if project.web_page_url %}
                     <a href="{{ project.web_page_url }}" target="_blank"
                         class="store-btn web text-xs relative z-10" onclick="event.stopPropagation()">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -142,11 +136,9 @@
                 ${p.image_url
                     ? `<div class="relative overflow-hidden">
                         <img src="${p.image_url}" alt="${p.title}" class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
-                        <div class="absolute top-3 left-3 z-10"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
                        </div>`
                     : `<div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
                         No image
-                        <div class="absolute top-3 left-3 z-10"><span class="platform-badge ${p.platform}">${p.platform_display}</span></div>
                        </div>`
                 }
 
@@ -159,7 +151,7 @@
                     <div class="flex items-center gap-3 flex-wrap mt-auto">
                         ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs relative z-10" onclick="event.stopPropagation()">App Store</a>` : ''}
                         ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs relative z-10" onclick="event.stopPropagation()">Google Play</a>` : ''}
-                        ${p.platform === 'web' && p.web_page_url ? `<a href="${p.web_page_url}" target="_blank" class="store-btn web text-xs relative z-10" onclick="event.stopPropagation()">Web Page</a>` : ''}
+                        ${p.web_page_url ? `<a href="${p.web_page_url}" target="_blank" class="store-btn web text-xs relative z-10" onclick="event.stopPropagation()">Web Page</a>` : ''}
                         ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm relative z-10" onclick="event.stopPropagation()">GitHub →</a>` : ''}
                         <a href="/projects/${p.slug}/" class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details →</a>
                     </div>
