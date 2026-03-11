@@ -53,6 +53,9 @@ Thumbs.db
 backend/static/
 backend/media/
 
+# Node
+node_modules/
+
 # AI agent tools
 /output/
 /docs/
