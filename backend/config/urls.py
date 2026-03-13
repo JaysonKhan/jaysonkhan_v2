@@ -49,6 +49,13 @@ urlpatterns = [
     # ── WakaTime coding stats ──────────────────────────────────────────────
     path('api/wakatime-stats/', wakatime_stats, name='wakatime_stats'),
 
+    # ── Telegram Bot Webhook ─────────────────────────────────────────────────
+    path(
+        'api/telegram/webhook/<str:secret>/',
+        __import__('interactions.notifications.webhook', fromlist=['TelegramWebhookView']).TelegramWebhookView.as_view(),
+        name='telegram_webhook',
+    ),
+
     # ── Interactions (Telegram auth, comments, likes) — included at root ─────
     path('', include('interactions.urls')),
 

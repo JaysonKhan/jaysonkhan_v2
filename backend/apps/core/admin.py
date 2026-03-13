@@ -235,7 +235,28 @@ class SiteSettingsAdmin(ModelAdmin):
                 'fields': tuple(footer_fields),
             }),
 
-            # ── Tab 8: System ──────────────────────────────────────────────────
+            # ── Tab 8: Telegram ─────────────────────────────────────────────────
+            *([('Telegram', {
+                'classes': ('tab',),
+                'description': (
+                    'Telegram bot notification settings. Configure the admin group '
+                    'and site owner ID for notification routing.'
+                ),
+                'fields': tuple(
+                    f for f in (
+                        'telegram_owner_id',
+                        'telegram_admin_group_id',
+                        'admin_notify_new_users',
+                        'admin_notify_comments',
+                        'admin_notify_replies',
+                        'admin_notify_reactions',
+                        'admin_notify_likes',
+                        'admin_notify_contacts',
+                    ) if f in columns
+                ),
+            })] if 'telegram_owner_id' in columns else []),
+
+            # ── Tab 9: System ──────────────────────────────────────────────────
             ('System', {
                 'classes': ('tab',),
                 'fields': (

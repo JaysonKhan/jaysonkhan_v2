@@ -266,6 +266,12 @@ class AddCommentView(View):
         if not profile:
             return JsonResponse({'error': 'Login with Telegram first'}, status=401)
 
+        # ── 0. Ban / Mute Check ──
+        from interactions.notifications.ban_check import check_ban
+        ban_result = check_ban(profile)
+        if ban_result.is_banned:
+            return JsonResponse({'error': ban_result.message}, status=403)
+
         # Handle FormData for images and text
         text = request.POST.get('text', '').strip()
         parent_id = request.POST.get('parent_id')

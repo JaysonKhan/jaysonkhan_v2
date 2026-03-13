@@ -1,0 +1,290 @@
+"""
+Telegram Bot webhook receiver.
+
+Handles:
+- Private chat: /start, /notifications (inline keyboard toggles)
+- Admin group:  /ban, /mute (reply to logged message), /config
+- Callback queries for inline keyboard presses
+"""
+import json
+import logging
+from datetime import timedelta
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+
+from core.services import SiteSettingsService
+from interactions.models import (
+    TelegramProfile,
+    NotificationPreference,
+    UserBan,
+    AdminLogMessage,
+)
+from .telegram_api import TelegramBotAPI
+
+logger = logging.getLogger('interactions.notifications')
+
+MUTE_DAYS = 3
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TelegramWebhookView(View):
+    """POST /api/telegram/webhook/<secret>/"""
+
+    def post(self, request, secret):
+        expected = getattr(settings, 'TELEGRAM_WEBHOOK_SECRET', '')
+        if not expected or secret != expected:
+            return HttpResponse(status=403)
+
+        try:
+            update = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return HttpResponse(status=400)
+
+        if 'message' in update:
+            self._handle_message(update['message'])
+        elif 'callback_query' in update:
+            self._handle_callback(update['callback_query'])
+
+        return HttpResponse('ok')
+
+    # ── Message routing ──────────────────────────────────────────────────────
+
+    def _handle_message(self, message):
+        text = message.get('text', '')
+        if not text.startswith('/'):
+            return
+
+        chat = message.get('chat', {})
+        chat_type = chat.get('type', '')
+        command = text.split()[0].split('@')[0]  # strip @botname
+
+        if chat_type == 'private':
+            self._private_command(command, message)
+        elif chat_type in ('group', 'supergroup'):
+            self._group_command(command, message)
+
+    # ── Private chat ─────────────────────────────────────────────────────────
+
+    def _private_command(self, command, message):
+        api = TelegramBotAPI()
+        tg_id = message['from']['id']
+
+        if command == '/start':
+            api.send_message(tg_id, (
+                'Salom! Men sizga kommentlaringizga javob kelganda '
+                'yoki reaksiya qo\'yilganda xabar beraman.\n\n'
+                'Sozlamalar: /notifications'
+            ))
+        elif command == '/notifications':
+            self._show_user_settings(tg_id)
+
+    def _show_user_settings(self, telegram_id: int):
+        api = TelegramBotAPI()
+        try:
+            profile = TelegramProfile.objects.get(telegram_id=telegram_id)
+        except TelegramProfile.DoesNotExist:
+            api.send_message(telegram_id, (
+                'Siz hali saytga kirmagansiz. Avval jaysonkhan.com da '
+                'Telegram orqali login qiling.'
+            ))
+            return
+
+        pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
+        keyboard = self._build_user_keyboard(pref)
+        api.send_message(
+            telegram_id,
+            '🔔 <b>Bildirishnoma sozlamalari</b>',
+            reply_markup=keyboard,
+        )
+
+    @staticmethod
+    def _build_user_keyboard(pref):
+        r = '✅' if pref.replies_enabled else '❌'
+        x = '✅' if pref.reactions_enabled else '❌'
+        return {
+            'inline_keyboard': [
+                [{'text': f'{r} Javoblar (replies)', 'callback_data': 'toggle_replies'}],
+                [{'text': f'{x} Reaksiyalar', 'callback_data': 'toggle_reactions'}],
+            ],
+        }
+
+    # ── Group commands ───────────────────────────────────────────────────────
+
+    def _group_command(self, command, message):
+        site = SiteSettingsService.get()
+        chat_id = message['chat']['id']
+
+        # Only respond in the configured admin group
+        if site.telegram_admin_group_id and chat_id != site.telegram_admin_group_id:
+            return
+
+        if command == '/ban':
+            self._handle_ban(message, permanent=True)
+        elif command == '/mute':
+            self._handle_ban(message, permanent=False)
+        elif command == '/config':
+            self._show_group_config(chat_id)
+
+    def _handle_ban(self, message, *, permanent: bool):
+        api = TelegramBotAPI()
+        chat_id = message['chat']['id']
+        reply_to = message.get('reply_to_message')
+
+        if not reply_to:
+            api.send_message(chat_id, 'ℹ️ Foydalanuvchi xabariga reply qilib /ban yoki /mute yuboring.')
+            return
+
+        # Look up the user from the admin log
+        try:
+            log_entry = AdminLogMessage.objects.select_related('profile').get(
+                message_id=reply_to['message_id'],
+            )
+        except AdminLogMessage.DoesNotExist:
+            api.send_message(chat_id, '⚠️ Bu xabardan foydalanuvchini aniqlab bo\'lmadi.')
+            return
+
+        if not log_entry.profile:
+            api.send_message(chat_id, '⚠️ Bu eventda foydalanuvchi profili yo\'q.')
+            return
+
+        profile = log_entry.profile
+        # Parse optional reason after the command
+        parts = message.get('text', '').split(maxsplit=1)
+        reason = parts[1] if len(parts) > 1 else ''
+
+        # Deactivate any existing bans
+        UserBan.objects.filter(profile=profile, is_active=True).update(is_active=False)
+
+        if permanent:
+            UserBan.objects.create(
+                profile=profile,
+                ban_type='ban',
+                reason=reason,
+                expires_at=None,
+                is_active=True,
+            )
+            api.send_message(chat_id, f'🚫 <b>{profile.display_name}</b> doimiy ban qilindi.')
+            api.send_message(
+                profile.telegram_id,
+                '🚫 Siz jaysonkhan.com da komment yozishdan doimiy bloklangansiz.',
+            )
+        else:
+            expires = timezone.now() + timedelta(days=MUTE_DAYS)
+            UserBan.objects.create(
+                profile=profile,
+                ban_type='mute',
+                reason=reason,
+                expires_at=expires,
+                is_active=True,
+            )
+            until = expires.strftime('%Y-%m-%d %H:%M UTC')
+            api.send_message(
+                chat_id,
+                f'🔇 <b>{profile.display_name}</b> {MUTE_DAYS} kunga mute qilindi ({until} gacha).',
+            )
+            api.send_message(
+                profile.telegram_id,
+                f'🔇 Siz jaysonkhan.com da {MUTE_DAYS} kunga mute qilindingiz ({until} gacha).',
+            )
+
+    def _show_group_config(self, chat_id: int):
+        api = TelegramBotAPI()
+        site = SiteSettingsService.get()
+
+        def _s(val):
+            return '✅' if val else '❌'
+
+        keyboard = {
+            'inline_keyboard': [
+                [{'text': f'{_s(site.admin_notify_new_users)} Yangi userlar',
+                  'callback_data': 'cfg_new_users'}],
+                [{'text': f'{_s(site.admin_notify_comments)} Kommentlar',
+                  'callback_data': 'cfg_comments'}],
+                [{'text': f'{_s(site.admin_notify_replies)} Javoblar',
+                  'callback_data': 'cfg_replies'}],
+                [{'text': f'{_s(site.admin_notify_reactions)} Reaksiyalar',
+                  'callback_data': 'cfg_reactions'}],
+                [{'text': f'{_s(site.admin_notify_likes)} Likelar',
+                  'callback_data': 'cfg_likes'}],
+                [{'text': f'{_s(site.admin_notify_contacts)} Contact xabarlar',
+                  'callback_data': 'cfg_contacts'}],
+            ],
+        }
+        api.send_message(chat_id, '⚙️ <b>Admin guruh sozlamalari</b>', reply_markup=keyboard)
+
+    # ── Callback queries ─────────────────────────────────────────────────────
+
+    def _handle_callback(self, callback_query):
+        data = callback_query.get('data', '')
+        if data.startswith('toggle_'):
+            self._toggle_user_pref(callback_query)
+        elif data.startswith('cfg_'):
+            self._toggle_admin_setting(callback_query)
+
+    def _toggle_user_pref(self, cq):
+        api = TelegramBotAPI()
+        data = cq['data']
+        tg_id = cq['from']['id']
+        cb_id = cq['id']
+        msg = cq.get('message', {})
+
+        try:
+            profile = TelegramProfile.objects.get(telegram_id=tg_id)
+            pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
+        except TelegramProfile.DoesNotExist:
+            api.answer_callback_query(cb_id, 'Profil topilmadi')
+            return
+
+        if data == 'toggle_replies':
+            pref.replies_enabled = not pref.replies_enabled
+        elif data == 'toggle_reactions':
+            pref.reactions_enabled = not pref.reactions_enabled
+        pref.save()
+
+        # Update keyboard in-place
+        keyboard = self._build_user_keyboard(pref)
+        api.edit_message_reply_markup(
+            chat_id=tg_id,
+            message_id=msg.get('message_id'),
+            reply_markup=keyboard,
+        )
+        api.answer_callback_query(cb_id, 'Yangilandi ✓')
+
+    def _toggle_admin_setting(self, cq):
+        api = TelegramBotAPI()
+        data = cq['data']
+        cb_id = cq['id']
+        msg = cq.get('message', {})
+        chat_id = msg.get('chat', {}).get('id')
+
+        field_map = {
+            'cfg_new_users': 'admin_notify_new_users',
+            'cfg_comments': 'admin_notify_comments',
+            'cfg_replies': 'admin_notify_replies',
+            'cfg_reactions': 'admin_notify_reactions',
+            'cfg_likes': 'admin_notify_likes',
+            'cfg_contacts': 'admin_notify_contacts',
+        }
+        field_name = field_map.get(data)
+        if not field_name:
+            return
+
+        from core.models import SiteSettings
+        site = SiteSettings.objects.first()
+        if not site:
+            api.answer_callback_query(cb_id, 'SiteSettings topilmadi')
+            return
+
+        current = getattr(site, field_name)
+        setattr(site, field_name, not current)
+        site.save(update_fields=[field_name])
+        # post_save signal invalidates SiteSettingsService cache
+
+        # Refresh the keyboard
+        self._show_group_config(chat_id)
+        api.answer_callback_query(cb_id, 'Yangilandi ✓')

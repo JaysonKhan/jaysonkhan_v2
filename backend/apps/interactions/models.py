@@ -115,3 +115,103 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.author.display_name} ❤ {self.content_type} #{self.object_id}"
+
+
+# ── Notification & Moderation ────────────────────────────────────────────────
+
+class NotificationPreference(models.Model):
+    """
+    Per-user toggle for notification types.
+    Defaults to ON for all. Created lazily on first preference check.
+    """
+    profile = models.OneToOneField(
+        TelegramProfile, on_delete=models.CASCADE,
+        related_name='notification_pref',
+    )
+    replies_enabled = models.BooleanField(
+        default=True,
+        help_text='Receive notification when someone replies to your comment',
+    )
+    reactions_enabled = models.BooleanField(
+        default=True,
+        help_text='Receive notification when someone reacts to your comment',
+    )
+
+    class Meta:
+        verbose_name = 'Notification Preference'
+        verbose_name_plural = 'Notification Preferences'
+
+    def __str__(self):
+        return f"Prefs for {self.profile.display_name}"
+
+
+class UserBan(models.Model):
+    """
+    Tracks bans and mutes issued via the admin Telegram group.
+    - ban  = permanent (expires_at is NULL)
+    - mute = temporary (expires_at is set, auto-expired on check)
+    """
+    BAN_TYPE_CHOICES = [
+        ('ban', 'Permanent Ban'),
+        ('mute', 'Temporary Mute'),
+    ]
+    profile = models.ForeignKey(
+        TelegramProfile, on_delete=models.CASCADE,
+        related_name='bans',
+    )
+    ban_type = models.CharField(max_length=10, choices=BAN_TYPE_CHOICES)
+    reason = models.TextField(blank=True, default='')
+    expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Null = permanent ban. Set for temporary mutes.',
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'User Ban'
+        verbose_name_plural = 'User Bans'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(
+                fields=['profile', 'is_active'],
+                name='ban_profile_active',
+            ),
+        ]
+
+    def __str__(self):
+        status = 'active' if self.is_active else 'expired'
+        return f"{self.get_ban_type_display()} — {self.profile.display_name} ({status})"
+
+
+class AdminLogMessage(models.Model):
+    """
+    Maps a Telegram message_id in the admin group to the user/event
+    that triggered it. Used for /ban and /mute reply lookups.
+    """
+    EVENT_CHOICES = [
+        ('comment', 'New Comment'),
+        ('reply', 'Reply'),
+        ('reaction', 'Reaction'),
+        ('like', 'Like'),
+        ('contact', 'Contact Form'),
+        ('new_user', 'New User'),
+    ]
+    message_id = models.IntegerField(
+        unique=True,
+        help_text='Telegram message_id in the admin group',
+    )
+    profile = models.ForeignKey(
+        TelegramProfile, on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='admin_log_messages',
+    )
+    event_type = models.CharField(max_length=20, choices=EVENT_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Admin Log Message'
+        verbose_name_plural = 'Admin Log Messages'
+
+    def __str__(self):
+        return f"Msg #{self.message_id} ({self.event_type})"

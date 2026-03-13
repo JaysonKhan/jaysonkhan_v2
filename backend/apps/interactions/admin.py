@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
-from .models import TelegramProfile, Comment, Like, CommentReaction
+from .models import (
+    TelegramProfile, Comment, Like, CommentReaction,
+    NotificationPreference, UserBan, AdminLogMessage,
+)
 
 
 @admin.register(TelegramProfile)
@@ -67,3 +70,28 @@ class LikeAdmin(ModelAdmin):
     list_display  = ('author', 'content_type', 'object_id', 'created_at')
     list_filter   = ('content_type', 'created_at')
     readonly_fields = ('author', 'content_type', 'object_id', 'created_at')
+
+
+# ── Notification & Moderation ────────────────────────────────────────────────
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(ModelAdmin):
+    list_display = ('profile', 'replies_enabled', 'reactions_enabled')
+    list_filter = ('replies_enabled', 'reactions_enabled')
+    readonly_fields = ('profile',)
+
+
+@admin.register(UserBan)
+class UserBanAdmin(ModelAdmin):
+    list_display = ('profile', 'ban_type', 'is_active', 'expires_at', 'created_at')
+    list_filter = ('ban_type', 'is_active')
+    list_editable = ('is_active',)
+    readonly_fields = ('profile', 'created_at')
+    ordering = ('-created_at',)
+
+
+@admin.register(AdminLogMessage)
+class AdminLogMessageAdmin(ModelAdmin):
+    list_display = ('message_id', 'profile', 'event_type', 'created_at')
+    list_filter = ('event_type',)
+    readonly_fields = ('message_id', 'profile', 'event_type', 'created_at')

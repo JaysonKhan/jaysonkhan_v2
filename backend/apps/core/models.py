@@ -288,6 +288,34 @@ class SiteSettings(models.Model):
         help_text="WakaTime API key (from wakatime.com/settings/api-key). Used server-side only."
     )
 
+    # ── Telegram Bot / Notifications ──────────────────────────────────────────
+    telegram_owner_id = models.BigIntegerField(
+        null=True, blank=True,
+        help_text="Telegram user ID of the site owner. Always receives notifications."
+    )
+    telegram_admin_group_id = models.BigIntegerField(
+        null=True, blank=True,
+        help_text="Telegram group/supergroup chat ID for admin notifications."
+    )
+    admin_notify_new_users = models.BooleanField(
+        default=True, help_text="Log new user registrations to admin group"
+    )
+    admin_notify_comments = models.BooleanField(
+        default=True, help_text="Log new comments to admin group"
+    )
+    admin_notify_replies = models.BooleanField(
+        default=True, help_text="Log comment replies to admin group"
+    )
+    admin_notify_reactions = models.BooleanField(
+        default=True, help_text="Log reactions to admin group"
+    )
+    admin_notify_likes = models.BooleanField(
+        default=True, help_text="Log likes/unlikes to admin group"
+    )
+    admin_notify_contacts = models.BooleanField(
+        default=True, help_text="Log contact form submissions to admin group"
+    )
+
     # ── Footer ────────────────────────────────────────────────────────────────
     footer_description = models.TextField(
         max_length=500, blank=True, default="",

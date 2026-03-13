@@ -183,6 +183,9 @@ TELEGRAM_BOT_TOKEN = env('TELEGRAM_BOT_TOKEN', default='')
 TELEGRAM_BOT_USERNAME = env('TELEGRAM_BOT_USERNAME', default='')
 # Max age (seconds) for Telegram auth_date — reject older tokens (default 24h)
 TELEGRAM_AUTH_MAX_AGE_SECONDS = env.int('TELEGRAM_AUTH_MAX_AGE_SECONDS', default=86400)
+# Webhook secret & domain for bot notifications
+TELEGRAM_WEBHOOK_SECRET = env('TELEGRAM_WEBHOOK_SECRET', default='')
+TELEGRAM_WEBHOOK_DOMAIN = env('TELEGRAM_WEBHOOK_DOMAIN', default='https://jaysonkhan.com')
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -375,6 +378,16 @@ UNFOLD = {
                         "title": "Telegram Profiles",
                         "icon": "group",
                         "link": f"{_A}interactions/telegramprofile/",
+                    },
+                    {
+                        "title": "Bans",
+                        "icon": "block",
+                        "link": f"{_A}interactions/userban/",
+                    },
+                    {
+                        "title": "Notification Prefs",
+                        "icon": "notifications",
+                        "link": f"{_A}interactions/notificationpreference/",
                     },
                 ],
             },
