@@ -9,8 +9,9 @@ from rest_framework_simplejwt.views import (
 )
 import environ
 from presentation.web.views import custom_404_view, custom_500_view
-from core.views import upload_media_view, robots_txt
+from core.views import upload_media_view, robots_txt, health_check
 from core.sitemaps import StaticViewSitemap, ProjectSitemap, PostSitemap
+from blog.feeds import LatestPostsFeed, LatestPostsAtomFeed
 
 env = environ.Env()
 
@@ -32,10 +33,15 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # ── SEO ────────────────────────────────────────────────────────────────────
+    # ── SEO & Feeds ────────────────────────────────────────────────────────────
     path('robots.txt', robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps},
          name='django.contrib.sitemaps.views.sitemap'),
+    path('blog/feed/', LatestPostsFeed(), name='blog_rss_feed'),
+    path('blog/feed/atom/', LatestPostsAtomFeed(), name='blog_atom_feed'),
+
+    # ── Health check ──────────────────────────────────────────────────────────
+    path('health/', health_check, name='health_check'),
 
     # ── Interactions (Telegram auth, comments, likes) — included at root ─────
     path('', include('interactions.urls')),

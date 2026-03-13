@@ -139,6 +139,12 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        # App-level loggers — catch WARNING+ in production log files
+        'core': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
+        'portfolio': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
+        'blog': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
+        'contact': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
+        'interactions': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
     },
     'root': {
         'handlers': ['file'],

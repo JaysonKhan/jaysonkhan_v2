@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.cache import cache
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.urls import reverse_lazy
 from django.contrib import messages
@@ -15,6 +16,10 @@ from blog.models import Post
 from core.models import SiteSettings, PageView
 from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
+
+# Visitor count cache — avoids COUNT(*) on every page render
+_VISITOR_COUNT_CACHE_KEY = 'visitor_count'
+_VISITOR_COUNT_TTL = 60 * 60  # 1 hour
 
 
 def custom_404_view(request, exception=None):
@@ -99,13 +104,19 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         portfolio_service = PortfolioService(PortfolioRepository())
-        context['portfolio'] = portfolio_service.get_portfolio_data()
+        context['portfolio'] = portfolio_service.get_homepage_data()
 
         blog_service = BlogService(BlogRepository())
         context['latest_posts'] = blog_service.get_all_published_posts()[:3]
 
-        context['visitor_count'] = PageView.objects.count()
+        # Cached visitor count — avoids COUNT(*) on every request
+        count = cache.get(_VISITOR_COUNT_CACHE_KEY)
+        if count is None:
+            count = PageView.objects.count()
+            cache.set(_VISITOR_COUNT_CACHE_KEY, count, _VISITOR_COUNT_TTL)
+        context['visitor_count'] = count
         return context
 
     @staticmethod
@@ -131,9 +142,10 @@ class HomeView(TemplateView):
                 uid = uuid.uuid4()
             if not PageView.objects.filter(visitor_id=uid).exists():
                 PageView.objects.create(visitor_id=uid, ip_address=ip)
+                cache.delete(_VISITOR_COUNT_CACHE_KEY)
         elif ip and PageView.objects.filter(ip_address=ip).exists():
             # Case 2: No cookie but IP already seen — different browser / incognito
-            # Link to existing record via cookie, don't create new
+            # Link to existing record via cookie, don't create new (no cache bust)
             existing = PageView.objects.filter(ip_address=ip).first()
             response.set_cookie(
                 self.VISITOR_COOKIE,
@@ -146,6 +158,7 @@ class HomeView(TemplateView):
             # Case 3: No cookie, new IP — genuinely new visitor
             new_id = uuid.uuid4()
             PageView.objects.create(visitor_id=new_id, ip_address=ip)
+            cache.delete(_VISITOR_COUNT_CACHE_KEY)
             response.set_cookie(
                 self.VISITOR_COOKIE,
                 str(new_id),
@@ -242,7 +255,29 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_interactions_context(self.request, self.object))
+        # Related posts by shared tags
+        blog_service = BlogService(BlogRepository())
+        context['related_posts'] = blog_service.get_related_posts(self.object)
         return context
+
+
+class BlogSearchView(ListView):
+    template_name = 'web/blog_search.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        q = self.request.GET.get('q', '').strip()
+        if not q:
+            return Post.objects.none()
+        blog_service = BlogService(BlogRepository())
+        return blog_service.search_posts(q)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['query'] = self.request.GET.get('q', '').strip()
+        return context
+
 
 class ContactView(TemplateView):
     template_name = 'web/contact.html'

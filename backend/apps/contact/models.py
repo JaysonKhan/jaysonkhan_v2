@@ -10,6 +10,10 @@ class ContactMessage(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at', 'is_read'],
+                         name='contact_date_read'),
+        ]
 
     def __str__(self):
         return f"Message from {self.name} - {self.subject}"

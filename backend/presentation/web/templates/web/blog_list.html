@@ -20,6 +20,17 @@
         <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.blog_page_subtitle }}</p>
     </div>
 
+    <!-- Search Bar -->
+    <form action="{% url 'blog_search' %}" method="get" class="max-w-xl mx-auto mb-12 reveal">
+        <div class="relative">
+            <input type="text" name="q"
+                placeholder="Search articles..."
+                autocomplete="off"
+                class="w-full px-5 py-3 pl-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        </div>
+    </form>
+
     <div id="items-grid" class="grid"
         style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;"
         data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
@@ -48,6 +59,8 @@
                 <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
                     <i class="fa-regular fa-calendar"></i>
                     <span>{{ post.created_at|date:"M d, Y" }}</span>
+                    <span>&middot;</span>
+                    <span>{{ post.reading_time }} min read</span>
                 </div>
                 <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition line-clamp-2 leading-snug">
                     <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>

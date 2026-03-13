@@ -92,3 +92,15 @@ class PortfolioService:
             'hero_skills': self.repository.get_hero_skills(),
             'experience': self.repository.get_all_experience(),
         }
+
+    def get_homepage_data(self) -> dict:
+        """Lightweight version — only data needed for the homepage."""
+        featured = self.repository.get_featured_projects()
+        return {
+            'featured_projects': featured,
+            # Fallback if none are marked as featured — template uses this
+            'projects': self.repository.get_all_projects()[:3] if not featured else [],
+            'skills_grouped': self.repository.get_skills_grouped(),
+            'hero_skills': self.repository.get_hero_skills(),
+            'experience': self.repository.get_all_experience(),
+        }

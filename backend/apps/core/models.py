@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.cache import cache
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -337,8 +338,13 @@ class SiteSettings(models.Model):
 
     @property
     def visitor_count(self):
-        """Total unique visitors tracked by PageView."""
-        return PageView.objects.count()
+        """Total unique visitors tracked by PageView (cached 1 hour)."""
+        key = 'visitor_count'
+        count = cache.get(key)
+        if count is None:
+            count = PageView.objects.count()
+            cache.set(key, count, 60 * 60)
+        return count
 
     @property
     def footer_display_description(self):

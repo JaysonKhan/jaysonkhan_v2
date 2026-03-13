@@ -120,6 +120,15 @@ fi
 if $HTTPS_OK; then
     ok "HTTPS responds (${HTTP_CODE}): https://${DOMAIN}/"
 
+    # Health endpoint — checks DB + cache
+    HEALTH_BODY=$(curl -s --max-time 5 "https://${DOMAIN}/health/" 2>/dev/null || echo '{}')
+    HEALTH_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "https://${DOMAIN}/health/" 2>/dev/null || echo "000")
+    if [[ "$HEALTH_CODE" == "200" ]]; then
+        ok "Health check passed: $HEALTH_BODY"
+    else
+        warn "Health check returned $HEALTH_CODE: $HEALTH_BODY"
+    fi
+
     # Check static files
     CSS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "https://${DOMAIN}/static/css/output.css" 2>/dev/null || echo "000")
     if [[ "$CSS_CODE" == "200" ]]; then

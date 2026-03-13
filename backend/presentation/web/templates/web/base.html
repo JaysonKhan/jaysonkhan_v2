@@ -18,6 +18,9 @@
     <meta name="author" content="{{ site_settings.site_author }}">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="{{ site_settings.site_author }} Blog" href="{% url 'blog_rss_feed' %}">
+
     <!-- Open Graph -->
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">

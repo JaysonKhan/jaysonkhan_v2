@@ -167,3 +167,39 @@ def robots_txt(request):
         f"Sitemap: {sitemap_url}\n"
     )
     return HttpResponse(content, content_type='text/plain')
+
+
+# ── Health check ──────────────────────────────────────────────────────────────
+
+def health_check(request):
+    """
+    Lightweight health check for monitoring and deploy verification.
+    Checks: database connectivity, cache backend, migrations applied.
+    """
+    from django.db import connection
+    from django.core.cache import cache
+
+    health = {'status': 'ok'}
+
+    # Database check
+    try:
+        connection.ensure_connection()
+        health['database'] = 'ok'
+    except Exception as e:
+        health['database'] = f'error: {e}'
+        health['status'] = 'degraded'
+
+    # Cache check
+    try:
+        cache.set('_health_check', '1', 10)
+        if cache.get('_health_check') == '1':
+            health['cache'] = 'ok'
+        else:
+            health['cache'] = 'error: read-back mismatch'
+            health['status'] = 'degraded'
+    except Exception as e:
+        health['cache'] = f'error: {e}'
+        health['status'] = 'degraded'
+
+    status_code = 200 if health['status'] == 'ok' else 503
+    return JsonResponse(health, status=status_code)

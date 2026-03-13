@@ -82,6 +82,14 @@ class Project(models.Model):
 
     class Meta:
         ordering = ['order', '-created_at']
+        indexes = [
+            models.Index(fields=['is_visible', 'order', '-created_at'],
+                         name='proj_visible_order'),
+            models.Index(fields=['is_featured', 'is_visible'],
+                         name='proj_featured'),
+            models.Index(fields=['is_bot', 'is_visible'],
+                         name='proj_bot'),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:

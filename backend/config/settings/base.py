@@ -232,6 +232,42 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@jaysonkhan.com')
 
+# ── Logging ──────────────────────────────────────────────────────────────────
+# Console logger for dev; file logger added in prod.py for production.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # App-level loggers — capture INFO+ for our own code
+        'core': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'portfolio': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'blog': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'contact': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'interactions': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
+
 # Django Unfold Admin Theme
 # Admin URL prefix — read from .env so sidebar links always match the real URL.
 _ADMIN_URL = env('ADMIN_URL', default='admin/')
