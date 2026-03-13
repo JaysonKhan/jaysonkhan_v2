@@ -79,6 +79,12 @@
     .message--other .message-content-wrapper { align-items: flex-start; }
     .message-content-wrapper.has-image-wrapper { max-width: 100%; }
 
+    /* When wrapper contains replies, expand so reply thread has room */
+    .message-content-wrapper:has(> .tg-replies-container) {
+        width: 100%;
+        min-width: min(70%, 420px);
+    }
+
     /* ── Bubble Base ── */
     .tg-bubble {
         display: block;
