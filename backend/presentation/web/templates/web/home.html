@@ -571,6 +571,52 @@
 </section>
 {% endif %}
 
+<!-- ── Separator ── -->
+<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
+
+<!-- ── WakaTime Coding Activity ─────────────────────────────── -->
+{% if site_settings.wakatime_api_key %}
+<section id="wakatime-section" class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);display:none;">
+    <div class="text-center mb-12 reveal">
+        <span class="section-tag">
+            <svg style="width:14px;height:14px;display:inline;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.1L6.1 6.1v4.5c0 4.3 2.5 8.3 5.9 10.3 3.4-2 5.9-6 5.9-10.3V6.1L12 3.1zm0 1.8l4.1 2.1v3.6c0 3.5-2 6.9-4.1 8.6-2.1-1.7-4.1-5.1-4.1-8.6V7l4.1-2.1z"/></svg>
+            Coding Activity
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">
+            <span class="text-gradient">WakaTime Stats</span>
+        </h2>
+        <p class="text-slate-400 mt-2">Last 7 days of coding activity</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto reveal">
+        <!-- Top Stats Cards -->
+        <div id="wk-stats-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"></div>
+
+        <!-- Languages + Editors Grid -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Languages -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;">
+                <h3 style="font-size:0.85rem;font-weight:600;color:#e2e8f0;margin-bottom:16px;">
+                    <svg style="width:14px;height:14px;display:inline;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+                    Languages
+                </h3>
+                <div id="wk-languages" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+
+            <!-- Editors -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;">
+                <h3 style="font-size:0.85rem;font-weight:600;color:#e2e8f0;margin-bottom:16px;">
+                    <svg style="width:14px;height:14px;display:inline;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    Editors
+                </h3>
+                <div id="wk-editors" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- Skills Scripts -->
 <script>
     /* Per-category collapse/expand toggle */
@@ -814,6 +860,109 @@
                         <span><strong style="color:#e2e8f0;">${currentStreak}</strong> day streak</span>
                         <span><strong style="color:#e2e8f0;">${maxStreak}</strong> best streak</span>
                     `;
+                }
+            })
+            .catch(() => {
+                // Silently fail — section stays hidden
+            });
+    })();
+    {% endif %}
+
+    /* ── WakaTime Stats ───────────────────────────────────────────── */
+    {% if site_settings.wakatime_api_key %}
+    (() => {
+        const section = document.getElementById('wakatime-section');
+        if (!section) return;
+
+        const langColors = {
+            'Dart': '#00B4AB', 'Python': '#3572A5', 'JavaScript': '#f1e05a',
+            'TypeScript': '#3178c6', 'HTML': '#e34c26', 'CSS': '#563d7c',
+            'Java': '#b07219', 'Kotlin': '#A97BFF', 'Swift': '#F05138',
+            'Go': '#00ADD8', 'Rust': '#dea584', 'C++': '#f34b7d',
+            'Ruby': '#701516', 'PHP': '#4F5D95', 'Shell': '#89e051',
+            'SQL': '#e38c00', 'YAML': '#cb171e', 'JSON': '#292929',
+            'Markdown': '#083fa1', 'Vue.js': '#41b883', 'Other': '#6366f1',
+        };
+
+        function getColor(name) {
+            return langColors[name] || '#6366f1';
+        }
+
+        function buildBar(items, container, useColors) {
+            items.forEach(item => {
+                const row = document.createElement('div');
+                const color = useColors ? getColor(item.name) : '#6366f1';
+                row.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-size:0.78rem;color:#cbd5e1;display:flex;align-items:center;gap:6px;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>
+                            ${item.name}
+                        </span>
+                        <span style="font-size:0.7rem;color:#64748b;">${item.text || item.percent + '%'}</span>
+                    </div>
+                    <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
+                        <div class="wk-bar-fill" style="height:100%;width:0;border-radius:4px;background:${color};transition:width 1s cubic-bezier(0.22,1,0.36,1);--target-w:${item.percent}%"></div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        fetch('/api/wakatime-stats/')
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => {
+                if (data.error) return;
+
+                section.style.display = '';
+
+                // Stats cards
+                const cards = document.getElementById('wk-stats-cards');
+                const statsData = [
+                    { label: 'Total Time', value: data.total || '—', icon: '&#9201;' },
+                    { label: 'Daily Average', value: data.daily_average || '—', icon: '&#128200;' },
+                    { label: 'Best Day', value: data.best_day ? data.best_day.text : '—', icon: '&#128293;' },
+                    { label: 'Languages', value: (data.languages || []).length + ' used', icon: '&#128187;' },
+                ];
+                statsData.forEach(s => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;text-align:center;';
+                    card.innerHTML = `
+                        <div style="font-size:1.5rem;margin-bottom:4px;">${s.icon}</div>
+                        <div style="font-size:1.1rem;font-weight:700;color:#e2e8f0;">${s.value}</div>
+                        <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">${s.label}</div>
+                    `;
+                    cards.appendChild(card);
+                });
+
+                // Languages
+                const langContainer = document.getElementById('wk-languages');
+                if (langContainer && data.languages) {
+                    buildBar(data.languages, langContainer, true);
+                }
+
+                // Editors
+                const edContainer = document.getElementById('wk-editors');
+                if (edContainer && data.editors) {
+                    buildBar(data.editors, edContainer, false);
+                }
+
+                // Animate bars on scroll
+                if ('IntersectionObserver' in window) {
+                    const obs = new IntersectionObserver((entries) => {
+                        entries.forEach(e => {
+                            if (e.isIntersecting) {
+                                e.target.querySelectorAll('.wk-bar-fill').forEach(bar => {
+                                    bar.style.width = bar.style.getPropertyValue('--target-w');
+                                });
+                                obs.unobserve(e.target);
+                            }
+                        });
+                    }, { threshold: 0.2 });
+                    obs.observe(section);
+                } else {
+                    section.querySelectorAll('.wk-bar-fill').forEach(bar => {
+                        bar.style.width = bar.style.getPropertyValue('--target-w');
+                    });
                 }
             })
             .catch(() => {

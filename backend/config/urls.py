@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import (
 )
 import environ
 from presentation.web.views import custom_404_view, custom_500_view
-from core.views import upload_media_view, robots_txt, health_check, github_contributions
+from core.views import upload_media_view, robots_txt, health_check, github_contributions, wakatime_stats
 from core.sitemaps import StaticViewSitemap, ProjectSitemap, PostSitemap
 from blog.feeds import LatestPostsFeed, LatestPostsAtomFeed
 
@@ -45,6 +45,9 @@ urlpatterns = [
 
     # ── GitHub contributions graph ─────────────────────────────────────────
     path('api/github-contributions/', github_contributions, name='github_contributions'),
+
+    # ── WakaTime coding stats ──────────────────────────────────────────────
+    path('api/wakatime-stats/', wakatime_stats, name='wakatime_stats'),
 
     # ── Interactions (Telegram auth, comments, likes) — included at root ─────
     path('', include('interactions.urls')),

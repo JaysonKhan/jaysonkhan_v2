@@ -283,6 +283,10 @@ class SiteSettings(models.Model):
         blank=True, default="",
         help_text="Telegram profile URL (optional)"
     )
+    wakatime_api_key = models.CharField(
+        max_length=255, blank=True, default="",
+        help_text="WakaTime API key (from wakatime.com/settings/api-key). Used server-side only."
+    )
 
     # ── Footer ────────────────────────────────────────────────────────────────
     footer_description = models.TextField(

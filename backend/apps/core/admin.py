@@ -218,6 +218,7 @@ class SiteSettingsAdmin(ModelAdmin):
                     'linkedin_url',
                     'twitter_url',
                     'telegram_url',
+                    'wakatime_api_key',
                     'resume_file',
                     'resume_preview',
                     'resume_button_text',

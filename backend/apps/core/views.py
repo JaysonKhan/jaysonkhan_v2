@@ -150,6 +150,101 @@ def upload_media_view(request):
     return JsonResponse({'location': url})
 
 
+# ── WakaTime Coding Activity ──────────────────────────────────────────────────
+
+def wakatime_stats(request):
+    """
+    Proxy WakaTime stats API — returns last 7 days coding activity.
+    API key stays server-side; frontend gets safe JSON.
+    Cached for 2 hours.
+    """
+    from django.core.cache import cache
+    from core.models import SiteSettings
+    import urllib.request
+    import json
+    import base64
+
+    cache_key = 'wakatime_stats_data'
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse(cached)
+
+    try:
+        settings_obj = SiteSettings.objects.first()
+        api_key = getattr(settings_obj, 'wakatime_api_key', '') or ''
+    except Exception:
+        api_key = ''
+
+    if not api_key:
+        return JsonResponse({'error': 'No WakaTime API key configured'}, status=404)
+
+    # WakaTime uses Basic auth with api_key as username, no password
+    auth_header = 'Basic ' + base64.b64encode(api_key.encode()).decode()
+    api_url = 'https://api.wakatime.com/api/v1/users/current/stats/last_7_days'
+
+    try:
+        req = urllib.request.Request(
+            api_url,
+            headers={
+                'Authorization': auth_header,
+                'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0)',
+            }
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = json.loads(resp.read().decode('utf-8'))
+    except Exception as e:
+        logger.warning('Failed to fetch WakaTime stats: %s', e)
+        return JsonResponse({'error': 'Failed to fetch WakaTime data'}, status=502)
+
+    data = raw.get('data', {})
+
+    # Extract only the fields we need (no sensitive info)
+    result = {
+        'daily_average': data.get('human_readable_daily_average_including_other_language', ''),
+        'total': data.get('human_readable_total_including_other_language', ''),
+        'best_day': {
+            'date': data.get('best_day', {}).get('date', ''),
+            'text': data.get('best_day', {}).get('text', ''),
+        } if data.get('best_day') else None,
+        'languages': [
+            {
+                'name': lang.get('name', ''),
+                'percent': round(lang.get('percent', 0), 1),
+                'text': lang.get('text', ''),
+            }
+            for lang in (data.get('languages') or [])[:8]
+        ],
+        'editors': [
+            {
+                'name': ed.get('name', ''),
+                'percent': round(ed.get('percent', 0), 1),
+                'text': ed.get('text', ''),
+            }
+            for ed in (data.get('editors') or [])[:5]
+        ],
+        'operating_systems': [
+            {
+                'name': os_item.get('name', ''),
+                'percent': round(os_item.get('percent', 0), 1),
+            }
+            for os_item in (data.get('operating_systems') or [])[:3]
+        ],
+        'categories': [
+            {
+                'name': cat.get('name', ''),
+                'percent': round(cat.get('percent', 0), 1),
+                'text': cat.get('text', ''),
+            }
+            for cat in (data.get('categories') or [])[:5]
+        ],
+    }
+
+    # Cache for 2 hours
+    cache.set(cache_key, result, 7200)
+
+    return JsonResponse(result)
+
+
 # ── GitHub Contribution Graph ──────────────────────────────────────────────────
 
 def github_contributions(request):
