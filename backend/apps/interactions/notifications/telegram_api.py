@@ -45,6 +45,27 @@ class TelegramBotAPI:
             payload['reply_markup'] = reply_markup
         return self._post('sendMessage', payload)
 
+    def send_photo(
+        self,
+        chat_id: int,
+        photo: str,
+        *,
+        caption: str = '',
+        parse_mode: str = 'HTML',
+        reply_markup: Optional[dict] = None,
+    ) -> Optional[dict]:
+        """POST /sendPhoto.  *photo* is a URL string."""
+        payload: dict = {
+            'chat_id': chat_id,
+            'photo': photo,
+            'parse_mode': parse_mode,
+        }
+        if caption:
+            payload['caption'] = caption
+        if reply_markup:
+            payload['reply_markup'] = reply_markup
+        return self._post('sendPhoto', payload)
+
     def answer_callback_query(
         self,
         callback_query_id: str,

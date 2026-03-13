@@ -99,15 +99,15 @@ class NotificationService:
         if not site.admin_notify_comments:
             return
         author = escape(comment.author.display_name)
-        title = self._get_content_title(comment.content_object)
         url = self._get_full_url(comment)
-        snippet = escape(comment.text[:200])
-        text = (
-            f'💬 <b>{author}</b> komment yozdi:\n'
-            f'{snippet}'
-        )
+        snippet = escape(comment.text[:200]) if comment.text else ''
+        text = f'💬 <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'💬 <b>{author}</b> komment yozdi:'
         button = self._url_button('💬 Kommentni ko\'rish', f'{url}#comment-{comment.id}')
-        self._send_to_admin_group(text, comment.author, 'comment', reply_markup=button)
+        photo_url = self._get_comment_image_url(comment)
+        self._send_to_admin_group(
+            text, comment.author, 'comment',
+            reply_markup=button, photo_url=photo_url,
+        )
 
     def log_reply(self, comment) -> None:
         site = SiteSettingsService.get()
@@ -116,13 +116,14 @@ class NotificationService:
         author = escape(comment.author.display_name)
         parent_author = escape(comment.parent.author.display_name)
         url = self._get_full_url(comment)
-        snippet = escape(comment.text[:200])
-        text = (
-            f'↩️ <b>{author}</b> → <b>{parent_author}</b>:\n'
-            f'{snippet}'
-        )
+        snippet = escape(comment.text[:200]) if comment.text else ''
+        text = f'↩️ <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'↩️ <b>{author}</b> → <b>{parent_author}</b>'
         button = self._url_button('💬 Javobni ko\'rish', f'{url}#comment-{comment.id}')
-        self._send_to_admin_group(text, comment.author, 'reply', reply_markup=button)
+        photo_url = self._get_comment_image_url(comment)
+        self._send_to_admin_group(
+            text, comment.author, 'reply',
+            reply_markup=button, photo_url=photo_url,
+        )
 
     def log_reaction(self, reaction, action: str) -> None:
         site = SiteSettingsService.get()
@@ -195,6 +196,7 @@ class NotificationService:
         profile=None,
         event_type: str = '',
         reply_markup: Optional[dict] = None,
+        photo_url: Optional[str] = None,
     ) -> Optional[int]:
         """Send message to admin group.  Saves AdminLogMessage for /ban lookup."""
         from interactions.models import AdminLogMessage
@@ -204,7 +206,14 @@ class NotificationService:
         if not group_id:
             return None
 
-        result = self.api.send_message(group_id, text, reply_markup=reply_markup)
+        if photo_url:
+            result = self.api.send_photo(
+                group_id, photo_url,
+                caption=text, reply_markup=reply_markup,
+            )
+        else:
+            result = self.api.send_message(group_id, text, reply_markup=reply_markup)
+
         if result and result.get('ok'):
             msg_id = result['result']['message_id']
             AdminLogMessage.objects.create(
@@ -231,6 +240,14 @@ class NotificationService:
         site = SiteSettingsService.get()
         owner_id = site.telegram_owner_id
         return bool(owner_id and profile.telegram_id == owner_id)
+
+    @staticmethod
+    def _get_comment_image_url(comment) -> Optional[str]:
+        """Return absolute URL for the comment image, or None."""
+        if not comment.image:
+            return None
+        domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', 'https://jaysonkhan.com')
+        return f'{domain}{comment.image.url}'
 
     @staticmethod
     def _url_button(label: str, url: str) -> dict:
