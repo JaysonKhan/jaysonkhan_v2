@@ -794,21 +794,21 @@
 .sk-rm-section:last-child {
     padding-bottom: 0;
 }
-/* Horizontal colored connector line — from icon to first dot center */
+/* Horizontal colored connector line — from left col edge to first dot center */
 .sk-rm-section::after {
     content: '';
     position: absolute;
-    top: 19px;                          /* vertical center of 40px icon */
+    top: 20px;                          /* vertical center of 40px icon */
     left: 260px;
-    width: 54px;                        /* 50px padding-left + 4px dot center */
+    width: 54px;                        /* 50px padding + 4px dot center */
     height: 2px;
     background: var(--wp-color, #6366f1);
 }
-/* Vertical timeline line through dots */
+/* Vertical timeline line through dot centers */
 .sk-rm-section .sk-rm-skills::before {
     content: '';
     position: absolute;
-    left: 4px;                          /* center of 9px dot */
+    left: 54px;                         /* 50px padding + 4px = dot center */
     top: 0;
     bottom: -2.5rem;
     width: 1px;
@@ -854,7 +854,7 @@
 }
 .sk-rm-skills {
     padding-left: 50px;
-    padding-top: 16px;                  /* align first dot center with icon center (20px) */
+    padding-top: 9px;                   /* 9px + ~11px (half item height) = 20px = icon center */
     position: relative;
     display: flex;
     flex-direction: column;
