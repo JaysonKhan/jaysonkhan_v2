@@ -103,10 +103,11 @@ class NotificationService:
         url = self._get_full_url(comment)
         snippet = escape(comment.text[:200])
         text = (
-            f'💬 <a href="{url}">{escape(title)}</a> ga komment:\n'
-            f'<b>{author}</b>: {snippet}'
+            f'💬 <b>{author}</b> komment yozdi:\n'
+            f'{snippet}'
         )
-        self._send_to_admin_group(text, comment.author, 'comment')
+        button = self._url_button('💬 Kommentni ko\'rish', f'{url}#comment-{comment.id}')
+        self._send_to_admin_group(text, comment.author, 'comment', reply_markup=button)
 
     def log_reply(self, comment) -> None:
         site = SiteSettingsService.get()
@@ -114,14 +115,14 @@ class NotificationService:
             return
         author = escape(comment.author.display_name)
         parent_author = escape(comment.parent.author.display_name)
-        title = self._get_content_title(comment.content_object)
         url = self._get_full_url(comment)
         snippet = escape(comment.text[:200])
         text = (
-            f'↩️ <a href="{url}">{escape(title)}</a>:\n'
-            f'<b>{author}</b> → <b>{parent_author}</b>: {snippet}'
+            f'↩️ <b>{author}</b> → <b>{parent_author}</b>:\n'
+            f'{snippet}'
         )
-        self._send_to_admin_group(text, comment.author, 'reply')
+        button = self._url_button('💬 Javobni ko\'rish', f'{url}#comment-{comment.id}')
+        self._send_to_admin_group(text, comment.author, 'reply', reply_markup=button)
 
     def log_reaction(self, reaction, action: str) -> None:
         site = SiteSettingsService.get()
@@ -134,7 +135,10 @@ class NotificationService:
             f'{reaction.emoji} <b>{actor}</b> {verb} '
             f'{reaction.emoji} on <b>{comment_author}</b>\'s comment'
         )
-        self._send_to_admin_group(text, reaction.author, 'reaction')
+        # Reaction uchun komment URL'ni olamiz
+        url = self._get_full_url_from_comment(reaction.comment)
+        button = self._url_button(f'{reaction.emoji} Kommentni ko\'rish', url)
+        self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button)
 
     def log_like(self, like, action: str) -> None:
         site = SiteSettingsService.get()
@@ -148,11 +152,9 @@ class NotificationService:
         if hasattr(obj, 'get_absolute_url'):
             obj_url = f'{domain}{obj.get_absolute_url()}'
         emoji = '👍' if action == 'liked' else '👎'
-        if obj_url:
-            text = f'{emoji} <b>{actor}</b> {action} <a href="{obj_url}">{escape(title)}</a>'
-        else:
-            text = f'{emoji} <b>{actor}</b> {action} {escape(title)}'
-        self._send_to_admin_group(text, like.author, 'like')
+        text = f'{emoji} <b>{actor}</b> {action} <b>{escape(title)}</b>'
+        button = self._url_button(f'{emoji} Ko\'rish', obj_url) if obj_url else None
+        self._send_to_admin_group(text, like.author, 'like', reply_markup=button)
 
     def log_new_user(self, profile) -> None:
         site = SiteSettingsService.get()
@@ -161,7 +163,9 @@ class NotificationService:
         name = escape(profile.display_name)
         username = f' (@{escape(profile.username)})' if profile.username else ''
         text = f'👤 Yangi user: <b>{name}</b>{username}'
-        self._send_to_admin_group(text, profile, 'new_user')
+        domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', 'https://jaysonkhan.com')
+        button = self._url_button('🌐 Saytga o\'tish', domain)
+        self._send_to_admin_group(text, profile, 'new_user', reply_markup=button)
 
     def log_contact_message(self, contact) -> None:
         site = SiteSettingsService.get()
@@ -177,7 +181,11 @@ class NotificationService:
             f'<b>Subject:</b> {subject}\n'
             f'<b>Message:</b> {body}'
         )
-        self._send_to_admin_group(text, profile=None, event_type='contact')
+        domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', 'https://jaysonkhan.com')
+        admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
+        admin_url = f'{domain}/{admin_prefix}contact/contactmessage/'
+        button = self._url_button('📩 Admin panelda ko\'rish', admin_url)
+        self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
@@ -186,6 +194,7 @@ class NotificationService:
         text: str,
         profile=None,
         event_type: str = '',
+        reply_markup: Optional[dict] = None,
     ) -> Optional[int]:
         """Send message to admin group.  Saves AdminLogMessage for /ban lookup."""
         from interactions.models import AdminLogMessage
@@ -195,7 +204,7 @@ class NotificationService:
         if not group_id:
             return None
 
-        result = self.api.send_message(group_id, text)
+        result = self.api.send_message(group_id, text, reply_markup=reply_markup)
         if result and result.get('ok'):
             msg_id = result['result']['message_id']
             AdminLogMessage.objects.create(
@@ -224,6 +233,13 @@ class NotificationService:
         return bool(owner_id and profile.telegram_id == owner_id)
 
     @staticmethod
+    def _url_button(label: str, url: str) -> dict:
+        """Build a single inline-keyboard row with one URL button."""
+        return {
+            'inline_keyboard': [[{'text': label, 'url': url}]],
+        }
+
+    @staticmethod
     def _get_content_url(comment) -> str:
         """Resolve relative URL for the content object a comment is attached to."""
         obj = comment.content_object
@@ -234,6 +250,10 @@ class NotificationService:
     def _get_full_url(self, comment) -> str:
         domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', 'https://jaysonkhan.com')
         return f'{domain}{self._get_content_url(comment)}'
+
+    def _get_full_url_from_comment(self, comment) -> str:
+        """Get full URL for a comment's parent content, with anchor."""
+        return f'{self._get_full_url(comment)}#comment-{comment.id}'
 
     @staticmethod
     def _get_content_title(content_object) -> str:
