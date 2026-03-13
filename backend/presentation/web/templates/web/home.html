@@ -342,189 +342,6 @@
 <!-- ── Separator ── -->
 <div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
 
-<!-- ── Skills Section (Globe Orbit Animation) ────────────── -->
-<section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="text-center mb-4 reveal">
-        <span class="section-tag">
-            <i class="fa-solid fa-code"></i>
-            Tech Stack
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">
-            <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
-        </h2>
-    </div>
-    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto reveal">
-        Technologies and tools I use to bring ideas to life.
-    </p>
-
-    <!-- Globe + Orbiting Skills -->
-    <div id="sk-globe-area" class="flex flex-col items-center gap-6 mb-16">
-
-        <!-- Outer wrapper: sized to include icon bleed, overflow:visible -->
-        <div id="sk-globe-wrap" class="sk-globe-wrap">
-
-            <!-- sk-orbit-body: inset by icon-radius so orbit ring + icons
-                 never escape the outer wrapper bounding box -->
-            <div class="sk-orbit-body">
-
-                <!-- Orbit ring guides -->
-                <div class="sk-ring-outer"></div>
-                <div class="sk-ring-inner"></div>
-
-                <!-- Central globe -->
-                <div class="sk-globe-center">
-                    <div class="sk-globe-glow"></div>
-                    <i class="fa-solid fa-globe text-primary sk-globe-icon"></i>
-                </div>
-
-                <!-- Orbit items: --n set on container, --i on each item -->
-                {% with orbit_skills=portfolio.hero_skills %}
-                {% if orbit_skills %}
-                <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
-                    {% for skill in orbit_skills %}
-                    <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
-                        <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}"
-                            aria-label="{{ skill.name }}">
-                            {% if skill.icon %}
-                            <i class="{{ skill.icon }}"></i>
-                            {% else %}
-                            <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.03em;">{{
-                                skill.name|slice:":2"|upper }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                {% endwith %}
-
-            </div><!-- /sk-orbit-body -->
-        </div>
-
-    </div>
-
-    <!-- Category Filter Tabs -->
-    <div class="flex flex-wrap justify-center gap-2 mb-8 reveal">
-        <button class="sk-filter-tab sk-filter-active" onclick="filterSkills('all',this)">All</button>
-        {% for category_name, skills in portfolio.skills_grouped.items %}
-        <button class="sk-filter-tab" onclick="filterSkills('{{ skills.0.category }}',this)">{{ category_name }}</button>
-        {% endfor %}
-    </div>
-
-    <!-- Skills Grid (Grouped by Category — collapsible cards + tile grid + proficiency bars) -->
-    <div id="skills-accordion" class="max-w-4xl mx-auto space-y-4">
-        {% for category_name, skills in portfolio.skills_grouped.items %}
-
-        {% if forloop.counter <= 2 %} <!-- Default Visible Category Card -->
-            <div class="sk-cat-card" data-category="{{ skills.0.category }}">
-                <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
-                    onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
-                    <span class="sk-cat-label">
-                        {% with cat_key=skills.0.category %}
-                        {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen"></i>
-                        {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group"></i>
-                        {% elif cat_key == 'backend' %}<i class="fa-solid fa-server"></i>
-                        {% elif cat_key == 'database' %}<i class="fa-solid fa-database"></i>
-                        {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved"></i>
-                        {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high"></i>
-                        {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film"></i>
-                        {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker"></i>
-                        {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib"></i>
-                        {% else %}<i class="fa-solid fa-code"></i>
-                        {% endif %}
-                        {% endwith %}
-                        {{ category_name }}
-                        <span class="sk-cat-count">{{ skills|length }}</span>
-                    </span>
-                    <svg class="sk-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-                <div class="sk-cat-body sk-tile-grid">
-                    {% for skill in skills %}
-                    <div class="sk-tile" title="{{ skill.name }} — {{ skill.level }}%" style="position:relative;">
-                        {% if skill.icon %}
-                        <i class="{{ skill.icon }} sk-tile-icon"></i>
-                        {% else %}
-                        <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
-                        {% endif %}
-                        <div class="flex-1 min-w-0">
-                            <span class="sk-tile-name">{{ skill.name }}</span>
-                            <div class="sk-skill-bar"><div class="sk-skill-bar-fill" style="--target-w:{{ skill.level }}%"></div></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            {% else %}
-            <!-- Hidden Category Card (revealed by Show more) -->
-            <div class="sk-cat-card hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500" data-category="{{ skills.0.category }}">
-                <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
-                    onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
-                    <span class="sk-cat-label">
-                        {% with cat_key=skills.0.category %}
-                        {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen"></i>
-                        {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group"></i>
-                        {% elif cat_key == 'backend' %}<i class="fa-solid fa-server"></i>
-                        {% elif cat_key == 'database' %}<i class="fa-solid fa-database"></i>
-                        {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved"></i>
-                        {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high"></i>
-                        {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film"></i>
-                        {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker"></i>
-                        {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib"></i>
-                        {% else %}<i class="fa-solid fa-code"></i>
-                        {% endif %}
-                        {% endwith %}
-                        {{ category_name }}
-                        <span class="sk-cat-count">{{ skills|length }}</span>
-                    </span>
-                    <svg class="sk-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-                <div class="sk-cat-body sk-tile-grid">
-                    {% for skill in skills %}
-                    <div class="sk-tile" title="{{ skill.name }} — {{ skill.level }}%" style="position:relative;">
-                        {% if skill.icon %}
-                        <i class="{{ skill.icon }} sk-tile-icon"></i>
-                        {% else %}
-                        <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
-                        {% endif %}
-                        <div class="flex-1 min-w-0">
-                            <span class="sk-tile-name">{{ skill.name }}</span>
-                            <div class="sk-skill-bar"><div class="sk-skill-bar-fill" style="--target-w:{{ skill.level }}%"></div></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            {% endif %}
-            {% empty %}
-            <p class="text-center text-slate-500">No skills added yet.</p>
-            {% endfor %}
-    </div>
-
-    <!-- Single Toggle Button (Show more / Show less) -->
-    {% if portfolio.skills_grouped|length > 2 %}
-    <div class="flex justify-center mt-8">
-        <button id="toggle-skills-btn" onclick="toggleSkillsUnified()"
-            class="group inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-xs font-medium text-slate-400 hover:text-white">
-            <span id="toggle-skills-text" class="whitespace-nowrap">Show more</span>
-            <svg id="toggle-skills-icon" class="w-3.5 h-3.5 shrink-0 transition-transform duration-300" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
-    </div>
-    {% endif %}
-</section>
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
 <!-- ── GitHub Contribution Graph ────────────────────────────── -->
 {% if site_settings.github_url %}
 <section id="github-section" class="max-w-7xl mx-auto px-6"
@@ -626,113 +443,97 @@
 </section>
 {% endif %}
 
-<!-- Skills Scripts -->
+<!-- ── Separator ── -->
+<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
+
+<!-- ── Skills Section (Globe Orbit + Chip Grid) ────────────── -->
+<section class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
+    <div class="text-center mb-4 reveal">
+        <span class="section-tag">
+            <i class="fa-solid fa-code"></i>
+            Tech Stack
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">
+            <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
+        </h2>
+    </div>
+    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto reveal">
+        Technologies and tools I use to bring ideas to life.
+    </p>
+
+    <!-- Globe + Orbiting Skills -->
+    <div id="sk-globe-area" class="flex flex-col items-center gap-6 mb-16">
+        <div id="sk-globe-wrap" class="sk-globe-wrap">
+            <div class="sk-orbit-body">
+                <div class="sk-ring-outer"></div>
+                <div class="sk-ring-inner"></div>
+                <div class="sk-globe-center">
+                    <div class="sk-globe-glow"></div>
+                    <i class="fa-solid fa-globe text-primary sk-globe-icon"></i>
+                </div>
+                {% with orbit_skills=portfolio.hero_skills %}
+                {% if orbit_skills %}
+                <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
+                    {% for skill in orbit_skills %}
+                    <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
+                        <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}"
+                            aria-label="{{ skill.name }}">
+                            {% if skill.icon %}
+                            <i class="{{ skill.icon }}"></i>
+                            {% else %}
+                            <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.03em;">{{ skill.name|slice:":2"|upper }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Grid — flat chip layout grouped by category -->
+    <div class="max-w-4xl mx-auto space-y-10">
+        {% for category_name, skills in portfolio.skills_grouped.items %}
+        <div class="reveal">
+            <div class="flex items-center gap-2 mb-4">
+                {% with cat_key=skills.0.category %}
+                {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen sk-cat-icon"></i>
+                {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group sk-cat-icon"></i>
+                {% elif cat_key == 'backend' %}<i class="fa-solid fa-server sk-cat-icon"></i>
+                {% elif cat_key == 'database' %}<i class="fa-solid fa-database sk-cat-icon"></i>
+                {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved sk-cat-icon"></i>
+                {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high sk-cat-icon"></i>
+                {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film sk-cat-icon"></i>
+                {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker sk-cat-icon"></i>
+                {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib sk-cat-icon"></i>
+                {% else %}<i class="fa-solid fa-code sk-cat-icon"></i>
+                {% endif %}
+                {% endwith %}
+                <span class="sk-cat-title">{{ category_name }}</span>
+                <span class="sk-cat-badge">{{ skills|length }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {% for skill in skills %}
+                <span class="sk-chip">
+                    {% if skill.icon %}
+                    <i class="{{ skill.icon }} sk-chip-icon"></i>
+                    {% endif %}
+                    {{ skill.name }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-slate-500">No skills added yet.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Scripts -->
 <script>
-    /* Per-category collapse/expand toggle */
-    function toggleSkCat(headerEl) {
-        headerEl.closest('.sk-cat-card').classList.toggle('collapsed');
-    }
-
-    let skillsExpanded = false;
-
-    function toggleSkillsUnified() {
-        if (!skillsExpanded) {
-            document.querySelectorAll('.hidden-skills').forEach((b, i) => {
-                b.classList.remove('hidden');
-                setTimeout(() => {
-                    b.classList.remove('opacity-0', 'translate-y-4');
-                    b.classList.add('opacity-100', 'translate-y-0');
-                }, i * 60 + 10);
-            });
-            skillsExpanded = true;
-        } else {
-            document.querySelectorAll('.hidden-skills').forEach(b => {
-                b.classList.remove('opacity-100', 'translate-y-0');
-                b.classList.add('opacity-0', 'translate-y-4');
-                setTimeout(() => b.classList.add('hidden'), 300);
-            });
-            skillsExpanded = false;
-        }
-        const t = document.getElementById('toggle-skills-text');
-        const i = document.getElementById('toggle-skills-icon');
-        if (t) t.innerText = skillsExpanded ? 'Show less' : 'Show more';
-        if (i) i.classList.toggle('rotate-180', skillsExpanded);
-    }
-
-    /* ── Category Filter ───────────────────────────────────────────── */
-    function filterSkills(category, btn) {
-        // Update active tab
-        document.querySelectorAll('.sk-filter-tab').forEach(t => t.classList.remove('sk-filter-active'));
-        btn.classList.add('sk-filter-active');
-
-        const cards = document.querySelectorAll('.sk-cat-card');
-        if (category === 'all') {
-            // Show first 2, respect show more/less state
-            cards.forEach((c, i) => {
-                if (c.classList.contains('hidden-skills')) {
-                    if (skillsExpanded) {
-                        c.classList.remove('hidden', 'opacity-0', 'translate-y-4');
-                        c.classList.add('opacity-100', 'translate-y-0');
-                    } else {
-                        c.classList.add('hidden', 'opacity-0', 'translate-y-4');
-                        c.classList.remove('opacity-100', 'translate-y-0');
-                    }
-                } else {
-                    c.style.display = '';
-                }
-            });
-            const toggleBtn = document.getElementById('toggle-skills-btn');
-            if (toggleBtn) toggleBtn.style.display = '';
-        } else {
-            // Hide toggle button when filtering
-            const toggleBtn = document.getElementById('toggle-skills-btn');
-            if (toggleBtn) toggleBtn.style.display = 'none';
-
-            cards.forEach(c => {
-                if (c.dataset.category === category) {
-                    c.classList.remove('hidden', 'opacity-0', 'translate-y-4');
-                    c.classList.add('opacity-100', 'translate-y-0');
-                    c.style.display = '';
-                    // Ensure it's expanded
-                    c.classList.remove('collapsed');
-                } else {
-                    c.style.display = 'none';
-                }
-            });
-        }
-
-        // Re-trigger bar animations for visible cards
-        document.querySelectorAll('.sk-skill-bar-fill').forEach(bar => {
-            bar.classList.remove('sk-bar-animated');
-            void bar.offsetWidth; // force reflow
-        });
-        setTimeout(() => {
-            skBarObserver && skBarObserver.disconnect();
-            document.querySelectorAll('.sk-skill-bar-fill:not(.sk-bar-animated)').forEach(bar => {
-                skBarObserver && skBarObserver.observe(bar);
-            });
-        }, 100);
-    }
-
-    /* ── Skill Bar Scroll Animation ───────────────────────────────── */
-    let skBarObserver = null;
-    (() => {
-        if (!('IntersectionObserver' in window)) {
-            // Fallback: just show all bars immediately
-            document.querySelectorAll('.sk-skill-bar-fill').forEach(b => b.classList.add('sk-bar-animated'));
-            return;
-        }
-        skBarObserver = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    e.target.classList.add('sk-bar-animated');
-                    skBarObserver.unobserve(e.target);
-                }
-            });
-        }, { threshold: 0.3 });
-        document.querySelectorAll('.sk-skill-bar-fill').forEach(bar => skBarObserver.observe(bar));
-    })();
-
     /* ── Typing Animation ──────────────────────────────────────────── */
     {% if site_settings.hero_typing_texts %}
     (() => {
@@ -1009,75 +810,51 @@
 <style>
 @keyframes cursorBlink { 50% { opacity: 0; } }
 
-/* ── Category Filter Tabs ─────────────────────────────────── */
-.sk-filter-tab {
-    padding: 6px 16px;
+/* ── Skills Chip Grid ─────────────────────────────────────── */
+.sk-cat-icon {
+    font-size: 0.85rem;
+    color: #a78bfa;
+    opacity: 0.8;
+}
+.sk-cat-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #c084fc;
+}
+.sk-cat-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: rgba(148,163,184,0.6);
+    background: rgba(255,255,255,0.05);
+    padding: 1px 7px;
+    border-radius: 9999px;
+}
+.sk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 500;
-    color: #94a3b8;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    cursor: pointer;
+    color: #cbd5e1;
+    background: rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.15);
+    cursor: default;
     transition: all 0.25s ease;
 }
-.sk-filter-tab:hover {
-    color: #e2e8f0;
-    background: rgba(255,255,255,0.08);
-    border-color: rgba(255,255,255,0.15);
+.sk-chip:hover {
+    color: #fff;
+    background: rgba(99,102,241,0.14);
+    border-color: rgba(99,102,241,0.40);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.12);
 }
-.sk-filter-active {
-    color: #fff !important;
-    background: rgba(99,102,241,0.2) !important;
-    border-color: rgba(99,102,241,0.4) !important;
-    box-shadow: 0 0 12px rgba(99,102,241,0.15);
-}
-
-/* ── Skill Proficiency Bars ───────────────────────────────── */
-.sk-skill-bar {
-    height: 3px;
-    width: 100%;
-    background: rgba(255,255,255,0.06);
-    border-radius: 3px;
-    margin-top: 4px;
-    overflow: hidden;
-}
-.sk-skill-bar-fill {
-    height: 100%;
-    width: 0;
-    border-radius: 3px;
-    background: linear-gradient(90deg, #6366f1, #818cf8, #a78bfa);
-    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.sk-skill-bar-fill.sk-bar-animated {
-    width: var(--target-w);
-}
-
-/* ── Skill tile hover tooltip ─────────────────────────────── */
-.sk-tile[title] {
-    position: relative;
-}
-.sk-tile::after {
-    content: attr(title);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%) scale(0.9);
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(15,23,42,0.95);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #e2e8f0;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 10;
-}
-.sk-tile:hover::after {
-    opacity: 1;
-    transform: translateX(-50%) scale(1);
+.sk-chip-icon {
+    font-size: 0.75rem;
+    color: #a78bfa;
 }
 </style>
 

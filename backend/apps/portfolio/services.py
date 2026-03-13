@@ -44,7 +44,7 @@ class PortfolioRepository:
     def get_all_skills():
         return (
             Skill.objects
-            .only('id', 'name', 'level', 'icon', 'category', 'order', 'show_in_hero')
+            .only('id', 'name', 'icon', 'category', 'order', 'show_in_hero')
             .all()
         )
 
@@ -63,7 +63,7 @@ class PortfolioRepository:
         """Return skills grouped by category as {category_label: [skills]}."""
         skills = (
             Skill.objects
-            .only('id', 'name', 'icon', 'category', 'order', 'level')
+            .only('id', 'name', 'icon', 'category', 'order')
             .order_by('category', 'order', 'name')
         )
         grouped: dict = {}

@@ -10,13 +10,13 @@ from django.utils.safestring import mark_safe
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('name', 'icon_display', 'category', 'level', 'order', 'show_in_hero')
-    list_editable = ('category', 'level', 'order', 'show_in_hero')
+    list_display = ('name', 'icon_display', 'category', 'order', 'show_in_hero')
+    list_editable = ('category', 'order', 'show_in_hero')
     list_filter = ('category', 'show_in_hero')
     search_fields = ('name',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'icon', 'category', 'level', 'order', 'show_in_hero'),
+            'fields': ('name', 'icon', 'category', 'order', 'show_in_hero'),
         }),
     )
 
