@@ -6,9 +6,12 @@ Handles:
 - Admin group:  /ban, /mute (reply to logged message), /config
 - Callback queries for inline keyboard presses
 """
+from __future__ import annotations
+
 import json
 import logging
 from datetime import timedelta
+from typing import Optional
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -30,10 +33,24 @@ logger = logging.getLogger('interactions.notifications')
 
 MUTE_DAYS = 3
 
+# ── Config field mapping (callback_data → SiteSettings field name) ────────────
+CONFIG_FIELDS = {
+    'cfg_new_users': 'admin_notify_new_users',
+    'cfg_comments': 'admin_notify_comments',
+    'cfg_replies': 'admin_notify_replies',
+    'cfg_reactions': 'admin_notify_reactions',
+    'cfg_likes': 'admin_notify_likes',
+    'cfg_contacts': 'admin_notify_contacts',
+}
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TelegramWebhookView(View):
     """POST /api/telegram/webhook/<secret>/"""
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.api = TelegramBotAPI()
 
     def post(self, request, secret):
         expected = getattr(settings, 'TELEGRAM_WEBHOOK_SECRET', '')
@@ -71,11 +88,10 @@ class TelegramWebhookView(View):
     # ── Private chat ─────────────────────────────────────────────────────────
 
     def _private_command(self, command, message):
-        api = TelegramBotAPI()
         tg_id = message['from']['id']
 
         if command == '/start':
-            api.send_message(tg_id, (
+            self.api.send_message(tg_id, (
                 'Salom! Men sizga kommentlaringizga javob kelganda '
                 'yoki reaksiya qo\'yilganda xabar beraman.\n\n'
                 'Sozlamalar: /notifications'
@@ -84,11 +100,10 @@ class TelegramWebhookView(View):
             self._show_user_settings(tg_id)
 
     def _show_user_settings(self, telegram_id: int):
-        api = TelegramBotAPI()
         try:
             profile = TelegramProfile.objects.get(telegram_id=telegram_id)
         except TelegramProfile.DoesNotExist:
-            api.send_message(telegram_id, (
+            self.api.send_message(telegram_id, (
                 'Siz hali saytga kirmagansiz. Avval jaysonkhan.com da '
                 'Telegram orqali login qiling.'
             ))
@@ -96,7 +111,7 @@ class TelegramWebhookView(View):
 
         pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
         keyboard = self._build_user_keyboard(pref)
-        api.send_message(
+        self.api.send_message(
             telegram_id,
             '🔔 <b>Bildirishnoma sozlamalari</b>',
             reply_markup=keyboard,
@@ -131,25 +146,30 @@ class TelegramWebhookView(View):
             self._show_group_config(chat_id)
 
     def _handle_ban(self, message, *, permanent: bool):
-        api = TelegramBotAPI()
         chat_id = message['chat']['id']
         reply_to = message.get('reply_to_message')
 
         if not reply_to:
-            api.send_message(chat_id, 'ℹ️ Foydalanuvchi xabariga reply qilib /ban yoki /mute yuboring.')
+            self.api.send_message(
+                chat_id, 'ℹ️ Foydalanuvchi xabariga reply qilib /ban yoki /mute yuboring.',
+            )
+            return
+
+        reply_msg_id = reply_to.get('message_id')
+        if not reply_msg_id:
             return
 
         # Look up the user from the admin log
         try:
             log_entry = AdminLogMessage.objects.select_related('profile').get(
-                message_id=reply_to['message_id'],
+                message_id=reply_msg_id,
             )
         except AdminLogMessage.DoesNotExist:
-            api.send_message(chat_id, '⚠️ Bu xabardan foydalanuvchini aniqlab bo\'lmadi.')
+            self.api.send_message(chat_id, '⚠️ Bu xabardan foydalanuvchini aniqlab bo\'lmadi.')
             return
 
         if not log_entry.profile:
-            api.send_message(chat_id, '⚠️ Bu eventda foydalanuvchi profili yo\'q.')
+            self.api.send_message(chat_id, '⚠️ Bu eventda foydalanuvchi profili yo\'q.')
             return
 
         profile = log_entry.profile
@@ -163,13 +183,12 @@ class TelegramWebhookView(View):
         if permanent:
             UserBan.objects.create(
                 profile=profile,
-                ban_type='ban',
+                ban_type=UserBan.BAN,
                 reason=reason,
-                expires_at=None,
                 is_active=True,
             )
-            api.send_message(chat_id, f'🚫 <b>{profile.display_name}</b> doimiy ban qilindi.')
-            api.send_message(
+            self.api.send_message(chat_id, f'🚫 <b>{profile.display_name}</b> doimiy ban qilindi.')
+            self.api.send_message(
                 profile.telegram_id,
                 '🚫 Siz jaysonkhan.com da komment yozishdan doimiy bloklangansiz.',
             )
@@ -177,45 +196,55 @@ class TelegramWebhookView(View):
             expires = timezone.now() + timedelta(days=MUTE_DAYS)
             UserBan.objects.create(
                 profile=profile,
-                ban_type='mute',
+                ban_type=UserBan.MUTE,
                 reason=reason,
                 expires_at=expires,
                 is_active=True,
             )
             until = expires.strftime('%Y-%m-%d %H:%M UTC')
-            api.send_message(
+            self.api.send_message(
                 chat_id,
                 f'🔇 <b>{profile.display_name}</b> {MUTE_DAYS} kunga mute qilindi ({until} gacha).',
             )
-            api.send_message(
+            self.api.send_message(
                 profile.telegram_id,
                 f'🔇 Siz jaysonkhan.com da {MUTE_DAYS} kunga mute qilindingiz ({until} gacha).',
             )
 
-    def _show_group_config(self, chat_id: int):
-        api = TelegramBotAPI()
+    @staticmethod
+    def _build_config_keyboard() -> dict:
+        """Build the admin config inline keyboard from current SiteSettings."""
         site = SiteSettingsService.get()
 
         def _s(val):
             return '✅' if val else '❌'
 
-        keyboard = {
-            'inline_keyboard': [
-                [{'text': f'{_s(site.admin_notify_new_users)} Yangi userlar',
-                  'callback_data': 'cfg_new_users'}],
-                [{'text': f'{_s(site.admin_notify_comments)} Kommentlar',
-                  'callback_data': 'cfg_comments'}],
-                [{'text': f'{_s(site.admin_notify_replies)} Javoblar',
-                  'callback_data': 'cfg_replies'}],
-                [{'text': f'{_s(site.admin_notify_reactions)} Reaksiyalar',
-                  'callback_data': 'cfg_reactions'}],
-                [{'text': f'{_s(site.admin_notify_likes)} Likelar',
-                  'callback_data': 'cfg_likes'}],
-                [{'text': f'{_s(site.admin_notify_contacts)} Contact xabarlar',
-                  'callback_data': 'cfg_contacts'}],
-            ],
+        labels = {
+            'cfg_new_users': 'Yangi userlar',
+            'cfg_comments': 'Kommentlar',
+            'cfg_replies': 'Javoblar',
+            'cfg_reactions': 'Reaksiyalar',
+            'cfg_likes': 'Likelar',
+            'cfg_contacts': 'Contact xabarlar',
         }
-        api.send_message(chat_id, '⚙️ <b>Admin guruh sozlamalari</b>', reply_markup=keyboard)
+        rows = []
+        for cb_data, label in labels.items():
+            field = CONFIG_FIELDS[cb_data]
+            rows.append([{
+                'text': f'{_s(getattr(site, field, True))} {label}',
+                'callback_data': cb_data,
+            }])
+        return {'inline_keyboard': rows}
+
+    def _show_group_config(self, chat_id: int) -> Optional[int]:
+        """Send config keyboard, return message_id."""
+        keyboard = self._build_config_keyboard()
+        result = self.api.send_message(
+            chat_id, '⚙️ <b>Admin guruh sozlamalari</b>', reply_markup=keyboard,
+        )
+        if result and result.get('ok'):
+            return result['result']['message_id']
+        return None
 
     # ── Callback queries ─────────────────────────────────────────────────────
 
@@ -227,17 +256,16 @@ class TelegramWebhookView(View):
             self._toggle_admin_setting(callback_query)
 
     def _toggle_user_pref(self, cq):
-        api = TelegramBotAPI()
         data = cq['data']
         tg_id = cq['from']['id']
         cb_id = cq['id']
-        msg = cq.get('message', {})
+        msg = cq.get('message')
 
         try:
             profile = TelegramProfile.objects.get(telegram_id=tg_id)
             pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
         except TelegramProfile.DoesNotExist:
-            api.answer_callback_query(cb_id, 'Profil topilmadi')
+            self.api.answer_callback_query(cb_id, 'Profil topilmadi')
             return
 
         if data == 'toggle_replies':
@@ -247,37 +275,28 @@ class TelegramWebhookView(View):
         pref.save()
 
         # Update keyboard in-place
-        keyboard = self._build_user_keyboard(pref)
-        api.edit_message_reply_markup(
-            chat_id=tg_id,
-            message_id=msg.get('message_id'),
-            reply_markup=keyboard,
-        )
-        api.answer_callback_query(cb_id, 'Yangilandi ✓')
+        if msg and msg.get('message_id'):
+            keyboard = self._build_user_keyboard(pref)
+            self.api.edit_message_reply_markup(
+                chat_id=tg_id,
+                message_id=msg['message_id'],
+                reply_markup=keyboard,
+            )
+        self.api.answer_callback_query(cb_id, 'Yangilandi ✓')
 
     def _toggle_admin_setting(self, cq):
-        api = TelegramBotAPI()
         data = cq['data']
         cb_id = cq['id']
-        msg = cq.get('message', {})
-        chat_id = msg.get('chat', {}).get('id')
+        msg = cq.get('message')
 
-        field_map = {
-            'cfg_new_users': 'admin_notify_new_users',
-            'cfg_comments': 'admin_notify_comments',
-            'cfg_replies': 'admin_notify_replies',
-            'cfg_reactions': 'admin_notify_reactions',
-            'cfg_likes': 'admin_notify_likes',
-            'cfg_contacts': 'admin_notify_contacts',
-        }
-        field_name = field_map.get(data)
+        field_name = CONFIG_FIELDS.get(data)
         if not field_name:
             return
 
         from core.models import SiteSettings
         site = SiteSettings.objects.first()
         if not site:
-            api.answer_callback_query(cb_id, 'SiteSettings topilmadi')
+            self.api.answer_callback_query(cb_id, 'SiteSettings topilmadi')
             return
 
         current = getattr(site, field_name)
@@ -285,6 +304,12 @@ class TelegramWebhookView(View):
         site.save(update_fields=[field_name])
         # post_save signal invalidates SiteSettingsService cache
 
-        # Refresh the keyboard
-        self._show_group_config(chat_id)
-        api.answer_callback_query(cb_id, 'Yangilandi ✓')
+        # Edit the existing message keyboard instead of sending a new one
+        if msg and msg.get('message_id') and msg.get('chat', {}).get('id'):
+            keyboard = self._build_config_keyboard()
+            self.api.edit_message_reply_markup(
+                chat_id=msg['chat']['id'],
+                message_id=msg['message_id'],
+                reply_markup=keyboard,
+            )
+        self.api.answer_callback_query(cb_id, 'Yangilandi ✓')

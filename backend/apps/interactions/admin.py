@@ -86,6 +86,7 @@ class UserBanAdmin(ModelAdmin):
     list_display = ('profile', 'ban_type', 'is_active', 'expires_at', 'created_at')
     list_filter = ('ban_type', 'is_active')
     list_editable = ('is_active',)
+    search_fields = ('profile__first_name', 'profile__username', 'reason')
     readonly_fields = ('profile', 'created_at')
     ordering = ('-created_at',)
 
@@ -93,5 +94,7 @@ class UserBanAdmin(ModelAdmin):
 @admin.register(AdminLogMessage)
 class AdminLogMessageAdmin(ModelAdmin):
     list_display = ('message_id', 'profile', 'event_type', 'created_at')
-    list_filter = ('event_type',)
+    list_filter = ('event_type', 'created_at')
+    search_fields = ('profile__first_name', 'profile__username', 'message_id')
     readonly_fields = ('message_id', 'profile', 'event_type', 'created_at')
+    ordering = ('-created_at',)

@@ -12,6 +12,7 @@ from presentation.web.views import custom_404_view, custom_500_view
 from core.views import upload_media_view, robots_txt, health_check, github_contributions, wakatime_stats
 from core.sitemaps import StaticViewSitemap, ProjectSitemap, PostSitemap
 from blog.feeds import LatestPostsFeed, LatestPostsAtomFeed
+from interactions.notifications.webhook import TelegramWebhookView
 
 env = environ.Env()
 
@@ -52,7 +53,7 @@ urlpatterns = [
     # ── Telegram Bot Webhook ─────────────────────────────────────────────────
     path(
         'api/telegram/webhook/<str:secret>/',
-        __import__('interactions.notifications.webhook', fromlist=['TelegramWebhookView']).TelegramWebhookView.as_view(),
+        TelegramWebhookView.as_view(),
         name='telegram_webhook',
     ),
 

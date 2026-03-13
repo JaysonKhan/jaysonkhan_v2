@@ -31,7 +31,7 @@ class BanCheckResult:
     def message(self) -> str:
         if not self.is_banned:
             return ''
-        if self.ban_type == 'ban':
+        if self.ban_type == 'ban':  # UserBan.BAN
             return 'You have been permanently banned from commenting.'
         if self.expires_at:
             return (
@@ -56,7 +56,7 @@ def check_ban(profile) -> BanCheckResult:
     UserBan.objects.filter(
         profile=profile,
         is_active=True,
-        ban_type='mute',
+        ban_type=UserBan.MUTE,
         expires_at__lt=now,
     ).update(is_active=False)
 

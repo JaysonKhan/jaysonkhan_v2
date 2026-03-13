@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
 from .models import TelegramProfile, Comment, Like
+from .notifications.ban_check import check_ban
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
 
 logger = logging.getLogger(__name__)
@@ -267,7 +268,6 @@ class AddCommentView(View):
             return JsonResponse({'error': 'Login with Telegram first'}, status=401)
 
         # ── 0. Ban / Mute Check ──
-        from interactions.notifications.ban_check import check_ban
         ban_result = check_ban(profile)
         if ban_result.is_banned:
             return JsonResponse({'error': ban_result.message}, status=403)

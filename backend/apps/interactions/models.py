@@ -151,9 +151,11 @@ class UserBan(models.Model):
     - ban  = permanent (expires_at is NULL)
     - mute = temporary (expires_at is set, auto-expired on check)
     """
+    BAN = 'ban'
+    MUTE = 'mute'
     BAN_TYPE_CHOICES = [
-        ('ban', 'Permanent Ban'),
-        ('mute', 'Temporary Mute'),
+        (BAN, 'Permanent Ban'),
+        (MUTE, 'Temporary Mute'),
     ]
     profile = models.ForeignKey(
         TelegramProfile, on_delete=models.CASCADE,
@@ -197,7 +199,7 @@ class AdminLogMessage(models.Model):
         ('contact', 'Contact Form'),
         ('new_user', 'New User'),
     ]
-    message_id = models.IntegerField(
+    message_id = models.BigIntegerField(
         unique=True,
         help_text='Telegram message_id in the admin group',
     )
