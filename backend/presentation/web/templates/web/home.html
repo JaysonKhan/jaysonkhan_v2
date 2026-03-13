@@ -462,38 +462,6 @@
         Technologies and tools I use to bring ideas to life.
     </p>
 
-    <!-- Globe + Orbiting Skills -->
-    <div id="sk-globe-area" class="flex flex-col items-center gap-6 mb-16">
-        <div id="sk-globe-wrap" class="sk-globe-wrap">
-            <div class="sk-orbit-body">
-                <div class="sk-ring-outer"></div>
-                <div class="sk-ring-inner"></div>
-                <div class="sk-globe-center">
-                    <div class="sk-globe-glow"></div>
-                    <i class="fa-solid fa-globe text-primary sk-globe-icon"></i>
-                </div>
-                {% with orbit_skills=portfolio.hero_skills %}
-                {% if orbit_skills %}
-                <div style="position:absolute; inset:0; --n:{{ orbit_skills|length }};">
-                    {% for skill in orbit_skills %}
-                    <div class="sk-orbit-item" style="--i:{{ forloop.counter0 }};">
-                        <div class="sk-orbit-icon" title="{{ skill.name }}" data-label="{{ skill.name }}"
-                            aria-label="{{ skill.name }}">
-                            {% if skill.icon %}
-                            <i class="{{ skill.icon }}"></i>
-                            {% else %}
-                            <span style="font-size:0.6rem; font-weight:700; letter-spacing:0.03em;">{{ skill.name|slice:":2"|upper }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-    </div>
-
     <!-- Skills Grid — Roadmap Timeline layout -->
     <div class="sk-roadmap max-w-5xl mx-auto">
         {% for category_name, skills in portfolio.skills_grouped.items %}
@@ -819,19 +787,20 @@
 .sk-rm-section {
     display: grid;
     grid-template-columns: 260px 1fr;
+    align-items: start;
     position: relative;
     padding-bottom: 2.5rem;
 }
 .sk-rm-section:last-child {
     padding-bottom: 0;
 }
-/* Horizontal colored connector line */
+/* Horizontal colored connector line — from icon to first dot center */
 .sk-rm-section::after {
     content: '';
     position: absolute;
-    top: 28px;
+    top: 19px;                          /* vertical center of 40px icon */
     left: 260px;
-    width: 50px;
+    width: 54px;                        /* 50px padding-left + 4px dot center */
     height: 2px;
     background: var(--wp-color, #6366f1);
 }
@@ -839,7 +808,7 @@
 .sk-rm-section .sk-rm-skills::before {
     content: '';
     position: absolute;
-    left: calc(50px + 4px);
+    left: 4px;                          /* center of 9px dot */
     top: 0;
     bottom: -2.5rem;
     width: 1px;
@@ -869,7 +838,11 @@
     font-size: 3.5rem;
     font-weight: 800;
     line-height: 1;
-    color: rgba(255,255,255,0.07);
+    background: linear-gradient(to right, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.18;
     letter-spacing: -0.02em;
 }
 .sk-rm-title {
@@ -881,7 +854,7 @@
 }
 .sk-rm-skills {
     padding-left: 50px;
-    padding-top: 12px;
+    padding-top: 16px;                  /* align first dot center with icon center (20px) */
     position: relative;
     display: flex;
     flex-direction: column;
