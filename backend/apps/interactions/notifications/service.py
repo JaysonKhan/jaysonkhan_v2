@@ -185,7 +185,7 @@ class NotificationService:
         domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', 'https://jaysonkhan.com')
         admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
         admin_url = f'{domain}/{admin_prefix}contact/contactmessage/'
-        button = self._url_button('📩 Admin panelda ko\'rish', admin_url)
+        button = self._url_button('📩 Admin panelda ko\'rish', admin_url, web_app=False)
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
 
     # ── Private helpers ──────────────────────────────────────────────────────
@@ -250,8 +250,16 @@ class NotificationService:
         return f'{domain}{comment.image.url}'
 
     @staticmethod
-    def _url_button(label: str, url: str) -> dict:
-        """Build a single inline-keyboard row with one URL button."""
+    def _url_button(label: str, url: str, *, web_app: bool = True) -> dict:
+        """Build a single inline-keyboard row with one button.
+
+        *web_app=True* opens inside Telegram's WebApp viewer;
+        *web_app=False* opens in the system browser.
+        """
+        if web_app:
+            return {
+                'inline_keyboard': [[{'text': label, 'web_app': {'url': url}}]],
+            }
         return {
             'inline_keyboard': [[{'text': label, 'url': url}]],
         }
