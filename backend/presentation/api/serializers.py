@@ -109,7 +109,8 @@ class PostListSerializer(serializers.ModelSerializer):
 class ContactMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
-        fields = '__all__'
+        fields = ('id', 'name', 'email', 'subject', 'message', 'created_at')
+        read_only_fields = ('id', 'created_at')
 
 
 # Site Settings

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import uuid
 import io
 
@@ -28,6 +29,43 @@ IMAGE_MAGIC_BYTES = {
 
 MAX_IMAGE_SIZE = 10 * 1024 * 1024   # 10 MB
 MAX_VIDEO_SIZE = 50 * 1024 * 1024   # 50 MB
+
+# ── SVG sanitization ────────────────────────────────────────────────────────
+# Tags and attributes that can execute JavaScript or load external resources.
+_SVG_DANGEROUS_TAGS = re.compile(
+    r'<\s*(?:script|foreignObject|set|animate(?:Transform)?)[^>]*>.*?</\s*(?:script|foreignObject|set|animate(?:Transform)?)\s*>',
+    re.IGNORECASE | re.DOTALL,
+)
+_SVG_DANGEROUS_TAG_SELF = re.compile(
+    r'<\s*(?:script|foreignObject|set|animate(?:Transform)?)[^>]*/\s*>',
+    re.IGNORECASE,
+)
+_SVG_EVENT_ATTRS = re.compile(
+    r'\s+on\w+\s*=\s*["\'][^"\']*["\']',
+    re.IGNORECASE,
+)
+_SVG_XLINK_HREF_JS = re.compile(
+    r'(xlink:href|href)\s*=\s*["\'](?:\s*javascript\s*:)[^"\']*["\']',
+    re.IGNORECASE,
+)
+
+
+def _sanitize_svg(raw_bytes: bytes) -> bytes:
+    """Strip dangerous elements/attributes from SVG content.
+
+    This is a defence-in-depth measure: the upload is staff-only, but
+    SVGs are served to all visitors and can execute JS in the browser.
+    """
+    try:
+        text = raw_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        raise ValueError('SVG file contains invalid UTF-8')
+
+    text = _SVG_DANGEROUS_TAGS.sub('', text)
+    text = _SVG_DANGEROUS_TAG_SELF.sub('', text)
+    text = _SVG_EVENT_ATTRS.sub('', text)
+    text = _SVG_XLINK_HREF_JS.sub('', text)
+    return text.encode('utf-8')
 
 
 @staff_member_required
@@ -91,8 +129,19 @@ def upload_media_view(request):
         except Exception as e:
             logger.warning('[Upload] Invalid image file from %s: %s', request.user, e)
             return JsonResponse({'error': 'Uploaded file is corrupted or not a valid image.'}, status=400)
+    elif ext == '.svg':
+        # SVG: sanitize to remove XSS vectors before saving
+        raw = file.read()
+        try:
+            clean = _sanitize_svg(raw)
+        except ValueError as e:
+            logger.warning('[Upload] Invalid SVG from %s: %s', request.user, e)
+            return JsonResponse({'error': str(e)}, status=400)
+        file_path = default_storage.save(
+            f"uploads/rich_content/{new_filename}", ContentFile(clean),
+        )
     else:
-        # SVG or video: save directly
+        # Video: save directly
         file_path = default_storage.save(f"uploads/rich_content/{new_filename}", file)
 
     url = default_storage.url(file_path)

@@ -90,14 +90,18 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
         return PostSerializer
 
     def get_queryset(self):
-        return (
+        qs = (
             Post.objects
             .filter(is_published=True)
             .select_related('category', 'author')
             .prefetch_related('tags')
-            .defer('content_rich')
             .order_by('-created_at')
         )
+        # Defer heavy HTML field on list (not needed for cards);
+        # detail view needs it for full content rendering.
+        if self.action == 'list':
+            qs = qs.defer('content_rich')
+        return qs
     # Inherits IsAdminUser from REST_FRAMEWORK default
 
 

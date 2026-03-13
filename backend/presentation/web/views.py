@@ -261,10 +261,14 @@ class ContactView(TemplateView):
             return self.render_to_response(self.get_context_data())
 
         # ── Normal processing ────────────────────────────────────────────────
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
+
+        if not all([name, email, subject, message]):
+            messages.error(request, "Please fill in all required fields.")
+            return self.render_to_response(self.get_context_data())
 
         contact_service = ContactService(ContactRepository())
         contact_service.send_contact_message(name, email, subject, message)
