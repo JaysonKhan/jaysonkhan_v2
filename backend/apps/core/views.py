@@ -32,12 +32,13 @@ MAX_VIDEO_SIZE = 50 * 1024 * 1024   # 50 MB
 
 # ── SVG sanitization ────────────────────────────────────────────────────────
 # Tags and attributes that can execute JavaScript or load external resources.
+_SVG_DANGEROUS_TAG_GROUP = r'(?:script|foreignObject|set|animate(?:Transform)?)'
 _SVG_DANGEROUS_TAGS = re.compile(
-    r'<\s*(?:script|foreignObject|set|animate(?:Transform)?)[^>]*>.*?</\s*(?:script|foreignObject|set|animate(?:Transform)?)\s*>',
+    rf'<\s*{_SVG_DANGEROUS_TAG_GROUP}[^>]*>.*?</\s*{_SVG_DANGEROUS_TAG_GROUP}\s*>',
     re.IGNORECASE | re.DOTALL,
 )
 _SVG_DANGEROUS_TAG_SELF = re.compile(
-    r'<\s*(?:script|foreignObject|set|animate(?:Transform)?)[^>]*/\s*>',
+    rf'<\s*{_SVG_DANGEROUS_TAG_GROUP}[^>]*/\s*>',
     re.IGNORECASE,
 )
 _SVG_EVENT_ATTRS = re.compile(

@@ -32,16 +32,34 @@ def _safe_redirect_url(url, request):
     return '/'
 
 
+def _allowed_origins():
+    """Build the set of allowed origins once (both http and https for each host)."""
+    hosts = [h for h in settings.ALLOWED_HOSTS if h != '*']
+    if not hosts:
+        # Wildcard-only ALLOWED_HOSTS (dev) — accept any origin
+        return None
+    origins = set()
+    for h in hosts:
+        origins.add(f'https://{h}')
+        origins.add(f'http://{h}')
+    return frozenset(origins)
+
+
+_ALLOWED_ORIGINS = _allowed_origins()
+
+
 def _is_same_origin(request):
     """Check Origin/Referer header matches our host — mitigates CSRF for csrf_exempt views."""
-    allowed = {f'https://{h}' for h in settings.ALLOWED_HOSTS if h != '*'}
+    if _ALLOWED_ORIGINS is None:
+        # Dev mode with ALLOWED_HOSTS = ['*'] — skip check
+        return True
     origin = request.META.get('HTTP_ORIGIN', '')
     if origin:
-        return origin in allowed
+        return origin in _ALLOWED_ORIGINS
     referer = request.META.get('HTTP_REFERER', '')
     if referer:
         parsed = urlparse(referer)
-        return f'{parsed.scheme}://{parsed.netloc}' in allowed
+        return f'{parsed.scheme}://{parsed.netloc}' in _ALLOWED_ORIGINS
     # No Origin or Referer — allow only in dev (non-HTTPS)
     return not request.is_secure()
 
@@ -346,10 +364,8 @@ class AddCommentView(View):
         except ContentType.DoesNotExist:
             return JsonResponse({'error': 'Invalid content type'}, status=404)
 
-        # Verify the target object actually exists
-        try:
-            ct.get_object_for_this_type(pk=object_id)
-        except ct.model_class().DoesNotExist:
+        # Verify the target object actually exists (EXISTS query, no full row load)
+        if not ct.model_class().objects.filter(pk=object_id).exists():
             return JsonResponse({'error': 'Target object not found'}, status=404)
 
         parent = None
@@ -453,9 +469,8 @@ class ToggleLikeView(View):
         except ContentType.DoesNotExist:
             return JsonResponse({'error': 'Invalid content type'}, status=404)
 
-        try:
-            ct.get_object_for_this_type(pk=object_id)
-        except ct.model_class().DoesNotExist:
+        # Verify the target object actually exists (EXISTS query, no full row load)
+        if not ct.model_class().objects.filter(pk=object_id).exists():
             return JsonResponse({'error': 'Target object not found'}, status=404)
 
         like, created = Like.objects.get_or_create(
