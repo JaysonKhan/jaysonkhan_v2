@@ -154,9 +154,10 @@ def upload_media_view(request):
 
 def wakatime_stats(request):
     """
-    Proxy WakaTime stats API — returns last 7 days coding activity.
+    Proxy WakaTime stats API — returns all-time coding activity.
+    Fetches both all_time and last_7_days for comprehensive stats.
     API key stays server-side; frontend gets safe JSON.
-    Cached for 2 hours.
+    Cached for 4 hours.
     """
     from django.core.cache import cache
     from core.models import SiteSettings
@@ -164,7 +165,7 @@ def wakatime_stats(request):
     import json
     import base64
 
-    cache_key = 'wakatime_stats_data'
+    cache_key = 'wakatime_stats_v2'
     cached = cache.get(cache_key)
     if cached:
         return JsonResponse(cached)
@@ -178,30 +179,39 @@ def wakatime_stats(request):
     if not api_key:
         return JsonResponse({'error': 'No WakaTime API key configured'}, status=404)
 
-    # WakaTime uses Basic auth with api_key as username, no password
     auth_header = 'Basic ' + base64.b64encode(api_key.encode()).decode()
-    api_url = 'https://api.wakatime.com/api/v1/users/current/stats/last_7_days'
+    headers = {
+        'Authorization': auth_header,
+        'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0)',
+    }
+
+    def _fetch(url):
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode('utf-8'))
 
     try:
-        req = urllib.request.Request(
-            api_url,
-            headers={
-                'Authorization': auth_header,
-                'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0)',
-            }
+        # Fetch all-time stats (comprehensive data)
+        all_time_raw = _fetch(
+            'https://api.wakatime.com/api/v1/users/current/all_time_since_today'
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            raw = json.loads(resp.read().decode('utf-8'))
+        stats_raw = _fetch(
+            'https://api.wakatime.com/api/v1/users/current/stats/all_time'
+        )
     except Exception as e:
         logger.warning('Failed to fetch WakaTime stats: %s', e)
         return JsonResponse({'error': 'Failed to fetch WakaTime data'}, status=502)
 
-    data = raw.get('data', {})
+    all_time = all_time_raw.get('data', {})
+    data = stats_raw.get('data', {})
 
-    # Extract only the fields we need (no sensitive info)
     result = {
-        'daily_average': data.get('human_readable_daily_average_including_other_language', ''),
-        'total': data.get('human_readable_total_including_other_language', ''),
+        # All-time total from dedicated endpoint (most accurate)
+        'total': all_time.get('text', data.get(
+            'human_readable_total_including_other_language', '')),
+        'daily_average': data.get(
+            'human_readable_daily_average_including_other_language', ''),
+        'start_date': all_time.get('range', {}).get('start_text', ''),
         'best_day': {
             'date': data.get('best_day', {}).get('date', ''),
             'text': data.get('best_day', {}).get('text', ''),
@@ -212,7 +222,7 @@ def wakatime_stats(request):
                 'percent': round(lang.get('percent', 0), 1),
                 'text': lang.get('text', ''),
             }
-            for lang in (data.get('languages') or [])[:8]
+            for lang in (data.get('languages') or [])[:10]
         ],
         'editors': [
             {
@@ -220,14 +230,15 @@ def wakatime_stats(request):
                 'percent': round(ed.get('percent', 0), 1),
                 'text': ed.get('text', ''),
             }
-            for ed in (data.get('editors') or [])[:5]
+            for ed in (data.get('editors') or [])[:7]
         ],
         'operating_systems': [
             {
                 'name': os_item.get('name', ''),
                 'percent': round(os_item.get('percent', 0), 1),
+                'text': os_item.get('text', ''),
             }
-            for os_item in (data.get('operating_systems') or [])[:3]
+            for os_item in (data.get('operating_systems') or [])[:5]
         ],
         'categories': [
             {
@@ -239,8 +250,8 @@ def wakatime_stats(request):
         ],
     }
 
-    # Cache for 2 hours
-    cache.set(cache_key, result, 7200)
+    # Cache for 4 hours (all-time stats don't change rapidly)
+    cache.set(cache_key, result, 14400)
 
     return JsonResponse(result)
 
