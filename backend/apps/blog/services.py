@@ -35,6 +35,12 @@ class BlogRepository:
             return None
 
     @staticmethod
+    def _is_postgres():
+        from django.conf import settings
+        engine = settings.DATABASES.get('default', {}).get('ENGINE', '')
+        return 'postgresql' in engine or 'postgis' in engine
+
+    @staticmethod
     def search_posts(query: str):
         """
         Search published posts by title, excerpt and tags.
@@ -47,7 +53,7 @@ class BlogRepository:
             .prefetch_related('tags')
             .defer('content_rich')
         )
-        try:
+        if BlogRepository._is_postgres():
             from django.contrib.postgres.search import (
                 SearchVector, SearchQuery, SearchRank,
             )
@@ -58,7 +64,7 @@ class BlogRepository:
                 .filter(rank__gte=0.01)
                 .order_by('-rank')
             )
-        except Exception:
+        else:
             # Fallback for SQLite (dev) — simple icontains
             qs = qs.filter(
                 models.Q(title__icontains=query)
