@@ -495,7 +495,7 @@
     </div>
 
     <!-- Skills Grid — Roadmap Timeline layout -->
-    <div class="sk-roadmap max-w-4xl mx-auto">
+    <div class="sk-roadmap max-w-5xl mx-auto">
         {% for category_name, skills in portfolio.skills_grouped.items %}
         <div class="sk-rm-section reveal" data-cat="{{ skills.0.category }}">
             <!-- Left: Number + Title -->
@@ -818,7 +818,7 @@
 }
 .sk-rm-section {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 260px 1fr;
     position: relative;
     padding-bottom: 2.5rem;
 }
@@ -829,9 +829,9 @@
 .sk-rm-section::after {
     content: '';
     position: absolute;
-    top: 22px;
-    left: 200px;
-    width: 60px;
+    top: 28px;
+    left: 260px;
+    width: 50px;
     height: 2px;
     background: var(--wp-color, #6366f1);
 }
@@ -839,7 +839,7 @@
 .sk-rm-section .sk-rm-skills::before {
     content: '';
     position: absolute;
-    left: calc(60px + 3px);
+    left: calc(50px + 4px);
     top: 0;
     bottom: -2.5rem;
     width: 1px;
@@ -852,10 +852,17 @@
     padding-right: 1rem;
 }
 .sk-rm-label {
-    display: block;
-    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 1.15rem;
     color: var(--wp-color, #6366f1);
-    margin-bottom: 2px;
+    background: color-mix(in srgb, var(--wp-color, #6366f1) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--wp-color, #6366f1) 20%, transparent);
+    margin-bottom: 6px;
 }
 .sk-rm-num {
     display: block;
@@ -866,19 +873,19 @@
     letter-spacing: -0.02em;
 }
 .sk-rm-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: #e2e8f0;
     margin-top: 0.75rem;
     line-height: 1.3;
 }
 .sk-rm-skills {
-    padding-left: 60px;
+    padding-left: 50px;
     padding-top: 12px;
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.55rem;
 }
 .sk-rm-item {
     display: flex;
@@ -888,15 +895,15 @@
     z-index: 1;
 }
 .sk-rm-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--wp-color, #6366f1);
     flex-shrink: 0;
-    box-shadow: 0 0 6px color-mix(in srgb, var(--wp-color, #6366f1) 40%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--wp-color, #6366f1) 40%, transparent);
 }
 .sk-rm-name {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 500;
     color: #cbd5e1;
 }
@@ -929,14 +936,22 @@
     .sk-rm-num {
         font-size: 2.5rem;
     }
+    .sk-rm-label {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
     .sk-rm-info {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         gap: 1rem;
         padding-right: 0;
+        flex-wrap: wrap;
     }
     .sk-rm-title {
         margin-top: 0;
+        width: 100%;
     }
     .sk-rm-skills {
         padding-left: 1.5rem;
