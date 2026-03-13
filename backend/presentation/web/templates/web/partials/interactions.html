@@ -248,19 +248,42 @@
     .tg-emoji-item:hover { background: rgba(99,102,241,0.18); transform: scale(1.18); }
 
     /* ── Reply Thread Lines ── */
-    .tg-replies-container { margin-top: 3px; width: fit-content; max-width: 100%; }
+    .tg-replies-container {
+        margin-top: 6px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
     .message--other .tg-replies-container {
-        margin-left: 3px; padding-left: 12px;
+        margin-left: 0; padding-left: 16px;
         border-left: 2px solid var(--reply-line);
+        align-items: flex-start;
     }
     .message--own .tg-replies-container {
-        margin-right: 3px; padding-right: 12px;
+        margin-right: 0; padding-right: 16px;
         border-right: 2px solid var(--reply-line);
-        display: flex; flex-direction: column; align-items: flex-end;
+        align-items: flex-end;
     }
+
+    /* ── Nested reply rows: smaller avatar, compact layout ── */
+    .tg-replies-container .message-row { gap: 6px; }
+    .tg-replies-container .message-avatar {
+        width: 24px; height: 24px;
+    }
+    .tg-replies-container .tg-bubble {
+        max-width: min(65vw, 380px);
+    }
+    .tg-replies-container .tg-bubble-text { font-size: 0.85rem; }
+    .tg-replies-container .tg-author-name { font-size: 0.65rem; }
+
+    /* ── Deeper nesting (depth ≥ 2): hide avatar, tighter ── */
+    .tg-replies-container .tg-replies-container .message-avatar { display: none; }
+    .tg-replies-container .tg-replies-container { padding-left: 10px; padding-right: 10px; }
+
     .tg-view-replies {
         display: inline-flex; align-items: center; gap: 6px;
-        padding: 0; border: 0; background: transparent;
+        padding: 2px 0; border: 0; background: transparent;
         font-size: 0.74rem; font-weight: 700;
         color: var(--action-color);
         transition: color 0.2s ease;
@@ -397,6 +420,10 @@
         .tg-bubble-text     { font-size:0.875rem; }
         .tg-author-name     { font-size:0.67rem; }
         .tg-emoji-menu      { right:0; left:auto; }
+        /* Reply tweaks */
+        .tg-replies-container .message-avatar { width:22px; height:22px; }
+        .tg-replies-container .tg-bubble { max-width: 72vw; }
+        .tg-replies-container { padding-left: 12px; padding-right: 12px; }
     }
 </style>
 
