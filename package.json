@@ -8,5 +8,8 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.0.0",
     "tailwindcss": "^4.2.1"
+  },
+  "dependencies": {
+    "docx": "^9.6.1"
   }
 }

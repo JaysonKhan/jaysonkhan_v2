@@ -117,6 +117,15 @@ class SiteSettings(models.Model):
         max_length=200, default="/contact/",
         help_text="Secondary CTA button URL"
     )
+    hero_typing_texts = models.TextField(
+        blank=True,
+        default='["Flutter Developer", "Mobile Engineer", "Problem Solver", "App Builder"]',
+        help_text=(
+            'JSON array of phrases for the hero typing animation. '
+            'Example: ["Flutter Developer", "Mobile Engineer"]. '
+            'Leave empty to disable.'
+        )
+    )
 
     # ── About Section ─────────────────────────────────────────────────────────
     about_title = models.CharField(

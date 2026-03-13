@@ -63,7 +63,7 @@ class PortfolioRepository:
         """Return skills grouped by category as {category_label: [skills]}."""
         skills = (
             Skill.objects
-            .only('id', 'name', 'icon', 'category', 'order')
+            .only('id', 'name', 'icon', 'category', 'order', 'level')
             .order_by('category', 'order', 'name')
         )
         grouped: dict = {}

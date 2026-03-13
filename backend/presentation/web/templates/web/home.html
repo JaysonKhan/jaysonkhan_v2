@@ -20,6 +20,13 @@
             {{ site_settings.hero_title }}
         </h1>
         <p class="text-slate-400 text-lg max-w-lg leading-relaxed">{{ site_settings.hero_subtitle }}</p>
+        {% if site_settings.hero_typing_texts %}
+        <div class="text-2xl md:text-3xl font-bold">
+            <span class="text-slate-300">I am a </span>
+            <span id="typing-text" class="text-gradient"></span>
+            <span id="typing-cursor" style="color:#6366f1;animation:cursorBlink .7s step-end infinite;">|</span>
+        </div>
+        {% endif %}
         <div class="flex flex-wrap gap-3">
             <span class="platform-badge cross">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -397,12 +404,20 @@
 
     </div>
 
-    <!-- Skills Grid (Grouped by Category — collapsible cards + tile grid) -->
+    <!-- Category Filter Tabs -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8 reveal">
+        <button class="sk-filter-tab sk-filter-active" onclick="filterSkills('all',this)">All</button>
+        {% for category_name, skills in portfolio.skills_grouped.items %}
+        <button class="sk-filter-tab" onclick="filterSkills('{{ skills.0.category }}',this)">{{ category_name }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Skills Grid (Grouped by Category — collapsible cards + tile grid + proficiency bars) -->
     <div id="skills-accordion" class="max-w-4xl mx-auto space-y-4">
         {% for category_name, skills in portfolio.skills_grouped.items %}
 
         {% if forloop.counter <= 2 %} <!-- Default Visible Category Card -->
-            <div class="sk-cat-card">
+            <div class="sk-cat-card" data-category="{{ skills.0.category }}">
                 <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
                     onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
                     <span class="sk-cat-label">
@@ -428,13 +443,16 @@
                 </div>
                 <div class="sk-cat-body sk-tile-grid">
                     {% for skill in skills %}
-                    <div class="sk-tile" title="{{ skill.name }}">
+                    <div class="sk-tile" title="{{ skill.name }} — {{ skill.level }}%" style="position:relative;">
                         {% if skill.icon %}
                         <i class="{{ skill.icon }} sk-tile-icon"></i>
                         {% else %}
                         <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
                         {% endif %}
-                        <span class="sk-tile-name">{{ skill.name }}</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="sk-tile-name">{{ skill.name }}</span>
+                            <div class="sk-skill-bar"><div class="sk-skill-bar-fill" style="--target-w:{{ skill.level }}%"></div></div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -442,7 +460,7 @@
 
             {% else %}
             <!-- Hidden Category Card (revealed by Show more) -->
-            <div class="sk-cat-card hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500">
+            <div class="sk-cat-card hidden-skills hidden opacity-0 translate-y-4 transition-all duration-500" data-category="{{ skills.0.category }}">
                 <div class="sk-cat-header" onclick="toggleSkCat(this)" role="button" tabindex="0"
                     onkeydown="if(event.key==='Enter'||event.key===' ')toggleSkCat(this)">
                     <span class="sk-cat-label">
@@ -468,13 +486,16 @@
                 </div>
                 <div class="sk-cat-body sk-tile-grid">
                     {% for skill in skills %}
-                    <div class="sk-tile" title="{{ skill.name }}">
+                    <div class="sk-tile" title="{{ skill.name }} — {{ skill.level }}%" style="position:relative;">
                         {% if skill.icon %}
                         <i class="{{ skill.icon }} sk-tile-icon"></i>
                         {% else %}
                         <span class="sk-tile-abbr">{{ skill.name|slice:":2"|upper }}</span>
                         {% endif %}
-                        <span class="sk-tile-name">{{ skill.name }}</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="sk-tile-name">{{ skill.name }}</span>
+                            <div class="sk-skill-bar"><div class="sk-skill-bar-fill" style="--target-w:{{ skill.level }}%"></div></div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -500,6 +521,55 @@
     </div>
     {% endif %}
 </section>
+
+<!-- ── Separator ── -->
+<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
+
+<!-- ── GitHub Contribution Graph ────────────────────────────── -->
+{% if site_settings.github_url %}
+<section id="github-section" class="max-w-7xl mx-auto px-6"
+    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);display:none;">
+    <div class="text-center mb-12 reveal">
+        <span class="section-tag">
+            <i class="fa-brands fa-github"></i>
+            Open Source
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold">
+            <span class="text-gradient">GitHub Activity</span>
+        </h2>
+    </div>
+
+    <div class="max-w-4xl mx-auto reveal">
+        <!-- Month labels -->
+        <div id="gh-months" style="display:flex;padding-left:28px;margin-bottom:4px;overflow:hidden;"></div>
+
+        <div style="display:flex;gap:4px;">
+            <!-- Day labels -->
+            <div style="display:flex;flex-direction:column;justify-content:space-between;padding:2px 4px 2px 0;font-size:0.6rem;color:#64748b;line-height:1;">
+                <span>Mon</span>
+                <span>Wed</span>
+                <span>Fri</span>
+            </div>
+            <!-- Heatmap grid -->
+            <div id="gh-heatmap" style="display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:2px;flex:1;overflow:hidden;"></div>
+        </div>
+
+        <!-- Legend -->
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:0.65rem;color:#64748b;">
+            <span>Less</span>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.08);border:1px solid rgba(255,255,255,0.05);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.25);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.50);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.75);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#6366f1;"></div>
+            <span>More</span>
+        </div>
+
+        <!-- Stats row -->
+        <div id="gh-stats" style="display:flex;gap:24px;justify-content:center;margin-top:16px;font-size:0.8rem;color:#94a3b8;"></div>
+    </div>
+</section>
+{% endif %}
 
 <!-- Skills Scripts -->
 <script>
@@ -533,6 +603,299 @@
         if (t) t.innerText = skillsExpanded ? 'Show less' : 'Show more';
         if (i) i.classList.toggle('rotate-180', skillsExpanded);
     }
+
+    /* ── Category Filter ───────────────────────────────────────────── */
+    function filterSkills(category, btn) {
+        // Update active tab
+        document.querySelectorAll('.sk-filter-tab').forEach(t => t.classList.remove('sk-filter-active'));
+        btn.classList.add('sk-filter-active');
+
+        const cards = document.querySelectorAll('.sk-cat-card');
+        if (category === 'all') {
+            // Show first 2, respect show more/less state
+            cards.forEach((c, i) => {
+                if (c.classList.contains('hidden-skills')) {
+                    if (skillsExpanded) {
+                        c.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+                        c.classList.add('opacity-100', 'translate-y-0');
+                    } else {
+                        c.classList.add('hidden', 'opacity-0', 'translate-y-4');
+                        c.classList.remove('opacity-100', 'translate-y-0');
+                    }
+                } else {
+                    c.style.display = '';
+                }
+            });
+            const toggleBtn = document.getElementById('toggle-skills-btn');
+            if (toggleBtn) toggleBtn.style.display = '';
+        } else {
+            // Hide toggle button when filtering
+            const toggleBtn = document.getElementById('toggle-skills-btn');
+            if (toggleBtn) toggleBtn.style.display = 'none';
+
+            cards.forEach(c => {
+                if (c.dataset.category === category) {
+                    c.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+                    c.classList.add('opacity-100', 'translate-y-0');
+                    c.style.display = '';
+                    // Ensure it's expanded
+                    c.classList.remove('collapsed');
+                } else {
+                    c.style.display = 'none';
+                }
+            });
+        }
+
+        // Re-trigger bar animations for visible cards
+        document.querySelectorAll('.sk-skill-bar-fill').forEach(bar => {
+            bar.classList.remove('sk-bar-animated');
+            void bar.offsetWidth; // force reflow
+        });
+        setTimeout(() => {
+            skBarObserver && skBarObserver.disconnect();
+            document.querySelectorAll('.sk-skill-bar-fill:not(.sk-bar-animated)').forEach(bar => {
+                skBarObserver && skBarObserver.observe(bar);
+            });
+        }, 100);
+    }
+
+    /* ── Skill Bar Scroll Animation ───────────────────────────────── */
+    let skBarObserver = null;
+    (() => {
+        if (!('IntersectionObserver' in window)) {
+            // Fallback: just show all bars immediately
+            document.querySelectorAll('.sk-skill-bar-fill').forEach(b => b.classList.add('sk-bar-animated'));
+            return;
+        }
+        skBarObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('sk-bar-animated');
+                    skBarObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.3 });
+        document.querySelectorAll('.sk-skill-bar-fill').forEach(bar => skBarObserver.observe(bar));
+    })();
+
+    /* ── Typing Animation ──────────────────────────────────────────── */
+    {% if site_settings.hero_typing_texts %}
+    (() => {
+        let phrases;
+        try { phrases = {{ site_settings.hero_typing_texts|safe }}; } catch(e) { return; }
+        if (!Array.isArray(phrases) || !phrases.length) return;
+        const el = document.getElementById('typing-text');
+        if (!el) return;
+        let pi = 0, ci = 0, deleting = false;
+        function tick() {
+            const phrase = phrases[pi];
+            if (!deleting) {
+                el.textContent = phrase.slice(0, ++ci);
+                if (ci === phrase.length) { setTimeout(() => { deleting = true; tick(); }, 2000); return; }
+                setTimeout(tick, 80);
+            } else {
+                el.textContent = phrase.slice(0, --ci);
+                if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(tick, 400); return; }
+                setTimeout(tick, 40);
+            }
+        }
+        setTimeout(tick, 800);
+    })();
+    {% endif %}
+
+    /* ── GitHub Contribution Heatmap ──────────────────────────────── */
+    {% if site_settings.github_url %}
+    (() => {
+        const section = document.getElementById('github-section');
+        if (!section) return;
+
+        const colors = [
+            'rgba(99,102,241,0.08)',  // level 0
+            'rgba(99,102,241,0.25)',  // level 1
+            'rgba(99,102,241,0.50)',  // level 2
+            'rgba(99,102,241,0.75)',  // level 3
+            '#6366f1',               // level 4
+        ];
+
+        fetch('/api/github-contributions/')
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => {
+                if (!Array.isArray(data) || !data.length) return;
+
+                // Show the section
+                section.style.display = '';
+
+                const grid = document.getElementById('gh-heatmap');
+                const monthsEl = document.getElementById('gh-months');
+                const statsEl = document.getElementById('gh-stats');
+
+                // Build date map
+                const dateMap = {};
+                data.forEach(d => { dateMap[d.date] = d.level; });
+
+                // Get date range (last 52 weeks from today)
+                const today = new Date();
+                const startDate = new Date(today);
+                startDate.setDate(startDate.getDate() - (52 * 7) - startDate.getDay());
+
+                // Build cells
+                let totalContribs = 0;
+                let currentStreak = 0;
+                let maxStreak = 0;
+                let tempStreak = 0;
+                const cells = [];
+                const monthPositions = [];
+                let lastMonth = -1;
+                let weekIndex = 0;
+
+                const d = new Date(startDate);
+                while (d <= today) {
+                    const dateStr = d.toISOString().slice(0, 10);
+                    const level = dateMap[dateStr] || 0;
+                    const dayOfWeek = d.getDay();
+
+                    if (dayOfWeek === 0) weekIndex++;
+
+                    // Track months
+                    const month = d.getMonth();
+                    if (month !== lastMonth) {
+                        monthPositions.push({ month, week: weekIndex });
+                        lastMonth = month;
+                    }
+
+                    // Stats
+                    if (level > 0) {
+                        totalContribs += level;
+                        tempStreak++;
+                        if (tempStreak > maxStreak) maxStreak = tempStreak;
+                    } else {
+                        tempStreak = 0;
+                    }
+
+                    const cell = document.createElement('div');
+                    cell.style.cssText = `width:10px;height:10px;border-radius:2px;background:${colors[Math.min(level, 4)]};${level === 0 ? 'border:1px solid rgba(255,255,255,0.05);' : ''}`;
+                    cell.title = `${dateStr}: ${level} contribution${level !== 1 ? 's' : ''}`;
+                    cells.push(cell);
+
+                    d.setDate(d.getDate() + 1);
+                }
+
+                // Calculate current streak (from today backwards)
+                const checkDate = new Date(today);
+                while (true) {
+                    const ds = checkDate.toISOString().slice(0, 10);
+                    if ((dateMap[ds] || 0) > 0) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else break;
+                }
+
+                cells.forEach(c => grid.appendChild(c));
+
+                // Month labels
+                const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                if (monthsEl) {
+                    // Calculate approximate width per week
+                    const totalWeeks = weekIndex + 1;
+                    monthPositions.forEach((mp, i) => {
+                        const span = document.createElement('span');
+                        span.textContent = monthNames[mp.month];
+                        span.style.cssText = 'font-size:0.6rem;color:#64748b;flex:1;text-align:left;';
+                        // Only show every other month on small screens
+                        if (i % 2 !== 0 && totalWeeks > 40) span.classList.add('hidden', 'sm:inline');
+                        monthsEl.appendChild(span);
+                    });
+                }
+
+                // Stats
+                if (statsEl) {
+                    statsEl.innerHTML = `
+                        <span><strong style="color:#e2e8f0;">${totalContribs}</strong> contributions</span>
+                        <span><strong style="color:#e2e8f0;">${currentStreak}</strong> day streak</span>
+                        <span><strong style="color:#e2e8f0;">${maxStreak}</strong> best streak</span>
+                    `;
+                }
+            })
+            .catch(() => {
+                // Silently fail — section stays hidden
+            });
+    })();
+    {% endif %}
 </script>
+
+<style>
+@keyframes cursorBlink { 50% { opacity: 0; } }
+
+/* ── Category Filter Tabs ─────────────────────────────────── */
+.sk-filter-tab {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #94a3b8;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.sk-filter-tab:hover {
+    color: #e2e8f0;
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+}
+.sk-filter-active {
+    color: #fff !important;
+    background: rgba(99,102,241,0.2) !important;
+    border-color: rgba(99,102,241,0.4) !important;
+    box-shadow: 0 0 12px rgba(99,102,241,0.15);
+}
+
+/* ── Skill Proficiency Bars ───────────────────────────────── */
+.sk-skill-bar {
+    height: 3px;
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+.sk-skill-bar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #6366f1, #818cf8, #a78bfa);
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sk-skill-bar-fill.sk-bar-animated {
+    width: var(--target-w);
+}
+
+/* ── Skill tile hover tooltip ─────────────────────────────── */
+.sk-tile[title] {
+    position: relative;
+}
+.sk-tile::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(15,23,42,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #e2e8f0;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 10;
+}
+.sk-tile:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+</style>
 
 {% endblock %}

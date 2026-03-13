@@ -1408,9 +1408,9 @@
     <!-- ── Global UI/UX Enhancement Scripts ──────────────────────────── -->
     <script>
     (() => {
-        // ── Scroll Progress Bar ──────────────────────────────
+        // ── Scroll Progress Bar (skipped if page provides custom handler) ──
         const progressBar = document.getElementById('scroll-progress');
-        if (progressBar) {
+        if (progressBar && !window.__customProgressBar) {
             window.addEventListener('scroll', () => {
                 const docH = document.documentElement.scrollHeight - window.innerHeight;
                 progressBar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';

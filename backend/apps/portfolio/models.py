@@ -80,6 +80,20 @@ class Project(models.Model):
     order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ── Case Study (optional structured fields) ──────────────────────
+    case_study_challenge = models.TextField(
+        blank=True, default='',
+        help_text="Case Study — Challenge/Problem (leave empty to hide)"
+    )
+    case_study_solution = models.TextField(
+        blank=True, default='',
+        help_text="Case Study — Solution approach"
+    )
+    case_study_results = models.TextField(
+        blank=True, default='',
+        help_text="Case Study — Results/Outcomes"
+    )
+
     class Meta:
         ordering = ['order', '-created_at']
         indexes = [
@@ -90,6 +104,10 @@ class Project(models.Model):
             models.Index(fields=['is_bot', 'is_visible'],
                          name='proj_bot'),
         ]
+
+    @property
+    def has_case_study(self):
+        return bool(self.case_study_challenge or self.case_study_solution or self.case_study_results)
 
     def save(self, *args, **kwargs):
         if not self.slug:

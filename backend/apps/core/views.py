@@ -150,6 +150,73 @@ def upload_media_view(request):
     return JsonResponse({'location': url})
 
 
+# ── GitHub Contribution Graph ──────────────────────────────────────────────────
+
+def github_contributions(request):
+    """
+    Return the last ~1 year of GitHub contribution data as JSON.
+    Scrapes the public contributions page (no API token required).
+    Cached for 1 hour.
+    """
+    from django.core.cache import cache
+    from core.models import SiteSettings
+    import urllib.request
+
+    cache_key = 'github_contributions_data'
+    cached = cache.get(cache_key)
+    if cached:
+        return JsonResponse(cached, safe=False)
+
+    try:
+        settings_obj = SiteSettings.objects.first()
+        github_url = getattr(settings_obj, 'github_url', '') or ''
+    except Exception:
+        github_url = ''
+
+    if not github_url:
+        return JsonResponse({'error': 'No GitHub URL configured'}, status=404)
+
+    # Extract username from URL like https://github.com/username
+    username = github_url.rstrip('/').split('/')[-1]
+    if not username:
+        return JsonResponse({'error': 'Could not extract GitHub username'}, status=400)
+
+    contributions_url = f'https://github.com/users/{username}/contributions'
+    try:
+        req = urllib.request.Request(
+            contributions_url,
+            headers={'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0)'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode('utf-8')
+    except Exception as e:
+        logger.warning('Failed to fetch GitHub contributions for %s: %s', username, e)
+        return JsonResponse({'error': 'Failed to fetch contributions'}, status=502)
+
+    # Parse contribution data from the SVG/HTML
+    # Each cell: <td ... data-date="2025-03-01" data-level="2" ...>
+    pattern = re.compile(
+        r'data-date="(\d{4}-\d{2}-\d{2})"[^>]*data-level="(\d)"'
+    )
+    contributions = []
+    for match in pattern.finditer(html):
+        contributions.append({
+            'date': match.group(1),
+            'level': int(match.group(2)),
+        })
+
+    if not contributions:
+        return JsonResponse({'error': 'No contribution data found'}, status=404)
+
+    # Sort by date
+    contributions.sort(key=lambda x: x['date'])
+
+    # Cache for 1 hour
+    cache.set(cache_key, contributions, 3600)
+
+    return JsonResponse(contributions, safe=False)
+
+
 # ── robots.txt ─────────────────────────────────────────────────────────────────
 
 def robots_txt(request):

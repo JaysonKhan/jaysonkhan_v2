@@ -160,6 +160,7 @@ class SiteSettingsAdmin(ModelAdmin):
                     'hero_primary_cta_url',
                     'hero_secondary_cta_text',
                     'hero_secondary_cta_url',
+                    'hero_typing_texts',
                     # — About ——————————————————————————————————————————————————
                     'about_title',
                     'about_description',

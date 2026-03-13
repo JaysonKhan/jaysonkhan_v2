@@ -71,6 +71,18 @@ class ProjectAdmin(UnfoldModelAdmin):
         ('Links & Technologies', {
             'fields': ('github_url', 'technologies'),
         }),
+        ('Case Study', {
+            'fields': (
+                'case_study_challenge',
+                'case_study_solution',
+                'case_study_results',
+            ),
+            'description': (
+                'Optional structured case study. '
+                'Fill any field to show a Case Study section on the detail page.'
+            ),
+            'classes': ('collapse',),
+        }),
     )
 
     def thumbnail(self, obj):
