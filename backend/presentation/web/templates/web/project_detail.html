@@ -13,6 +13,28 @@
 <meta property="og:image" content="{{ project.image.url }}">
 <meta name="twitter:image" content="{{ project.image.url }}">
 {% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "{{ project.title|escapejs }}",
+  "description": "{{ project.get_card_description|escapejs }}",
+  "applicationCategory": "MobileApplication",
+  "author": {
+    "@type": "Person",
+    "name": "{{ site_settings.site_author|escapejs }}",
+    "url": "{{ site_settings.og_url }}"
+  }{% if project.image %},
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}"{% endif %}{% if project.play_store_url %},
+  "installUrl": "{{ project.play_store_url }}"{% endif %}{% if project.play_store_url or project.app_store_url %},
+  "operatingSystem": "{% if project.play_store_url %}Android{% endif %}{% if project.play_store_url and project.app_store_url %}, {% endif %}{% if project.app_store_url %}iOS{% endif %}"{% endif %},
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
 {% endblock %}
 
 {% block content %}

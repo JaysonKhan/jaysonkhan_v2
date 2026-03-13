@@ -4,11 +4,12 @@ import re
 import uuid
 import io
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_POST
+from django.urls import reverse
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -147,3 +148,22 @@ def upload_media_view(request):
 
     url = default_storage.url(file_path)
     return JsonResponse({'location': url})
+
+
+# ── robots.txt ─────────────────────────────────────────────────────────────────
+
+def robots_txt(request):
+    """Serve robots.txt with dynamic Sitemap URL."""
+    sitemap_url = request.build_absolute_uri(
+        reverse('django.contrib.sitemaps.views.sitemap')
+    )
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "\n"
+        "Disallow: /api/\n"
+        "Disallow: /auth/\n"
+        "\n"
+        f"Sitemap: {sitemap_url}\n"
+    )
+    return HttpResponse(content, content_type='text/plain')

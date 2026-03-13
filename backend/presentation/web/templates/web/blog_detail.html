@@ -14,6 +14,33 @@
 <meta property="og:image" content="{{ post.featured_image.url }}">
 <meta name="twitter:image" content="{{ post.featured_image.url }}">
 {% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ post.title|escapejs }}",
+  "description": "{{ post.excerpt|escapejs }}",
+  "datePublished": "{{ post.created_at|date:'c' }}",
+  "dateModified": "{{ post.updated_at|date:'c' }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ site_settings.site_author|escapejs }}",
+    "url": "{{ site_settings.og_url }}"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "{{ site_settings.site_author|escapejs }}",
+    "url": "{{ site_settings.og_url }}"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ request.build_absolute_uri }}"
+  }{% if post.featured_image %},
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}"{% endif %}{% if post.category %},
+  "articleSection": "{{ post.category.name|escapejs }}"{% endif %}{% if post.tags.all %},
+  "keywords": "{% for tag in post.tags.all %}{{ tag.name|escapejs }}{% if not forloop.last %}, {% endif %}{% endfor %}"{% endif %}
+}
+</script>
 {% endblock %}
 
 {% block content %}

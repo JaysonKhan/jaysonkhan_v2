@@ -90,6 +90,10 @@ class Project(models.Model):
             self.description_rich = sanitize_rich_text(self.description_rich)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('project_detail', kwargs={'slug': self.slug})
+
     def get_card_description(self):
         """Short description for cards."""
         rich_text_content = strip_tags(self.description_rich or '')

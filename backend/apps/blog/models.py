@@ -38,6 +38,10 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('blog_detail', kwargs={'slug': self.slug})
+
     def save(self, *args, **kwargs):
         if self.content_rich:
             self.content_rich = sanitize_rich_text(self.content_rich)

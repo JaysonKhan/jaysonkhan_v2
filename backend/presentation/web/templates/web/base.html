@@ -16,6 +16,7 @@
     <meta name="description" content="{% block meta_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     <meta name="author" content="{{ site_settings.site_author }}">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
     <!-- Open Graph -->
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
