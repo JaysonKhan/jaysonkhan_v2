@@ -1,148 +1,174 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}{{ poll.title }}{% endblock %}
+{% block page_title %}{{ poll.title }} — Rektor Bot{% endblock %}
 
 {% block bot_content %}
-<div class="bot-breadcrumb">
-    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
-    <span>/</span> <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
-    <span>/</span> {{ poll.title }}
+<!-- Breadcrumb -->
+<div class="rb-breadcrumb">
+    <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+    <span>{{ poll.title }}</span>
 </div>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-    <h1 style="margin: 0;">
+<!-- Header -->
+<div class="rb-header">
+    <h1>
         {{ poll.title }}
         {% if poll.status == "open" %}
-            <span class="bot-badge bot-badge-open">Faol</span>
+            <span class="rb-badge rb-badge-open" style="vertical-align:middle; margin-left:0.5rem;">Faol</span>
         {% else %}
-            <span class="bot-badge bot-badge-closed">Yopilgan</span>
+            <span class="rb-badge rb-badge-closed" style="vertical-align:middle; margin-left:0.5rem;">Yopilgan</span>
         {% endif %}
     </h1>
-    <div class="bot-actions">
+    <div class="rb-actions">
         {% if poll.status == "open" %}
         <form method="post" action="{% url 'bot_poll_close' poll.id %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit" class="bot-btn bot-btn-danger bot-btn-sm" onclick="return confirm('So\'rovnomani yopishni xohlaysizmi?');">Yopish</button>
+            <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('So\'rovnomani yopishni xohlaysizmi?');">
+                <span class="material-symbols-outlined">lock</span> Yopish
+            </button>
         </form>
         {% endif %}
-        <a href="{% url 'bot_export_csv' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">CSV</a>
-        <a href="{% url 'bot_export_json' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">JSON</a>
-        <a href="{% url 'bot_export_pdf' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">PDF</a>
+        <a href="{% url 'bot_export_csv' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+            <span class="material-symbols-outlined">download</span> CSV
+        </a>
+        <a href="{% url 'bot_export_json' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+            <span class="material-symbols-outlined">data_object</span> JSON
+        </a>
+        <a href="{% url 'bot_export_pdf' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+            <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+        </a>
     </div>
 </div>
 
-<!-- Poll Info -->
-<div class="bot-card">
-    <h2>Ma'lumot</h2>
-    <table class="bot-table">
-        <tr><td style="width:200px; font-weight:600;">Tavsif</td><td>{{ poll.description }}</td></tr>
-        <tr><td style="font-weight:600;">Muddati</td><td>{{ poll.deadline_at }}</td></tr>
-        <tr><td style="font-weight:600;">Maks. ovozlar</td><td>{{ poll.max_votes_per_user }}</td></tr>
-        <tr><td style="font-weight:600;">CAPTCHA</td><td>{% if poll.captcha_enabled %}Ha{% else %}Yo'q{% endif %}</td></tr>
-        <tr><td style="font-weight:600;">Ovoz o'zgartirish</td><td>{% if poll.allow_vote_change %}Ha{% else %}Yo'q{% endif %}</td></tr>
-        <tr><td style="font-weight:600;">Yaratilgan</td><td>{{ poll.created_at }}</td></tr>
-        {% if channels %}
-        <tr><td style="font-weight:600;">Kanallar</td><td>{{ channels|join:", " }}</td></tr>
-        {% endif %}
-    </table>
-</div>
-
-<!-- Results Summary -->
-<div class="bot-grid">
-    <div class="bot-stat">
+<!-- Stats -->
+<div class="rb-stats">
+    <div class="rb-stat accent-blue">
         <div class="value">{{ results.total_voters }}</div>
         <div class="label">Jami ovoz berganlar</div>
     </div>
-    <div class="bot-stat">
+    <div class="rb-stat">
         <div class="value">{{ candidates|length }}</div>
         <div class="label">Nomzodlar</div>
     </div>
-    <div class="bot-stat">
+    <div class="rb-stat accent-amber">
         <div class="value">{{ faculties|length }}</div>
         <div class="label">Fakultetlar</div>
     </div>
 </div>
 
+<!-- Poll Info -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Ma'lumot</h2>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <tr><td style="width:180px; font-weight:600; color:var(--body-quiet-color,#888);">Tavsif</td><td>{{ poll.description }}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Muddati</td><td>{{ poll.deadline_at }}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Maks. ovozlar</td><td><span class="rb-code">{{ poll.max_votes_per_user }}</span></td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">CAPTCHA</td><td>{% if poll.captcha_enabled %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Ovoz o'zgartirish</td><td>{% if poll.allow_vote_change %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Yaratilgan</td><td>{{ poll.created_at }}</td></tr>
+            {% if channels %}
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Kanallar</td><td>{{ channels|join:", " }}</td></tr>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
 <!-- Top Candidates -->
 {% if top %}
-<div class="bot-card">
-    <h2>Top nomzodlar</h2>
-    <table class="bot-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Nomzod</th>
-                <th>Lavozim</th>
-                <th>Fakultet</th>
-                <th>Ovozlar</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in top %}
-            <tr>
-                <td>
-                    {% if t.rank == 1 %}&#x1F947;{% elif t.rank == 2 %}&#x1F948;{% elif t.rank == 3 %}&#x1F949;{% else %}{{ t.rank }}{% endif %}
-                </td>
-                <td><strong>{{ t.candidate_name }}</strong></td>
-                <td>{{ t.position|default:"-" }}</td>
-                <td>{{ t.faculty_code|default:"-" }}</td>
-                <td><strong>{{ t.votes }}</strong></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Top nomzodlar</h2>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th>Nomzod</th>
+                    <th>Lavozim</th>
+                    <th>Fakultet</th>
+                    <th style="text-align:right;">Ovozlar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in top %}
+                <tr>
+                    <td>
+                        {% if t.rank == 1 %}<span class="rb-medal">&#x1F947;</span>
+                        {% elif t.rank == 2 %}<span class="rb-medal">&#x1F948;</span>
+                        {% elif t.rank == 3 %}<span class="rb-medal">&#x1F949;</span>
+                        {% else %}{{ t.rank }}{% endif %}
+                    </td>
+                    <td><strong>{{ t.candidate_name }}</strong></td>
+                    <td class="rb-muted">{{ t.position|default:"-" }}</td>
+                    <td><span class="rb-code">{{ t.faculty_code|default:"-" }}</span></td>
+                    <td style="text-align:right;"><strong>{{ t.votes }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}
 
 <!-- Full Results -->
 {% if results.results %}
-<div class="bot-card">
-    <h2>To'liq natijalar</h2>
-    <table class="bot-table">
-        <thead>
-            <tr>
-                <th>Fakultet</th>
-                <th>Nomzod</th>
-                <th>Ovozlar</th>
-                <th>%</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in results.results %}
-            <tr>
-                <td>{{ r.faculty_code }}</td>
-                <td>{{ r.candidate_name }}</td>
-                <td>{{ r.votes }}</td>
-                <td>
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <div style="flex:1; background:var(--darkened-bg, #eee); border-radius:4px; height:8px; max-width:200px;">
-                            <div style="width:{{ r.percentage }}%; background:var(--primary, #7c3aed); height:100%; border-radius:4px;"></div>
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>To'liq natijalar</h2>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>Fakultet</th>
+                    <th>Nomzod</th>
+                    <th style="text-align:right;">Ovozlar</th>
+                    <th style="width:280px;">Foiz</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in results.results %}
+                <tr>
+                    <td><span class="rb-code">{{ r.faculty_code }}</span></td>
+                    <td>{{ r.candidate_name }}</td>
+                    <td style="text-align:right;"><strong>{{ r.votes }}</strong></td>
+                    <td>
+                        <div class="rb-progress">
+                            <div class="rb-progress-bar">
+                                <div class="rb-progress-fill" style="width:{{ r.percentage }}%;"></div>
+                            </div>
+                            <span class="rb-progress-text">{{ r.percentage }}%</span>
                         </div>
-                        <span>{{ r.percentage }}%</span>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}
 
 <!-- Charts -->
-<div class="bot-card">
-    <h2>Grafiklar</h2>
-    <div class="bot-grid" style="grid-template-columns: 1fr 1fr;">
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Grafiklar</h2>
+    </div>
+    <div class="rb-grid-2">
         <div>
-            <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Ovozlar dinamikasi</h3>
-            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px;" loading="lazy">
+            <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Ovozlar dinamikasi</p>
+            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
         </div>
         <div>
-            <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Fakultetlar bo'yicha</h3>
-            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px;" loading="lazy">
+            <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Fakultetlar bo'yicha</p>
+            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
         </div>
     </div>
-    <div style="margin-top:1rem;">
-        <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Soatlik faollik</h3>
-        <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; border-radius:8px; max-width:600px;" loading="lazy">
-    </div>
+    <hr class="rb-divider">
+    <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Soatlik faollik</p>
+    <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
 </div>
 {% endblock %}

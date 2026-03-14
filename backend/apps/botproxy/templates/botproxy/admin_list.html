@@ -1,56 +1,64 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Bot Adminlar{% endblock %}
+{% block page_title %}Adminlar — Rektor Bot{% endblock %}
 
 {% block bot_content %}
-<div class="bot-breadcrumb">
-    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
-    <span>/</span> Adminlar
+<div class="rb-header">
+    <h1>Bot Adminlar</h1>
 </div>
 
-<h1>Bot Adminlar</h1>
-
 <!-- Add Admin -->
-<div class="bot-card">
-    <h2>Admin qo'shish</h2>
-    <form method="post" action="{% url 'bot_admin_add' %}" style="display:flex; gap:0.5rem; align-items:flex-end;">
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Admin qo'shish</h2>
+    </div>
+    <form method="post" action="{% url 'bot_admin_add' %}" style="display:flex; gap:0.75rem; align-items:flex-end;">
         {% csrf_token %}
-        <div class="bot-form-group" style="margin:0; flex:1;">
+        <div class="rb-form-group" style="margin:0; flex:1; max-width:400px;">
             <label for="user_id">Telegram User ID</label>
             <input type="number" id="user_id" name="user_id" required placeholder="123456789">
         </div>
-        <button type="submit" class="bot-btn bot-btn-primary" style="height:38px;">Qo'shish</button>
+        <button type="submit" class="rb-btn rb-btn-primary" style="height:40px;">
+            <span class="material-symbols-outlined">person_add</span> Qo'shish
+        </button>
     </form>
 </div>
 
 <!-- Admin List -->
-<div class="bot-card">
-    <h2>Joriy adminlar ({{ admin_ids|length }})</h2>
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Joriy adminlar <span class="rb-badge rb-badge-info">{{ admin_ids|length }}</span></h2>
+    </div>
     {% if admin_ids %}
-    <table class="bot-table">
-        <thead>
-            <tr>
-                <th>Telegram User ID</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for uid in admin_ids %}
-            <tr>
-                <td><code>{{ uid }}</code></td>
-                <td style="text-align:right;">
-                    <form method="post" action="{% url 'bot_admin_remove' uid %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="bot-btn bot-btn-danger bot-btn-sm" onclick="return confirm('Bu adminni o\'chirmoqchimisiz?');">O'chirish</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>Telegram User ID</th>
+                    <th style="text-align:right;">Amallar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for uid in admin_ids %}
+                <tr>
+                    <td><span class="rb-code">{{ uid }}</span></td>
+                    <td style="text-align:right;">
+                        <form method="post" action="{% url 'bot_admin_remove' uid %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('Bu adminni o\'chirmoqchimisiz?');">
+                                <span class="material-symbols-outlined">delete</span> O'chirish
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-    <p style="text-align:center; color:var(--body-quiet-color, #666); padding:1rem;">
-        Adminlar topilmadi
-    </p>
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">admin_panel_settings</span>
+        <p>Adminlar topilmadi</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,7 +1,8 @@
-"""Django admin views for bot management (polls, analytics, admins, users)."""
+"""Django admin views for Rektor Bot management (polls, analytics, admins, users)."""
 from __future__ import annotations
 
 import logging
+import math
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -12,6 +13,8 @@ from django.urls import reverse
 from botproxy.client import BotAPIClient, BotAPIError
 
 logger = logging.getLogger(__name__)
+
+PER_PAGE = 25
 
 
 def _ctx(request, extra: dict | None = None) -> dict:
@@ -32,6 +35,15 @@ def _handle_api_error(request, e: BotAPIError) -> None:
         messages.error(request, f"Bot serveriga ulanib bo'lmadi: {e.detail}")
     else:
         messages.error(request, f"Bot API xatosi ({e.status}): {e.detail}")
+
+
+def _parse_page(request) -> int:
+    """Extract and validate page number from request GET params."""
+    try:
+        page = int(request.GET.get("page", 1))
+        return max(1, page)
+    except (ValueError, TypeError):
+        return 1
 
 
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
@@ -269,24 +281,64 @@ def admin_remove(request, user_id: int):
 
 @staff_member_required
 def user_stats(request):
+    """Users list with pagination and search."""
     client = _client()
-    user_count = 0
+    page = _parse_page(request)
+    search = request.GET.get("q", "").strip()
     user_detail = None
     search_id = request.GET.get("user_id", "").strip()
 
+    # Paginated user list
+    user_count = 0
+    users = []
+    total_pages = 1
     try:
-        user_count = client.get_user_count()
+        result = client.list_users(page=page, per_page=PER_PAGE, search=search)
+        users = result.get("users", [])
+        user_count = result.get("total", 0)
+        total_pages = max(1, math.ceil(user_count / PER_PAGE))
     except BotAPIError as e:
-        _handle_api_error(request, e)
+        # Fallback: if list_users endpoint doesn't exist yet, show count only
+        logger.warning("list_users failed (endpoint may not exist): %s", e)
+        try:
+            user_count = client.get_user_count()
+        except BotAPIError as e2:
+            _handle_api_error(request, e2)
 
+    # User detail search by ID
     if search_id and search_id.isdigit():
         try:
             user_detail = client.get_user_history(int(search_id))
         except BotAPIError:
             messages.warning(request, f"User {search_id} topilmadi")
 
+    # Build page range for pagination
+    page_range = _build_page_range(page, total_pages)
+
     return TemplateResponse(request, "botproxy/user_stats.html", _ctx(request, {
         "user_count": user_count,
+        "users": users,
         "user_detail": user_detail,
         "search_id": search_id,
+        "search_query": search,
+        "page": page,
+        "total_pages": total_pages,
+        "page_range": page_range,
+        "has_prev": page > 1,
+        "has_next": page < total_pages,
     }))
+
+
+def _build_page_range(current: int, total: int) -> list:
+    """Build a compact page range with ellipsis markers."""
+    if total <= 7:
+        return list(range(1, total + 1))
+
+    pages = []
+    if current <= 4:
+        pages = list(range(1, 6)) + [None, total]
+    elif current >= total - 3:
+        pages = [1, None] + list(range(total - 4, total + 1))
+    else:
+        pages = [1, None, current - 1, current, current + 1, None, total]
+    return pages

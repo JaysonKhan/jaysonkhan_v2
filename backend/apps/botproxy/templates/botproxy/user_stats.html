@@ -1,81 +1,164 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Foydalanuvchilar{% endblock %}
+{% block page_title %}Foydalanuvchilar — Rektor Bot{% endblock %}
 
 {% block bot_content %}
-<div class="bot-breadcrumb">
-    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
-    <span>/</span> Foydalanuvchilar
+<div class="rb-header">
+    <h1>
+        Foydalanuvchilar
+        <span class="rb-subtitle">Jami: {{ user_count }} ta foydalanuvchi</span>
+    </h1>
 </div>
 
-<h1>Foydalanuvchilar</h1>
-
-<div class="bot-grid">
-    <div class="bot-stat">
+<!-- Stats -->
+<div class="rb-stats">
+    <div class="rb-stat">
         <div class="value">{{ user_count }}</div>
         <div class="label">Jami foydalanuvchilar</div>
     </div>
 </div>
 
-<!-- User Search -->
-<div class="bot-card">
-    <h2>Foydalanuvchi qidirish</h2>
-    <form method="get" style="display:flex; gap:0.5rem; align-items:flex-end;">
-        <div class="bot-form-group" style="margin:0; flex:1;">
+<!-- Search by User ID -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Foydalanuvchi qidirish</h2>
+    </div>
+    <form method="get" style="display:flex; gap:0.75rem; align-items:flex-end;">
+        <div class="rb-form-group" style="margin:0; flex:1; max-width:400px;">
             <label for="user_id">Telegram User ID</label>
             <input type="number" id="user_id" name="user_id" value="{{ search_id }}" placeholder="123456789">
         </div>
-        <button type="submit" class="bot-btn bot-btn-primary" style="height:38px;">Qidirish</button>
+        <button type="submit" class="rb-btn rb-btn-primary" style="height:40px;">
+            <span class="material-symbols-outlined">search</span> Qidirish
+        </button>
     </form>
 </div>
 
-<!-- User Detail -->
+<!-- User Detail (from search) -->
 {% if user_detail %}
-<div class="bot-card">
-    <h2>Foydalanuvchi: {{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
-    <table class="bot-table">
-        <tr><td style="width:200px; font-weight:600;">User ID</td><td><code>{{ user_detail.user_id }}</code></td></tr>
-        <tr><td style="font-weight:600;">Username</td><td>{{ user_detail.username|default:"-" }}</td></tr>
-        <tr><td style="font-weight:600;">Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
-        <tr><td style="font-weight:600;">Jami ovozlar</td><td>{{ user_detail.total_votes }}</td></tr>
-    </table>
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
+        <span class="rb-badge rb-badge-info">ID: {{ user_detail.user_id }}</span>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <tr><td style="width:180px; font-weight:600; color:var(--body-quiet-color,#888);">User ID</td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Username</td><td>{{ user_detail.username|default:"-" }}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
+            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Jami ovozlar</td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
+        </table>
+    </div>
 
     {% if user_detail.votes %}
-    <h3 style="margin-top:1.5rem; font-size:1rem;">Ovoz berish tarixi</h3>
-    <table class="bot-table">
-        <thead>
-            <tr>
-                <th>So'rovnoma</th>
-                <th>Nomzod</th>
-                <th>Fakultet</th>
-                <th>Sana</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in user_detail.votes %}
-            <tr>
-                <td><a href="{% url 'bot_poll_detail' v.poll_id %}">{{ v.poll_title }}</a></td>
-                <td>{{ v.candidate_name }}</td>
-                <td>{{ v.faculty_code|default:"-" }}</td>
-                <td>{{ v.voted_at|truncatechars:16 }}</td>
-                <td>
-                    {% if v.poll_status == "open" %}
-                        <span class="bot-badge bot-badge-open">Faol</span>
-                    {% else %}
-                        <span class="bot-badge bot-badge-closed">Yopilgan</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <hr class="rb-divider">
+    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Ovoz berish tarixi</h3>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>So'rovnoma</th>
+                    <th>Nomzod</th>
+                    <th>Fakultet</th>
+                    <th>Sana</th>
+                    <th>Holat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in user_detail.votes %}
+                <tr>
+                    <td><a href="{% url 'bot_poll_detail' v.poll_id %}">{{ v.poll_title }}</a></td>
+                    <td>{{ v.candidate_name }}</td>
+                    <td><span class="rb-code">{{ v.faculty_code|default:"-" }}</span></td>
+                    <td class="rb-muted">{{ v.voted_at|truncatechars:16 }}</td>
+                    <td>
+                        {% if v.poll_status == "open" %}
+                            <span class="rb-badge rb-badge-open">Faol</span>
+                        {% else %}
+                            <span class="rb-badge rb-badge-closed">Yopilgan</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% endif %}
 </div>
 {% elif search_id %}
-<div class="bot-card">
-    <p style="text-align:center; color:var(--body-quiet-color, #666); padding:1rem;">
-        User {{ search_id }} topilmadi
-    </p>
+<div class="rb-card">
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">person_off</span>
+        <p>User {{ search_id }} topilmadi</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Users List (paginated) -->
+{% if users %}
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Barcha foydalanuvchilar</h2>
+        <span class="rb-muted" style="font-size:0.8125rem;">Sahifa {{ page }}/{{ total_pages }}</span>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Ism</th>
+                    <th>Username</th>
+                    <th>Ro'yxatdan o'tgan</th>
+                    <th>Ovozlar</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td><span class="rb-code">{{ u.user_id }}</span></td>
+                    <td>{{ u.first_name }} {{ u.last_name|default:"" }}</td>
+                    <td class="rb-muted">{{ u.username|default:"-" }}</td>
+                    <td class="rb-muted">{{ u.registered_at|truncatechars:16 }}</td>
+                    <td><strong>{{ u.total_votes|default:"0" }}</strong></td>
+                    <td style="text-align:right;">
+                        <a href="{% url 'bot_user_stats' %}?user_id={{ u.user_id }}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="rb-pagination">
+        {% if has_prev %}
+            <a href="?page={{ page|add:"-1" }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </a>
+        {% else %}
+            <span class="disabled"><span class="material-symbols-outlined">chevron_left</span></span>
+        {% endif %}
+
+        {% for p in page_range %}
+            {% if p is None %}
+                <span class="dots">&hellip;</span>
+            {% elif p == page %}
+                <span class="active">{{ p }}</span>
+            {% else %}
+                <a href="?page={{ p }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if has_next %}
+            <a href="?page={{ page|add:"1" }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </a>
+        {% else %}
+            <span class="disabled"><span class="material-symbols-outlined">chevron_right</span></span>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

@@ -137,5 +137,12 @@ class BotAPIClient:
     def get_user_count(self) -> int:
         return self._request("GET", "/api/v1/users/count").json()["count"]
 
+    def list_users(self, page: int = 1, per_page: int = 25, search: str = "") -> dict:
+        """List users with pagination. Returns {users: [...], total: int, page: int, per_page: int}."""
+        params = f"?page={page}&per_page={per_page}"
+        if search:
+            params += f"&search={search}"
+        return self._request("GET", f"/api/v1/users{params}").json()
+
     def get_user_history(self, user_id: int) -> dict:
         return self._request("GET", f"/api/v1/users/{user_id}/history").json()

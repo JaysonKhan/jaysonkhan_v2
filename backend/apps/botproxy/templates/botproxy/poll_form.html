@@ -1,64 +1,74 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Yangi so'rovnoma{% endblock %}
+{% block page_title %}Yangi so'rovnoma — Rektor Bot{% endblock %}
 
 {% block bot_content %}
-<div class="bot-breadcrumb">
-    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
-    <span>/</span> <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
-    <span>/</span> Yangi so'rovnoma
+<!-- Breadcrumb -->
+<div class="rb-breadcrumb">
+    <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+    <span>Yangi so'rovnoma</span>
 </div>
 
-<h1>Yangi so'rovnoma yaratish</h1>
+<div class="rb-header">
+    <h1>Yangi so'rovnoma yaratish</h1>
+</div>
 
-<div class="bot-card">
+<div class="rb-card">
     <form method="post">
         {% csrf_token %}
 
-        <div class="bot-form-group">
-            <label for="title">Nomi *</label>
+        <div class="rb-form-group">
+            <label for="title">Nomi <span class="req">*</span></label>
             <input type="text" id="title" name="title" required placeholder="So'rovnoma nomi">
         </div>
 
-        <div class="bot-form-group">
-            <label for="description">Tavsif *</label>
+        <div class="rb-form-group">
+            <label for="description">Tavsif <span class="req">*</span></label>
             <input type="text" id="description" name="description" required placeholder="Qisqa tavsif">
         </div>
 
-        <div class="bot-form-group">
-            <label for="deadline_at">Muddati *</label>
-            <input type="datetime-local" id="deadline_at" name="deadline_at" required>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-            <div class="bot-form-group">
+        <div class="rb-form-row rb-form-row-3">
+            <div class="rb-form-group">
+                <label for="deadline_at">Muddati <span class="req">*</span></label>
+                <input type="datetime-local" id="deadline_at" name="deadline_at" required>
+            </div>
+            <div class="rb-form-group">
                 <label for="max_votes_per_user">Maks. ovozlar soni</label>
                 <input type="number" id="max_votes_per_user" name="max_votes_per_user" value="1" min="1">
             </div>
-            <div class="bot-form-group" style="display:flex; align-items:center; gap:0.5rem; padding-top:1.5rem;">
-                <input type="checkbox" id="captcha_enabled" name="captcha_enabled" checked>
-                <label for="captcha_enabled" style="margin:0;">CAPTCHA</label>
-            </div>
-            <div class="bot-form-group" style="display:flex; align-items:center; gap:0.5rem; padding-top:1.5rem;">
-                <input type="checkbox" id="allow_vote_change" name="allow_vote_change">
-                <label for="allow_vote_change" style="margin:0;">Ovoz o'zgartirish</label>
+            <div style="display:flex; gap:1.5rem;">
+                <div class="rb-checkbox">
+                    <input type="checkbox" id="captcha_enabled" name="captcha_enabled" checked>
+                    <label for="captcha_enabled">CAPTCHA</label>
+                </div>
+                <div class="rb-checkbox">
+                    <input type="checkbox" id="allow_vote_change" name="allow_vote_change">
+                    <label for="allow_vote_change">Ovoz o'zgartirish</label>
+                </div>
             </div>
         </div>
 
-        <div class="bot-form-group">
-            <label for="faculties">Fakultetlar *</label>
+        <hr class="rb-divider">
+
+        <div class="rb-form-group">
+            <label for="faculties">Fakultetlar <span class="req">*</span></label>
             <textarea id="faculties" name="faculties" required placeholder="Har bir qator: KOD:Nomi&#10;Masalan:&#10;IT:Axborot texnologiyalari&#10;IQTISOD:Iqtisodiyot"></textarea>
             <div class="help">Har bir qatorda <code>KOD:Nomi</code> formatida yozing</div>
         </div>
 
-        <div class="bot-form-group">
-            <label for="candidates">Nomzodlar *</label>
+        <div class="rb-form-group">
+            <label for="candidates">Nomzodlar <span class="req">*</span></label>
             <textarea id="candidates" name="candidates" required placeholder="Har bir qator: FakultetKod:Ism:Lavozim&#10;Masalan:&#10;IT:Aliyev Ali:Dekan&#10;IQTISOD:Karimov Karim:Dekan"></textarea>
             <div class="help">Har bir qatorda <code>FakultetKod:Ism</code> yoki <code>FakultetKod:Ism:Lavozim</code> formatida yozing</div>
         </div>
 
-        <div class="bot-actions">
-            <button type="submit" class="bot-btn bot-btn-primary">Yaratish</button>
-            <a href="{% url 'bot_poll_list' %}" class="bot-btn bot-btn-outline">Bekor qilish</a>
+        <hr class="rb-divider">
+
+        <div class="rb-actions">
+            <button type="submit" class="rb-btn rb-btn-primary">
+                <span class="material-symbols-outlined">check</span> Yaratish
+            </button>
+            <a href="{% url 'bot_poll_list' %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
         </div>
     </form>
 </div>

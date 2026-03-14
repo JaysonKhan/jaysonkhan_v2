@@ -404,26 +404,26 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Bot Management",
+                "title": "My Services",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Dashboard",
+                        "title": "Rektor Bot",
                         "icon": "smart_toy",
                         "link": f"{_A}bot/dashboard/",
                     },
                     {
-                        "title": "Polls",
+                        "title": "So'rovnomalar",
                         "icon": "ballot",
                         "link": f"{_A}bot/polls/",
                     },
                     {
-                        "title": "Bot Admins",
+                        "title": "Bot Adminlar",
                         "icon": "admin_panel_settings",
                         "link": f"{_A}bot/admins/",
                     },
                     {
-                        "title": "Bot Users",
+                        "title": "Bot Foydalanuvchilar",
                         "icon": "people",
                         "link": f"{_A}bot/users/",
                     },
