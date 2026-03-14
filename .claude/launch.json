@@ -4,7 +4,7 @@
     {
       "name": "django-dev",
       "runtimeExecutable": "backend/venv/bin/python",
-      "runtimeArgs": ["backend/manage.py", "runserver", "0.0.0.0:8000"],
+      "runtimeArgs": ["backend/manage.py", "runserver", "--insecure", "0.0.0.0:8000"],
       "port": 8000
     },
     {
