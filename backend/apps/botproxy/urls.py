@@ -1,8 +1,15 @@
 from django.urls import path
 
-from botproxy import views
+from botproxy import osint_views, views
 
 urlpatterns = [
+    # ── OSINT ─────────────────────────────────────────────────────────────────
+    path("osint/search/", osint_views.osint_search, name="osint_search"),
+    path("osint/profile/<int:user_id>/", osint_views.osint_profile, name="osint_profile"),
+    path("osint/profile/<int:user_id>/branch/<str:branch>/", osint_views.osint_fetch_branch, name="osint_fetch_branch"),
+    path("osint/text-search/", osint_views.osint_text_search, name="osint_text_search"),
+    path("osint/balance/", osint_views.osint_balance, name="osint_balance"),
+    # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),
     path("<str:svc>/polls/create/", views.poll_create, name="bot_poll_create"),

@@ -1,0 +1,273 @@
+{% extends "botproxy/osint_base.html" %}
+{% block osint_title %}Profil #{{ user_id }}{% endblock %}
+
+{% block osint_content %}
+<!-- Breadcrumb -->
+<div class="rb-breadcrumb">
+    <a href="{% url 'osint_search' %}">Qidiruv</a>
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+    <span>Profil #{{ user_id }}</span>
+</div>
+
+<!-- User Header -->
+{% if basic.data %}
+<div class="rb-card">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+            <h1 style="margin:0; font-size:1.5rem; font-weight:700;">
+                {{ basic.data.first_name|default:"" }} {{ basic.data.last_name|default:"" }}
+                {% if basic.data.is_bot %}<span class="rb-badge rb-badge-info">BOT</span>{% endif %}
+                {% if basic.data.is_active == False %}<span class="rb-badge rb-badge-closed">Nofaol</span>{% endif %}
+                {% if basic.data.is_active %}<span class="rb-badge rb-badge-open">Faol</span>{% endif %}
+            </h1>
+            <div class="rb-muted" style="margin-top:0.375rem;">
+                <span class="rb-code">ID: {{ user_id }}</span>
+            </div>
+        </div>
+        <div style="text-align:right;">
+            {% if basic.cached %}
+            <span class="rb-cache-badge fresh">
+                <span class="material-symbols-outlined" style="font-size:12px;">cached</span>
+                Keshdan
+            </span>
+            {% else %}
+            <span class="rb-cache-badge stale">
+                <span class="material-symbols-outlined" style="font-size:12px;">sync</span>
+                Yangi
+            </span>
+            {% endif %}
+            {% if basic.cached_at %}
+            <div class="rb-muted" style="font-size:0.6875rem; margin-top:0.25rem;">{{ basic.cached_at|truncatechars:19 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr class="rb-divider">
+
+    <!-- Quick stats from stats_min -->
+    <div class="rb-stats" style="margin-bottom:0;">
+        <div class="rb-stat accent-blue" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_msg_count|default:"?" }}</div>
+            <div class="label">Jami xabarlar</div>
+        </div>
+        <div class="rb-stat accent-green" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_groups|default:"?" }}</div>
+            <div class="label">Guruhlar</div>
+        </div>
+        <div class="rb-stat accent-amber" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.usernames_count|default:"?" }}</div>
+            <div class="label">Usernamelar</div>
+        </div>
+        <div class="rb-stat accent-red" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.names_count|default:"?" }}</div>
+            <div class="label">Ism o'zgarishlar</div>
+        </div>
+        <div class="rb-stat" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.adm_in_groups|default:"0" }}</div>
+            <div class="label">Admin bo'lgan</div>
+        </div>
+    </div>
+
+    {% if basic.data.first_msg_date or basic.data.last_msg_date %}
+    <div style="display:flex; gap:2rem; margin-top:1rem; font-size:0.8125rem; color:var(--rb-fg-muted);">
+        {% if basic.data.first_msg_date %}
+        <span><span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">schedule</span> Birinchi xabar: {{ basic.data.first_msg_date|truncatechars:10 }}</span>
+        {% endif %}
+        {% if basic.data.last_msg_date %}
+        <span><span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">update</span> Oxirgi xabar: {{ basic.data.last_msg_date|truncatechars:10 }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% elif basic.error %}
+<div class="rb-card">
+    <div class="rb-error-box">{{ basic.error }}</div>
+</div>
+{% endif %}
+
+<!-- Data Tree (Shajara) -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>
+            <span class="material-symbols-outlined" style="vertical-align:middle;">account_tree</span>
+            Ma'lumotlar daraxti
+        </h2>
+        <span class="rb-muted" style="font-size:0.75rem;">Bo'limni bosib oching. Ma'lumot API orqali yuklanadi va saqlanadi.</span>
+    </div>
+
+    <ul class="rb-tree">
+        {% for node in tree %}
+        <li class="rb-tree-node {% if node.auto_load and node.has_cache %}open{% endif %}" data-branch="{{ node.id }}" data-user="{{ user_id }}"
+            {% if node.paginated %}data-paginated="1"{% endif %}>
+            <div class="rb-tree-header" onclick="toggleBranch(this)">
+                <span class="material-symbols-outlined chevron">chevron_right</span>
+                <span class="material-symbols-outlined" style="font-size:20px; color:var(--rb-primary);">{{ node.icon }}</span>
+                <span class="rb-tree-label">{{ node.label }}</span>
+                <span class="rb-cost-tag {% if node.cost == 'Bepul' %}free{% endif %}">{{ node.cost }}</span>
+                {% if node.has_cache %}
+                <span class="rb-cache-badge {% if node.is_stale %}stale{% else %}fresh{% endif %}">
+                    <span class="material-symbols-outlined" style="font-size:12px;">cached</span>
+                    {% if node.is_stale %}Eskirgan{% else %}Keshda{% endif %}
+                </span>
+                {% endif %}
+            </div>
+            <div class="rb-tree-body">
+                <div class="loading">
+                    <span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span>
+                    <p>Ma'lumot yuklanmoqda...</p>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+var BRANCH_URLS = {};
+{% for node in tree %}
+BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_id branch=node.id %}";
+{% endfor %}
+
+function toggleBranch(header) {
+    var node = header.closest('.rb-tree-node');
+    if (node.classList.contains('open')) {
+        node.classList.remove('open');
+        return;
+    }
+    node.classList.add('open');
+    var body = node.querySelector('.rb-tree-body');
+    if (body.dataset.loaded === '1') return;
+    loadBranch(node, false);
+}
+
+function loadBranch(node, refresh) {
+    var branch = node.dataset.branch;
+    var body = node.querySelector('.rb-tree-body');
+    body.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span><p>Yuklanmoqda...</p></div>';
+
+    var url = BRANCH_URLS[branch];
+    if (!url) { body.innerHTML = '<div class="rb-error-box">URL topilmadi</div>'; return; }
+    if (refresh) url += '?refresh=1';
+
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) {
+                body.innerHTML = '<div class="rb-error-box">' + d.error + '</div>';
+                return;
+            }
+            body.dataset.loaded = '1';
+            body.innerHTML = renderBranchData(branch, d);
+            // Update balance display
+            if (d.tech && d.tech.current_ballance != null) {
+                var bal = document.getElementById('balance-amount');
+                if (bal) bal.textContent = parseFloat(d.tech.current_ballance).toFixed(2);
+            }
+        })
+        .catch(function() {
+            body.innerHTML = '<div class="rb-error-box">Xatolik yuz berdi</div>';
+        });
+}
+
+function renderBranchData(branch, response) {
+    var data = response.data;
+    var tech = response.tech || {};
+    var html = '';
+
+    // Cache info bar
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">';
+    html += '<span class="rb-cache-badge ' + (response.cached ? 'fresh' : 'stale') + '">' +
+        '<span class="material-symbols-outlined" style="font-size:12px;">' + (response.cached ? 'cached' : 'sync') + '</span> ' +
+        (response.cached ? 'Keshdan' : 'API dan yangi') + '</span>';
+    html += '<div style="display:flex; gap:0.5rem; align-items:center;">';
+    if (tech.request_cost !== undefined && !response.cached) {
+        html += '<span class="rb-muted" style="font-size:0.6875rem;">Narxi: ' + tech.request_cost + '</span>';
+    }
+    if (response.cached_at) {
+        html += '<span class="rb-muted" style="font-size:0.6875rem;">' + response.cached_at.substring(0, 19).replace('T', ' ') + '</span>';
+    }
+    html += '<button class="rb-btn rb-btn-ghost rb-btn-sm" onclick="refreshBranch(\'' + branch + '\')">' +
+        '<span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Yangilash</button>';
+    html += '</div></div>';
+
+    // Empty check
+    if (!data || (Array.isArray(data) && data.length === 0) ||
+        (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
+        html += '<div class="rb-muted" style="padding:0.5rem;">Ma\'lumot topilmadi</div>';
+        return html;
+    }
+
+    // Object → key-value table
+    if (typeof data === 'object' && !Array.isArray(data)) {
+        html += '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
+        var keys = Object.keys(data);
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var val = data[key];
+            var display;
+            if (val === null || val === undefined) {
+                display = '<span class="rb-muted">—</span>';
+            } else if (typeof val === 'object') {
+                display = '<pre style="margin:0;font-size:0.75rem;white-space:pre-wrap;max-width:500px;overflow-x:auto;">' +
+                    JSON.stringify(val, null, 2) + '</pre>';
+            } else if (typeof val === 'boolean') {
+                display = val ? '<span class="rb-badge rb-badge-open">Ha</span>' : '<span class="rb-badge rb-badge-closed">Yo\'q</span>';
+            } else {
+                display = String(val);
+            }
+            html += '<tr><td class="rb-muted" style="width:220px;font-weight:600;">' + formatKey(key) + '</td><td>' + display + '</td></tr>';
+        }
+        html += '</tbody></table></div>';
+    }
+
+    // Array → auto-table
+    if (Array.isArray(data) && data.length > 0) {
+        var cols = Object.keys(data[0]);
+        html += '<div class="rb-table-wrap"><table class="rb-table"><thead><tr>';
+        for (var c = 0; c < cols.length; c++) {
+            html += '<th>' + formatKey(cols[c]) + '</th>';
+        }
+        html += '</tr></thead><tbody>';
+        var limit = Math.min(data.length, 100);
+        for (var r = 0; r < limit; r++) {
+            html += '<tr>';
+            for (var c2 = 0; c2 < cols.length; c2++) {
+                var v = data[r][cols[c2]];
+                var cell;
+                if (v === null || v === undefined) cell = '<span class="rb-muted">—</span>';
+                else if (typeof v === 'boolean') cell = v ? 'Ha' : 'Yo\'q';
+                else if (typeof v === 'object') cell = JSON.stringify(v);
+                else cell = String(v);
+                html += '<td style="max-width:250px; overflow:hidden; text-overflow:ellipsis;">' + cell + '</td>';
+            }
+            html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        if (data.length > 100) {
+            html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
+        }
+    }
+
+    return html;
+}
+
+function formatKey(key) {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+}
+
+function refreshBranch(branch) {
+    var node = document.querySelector('.rb-tree-node[data-branch="' + branch + '"]');
+    if (!node) return;
+    node.querySelector('.rb-tree-body').dataset.loaded = '';
+    node.classList.add('open');
+    loadBranch(node, true);
+}
+
+// Auto-load branches that have cache
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.rb-tree-node.open').forEach(function(node) {
+        loadBranch(node, false);
+    });
+});
+</script>
+{% endblock %}

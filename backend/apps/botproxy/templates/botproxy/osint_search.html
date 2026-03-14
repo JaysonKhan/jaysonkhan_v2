@@ -1,0 +1,149 @@
+{% extends "botproxy/osint_base.html" %}
+{% block osint_title %}Qidiruv{% endblock %}
+
+{% block osint_content %}
+<div class="rb-header">
+    <h1>
+        <span class="material-symbols-outlined" style="vertical-align:middle;">person_search</span>
+        OSINT Qidiruv
+        <span class="rb-subtitle">Telegram foydalanuvchini ID yoki @username bo'yicha qidiring</span>
+    </h1>
+</div>
+
+<!-- Main Search -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Foydalanuvchi qidirish</h2>
+    </div>
+    <form method="get" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+        <div class="rb-form-group" style="margin:0; flex:2; min-width:280px;">
+            <label for="q">Telegram ID yoki @username</label>
+            <input type="text" id="q" name="q" value="{{ query }}"
+                   placeholder="123456789 yoki @username" autofocus>
+        </div>
+        <button type="submit" class="rb-btn rb-btn-primary" style="height:40px;">
+            <span class="material-symbols-outlined">search</span> Qidirish
+        </button>
+    </form>
+    {% if error %}
+    <div class="rb-error-box" style="margin-top:1rem;">
+        <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">error</span>
+        {{ error }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Text Search -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Matn bo'yicha qidiruv</h2>
+        <span class="rb-cost-tag">0.1 kredit</span>
+    </div>
+    <form id="text-search-form" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+        <div class="rb-form-group" style="margin:0; flex:2; min-width:280px;">
+            <label for="text-q">Xabar matni</label>
+            <input type="text" id="text-q" placeholder="Qidiriladigan matn...">
+        </div>
+        <button type="submit" class="rb-btn rb-btn-outline" style="height:40px;">
+            <span class="material-symbols-outlined">text_snippet</span> Qidirish
+        </button>
+    </form>
+    <div id="text-results" style="margin-top:1rem;"></div>
+</div>
+
+<!-- Recent Searches -->
+{% if recent_searches %}
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>So'nggi qidiruvlar</h2>
+    </div>
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>So'rov</th>
+                    <th>Turi</th>
+                    <th>Natija ID</th>
+                    <th>Sana</th>
+                    <th>Narxi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in recent_searches %}
+                <tr>
+                    <td>
+                        {% if s.resolved_id %}
+                        <a href="{% url 'osint_profile' user_id=s.resolved_id %}">{{ s.query }}</a>
+                        {% else %}
+                        {{ s.query }}
+                        {% endif %}
+                    </td>
+                    <td><span class="rb-badge rb-badge-info">{{ s.get_query_type_display }}</span></td>
+                    <td>
+                        {% if s.resolved_id %}
+                        <a href="{% url 'osint_profile' user_id=s.resolved_id %}" class="rb-code">{{ s.resolved_id }}</a>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="rb-muted">{{ s.searched_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ s.api_cost }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.getElementById('text-search-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var q = document.getElementById('text-q').value.trim();
+    if (!q) return;
+    var container = document.getElementById('text-results');
+    container.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin">autorenew</span> Qidirilmoqda...</div>';
+
+    fetch("{% url 'osint_text_search' %}?q=" + encodeURIComponent(q))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) {
+                container.innerHTML = '<div class="rb-error-box">' + d.error + '</div>';
+                return;
+            }
+            var items = d.data;
+            if (items && items.data) items = items.data;
+            if (!items || (Array.isArray(items) && items.length === 0)) {
+                container.innerHTML = '<div class="rb-muted" style="padding:1rem;">Natijalar topilmadi</div>';
+                return;
+            }
+            if (!Array.isArray(items)) items = [items];
+
+            var html = '<div class="rb-table-wrap"><table class="rb-table"><thead><tr><th>Matn</th><th>User</th><th>Guruh</th><th>Sana</th></tr></thead><tbody>';
+            items.forEach(function(item) {
+                var userId = item.user_id || '';
+                var text = item.text || '-';
+                if (text.length > 120) text = text.substring(0, 120) + '...';
+                var groupTitle = '';
+                if (item.group) groupTitle = item.group.title || '';
+                html += '<tr>' +
+                    '<td style="max-width:300px;word-break:break-word;">' + text + '</td>' +
+                    '<td><a href="' + ("{% url 'osint_profile' user_id=99999 %}".replace('99999', userId)) + '">' +
+                    (item.name || item.username || userId || '-') + '</a></td>' +
+                    '<td class="rb-muted">' + groupTitle + '</td>' +
+                    '<td class="rb-muted" style="white-space:nowrap;">' + (item.date || '-') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table></div>';
+
+            if (d.tech) {
+                html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">' +
+                    'Narxi: ' + (d.tech.request_cost || 0) + ' | Balans: ' + (d.tech.current_ballance || '?') +
+                    '</div>';
+            }
+            container.innerHTML = html;
+        })
+        .catch(function() {
+            container.innerHTML = '<div class="rb-error-box">Xatolik yuz berdi</div>';
+        });
+});
+</script>
+{% endblock %}

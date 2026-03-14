@@ -240,6 +240,7 @@
 </style>
 
 <div class="rb">
+    {% block bot_nav %}
     <!-- Navigation Tabs -->
     <nav class="rb-nav">
         <a href="{% url 'bot_dashboard' svc=svc %}" class="{% if request.resolver_match.url_name == 'bot_dashboard' %}active{% endif %}">
@@ -258,6 +259,7 @@
             <span class="material-symbols-outlined">school</span> Universitetlar
         </a>
     </nav>
+    {% endblock %}
 
     {% block bot_content %}{% endblock %}
 </div>

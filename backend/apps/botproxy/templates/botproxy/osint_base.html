@@ -1,0 +1,102 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}{% block osint_title %}OSINT{% endblock %} — FunStat{% endblock %}
+
+{% block bot_nav %}
+<style>
+/* ── OSINT-specific styles ─────────────────────────────────────────────── */
+.rb-osint-balance {
+    margin-left: auto; display: flex; align-items: center; gap: 0.375rem;
+    font-size: 0.75rem; font-weight: 600; color: var(--rb-fg-muted);
+    padding: 0.375rem 0.75rem; background: var(--rb-bg-elevated);
+    border-radius: 8px; border: 1px solid var(--rb-border);
+}
+.rb-osint-balance .amount { color: var(--rb-primary); font-size: 0.875rem; }
+
+.rb-cache-badge {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem;
+    font-weight: 600; letter-spacing: 0.02em;
+}
+.rb-cache-badge.fresh { background: #dcfce7; color: #166534; }
+.rb-cache-badge.stale { background: #fef3c7; color: #92400e; }
+html.dark .rb-cache-badge.fresh { background: rgba(34,197,94,0.15); color: #4ade80; }
+html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+.rb-cost-tag {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem;
+    font-weight: 600; background: var(--rb-primary-muted); color: var(--rb-primary);
+}
+.rb-cost-tag.free { background: #dcfce7; color: #166534; }
+html.dark .rb-cost-tag.free { background: rgba(34,197,94,0.15); color: #4ade80; }
+
+/* ── Tree ──────────────────────────────────────────────────────────────── */
+.rb-tree { list-style: none; padding: 0; margin: 0; }
+.rb-tree-node {
+    border: 1px solid var(--rb-border); border-radius: 12px;
+    margin-bottom: 0.75rem; overflow: hidden;
+    background: var(--rb-bg-elevated);
+}
+.rb-tree-header {
+    display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem;
+    cursor: pointer; transition: background 0.15s ease; user-select: none;
+}
+.rb-tree-header:hover { background: var(--rb-bg-muted); }
+.rb-tree-header .material-symbols-outlined.chevron {
+    font-size: 20px; transition: transform 0.2s ease; color: var(--rb-fg-muted);
+}
+.rb-tree-node.open .rb-tree-header .chevron { transform: rotate(90deg); }
+.rb-tree-label { flex: 1; font-weight: 600; font-size: 0.875rem; }
+.rb-tree-body {
+    display: none; padding: 0 1.25rem 1.25rem;
+    border-top: 1px solid var(--rb-border);
+}
+.rb-tree-node.open .rb-tree-body { display: block; }
+.rb-tree-body .loading {
+    text-align: center; padding: 2rem; color: var(--rb-fg-muted); font-size: 0.8125rem;
+}
+
+/* ── Error/info boxes ──────────────────────────────────────────────────── */
+.rb-error-box {
+    padding: 0.75rem 1rem; background: #fef2f2; border-radius: 8px;
+    color: #991b1b; font-size: 0.8125rem;
+}
+html.dark .rb-error-box { background: rgba(239,68,68,0.1); color: #fca5a5; }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+</style>
+
+<nav class="rb-nav">
+    <a href="{% url 'osint_search' %}"
+       class="{% if request.resolver_match.url_name == 'osint_search' %}active{% endif %}">
+        <span class="material-symbols-outlined">search</span> Qidiruv
+    </a>
+    {% if user_id %}
+    <a href="{% url 'osint_profile' user_id=user_id %}"
+       class="{% if 'profile' in request.resolver_match.url_name %}active{% endif %}">
+        <span class="material-symbols-outlined">person_search</span> Profil #{{ user_id }}
+    </a>
+    {% endif %}
+    <div class="rb-osint-balance" id="balance-display">
+        <span class="material-symbols-outlined" style="font-size:16px;">account_balance_wallet</span>
+        Balans: <span class="amount" id="balance-amount">...</span>
+    </div>
+</nav>
+{% endblock %}
+
+{% block bot_content %}
+{% block osint_content %}{% endblock %}
+
+<script>
+fetch("{% url 'osint_balance' %}")
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('balance-amount').textContent =
+            d.balance != null ? parseFloat(d.balance).toFixed(2) : '?';
+    })
+    .catch(() => {
+        document.getElementById('balance-amount').textContent = 'xato';
+    });
+</script>
+{% endblock %}

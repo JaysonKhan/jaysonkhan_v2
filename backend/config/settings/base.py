@@ -417,6 +417,11 @@ UNFOLD = {
                         "icon": "record_voice_over",
                         "link": f"{_A}bot/ovoz/dashboard/",
                     },
+                    {
+                        "title": "OSINT",
+                        "icon": "person_search",
+                        "link": f"{_A}bot/osint/search/",
+                    },
                 ],
             },
         ],
@@ -444,3 +449,8 @@ BOT_SERVICES = {
         "timeout": env.int("OVOZ_API_TIMEOUT", default=30),
     },
 }
+
+# ── FunStat OSINT API ─────────────────────────────────────────────────────────
+FUNSTAT_API_BASE_URL = env('FUNSTAT_API_BASE_URL', default='https://funstat.in')
+FUNSTAT_API_TOKEN = env('FUNSTAT_API_TOKEN', default='')
+FUNSTAT_API_TIMEOUT = env.int('FUNSTAT_API_TIMEOUT', default=30)
