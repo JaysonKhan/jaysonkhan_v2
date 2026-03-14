@@ -279,48 +279,71 @@ def admin_remove(request, user_id: int):
 
 # ─── Users ───────────────────────────────────────────────────────────────────────
 
+ALLOWED_SORT_FIELDS = {"name", "registered_at", "total_votes"}
+
+
 @staff_member_required
 def user_stats(request):
-    """Users list with pagination and search."""
+    """Users list with pagination, search, sort, and enhanced stats."""
     client = _client()
     page = _parse_page(request)
     search = request.GET.get("q", "").strip()
+    sort = request.GET.get("sort", "").strip()
+    order = request.GET.get("order", "asc").strip()
     user_detail = None
     search_id = request.GET.get("user_id", "").strip()
 
-    # Paginated user list
-    user_count = 0
-    users = []
-    total_pages = 1
+    # Validate sort/order
+    if sort not in ALLOWED_SORT_FIELDS:
+        sort = ""
+    if order not in ("asc", "desc"):
+        order = "asc"
+
+    # ── Enhanced stats ───────────────────────────────────────────────
+    stats = {"total": 0, "today": 0, "this_week": 0, "this_month": 0, "active_voters": 0}
     try:
-        result = client.list_users(page=page, per_page=PER_PAGE, search=search)
-        users = result.get("users", [])
-        user_count = result.get("total", 0)
-        total_pages = max(1, math.ceil(user_count / PER_PAGE))
-    except BotAPIError as e:
-        # Fallback: if list_users endpoint doesn't exist yet, show count only
-        logger.warning("list_users failed (endpoint may not exist): %s", e)
+        stats = client.get_user_stats()
+    except BotAPIError:
+        logger.warning("get_user_stats failed (endpoint may not exist yet)")
         try:
-            user_count = client.get_user_count()
+            stats["total"] = client.get_user_count()
         except BotAPIError as e2:
             _handle_api_error(request, e2)
 
-    # User detail search by ID
+    user_count = stats.get("total", 0)
+
+    # ── Paginated user list (with sort) ──────────────────────────────
+    users = []
+    total_pages = 1
+    try:
+        result = client.list_users(
+            page=page, per_page=PER_PAGE, search=search,
+            sort=sort, order=order,
+        )
+        users = result.get("users", [])
+        user_count = result.get("total", user_count)
+        total_pages = max(1, math.ceil(user_count / PER_PAGE))
+    except BotAPIError as e:
+        logger.warning("list_users failed: %s", e)
+
+    # ── User detail search by ID ─────────────────────────────────────
     if search_id and search_id.isdigit():
         try:
             user_detail = client.get_user_history(int(search_id))
         except BotAPIError:
             messages.warning(request, f"User {search_id} topilmadi")
 
-    # Build page range for pagination
     page_range = _build_page_range(page, total_pages)
 
     return TemplateResponse(request, "botproxy/user_stats.html", _ctx(request, {
+        "stats": stats,
         "user_count": user_count,
         "users": users,
         "user_detail": user_detail,
         "search_id": search_id,
         "search_query": search,
+        "sort": sort,
+        "order": order,
         "page": page,
         "total_pages": total_pages,
         "page_range": page_range,
@@ -341,6 +364,31 @@ def user_photo_proxy(request, user_id: int):
         content_type="image/jpeg",
         headers={"Cache-Control": "public, max-age=3600"},
     )
+
+
+@staff_member_required
+def user_growth_chart(request):
+    """Proxy user growth chart PNG from bot API."""
+    client = _client()
+    try:
+        data = client.get_user_growth_chart(days=30)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(reverse("bot_user_stats"))
+    return HttpResponse(data, content_type="image/png")
+
+
+@staff_member_required
+def export_users_csv(request):
+    """Download all users as CSV."""
+    client = _client()
+    try:
+        data = client.export_users_csv()
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(reverse("bot_user_stats"))
+    return HttpResponse(data, content_type="text/csv",
+                        headers={"Content-Disposition": 'attachment; filename="users.csv"'})
 
 
 def _build_page_range(current: int, total: int) -> list:

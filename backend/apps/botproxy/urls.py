@@ -16,5 +16,7 @@ urlpatterns = [
     path("admins/add/", views.admin_add, name="bot_admin_add"),
     path("admins/<int:user_id>/remove/", views.admin_remove, name="bot_admin_remove"),
     path("users/", views.user_stats, name="bot_user_stats"),
+    path("users/chart/growth/", views.user_growth_chart, name="bot_user_growth_chart"),
+    path("users/export/csv/", views.export_users_csv, name="bot_export_users_csv"),
     path("users/<int:user_id>/photo/", views.user_photo_proxy, name="bot_user_photo"),
 ]

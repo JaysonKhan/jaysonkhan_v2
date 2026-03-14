@@ -139,11 +139,23 @@ class BotAPIClient:
     def get_user_count(self) -> int:
         return self._request("GET", "/api/v1/users/count").json()["count"]
 
-    def list_users(self, page: int = 1, per_page: int = 25, search: str = "") -> dict:
-        """List users with pagination. Returns {users: [...], total: int, page: int, per_page: int}."""
+    def get_user_stats(self) -> dict:
+        """Aggregated user stats: {total, today, this_week, this_month, active_voters}."""
+        return self._request("GET", "/api/v1/users/stats").json()
+
+    def list_users(self, page: int = 1, per_page: int = 25, search: str = "",
+                   sort: str = "", order: str = "asc") -> dict:
+        """List users with pagination, search, and sorting.
+
+        Returns {users: [...], total: int, page: int, per_page: int}.
+        sort: 'name', 'registered_at', 'total_votes' (empty = default)
+        order: 'asc' or 'desc'
+        """
         params = f"?page={page}&per_page={per_page}"
         if search:
             params += f"&search={search}"
+        if sort:
+            params += f"&sort={sort}&order={order}"
         return self._request("GET", f"/api/v1/users{params}").json()
 
     def get_user_history(self, user_id: int) -> dict:
@@ -155,3 +167,11 @@ class BotAPIClient:
             return self._request("GET", f"/api/v1/users/{user_id}/photo").content
         except BotAPIError:
             return None
+
+    def get_user_growth_chart(self, days: int = 30) -> bytes:
+        """User registration trend chart as PNG."""
+        return self._request("GET", f"/api/v1/users/chart/growth?days={days}").content
+
+    def export_users_csv(self) -> bytes:
+        """Download all users as CSV."""
+        return self._request("GET", "/api/v1/users/export/csv").content
