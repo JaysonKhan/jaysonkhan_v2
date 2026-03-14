@@ -120,8 +120,9 @@ class BotAPIClient:
     def export_pdf(self, poll_id: int) -> bytes:
         return self._request("GET", f"/api/v1/export/{poll_id}/pdf").content
 
-    def get_chart(self, poll_id: int, chart_type: str) -> bytes:
-        return self._request("GET", f"/api/v1/export/{poll_id}/chart/{chart_type}").content
+    def get_chart(self, poll_id: int, chart_type: str, theme: str = "") -> bytes:
+        params = f"?theme={theme}" if theme else ""
+        return self._request("GET", f"/api/v1/export/{poll_id}/chart/{chart_type}{params}").content
 
     # ─── Admins ──────────────────────────────────────────────────────────────
 
@@ -168,9 +169,12 @@ class BotAPIClient:
         except BotAPIError:
             return None
 
-    def get_user_growth_chart(self, days: int = 30) -> bytes:
+    def get_user_growth_chart(self, days: int = 30, theme: str = "") -> bytes:
         """User registration trend chart as PNG."""
-        return self._request("GET", f"/api/v1/users/chart/growth?days={days}").content
+        params = f"?days={days}"
+        if theme:
+            params += f"&theme={theme}"
+        return self._request("GET", f"/api/v1/users/chart/growth{params}").content
 
     def export_users_csv(self) -> bytes:
         """Download all users as CSV."""

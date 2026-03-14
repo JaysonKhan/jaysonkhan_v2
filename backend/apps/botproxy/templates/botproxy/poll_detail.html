@@ -160,15 +160,27 @@
     <div class="rb-grid-2">
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Ovozlar dinamikasi</p>
-            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
+            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" data-chart style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
         </div>
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Fakultetlar bo'yicha</p>
-            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
+            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" data-chart style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
         </div>
     </div>
     <hr class="rb-divider">
     <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Soatlik faollik</p>
-    <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
+    <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" data-chart style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
 </div>
+
+<script>
+(function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+        document.querySelectorAll('img[data-chart]').forEach(img => {
+            const sep = img.src.includes('?') ? '&' : '?';
+            img.src = img.src + sep + 'theme=dark';
+        });
+    }
+})();
+</script>
 {% endblock %}

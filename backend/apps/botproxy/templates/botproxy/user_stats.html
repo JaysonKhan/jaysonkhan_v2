@@ -66,7 +66,7 @@
         <span class="rb-muted" style="font-size:0.75rem;">Oxirgi 30 kun</span>
     </div>
     <img src="{% url 'bot_user_growth_chart' %}"
-         alt="User growth chart"
+         alt="User growth chart" data-chart
          style="width:100%; max-width:800px; border-radius:8px; border:1px solid var(--rb-border);"
          loading="lazy"
          onerror="document.getElementById('growth-chart-card').style.display='none';">
@@ -299,5 +299,16 @@ document.querySelectorAll('.rb-avatar').forEach(el => {
     const uid = parseInt(el.dataset.uid) || 0;
     el.style.backgroundColor = `hsl(${uid % 360}, 45%, 55%)`;
 });
+
+// Theme-aware charts: append ?theme=dark when admin panel is in dark mode
+(function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+        document.querySelectorAll('img[data-chart]').forEach(img => {
+            const sep = img.src.includes('?') ? '&' : '?';
+            img.src = img.src + sep + 'theme=dark';
+        });
+    }
+})();
 </script>
 {% endblock %}

@@ -226,9 +226,10 @@ ALLOWED_CHART_TYPES = {"trend", "faculty", "hourly", "bar", "pie"}
 def poll_chart(request, poll_id: int, chart_type: str):
     if chart_type not in ALLOWED_CHART_TYPES:
         return HttpResponse(status=400, content=b"Invalid chart type")
+    theme = request.GET.get("theme", "")
     client = _client()
     try:
-        data = client.get_chart(poll_id, chart_type)
+        data = client.get_chart(poll_id, chart_type, theme=theme)
     except BotAPIError as e:
         _handle_api_error(request, e)
         return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
@@ -369,9 +370,10 @@ def user_photo_proxy(request, user_id: int):
 @staff_member_required
 def user_growth_chart(request):
     """Proxy user growth chart PNG from bot API."""
+    theme = request.GET.get("theme", "")
     client = _client()
     try:
-        data = client.get_user_growth_chart(days=30)
+        data = client.get_user_growth_chart(days=30, theme=theme)
     except BotAPIError as e:
         _handle_api_error(request, e)
         return HttpResponseRedirect(reverse("bot_user_stats"))
