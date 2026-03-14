@@ -65,10 +65,9 @@
         <h2>Ro'yxatdan o'tish dinamikasi</h2>
         <span class="rb-muted" style="font-size:0.75rem;">Oxirgi 30 kun</span>
     </div>
-    <img src="{% url 'bot_user_growth_chart' %}"
-         alt="User growth chart" data-chart
+    <img data-chart-src="{% url 'bot_user_growth_chart' %}"
+         alt="User growth chart"
          style="width:100%; max-width:800px; border-radius:8px; border:1px solid var(--rb-border);"
-         loading="lazy"
          onerror="document.getElementById('growth-chart-card').style.display='none';">
 </div>
 
@@ -300,15 +299,16 @@ document.querySelectorAll('.rb-avatar').forEach(el => {
     el.style.backgroundColor = `hsl(${uid % 360}, 45%, 55%)`;
 });
 
-// Theme-aware charts: append ?theme=dark when admin panel is in dark mode
+// Theme-aware charts: set src with ?theme=dark when admin panel is in dark mode
 (function() {
     const isDark = document.documentElement.classList.contains('dark');
-    if (isDark) {
-        document.querySelectorAll('img[data-chart]').forEach(img => {
-            const sep = img.src.includes('?') ? '&' : '?';
-            img.src = img.src + sep + 'theme=dark';
-        });
-    }
+    document.querySelectorAll('img[data-chart-src]').forEach(img => {
+        let src = img.dataset.chartSrc;
+        if (isDark) {
+            src += (src.includes('?') ? '&' : '?') + 'theme=dark';
+        }
+        img.src = src;
+    });
 })();
 </script>
 {% endblock %}
