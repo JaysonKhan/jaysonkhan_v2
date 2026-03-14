@@ -57,7 +57,7 @@
                  alt="">
         </div>
         <div>
-            <h2 style="margin:0;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
+            <h2 style="margin:0; max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
             <span class="rb-badge rb-badge-info">ID: {{ user_detail.user_id }}</span>
         </div>
     </div>
@@ -145,15 +145,15 @@
                                  alt="">
                         </div>
                     </td>
-                    <td>
+                    <td style="max-width:200px;">
                         <div class="rb-user-row">
-                            <div>
-                                <div style="font-weight:500;">{{ u.first_name }} {{ u.last_name|default:"" }}</div>
+                            <div style="min-width:0;">
+                                <div class="rb-truncate" style="font-weight:500; max-width:100%;">{{ u.first_name }} {{ u.last_name|default:"" }}</div>
                                 <div class="rb-muted" style="font-size:0.75rem;">{{ u.user_id }}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="rb-muted">{{ u.username|default:"-" }}</td>
+                    <td class="rb-muted" style="max-width:140px;"><div class="rb-truncate" style="max-width:100%;">{{ u.username|default:"-" }}</div></td>
                     <td class="rb-muted">{{ u.phone_number|default:"-" }}</td>
                     <td class="rb-muted">{{ u.registered_at|truncatechars:16 }}</td>
                     <td><strong>{{ u.total_votes|default:"0" }}</strong></td>
