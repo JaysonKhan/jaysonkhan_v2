@@ -1,0 +1,65 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Universitetlar{% endblock %}
+
+{% block bot_content %}
+<div class="rb-header">
+    <h1>Universitetlar <span class="rb-subtitle">O'zbekiston OTM boshqaruvi</span></h1>
+    <a href="{% url 'bot_university_create' %}" class="rb-btn rb-btn-primary">
+        <span class="material-symbols-outlined">add</span> Universitet qo'shish
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="rb-filter-bar">
+    <form method="get" style="display:flex;gap:0.75rem;align-items:center;">
+        <select name="region" onchange="this.form.submit()">
+            <option value="">Barcha viloyatlar</option>
+            {% for r in regions %}
+            <option value="{{ r }}" {% if r == selected_region %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+        </select>
+        {% if selected_region %}
+        <a href="{% url 'bot_university_list' %}" class="rb-btn rb-btn-ghost rb-btn-sm">Tozalash</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if universities %}
+<div class="rb-card-grid">
+    {% for uni in universities %}
+    <div class="rb-card" style="margin-bottom:0;">
+        <div class="rb-uni-card">
+            {% if uni.logo_path %}
+            <img src="{% url 'bot_university_logo' uni.id %}" alt="{{ uni.short_name }}" class="rb-uni-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="rb-uni-logo-placeholder" style="display:none;">{{ uni.code|truncatechars:2 }}</div>
+            {% else %}
+            <div class="rb-uni-logo-placeholder">{{ uni.code|truncatechars:2 }}</div>
+            {% endif %}
+            <div class="rb-uni-info">
+                <h3><a href="{% url 'bot_university_detail' uni.id %}">{{ uni.short_name }}</a> <span class="rb-code" style="font-size:0.6875rem;">{{ uni.code }}</span></h3>
+                <p class="rb-uni-full">{{ uni.full_name }}</p>
+                <div class="rb-uni-meta">
+                    {% if uni.region %}
+                    <span class="rb-badge rb-badge-region">
+                        <span class="material-symbols-outlined">location_on</span> {{ uni.region }}
+                    </span>
+                    {% endif %}
+                    {% if uni.established_year %}
+                    <span><span class="material-symbols-outlined">calendar_month</span> {{ uni.established_year }}</span>
+                    {% endif %}
+                    {% if uni.website %}
+                    <span><span class="material-symbols-outlined">language</span> Sayt</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="rb-empty">
+    <span class="material-symbols-outlined">school</span>
+    <p>{% if selected_region %}Bu viloyatda universitetlar topilmadi{% else %}Hali universitetlar qo'shilmagan{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

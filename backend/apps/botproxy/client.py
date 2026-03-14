@@ -135,6 +135,64 @@ class BotAPIClient:
     def remove_admin(self, user_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/admins/{user_id}").json()
 
+    # ─── Universities ─────────────────────────────────────────────────────────
+
+    def list_universities(self, region: str | None = None) -> list[dict]:
+        params = f"?region={region}" if region else ""
+        return self._request("GET", f"/api/v1/universities{params}").json()["universities"]
+
+    def get_university(self, uni_id: int) -> dict:
+        return self._request("GET", f"/api/v1/universities/{uni_id}").json()
+
+    def create_university(self, data: dict) -> dict:
+        return self._request("POST", "/api/v1/universities", json=data).json()
+
+    def update_university(self, uni_id: int, data: dict) -> dict:
+        return self._request("PATCH", f"/api/v1/universities/{uni_id}", json=data).json()
+
+    def delete_university(self, uni_id: int) -> dict:
+        return self._request("DELETE", f"/api/v1/universities/{uni_id}").json()
+
+    def get_university_count(self) -> int:
+        return self._request("GET", "/api/v1/universities/count").json()["count"]
+
+    def upload_university_logo(self, uni_id: int, file_bytes: bytes, filename: str = "logo.png") -> dict:
+        """Upload university logo as multipart form data."""
+        import io
+        url = f"{self._base_url}/api/v1/universities/{uni_id}/logo"
+        sign_path = f"/api/v1/universities/{uni_id}/logo"
+        headers = self._headers("POST", sign_path, "")
+        headers.pop("Content-Type", None)  # let httpx set multipart content type
+        try:
+            with httpx.Client(timeout=self._timeout) as client:
+                resp = client.post(
+                    url, headers=headers,
+                    files={"logo": (filename, io.BytesIO(file_bytes), "image/png")},
+                )
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            raise BotAPIError(0, str(e))
+        if resp.status_code >= 400:
+            raise BotAPIError(resp.status_code, resp.text)
+        return resp.json()
+
+    def get_university_logo(self, uni_id: int) -> bytes | None:
+        try:
+            return self._request("GET", f"/api/v1/universities/{uni_id}/logo").content
+        except BotAPIError:
+            return None
+
+    def list_university_faculties(self, uni_id: int) -> list[dict]:
+        return self._request("GET", f"/api/v1/universities/{uni_id}/faculties").json()["faculties"]
+
+    def add_university_faculty(self, uni_id: int, code: str, name: str, sort_order: int = 0) -> dict:
+        return self._request(
+            "POST", f"/api/v1/universities/{uni_id}/faculties",
+            json={"code": code, "name": name, "sort_order": sort_order},
+        ).json()
+
+    def remove_university_faculty(self, fac_id: int) -> dict:
+        return self._request("DELETE", f"/api/v1/universities/faculties/{fac_id}").json()
+
     # ─── Users ───────────────────────────────────────────────────────────────
 
     def get_user_count(self) -> int:

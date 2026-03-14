@@ -19,4 +19,12 @@ urlpatterns = [
     path("users/chart/growth/", views.user_growth_chart, name="bot_user_growth_chart"),
     path("users/export/csv/", views.export_users_csv, name="bot_export_users_csv"),
     path("users/<int:user_id>/photo/", views.user_photo_proxy, name="bot_user_photo"),
+    # Universities
+    path("universities/", views.university_list, name="bot_university_list"),
+    path("universities/create/", views.university_create, name="bot_university_create"),
+    path("universities/<int:uni_id>/", views.university_detail, name="bot_university_detail"),
+    path("universities/<int:uni_id>/edit/", views.university_edit, name="bot_university_edit"),
+    path("universities/<int:uni_id>/delete/", views.university_delete, name="bot_university_delete"),
+    path("universities/<int:uni_id>/logo/", views.university_logo_proxy, name="bot_university_logo"),
+    path("universities/<int:uni_id>/faculties/", views.university_faculties_api, name="bot_university_faculties"),
 ]

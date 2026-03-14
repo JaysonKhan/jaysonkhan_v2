@@ -68,6 +68,17 @@
             <tr><td class="rb-muted"><strong>Maks. ovozlar</strong></td><td><span class="rb-code">{{ poll.max_votes_per_user }}</span></td></tr>
             <tr><td class="rb-muted"><strong>CAPTCHA</strong></td><td>{% if poll.captcha_enabled %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
             <tr><td class="rb-muted"><strong>Ovoz o'zgartirish</strong></td><td>{% if poll.allow_vote_change %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
+            {% if university %}
+            <tr>
+                <td class="rb-muted"><strong>Universitet</strong></td>
+                <td>
+                    <a href="{% url 'bot_university_detail' university.id %}" style="display:inline-flex; align-items:center; gap:0.375rem; text-decoration:none; color:var(--rb-primary);">
+                        <span class="material-symbols-outlined" style="font-size:1rem;">school</span>
+                        {{ university.short_name }} — {{ university.full_name }}
+                    </a>
+                </td>
+            </tr>
+            {% endif %}
             <tr><td class="rb-muted"><strong>Yaratilgan</strong></td><td>{{ poll.created_at }}</td></tr>
             {% if channels %}
             <tr><td class="rb-muted"><strong>Kanallar</strong></td><td>{{ channels|join:", " }}</td></tr>

@@ -1,12 +1,13 @@
-"""Django admin views for Rektor Bot management (polls, analytics, admins, users)."""
+"""Django admin views for Rektor Bot management (polls, analytics, admins, users, universities)."""
 from __future__ import annotations
 
+import json as json_mod
 import logging
 import math
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
@@ -51,7 +52,7 @@ def _parse_page(request) -> int:
 @staff_member_required
 def bot_dashboard(request):
     client = _client()
-    ctx = {"api_ok": False, "polls": [], "user_count": 0, "admin_ids": []}
+    ctx = {"api_ok": False, "polls": [], "user_count": 0, "admin_ids": [], "university_count": 0}
     try:
         health = client.health()
         ctx["api_ok"] = health.get("status") == "ok"
@@ -59,6 +60,7 @@ def bot_dashboard(request):
         ctx["polls"] = client.list_polls()
         ctx["user_count"] = client.get_user_count()
         ctx["admin_ids"] = client.list_admins()
+        ctx["university_count"] = client.get_university_count()
     except BotAPIError as e:
         _handle_api_error(request, e)
 
@@ -71,12 +73,26 @@ def bot_dashboard(request):
 def poll_list(request):
     client = _client()
     polls = []
+    uni_map = {}
     try:
         polls = client.list_polls()
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/poll_list.html", _ctx(request, {"polls": polls}))
+    # Annotate polls with university_name for display
+    if any(p.get("university_id") for p in polls):
+        try:
+            unis = client.list_universities()
+            uni_map = {u["id"]: u["short_name"] for u in unis}
+            for p in polls:
+                uid = p.get("university_id")
+                p["university_name"] = uni_map.get(uid, "") if uid else ""
+        except BotAPIError:
+            pass
+
+    return TemplateResponse(request, "botproxy/poll_list.html", _ctx(request, {
+        "polls": polls,
+    }))
 
 
 @staff_member_required
@@ -101,22 +117,36 @@ def poll_detail(request, poll_id: int):
     except BotAPIError as e:
         logger.warning("Failed to fetch top for poll %d: %s", poll_id, e)
 
+    # Resolve university name if poll has university_id
+    poll = poll_data["poll"]
+    university = None
+    if poll.get("university_id"):
+        try:
+            uni_data = client.get_university(poll["university_id"])
+            university = uni_data.get("university")
+        except BotAPIError:
+            pass
+
     return TemplateResponse(request, "botproxy/poll_detail.html", _ctx(request, {
-        "poll": poll_data["poll"],
+        "poll": poll,
         "faculties": poll_data.get("faculties", []),
         "candidates": poll_data.get("candidates", []),
         "channels": poll_data.get("channels", []),
         "results": results,
         "top": top,
+        "university": university,
     }))
 
 
 @staff_member_required
 def poll_create(request):
+    client = _client()
+
     if request.method == "POST":
         title = request.POST.get("title", "").strip()
         description = request.POST.get("description", "").strip()
         deadline_at = request.POST.get("deadline_at", "").strip()
+        university_id = request.POST.get("university_id", "").strip()
 
         # Parse faculties: "CODE:Name" lines
         faculties = []
@@ -137,8 +167,6 @@ def poll_create(request):
         # Validate required fields before hitting the API
         if not title or not description or not deadline_at:
             messages.error(request, "Nomi, tavsif va muddati to'ldirilishi shart")
-        elif not faculties:
-            messages.error(request, "Kamida bitta fakultet kiritilishi kerak")
         elif not candidates:
             messages.error(request, "Kamida bitta nomzod kiritilishi kerak")
         else:
@@ -158,7 +186,9 @@ def poll_create(request):
                 "faculties": faculties,
                 "candidates": candidates,
             }
-            client = _client()
+            if university_id and university_id.isdigit():
+                data["university_id"] = int(university_id)
+
             try:
                 result = client.create_poll(data)
                 messages.success(request, f"So'rovnoma yaratildi: {result['poll']['title']}")
@@ -166,7 +196,16 @@ def poll_create(request):
             except BotAPIError as e:
                 _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/poll_form.html", _ctx(request))
+    # GET: load universities for dropdown
+    universities = []
+    try:
+        universities = client.list_universities()
+    except BotAPIError:
+        pass
+
+    return TemplateResponse(request, "botproxy/poll_form.html", _ctx(request, {
+        "universities": universities,
+    }))
 
 
 @staff_member_required
@@ -391,6 +430,209 @@ def export_users_csv(request):
         return HttpResponseRedirect(reverse("bot_user_stats"))
     return HttpResponse(data, content_type="text/csv",
                         headers={"Content-Disposition": 'attachment; filename="users.csv"'})
+
+
+# ─── Universities ───────────────────────────────────────────────────────────────
+
+REGIONS = [
+    "Toshkent", "Toshkent viloyati", "Samarqand", "Buxoro",
+    "Andijon", "Farg'ona", "Namangan", "Xorazm", "Navoiy",
+    "Qashqadaryo", "Surxondaryo", "Jizzax", "Sirdaryo", "Qoraqalpog'iston",
+]
+
+
+@staff_member_required
+def university_list(request):
+    client = _client()
+    region_filter = request.GET.get("region", "").strip()
+    universities = []
+    try:
+        universities = client.list_universities(region=region_filter or None)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+
+    return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, {
+        "universities": universities,
+        "regions": REGIONS,
+        "selected_region": region_filter,
+    }))
+
+
+@staff_member_required
+def university_detail(request, uni_id: int):
+    client = _client()
+    try:
+        data = client.get_university(uni_id)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(reverse("bot_university_list"))
+
+    # Get polls for this university
+    polls = []
+    try:
+        all_polls = client.list_polls()
+        polls = [p for p in all_polls if p.get("university_id") == uni_id]
+    except BotAPIError:
+        pass
+
+    # Handle faculty add/remove
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "add_faculty":
+            code = request.POST.get("fac_code", "").strip()
+            name = request.POST.get("fac_name", "").strip()
+            if code and name:
+                try:
+                    client.add_university_faculty(uni_id, code, name)
+                    messages.success(request, f"Fakultet qo'shildi: {code}")
+                except BotAPIError as e:
+                    _handle_api_error(request, e)
+            else:
+                messages.error(request, "Kod va nom kiritilishi shart")
+            return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+        elif action == "remove_faculty":
+            fac_id = request.POST.get("fac_id", "")
+            if fac_id and fac_id.isdigit():
+                try:
+                    client.remove_university_faculty(int(fac_id))
+                    messages.success(request, "Fakultet o'chirildi")
+                except BotAPIError as e:
+                    _handle_api_error(request, e)
+            return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+
+    return TemplateResponse(request, "botproxy/university_detail.html", _ctx(request, {
+        "uni": data.get("university", {}),
+        "faculties": data.get("faculties", []),
+        "polls": polls,
+    }))
+
+
+@staff_member_required
+def university_create(request):
+    client = _client()
+    if request.method == "POST":
+        data = {
+            "code": request.POST.get("code", "").strip(),
+            "short_name": request.POST.get("short_name", "").strip(),
+            "full_name": request.POST.get("full_name", "").strip(),
+            "bio": request.POST.get("bio", "").strip() or None,
+            "website": request.POST.get("website", "").strip() or None,
+            "region": request.POST.get("region", "").strip() or None,
+        }
+        est_year = request.POST.get("established_year", "").strip()
+        if est_year and est_year.isdigit():
+            data["established_year"] = int(est_year)
+
+        if not data["code"] or not data["short_name"] or not data["full_name"]:
+            messages.error(request, "Kod, qisqa nom va to'liq nom kiritilishi shart")
+        else:
+            try:
+                result = client.create_university(data)
+                uni = result.get("university", {})
+                uni_id = uni.get("id")
+
+                # Upload logo if provided
+                logo_file = request.FILES.get("logo")
+                if logo_file and uni_id:
+                    try:
+                        client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
+                    except BotAPIError:
+                        messages.warning(request, "Universitet yaratildi, lekin logo yuklanmadi")
+
+                messages.success(request, f"Universitet yaratildi: {uni.get('short_name', '')}")
+                return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+
+    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, {
+        "regions": REGIONS,
+        "edit_mode": False,
+    }))
+
+
+@staff_member_required
+def university_edit(request, uni_id: int):
+    client = _client()
+    try:
+        uni_data = client.get_university(uni_id)
+        uni = uni_data.get("university", {})
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(reverse("bot_university_list"))
+
+    if request.method == "POST":
+        data = {
+            "code": request.POST.get("code", "").strip(),
+            "short_name": request.POST.get("short_name", "").strip(),
+            "full_name": request.POST.get("full_name", "").strip(),
+            "bio": request.POST.get("bio", "").strip() or None,
+            "website": request.POST.get("website", "").strip() or None,
+            "region": request.POST.get("region", "").strip() or None,
+        }
+        est_year = request.POST.get("established_year", "").strip()
+        if est_year and est_year.isdigit():
+            data["established_year"] = int(est_year)
+
+        if not data["code"] or not data["short_name"] or not data["full_name"]:
+            messages.error(request, "Kod, qisqa nom va to'liq nom kiritilishi shart")
+        else:
+            try:
+                client.update_university(uni_id, data)
+                # Upload new logo if provided
+                logo_file = request.FILES.get("logo")
+                if logo_file:
+                    try:
+                        client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
+                    except BotAPIError:
+                        messages.warning(request, "Ma'lumot yangilandi, lekin logo yuklanmadi")
+
+                messages.success(request, "Universitet yangilandi")
+                return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+
+    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, {
+        "uni": uni,
+        "regions": REGIONS,
+        "edit_mode": True,
+    }))
+
+
+@staff_member_required
+def university_delete(request, uni_id: int):
+    if request.method == "POST":
+        client = _client()
+        try:
+            client.delete_university(uni_id)
+            messages.success(request, "Universitet o'chirildi")
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+    return HttpResponseRedirect(reverse("bot_university_list"))
+
+
+@staff_member_required
+def university_logo_proxy(request, uni_id: int):
+    """Proxy university logo from bot API."""
+    client = _client()
+    logo_bytes = client.get_university_logo(uni_id)
+    if not logo_bytes:
+        return HttpResponse(status=404)
+    return HttpResponse(
+        logo_bytes,
+        content_type="image/png",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@staff_member_required
+def university_faculties_api(request, uni_id: int):
+    """AJAX endpoint: return university faculties as JSON for poll form auto-fill."""
+    client = _client()
+    try:
+        faculties = client.list_university_faculties(uni_id)
+    except BotAPIError:
+        faculties = []
+    return JsonResponse({"faculties": faculties})
 
 
 def _build_page_range(current: int, total: int) -> list:

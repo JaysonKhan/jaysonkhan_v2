@@ -50,10 +50,25 @@
 
         <hr class="rb-divider">
 
+        <!-- University selection -->
         <div class="rb-form-group">
-            <label for="faculties">Fakultetlar <span class="req">*</span></label>
+            <label for="university_id">Universitet</label>
+            <select id="university_id" name="university_id">
+                <option value="">— Universitet tanlanmagan —</option>
+                {% for uni in universities %}
+                <option value="{{ uni.id }}">{{ uni.short_name }} — {{ uni.full_name }}</option>
+                {% endfor %}
+            </select>
+            <div class="help">Universitet tanlanganda fakultetlar avtomatik yuklanadi</div>
+        </div>
+
+        <div class="rb-form-group">
+            <label for="faculties">
+                Fakultetlar <span class="req">*</span>
+                <span id="fac-loading" style="display:none; font-weight:400; color:var(--rb-primary); margin-left:0.5rem; font-size:0.8125rem;">yuklanmoqda...</span>
+            </label>
             <textarea id="faculties" name="faculties" required placeholder="Har bir qator: KOD:Nomi&#10;Masalan:&#10;IT:Axborot texnologiyalari&#10;IQTISOD:Iqtisodiyot"></textarea>
-            <div class="help">Har bir qatorda <code>KOD:Nomi</code> formatida yozing</div>
+            <div class="help">Har bir qatorda <code>KOD:Nomi</code> formatida yozing. Universitet tanlanganda avtomatik to'ldiriladi.</div>
         </div>
 
         <div class="rb-form-group">
@@ -72,4 +87,35 @@
         </div>
     </form>
 </div>
+
+<script>
+(function() {
+    var uniSelect = document.getElementById('university_id');
+    var facTextarea = document.getElementById('faculties');
+    var facLoading = document.getElementById('fac-loading');
+
+    if (!uniSelect) return;
+
+    uniSelect.addEventListener('change', function() {
+        var uniId = this.value;
+        if (!uniId) return;
+
+        facLoading.style.display = 'inline';
+        fetch("{% url 'bot_university_faculties' uni_id=0 %}".replace('/0/', '/' + uniId + '/'))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                facLoading.style.display = 'none';
+                if (data.faculties && data.faculties.length > 0) {
+                    var lines = data.faculties.map(function(f) {
+                        return f.code + ':' + f.name;
+                    });
+                    facTextarea.value = lines.join('\n');
+                }
+            })
+            .catch(function() {
+                facLoading.style.display = 'none';
+            });
+    });
+})();
+</script>
 {% endblock %}
