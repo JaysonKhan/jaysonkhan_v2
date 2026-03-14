@@ -231,6 +231,19 @@ def poll_close(request, poll_id: int, svc="rektor"):
     return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
 
 
+@staff_member_required
+def poll_delete(request, poll_id: int, svc="rektor"):
+    if request.method == "POST":
+        client = _client(svc)
+        try:
+            client.delete_poll(poll_id)
+            messages.success(request, "So'rovnoma o'chirildi")
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+            return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+    return HttpResponseRedirect(_rev("bot_poll_list", svc))
+
+
 # ─── Export ──────────────────────────────────────────────────────────────────────
 
 @staff_member_required

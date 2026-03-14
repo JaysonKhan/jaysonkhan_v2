@@ -93,6 +93,9 @@ class BotAPIClient:
     def close_poll(self, poll_id: int) -> dict:
         return self._request("POST", f"/api/v1/polls/{poll_id}/close").json()
 
+    def delete_poll(self, poll_id: int) -> dict:
+        return self._request("DELETE", f"/api/v1/polls/{poll_id}").json()
+
     def get_results(self, poll_id: int) -> dict:
         return self._request("GET", f"/api/v1/polls/{poll_id}/results").json()
 

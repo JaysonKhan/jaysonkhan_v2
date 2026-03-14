@@ -28,6 +28,12 @@
             </button>
         </form>
         {% endif %}
+        <form method="post" action="{% url 'bot_poll_delete' svc=svc poll_id=poll.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('So\'rovnomani butunlay o\'chirmoqchimisiz? Barcha ovozlar va natijalar o\'chib ketadi!');">
+                <span class="material-symbols-outlined">delete</span> O'chirish
+            </button>
+        </form>
         <a href="{% url 'bot_export_csv' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">download</span> CSV
         </a>
