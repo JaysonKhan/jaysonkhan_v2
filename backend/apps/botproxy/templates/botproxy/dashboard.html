@@ -39,6 +39,18 @@
     </div>
 </div>
 
+<!-- User Growth Chart -->
+<div class="rb-card" id="growth-chart-card">
+    <div class="rb-card-header">
+        <h2>Ro'yxatdan o'tish dinamikasi</h2>
+        <span class="rb-muted" style="font-size:0.75rem;">Oxirgi 30 kun</span>
+    </div>
+    <img data-chart-src="{% url 'bot_user_growth_chart' svc=svc %}"
+         alt="User growth chart"
+         style="width:100%; max-width:800px; border-radius:8px; border:1px solid var(--rb-border);"
+         onerror="document.getElementById('growth-chart-card').style.display='none';">
+</div>
+
 <!-- Recent Polls -->
 {% if polls %}
 <div class="rb-card">
@@ -89,4 +101,20 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+(function() {
+    var stored = localStorage.getItem('_x_adminTheme');
+    var isDark = stored === '"dark"' ||
+        ((stored === '"auto"' || !stored) && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+        document.documentElement.classList.contains('dark');
+    document.querySelectorAll('img[data-chart-src]').forEach(img => {
+        var src = img.dataset.chartSrc;
+        if (isDark) {
+            src += (src.includes('?') ? '&' : '?') + 'theme=dark';
+        }
+        img.src = src;
+    });
+})();
+</script>
 {% endblock %}
