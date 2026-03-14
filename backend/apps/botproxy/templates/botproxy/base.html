@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% block title %}{% block page_title %}Rektor Bot{% endblock %} | {{ block.super }}{% endblock %}
+{% block title %}{% block page_title %}{{ service_title|default:"Bot" }}{% endblock %} | {{ block.super }}{% endblock %}
 {% block content %}
 <style>
     /* ── CSS Variables (Light / Dark) ────────────────────────────────────── */
@@ -242,19 +242,19 @@
 <div class="rb">
     <!-- Navigation Tabs -->
     <nav class="rb-nav">
-        <a href="{% url 'bot_dashboard' %}" class="{% if request.resolver_match.url_name == 'bot_dashboard' %}active{% endif %}">
+        <a href="{% url 'bot_dashboard' svc=svc %}" class="{% if request.resolver_match.url_name == 'bot_dashboard' %}active{% endif %}">
             <span class="material-symbols-outlined">dashboard</span> Dashboard
         </a>
-        <a href="{% url 'bot_poll_list' %}" class="{% if 'poll' in request.resolver_match.url_name %}active{% endif %}">
+        <a href="{% url 'bot_poll_list' svc=svc %}" class="{% if 'poll' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">ballot</span> So'rovnomalar
         </a>
-        <a href="{% url 'bot_admin_list' %}" class="{% if 'admin' in request.resolver_match.url_name %}active{% endif %}">
+        <a href="{% url 'bot_admin_list' svc=svc %}" class="{% if 'admin' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">admin_panel_settings</span> Adminlar
         </a>
-        <a href="{% url 'bot_user_stats' %}" class="{% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+        <a href="{% url 'bot_user_stats' svc=svc %}" class="{% if 'user' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">people</span> Foydalanuvchilar
         </a>
-        <a href="{% url 'bot_university_list' %}" class="{% if 'university' in request.resolver_match.url_name %}active{% endif %}">
+        <a href="{% url 'bot_university_list' svc=svc %}" class="{% if 'university' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">school</span> Universitetlar
         </a>
     </nav>

@@ -1,5 +1,5 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Adminlar — Rektor Bot{% endblock %}
+{% block page_title %}Adminlar — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
 <div class="rb-header">
@@ -11,7 +11,7 @@
     <div class="rb-card-header">
         <h2>Admin qo'shish</h2>
     </div>
-    <form method="post" action="{% url 'bot_admin_add' %}" style="display:flex; gap:0.75rem; align-items:flex-end;">
+    <form method="post" action="{% url 'bot_admin_add' svc=svc %}" style="display:flex; gap:0.75rem; align-items:flex-end;">
         {% csrf_token %}
         <div class="rb-form-group" style="margin:0; flex:1; max-width:400px;">
             <label for="user_id">Telegram User ID</label>
@@ -42,7 +42,7 @@
                 <tr>
                     <td><span class="rb-code">{{ uid }}</span></td>
                     <td style="text-align:right;">
-                        <form method="post" action="{% url 'bot_admin_remove' uid %}" style="display:inline;">
+                        <form method="post" action="{% url 'bot_admin_remove' svc=svc user_id=uid %}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('Bu adminni o\'chirmoqchimisiz?');">
                                 <span class="material-symbols-outlined">delete</span> O'chirish

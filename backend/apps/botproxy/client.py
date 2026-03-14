@@ -23,10 +23,11 @@ class BotAPIError(Exception):
 class BotAPIClient:
     """Synchronous HTTP client for bot API with HMAC authentication."""
 
-    def __init__(self):
-        self._base_url = settings.BOT_API_BASE_URL.rstrip("/")
-        self._secret = settings.BOT_API_SECRET_KEY
-        self._timeout = getattr(settings, "BOT_API_TIMEOUT", 30)
+    def __init__(self, service: str = "rektor"):
+        cfg = settings.BOT_SERVICES[service]
+        self._base_url = cfg["base_url"].rstrip("/")
+        self._secret = cfg["secret"]
+        self._timeout = cfg.get("timeout", 30)
 
     def _headers(self, method: str, path: str, body: str = "") -> dict:
         timestamp = str(int(time.time()))

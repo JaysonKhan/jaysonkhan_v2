@@ -1,10 +1,14 @@
-"""Django admin views for Rektor Bot management (polls, analytics, admins, users, universities)."""
+"""Django admin views for bot management (polls, analytics, admins, users, universities).
+
+All views accept a `svc` parameter from the URL (e.g. 'rektor', 'ovoz') which
+selects which bot API to connect to via BOT_SERVICES settings.
+"""
 from __future__ import annotations
 
-import json as json_mod
 import logging
 import math
 
+from django.conf import settings as djsettings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -18,17 +22,19 @@ logger = logging.getLogger(__name__)
 PER_PAGE = 25
 
 
-def _ctx(request, extra: dict | None = None) -> dict:
-    """Base context with admin site vars."""
+def _ctx(request, svc: str = "rektor", extra: dict | None = None) -> dict:
+    """Base context with admin site vars and service info."""
     from django.contrib import admin
     ctx = admin.site.each_context(request)
+    ctx["svc"] = svc
+    ctx["service_title"] = djsettings.BOT_SERVICES.get(svc, {}).get("title", svc)
     if extra:
         ctx.update(extra)
     return ctx
 
 
-def _client() -> BotAPIClient:
-    return BotAPIClient()
+def _client(svc: str = "rektor") -> BotAPIClient:
+    return BotAPIClient(service=svc)
 
 
 def _handle_api_error(request, e: BotAPIError) -> None:
@@ -47,11 +53,17 @@ def _parse_page(request) -> int:
         return 1
 
 
+def _rev(name: str, svc: str, **kwargs) -> str:
+    """Shortcut: reverse URL with svc parameter."""
+    kwargs["svc"] = svc
+    return reverse(name, kwargs=kwargs)
+
+
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
 
 @staff_member_required
-def bot_dashboard(request):
-    client = _client()
+def bot_dashboard(request, svc="rektor"):
+    client = _client(svc)
     ctx = {"api_ok": False, "polls": [], "user_count": 0, "admin_ids": [], "university_count": 0}
     try:
         health = client.health()
@@ -64,16 +76,15 @@ def bot_dashboard(request):
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/dashboard.html", _ctx(request, ctx))
+    return TemplateResponse(request, "botproxy/dashboard.html", _ctx(request, svc, ctx))
 
 
 # ─── Polls ───────────────────────────────────────────────────────────────────────
 
 @staff_member_required
-def poll_list(request):
-    client = _client()
+def poll_list(request, svc="rektor"):
+    client = _client(svc)
     polls = []
-    uni_map = {}
     try:
         polls = client.list_polls()
     except BotAPIError as e:
@@ -90,20 +101,20 @@ def poll_list(request):
         except BotAPIError:
             pass
 
-    return TemplateResponse(request, "botproxy/poll_list.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/poll_list.html", _ctx(request, svc, {
         "polls": polls,
     }))
 
 
 @staff_member_required
-def poll_detail(request, poll_id: int):
-    client = _client()
+def poll_detail(request, poll_id: int, svc="rektor"):
+    client = _client(svc)
     # Primary data — redirect if poll itself can't be fetched
     try:
         poll_data = client.get_poll(poll_id)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_poll_list"))
+        return HttpResponseRedirect(_rev("bot_poll_list", svc))
 
     # Secondary data — show partial page if these fail
     results = {"total_voters": 0, "results": []}
@@ -127,7 +138,7 @@ def poll_detail(request, poll_id: int):
         except BotAPIError:
             pass
 
-    return TemplateResponse(request, "botproxy/poll_detail.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/poll_detail.html", _ctx(request, svc, {
         "poll": poll,
         "faculties": poll_data.get("faculties", []),
         "candidates": poll_data.get("candidates", []),
@@ -139,8 +150,8 @@ def poll_detail(request, poll_id: int):
 
 
 @staff_member_required
-def poll_create(request):
-    client = _client()
+def poll_create(request, svc="rektor"):
+    client = _client(svc)
 
     if request.method == "POST":
         title = request.POST.get("title", "").strip()
@@ -192,7 +203,7 @@ def poll_create(request):
             try:
                 result = client.create_poll(data)
                 messages.success(request, f"So'rovnoma yaratildi: {result['poll']['title']}")
-                return HttpResponseRedirect(reverse("bot_poll_detail", args=[result["poll"]["id"]]))
+                return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=result["poll"]["id"]))
             except BotAPIError as e:
                 _handle_api_error(request, e)
 
@@ -203,57 +214,57 @@ def poll_create(request):
     except BotAPIError:
         pass
 
-    return TemplateResponse(request, "botproxy/poll_form.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/poll_form.html", _ctx(request, svc, {
         "universities": universities,
     }))
 
 
 @staff_member_required
-def poll_close(request, poll_id: int):
+def poll_close(request, poll_id: int, svc="rektor"):
     if request.method == "POST":
-        client = _client()
+        client = _client(svc)
         try:
             client.close_poll(poll_id)
             messages.success(request, "So'rovnoma yopildi")
         except BotAPIError as e:
             _handle_api_error(request, e)
-    return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
+    return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
 
 
 # ─── Export ──────────────────────────────────────────────────────────────────────
 
 @staff_member_required
-def export_csv(request, poll_id: int):
-    client = _client()
+def export_csv(request, poll_id: int, svc="rektor"):
+    client = _client(svc)
     try:
         data = client.export_csv(poll_id)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
+        return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
     return HttpResponse(data, content_type="text/csv",
                         headers={"Content-Disposition": f'attachment; filename="poll_{poll_id}.csv"'})
 
 
 @staff_member_required
-def export_pdf(request, poll_id: int):
-    client = _client()
+def export_pdf(request, poll_id: int, svc="rektor"):
+    client = _client(svc)
     try:
         data = client.export_pdf(poll_id)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
+        return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
     return HttpResponse(data, content_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="poll_{poll_id}_report.pdf"'})
 
 
 @staff_member_required
-def export_json_view(request, poll_id: int):
-    client = _client()
+def export_json_view(request, poll_id: int, svc="rektor"):
+    client = _client(svc)
     try:
         data = client.export_json(poll_id)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
+        return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
     return HttpResponse(data, content_type="application/json",
                         headers={"Content-Disposition": f'attachment; filename="poll_{poll_id}.json"'})
 
@@ -262,39 +273,39 @@ ALLOWED_CHART_TYPES = {"trend", "faculty", "hourly", "bar", "pie"}
 
 
 @staff_member_required
-def poll_chart(request, poll_id: int, chart_type: str):
+def poll_chart(request, poll_id: int, chart_type: str, svc="rektor"):
     if chart_type not in ALLOWED_CHART_TYPES:
         return HttpResponse(status=400, content=b"Invalid chart type")
     theme = request.GET.get("theme", "")
-    client = _client()
+    client = _client(svc)
     try:
         data = client.get_chart(poll_id, chart_type, theme=theme)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_poll_detail", args=[poll_id]))
+        return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
     return HttpResponse(data, content_type="image/png")
 
 
 # ─── Admins ──────────────────────────────────────────────────────────────────────
 
 @staff_member_required
-def admin_list(request):
-    client = _client()
+def admin_list(request, svc="rektor"):
+    client = _client(svc)
     admin_ids = []
     try:
         admin_ids = client.list_admins()
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/admin_list.html", _ctx(request, {"admin_ids": admin_ids}))
+    return TemplateResponse(request, "botproxy/admin_list.html", _ctx(request, svc, {"admin_ids": admin_ids}))
 
 
 @staff_member_required
-def admin_add(request):
+def admin_add(request, svc="rektor"):
     if request.method == "POST":
         user_id = request.POST.get("user_id", "").strip()
         if user_id.isdigit():
-            client = _client()
+            client = _client(svc)
             try:
                 client.add_admin(int(user_id), added_by=request.user.pk)
                 messages.success(request, f"Admin qo'shildi: {user_id}")
@@ -302,19 +313,19 @@ def admin_add(request):
                 _handle_api_error(request, e)
         else:
             messages.error(request, "Telegram user ID raqam bo'lishi kerak")
-    return HttpResponseRedirect(reverse("bot_admin_list"))
+    return HttpResponseRedirect(_rev("bot_admin_list", svc))
 
 
 @staff_member_required
-def admin_remove(request, user_id: int):
+def admin_remove(request, user_id: int, svc="rektor"):
     if request.method == "POST":
-        client = _client()
+        client = _client(svc)
         try:
             client.remove_admin(user_id)
             messages.success(request, f"Admin o'chirildi: {user_id}")
         except BotAPIError as e:
             _handle_api_error(request, e)
-    return HttpResponseRedirect(reverse("bot_admin_list"))
+    return HttpResponseRedirect(_rev("bot_admin_list", svc))
 
 
 # ─── Users ───────────────────────────────────────────────────────────────────────
@@ -323,9 +334,9 @@ ALLOWED_SORT_FIELDS = {"name", "registered_at", "total_votes"}
 
 
 @staff_member_required
-def user_stats(request):
+def user_stats(request, svc="rektor"):
     """Users list with pagination, search, sort, and enhanced stats."""
-    client = _client()
+    client = _client(svc)
     page = _parse_page(request)
     search = request.GET.get("q", "").strip()
     sort = request.GET.get("sort", "").strip()
@@ -375,7 +386,7 @@ def user_stats(request):
 
     page_range = _build_page_range(page, total_pages)
 
-    return TemplateResponse(request, "botproxy/user_stats.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/user_stats.html", _ctx(request, svc, {
         "stats": stats,
         "user_count": user_count,
         "users": users,
@@ -393,9 +404,9 @@ def user_stats(request):
 
 
 @staff_member_required
-def user_photo_proxy(request, user_id: int):
+def user_photo_proxy(request, user_id: int, svc="rektor"):
     """Proxy user profile photo from bot API."""
-    client = _client()
+    client = _client(svc)
     photo_bytes = client.get_user_photo(user_id)
     if not photo_bytes:
         return HttpResponse(status=404)
@@ -407,27 +418,27 @@ def user_photo_proxy(request, user_id: int):
 
 
 @staff_member_required
-def user_growth_chart(request):
+def user_growth_chart(request, svc="rektor"):
     """Proxy user growth chart PNG from bot API."""
     theme = request.GET.get("theme", "")
-    client = _client()
+    client = _client(svc)
     try:
         data = client.get_user_growth_chart(days=30, theme=theme)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_user_stats"))
+        return HttpResponseRedirect(_rev("bot_user_stats", svc))
     return HttpResponse(data, content_type="image/png")
 
 
 @staff_member_required
-def export_users_csv(request):
+def export_users_csv(request, svc="rektor"):
     """Download all users as CSV."""
-    client = _client()
+    client = _client(svc)
     try:
         data = client.export_users_csv()
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_user_stats"))
+        return HttpResponseRedirect(_rev("bot_user_stats", svc))
     return HttpResponse(data, content_type="text/csv",
                         headers={"Content-Disposition": 'attachment; filename="users.csv"'})
 
@@ -442,8 +453,8 @@ REGIONS = [
 
 
 @staff_member_required
-def university_list(request):
-    client = _client()
+def university_list(request, svc="rektor"):
+    client = _client(svc)
     region_filter = request.GET.get("region", "").strip()
     universities = []
     try:
@@ -451,7 +462,7 @@ def university_list(request):
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, svc, {
         "universities": universities,
         "regions": REGIONS,
         "selected_region": region_filter,
@@ -459,13 +470,13 @@ def university_list(request):
 
 
 @staff_member_required
-def university_detail(request, uni_id: int):
-    client = _client()
+def university_detail(request, uni_id: int, svc="rektor"):
+    client = _client(svc)
     try:
         data = client.get_university(uni_id)
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_university_list"))
+        return HttpResponseRedirect(_rev("bot_university_list", svc))
 
     # Get polls for this university
     polls = []
@@ -489,7 +500,7 @@ def university_detail(request, uni_id: int):
                     _handle_api_error(request, e)
             else:
                 messages.error(request, "Kod va nom kiritilishi shart")
-            return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+            return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
         elif action == "remove_faculty":
             fac_id = request.POST.get("fac_id", "")
             if fac_id and fac_id.isdigit():
@@ -498,9 +509,9 @@ def university_detail(request, uni_id: int):
                     messages.success(request, "Fakultet o'chirildi")
                 except BotAPIError as e:
                     _handle_api_error(request, e)
-            return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+            return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
 
-    return TemplateResponse(request, "botproxy/university_detail.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/university_detail.html", _ctx(request, svc, {
         "uni": data.get("university", {}),
         "faculties": data.get("faculties", []),
         "polls": polls,
@@ -508,8 +519,8 @@ def university_detail(request, uni_id: int):
 
 
 @staff_member_required
-def university_create(request):
-    client = _client()
+def university_create(request, svc="rektor"):
+    client = _client(svc)
     if request.method == "POST":
         data = {
             "code": request.POST.get("code", "").strip(),
@@ -540,25 +551,25 @@ def university_create(request):
                         messages.warning(request, "Universitet yaratildi, lekin logo yuklanmadi")
 
                 messages.success(request, f"Universitet yaratildi: {uni.get('short_name', '')}")
-                return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+                return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
             except BotAPIError as e:
                 _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, svc, {
         "regions": REGIONS,
         "edit_mode": False,
     }))
 
 
 @staff_member_required
-def university_edit(request, uni_id: int):
-    client = _client()
+def university_edit(request, uni_id: int, svc="rektor"):
+    client = _client(svc)
     try:
         uni_data = client.get_university(uni_id)
         uni = uni_data.get("university", {})
     except BotAPIError as e:
         _handle_api_error(request, e)
-        return HttpResponseRedirect(reverse("bot_university_list"))
+        return HttpResponseRedirect(_rev("bot_university_list", svc))
 
     if request.method == "POST":
         data = {
@@ -587,11 +598,11 @@ def university_edit(request, uni_id: int):
                         messages.warning(request, "Ma'lumot yangilandi, lekin logo yuklanmadi")
 
                 messages.success(request, "Universitet yangilandi")
-                return HttpResponseRedirect(reverse("bot_university_detail", args=[uni_id]))
+                return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
             except BotAPIError as e:
                 _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, {
+    return TemplateResponse(request, "botproxy/university_form.html", _ctx(request, svc, {
         "uni": uni,
         "regions": REGIONS,
         "edit_mode": True,
@@ -599,21 +610,21 @@ def university_edit(request, uni_id: int):
 
 
 @staff_member_required
-def university_delete(request, uni_id: int):
+def university_delete(request, uni_id: int, svc="rektor"):
     if request.method == "POST":
-        client = _client()
+        client = _client(svc)
         try:
             client.delete_university(uni_id)
             messages.success(request, "Universitet o'chirildi")
         except BotAPIError as e:
             _handle_api_error(request, e)
-    return HttpResponseRedirect(reverse("bot_university_list"))
+    return HttpResponseRedirect(_rev("bot_university_list", svc))
 
 
 @staff_member_required
-def university_logo_proxy(request, uni_id: int):
+def university_logo_proxy(request, uni_id: int, svc="rektor"):
     """Proxy university logo from bot API."""
-    client = _client()
+    client = _client(svc)
     logo_bytes = client.get_university_logo(uni_id)
     if not logo_bytes:
         return HttpResponse(status=404)
@@ -625,9 +636,9 @@ def university_logo_proxy(request, uni_id: int):
 
 
 @staff_member_required
-def university_faculties_api(request, uni_id: int):
+def university_faculties_api(request, uni_id: int, svc="rektor"):
     """AJAX endpoint: return university faculties as JSON for poll form auto-fill."""
-    client = _client()
+    client = _client(svc)
     try:
         faculties = client.list_university_faculties(uni_id)
     except BotAPIError:

@@ -1,10 +1,10 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}{{ poll.title }} — Rektor Bot{% endblock %}
+{% block page_title %}{{ poll.title }} — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
 <!-- Breadcrumb -->
 <div class="rb-breadcrumb">
-    <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
+    <a href="{% url 'bot_poll_list' svc=svc %}">So'rovnomalar</a>
     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
     <span>{{ poll.title }}</span>
 </div>
@@ -21,20 +21,20 @@
     </h1>
     <div class="rb-actions">
         {% if poll.status == "open" %}
-        <form method="post" action="{% url 'bot_poll_close' poll.id %}" style="display:inline;">
+        <form method="post" action="{% url 'bot_poll_close' svc=svc poll_id=poll.id %}" style="display:inline;">
             {% csrf_token %}
             <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('So\'rovnomani yopishni xohlaysizmi?');">
                 <span class="material-symbols-outlined">lock</span> Yopish
             </button>
         </form>
         {% endif %}
-        <a href="{% url 'bot_export_csv' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+        <a href="{% url 'bot_export_csv' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">download</span> CSV
         </a>
-        <a href="{% url 'bot_export_json' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+        <a href="{% url 'bot_export_json' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">data_object</span> JSON
         </a>
-        <a href="{% url 'bot_export_pdf' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+        <a href="{% url 'bot_export_pdf' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">picture_as_pdf</span> PDF
         </a>
     </div>
@@ -72,7 +72,7 @@
             <tr>
                 <td class="rb-muted"><strong>Universitet</strong></td>
                 <td>
-                    <a href="{% url 'bot_university_detail' university.id %}" style="display:inline-flex; align-items:center; gap:0.375rem; text-decoration:none; color:var(--rb-primary);">
+                    <a href="{% url 'bot_university_detail' svc=svc uni_id=university.id %}" style="display:inline-flex; align-items:center; gap:0.375rem; text-decoration:none; color:var(--rb-primary);">
                         <span class="material-symbols-outlined" style="font-size:1rem;">school</span>
                         {{ university.short_name }} — {{ university.full_name }}
                     </a>
@@ -171,16 +171,16 @@
     <div class="rb-grid-2">
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Ovozlar dinamikasi</p>
-            <img data-chart-src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);">
+            <img data-chart-src="{% url 'bot_poll_chart' svc=svc poll_id=poll.id chart_type='trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);">
         </div>
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Fakultetlar bo'yicha</p>
-            <img data-chart-src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);">
+            <img data-chart-src="{% url 'bot_poll_chart' svc=svc poll_id=poll.id chart_type='faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);">
         </div>
     </div>
     <hr class="rb-divider">
     <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Soatlik faollik</p>
-    <img data-chart-src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--rb-border);">
+    <img data-chart-src="{% url 'bot_poll_chart' svc=svc poll_id=poll.id chart_type='hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--rb-border);">
 </div>
 
 <script>

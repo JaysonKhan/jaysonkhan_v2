@@ -1,5 +1,5 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Foydalanuvchilar — Rektor Bot{% endblock %}
+{% block page_title %}Foydalanuvchilar — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
 <style>
@@ -29,7 +29,7 @@
         <span class="rb-subtitle">Jami: {{ user_count }} ta foydalanuvchi</span>
     </h1>
     <div class="rb-actions">
-        <a href="{% url 'bot_export_users_csv' %}" class="rb-btn rb-btn-outline rb-btn-sm">
+        <a href="{% url 'bot_export_users_csv' svc=svc %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">download</span> CSV yuklab olish
         </a>
     </div>
@@ -65,7 +65,7 @@
         <h2>Ro'yxatdan o'tish dinamikasi</h2>
         <span class="rb-muted" style="font-size:0.75rem;">Oxirgi 30 kun</span>
     </div>
-    <img data-chart-src="{% url 'bot_user_growth_chart' %}"
+    <img data-chart-src="{% url 'bot_user_growth_chart' svc=svc %}"
          alt="User growth chart"
          style="width:100%; max-width:800px; border-radius:8px; border:1px solid var(--rb-border);"
          onerror="document.getElementById('growth-chart-card').style.display='none';">
@@ -98,7 +98,7 @@
 <div class="rb-card">
     <div class="rb-user-header">
         <div class="rb-avatar rb-avatar-lg" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
-            <img src="{% url 'bot_user_photo' user_detail.user_id %}"
+            <img src="{% url 'bot_user_photo' svc=svc user_id=user_detail.user_id %}"
                  onerror="this.parentElement.classList.add('no-photo'); this.remove();"
                  alt="">
         </div>
@@ -123,7 +123,7 @@
     <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Ishtirok etgan so'rovnomalar</h3>
     <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
         {% for poll in user_detail.participated_polls %}
-        <a href="{% url 'bot_poll_detail' poll.id %}" class="rb-badge rb-badge-info" style="text-decoration:none;">
+        <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-badge rb-badge-info" style="text-decoration:none;">
             {{ poll.title }}
         </a>
         {% endfor %}
@@ -147,7 +147,7 @@
             <tbody>
                 {% for v in user_detail.votes %}
                 <tr>
-                    <td><a href="{% url 'bot_poll_detail' v.poll_id %}">{{ v.poll_title }}</a></td>
+                    <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a></td>
                     <td>{{ v.candidate_name }}</td>
                     <td><span class="rb-code">{{ v.faculty_code|default:"-" }}</span></td>
                     <td class="rb-muted">{{ v.voted_at|truncatechars:16 }}</td>
@@ -234,7 +234,7 @@
                 <tr>
                     <td>
                         <div class="rb-avatar" data-uid="{{ u.user_id }}" data-initials="{{ u.first_name|first|upper|default:'?' }}">
-                            <img src="{% url 'bot_user_photo' u.user_id %}"
+                            <img src="{% url 'bot_user_photo' svc=svc user_id=u.user_id %}"
                                  onerror="this.parentElement.classList.add('no-photo'); this.remove();"
                                  alt="">
                         </div>
@@ -252,7 +252,7 @@
                     <td class="rb-muted">{{ u.registered_at|truncatechars:16 }}</td>
                     <td><strong>{{ u.total_votes|default:"0" }}</strong></td>
                     <td style="text-align:right;">
-                        <a href="{% url 'bot_user_stats' %}?user_id={{ u.user_id }}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
+                        <a href="{% url 'bot_user_stats' svc=svc %}?user_id={{ u.user_id }}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
                     </td>
                 </tr>
                 {% endfor %}

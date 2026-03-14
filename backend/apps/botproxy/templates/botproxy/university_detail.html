@@ -3,7 +3,7 @@
 
 {% block bot_content %}
 <div class="rb-breadcrumb">
-    <a href="{% url 'bot_university_list' %}">Universitetlar</a>
+    <a href="{% url 'bot_university_list' svc=svc %}">Universitetlar</a>
     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
     {{ uni.short_name }}
 </div>
@@ -12,7 +12,7 @@
 <div class="rb-card">
     <div class="rb-detail-header">
         {% if uni.logo_path %}
-        <img src="{% url 'bot_university_logo' uni.id %}" alt="{{ uni.short_name }}" class="rb-detail-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <img src="{% url 'bot_university_logo' svc=svc uni_id=uni.id %}" alt="{{ uni.short_name }}" class="rb-detail-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
         <div class="rb-detail-logo-placeholder" style="display:none;">{{ uni.code|truncatechars:3 }}</div>
         {% else %}
         <div class="rb-detail-logo-placeholder">{{ uni.code|truncatechars:3 }}</div>
@@ -39,10 +39,10 @@
     {% endif %}
     <hr class="rb-divider">
     <div class="rb-actions">
-        <a href="{% url 'bot_university_edit' uni.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
+        <a href="{% url 'bot_university_edit' svc=svc uni_id=uni.id %}" class="rb-btn rb-btn-outline rb-btn-sm">
             <span class="material-symbols-outlined">edit</span> Tahrirlash
         </a>
-        <form method="post" action="{% url 'bot_university_delete' uni.id %}" style="display:inline;" onsubmit="return confirm('Bu universitetni o\'chirishni tasdiqlaysizmi?');">
+        <form method="post" action="{% url 'bot_university_delete' svc=svc uni_id=uni.id %}" style="display:inline;" onsubmit="return confirm('Bu universitetni o\'chirishni tasdiqlaysizmi?');">
             {% csrf_token %}
             <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm">
                 <span class="material-symbols-outlined">delete</span> O'chirish
@@ -120,7 +120,7 @@
             {% for p in polls %}
             <tr>
                 <td class="rb-muted">#{{ p.id }}</td>
-                <td><a href="{% url 'bot_poll_detail' p.id %}">{{ p.title }}</a></td>
+                <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=p.id %}">{{ p.title }}</a></td>
                 <td>
                     {% if p.status == "open" %}
                     <span class="rb-badge rb-badge-open">Faol</span>

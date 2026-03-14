@@ -1,10 +1,10 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Yangi so'rovnoma — Rektor Bot{% endblock %}
+{% block page_title %}Yangi so'rovnoma — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
 <!-- Breadcrumb -->
 <div class="rb-breadcrumb">
-    <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
+    <a href="{% url 'bot_poll_list' svc=svc %}">So'rovnomalar</a>
     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
     <span>Yangi so'rovnoma</span>
 </div>
@@ -83,7 +83,7 @@
             <button type="submit" class="rb-btn rb-btn-primary">
                 <span class="material-symbols-outlined">check</span> Yaratish
             </button>
-            <a href="{% url 'bot_poll_list' %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
+            <a href="{% url 'bot_poll_list' svc=svc %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
         </div>
     </form>
 </div>
@@ -101,7 +101,7 @@
         if (!uniId) return;
 
         facLoading.style.display = 'inline';
-        fetch("{% url 'bot_university_faculties' uni_id=0 %}".replace('/0/', '/' + uniId + '/'))
+        fetch("{% url 'bot_university_faculties' svc=svc uni_id=0 %}".replace('/0/', '/' + uniId + '/'))
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 facLoading.style.display = 'none';

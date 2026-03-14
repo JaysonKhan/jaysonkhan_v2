@@ -410,7 +410,12 @@ UNFOLD = {
                     {
                         "title": "Rektor Bot",
                         "icon": "smart_toy",
-                        "link": f"{_A}bot/dashboard/",
+                        "link": f"{_A}bot/rektor/dashboard/",
+                    },
+                    {
+                        "title": "Ovozim Bot",
+                        "icon": "record_voice_over",
+                        "link": f"{_A}bot/ovoz/dashboard/",
                     },
                 ],
             },
@@ -422,3 +427,20 @@ UNFOLD = {
 BOT_API_BASE_URL = env('BOT_API_BASE_URL', default='http://161.97.177.218:8433')
 BOT_API_SECRET_KEY = env('BOT_API_SECRET_KEY', default='')
 BOT_API_TIMEOUT = env.int('BOT_API_TIMEOUT', default=30)
+
+BOT_SERVICES = {
+    "rektor": {
+        "title": "Rektor Bot",
+        "icon": "smart_toy",
+        "base_url": env("BOT_API_BASE_URL", default="http://161.97.177.218:8433"),
+        "secret": env("BOT_API_SECRET_KEY", default=""),
+        "timeout": env.int("BOT_API_TIMEOUT", default=30),
+    },
+    "ovoz": {
+        "title": "Ovozim Bot",
+        "icon": "record_voice_over",
+        "base_url": env("OVOZ_API_BASE_URL", default="http://161.97.177.218:8434"),
+        "secret": env("OVOZ_API_SECRET_KEY", default=""),
+        "timeout": env.int("OVOZ_API_TIMEOUT", default=30),
+    },
+}

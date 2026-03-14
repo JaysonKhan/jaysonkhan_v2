@@ -1,10 +1,10 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}So'rovnomalar — Rektor Bot{% endblock %}
+{% block page_title %}So'rovnomalar — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
 <div class="rb-header">
     <h1>So'rovnomalar</h1>
-    <a href="{% url 'bot_poll_create' %}" class="rb-btn rb-btn-primary">
+    <a href="{% url 'bot_poll_create' svc=svc %}" class="rb-btn rb-btn-primary">
         <span class="material-symbols-outlined">add</span> Yangi so'rovnoma
     </a>
 </div>
@@ -29,7 +29,7 @@
                 <tr>
                     <td><span class="rb-code">{{ poll.id }}</span></td>
                     <td>
-                        <a href="{% url 'bot_poll_detail' poll.id %}">{{ poll.title }}</a>
+                        <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}">{{ poll.title }}</a>
                         <div class="rb-muted" style="font-size:0.75rem; max-width:200px;">
                             <div class="rb-truncate">{{ poll.description|truncatechars:40 }}</div>
                         </div>
@@ -51,7 +51,7 @@
                     <td class="rb-muted">{{ poll.deadline_at|truncatechars:16 }}</td>
                     <td class="rb-muted">{{ poll.created_at|truncatechars:16 }}</td>
                     <td style="text-align:right;">
-                        <a href="{% url 'bot_poll_detail' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
+                        <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
                     </td>
                 </tr>
                 {% endfor %}

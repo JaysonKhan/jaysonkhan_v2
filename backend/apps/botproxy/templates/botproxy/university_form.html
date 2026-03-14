@@ -3,7 +3,7 @@
 
 {% block bot_content %}
 <div class="rb-breadcrumb">
-    <a href="{% url 'bot_university_list' %}">Universitetlar</a>
+    <a href="{% url 'bot_university_list' svc=svc %}">Universitetlar</a>
     <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
     {% if edit_mode %}{{ uni.short_name }}{% else %}Yangi{% endif %}
 </div>
@@ -72,7 +72,7 @@
                 <span class="material-symbols-outlined">save</span>
                 {% if edit_mode %}Saqlash{% else %}Yaratish{% endif %}
             </button>
-            <a href="{% url 'bot_university_list' %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
+            <a href="{% url 'bot_university_list' svc=svc %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
         </div>
     </form>
 </div>

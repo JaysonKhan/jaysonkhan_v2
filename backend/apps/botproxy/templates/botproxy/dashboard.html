@@ -1,16 +1,16 @@
 {% extends "botproxy/base.html" %}
-{% block page_title %}Rektor Bot — Dashboard{% endblock %}
+{% block page_title %}{{ service_title }} — Dashboard{% endblock %}
 
 {% block bot_content %}
 <div class="rb-header">
     <h1>
         <span class="rb-status">
             <span class="rb-status-dot {% if api_ok %}online{% else %}offline{% endif %}"></span>
-            Rektor Bot
+            {{ service_title }}
         </span>
         <span class="rb-subtitle">Telegram bot boshqaruv paneli</span>
     </h1>
-    <a href="{% url 'bot_poll_create' %}" class="rb-btn rb-btn-primary">
+    <a href="{% url 'bot_poll_create' svc=svc %}" class="rb-btn rb-btn-primary">
         <span class="material-symbols-outlined">add</span> Yangi so'rovnoma
     </a>
 </div>
@@ -44,7 +44,7 @@
 <div class="rb-card">
     <div class="rb-card-header">
         <h2>So'nggi so'rovnomalar</h2>
-        <a href="{% url 'bot_poll_list' %}" class="rb-btn rb-btn-ghost rb-btn-sm">
+        <a href="{% url 'bot_poll_list' svc=svc %}" class="rb-btn rb-btn-ghost rb-btn-sm">
             Barchasini ko'rish <span class="material-symbols-outlined">arrow_forward</span>
         </a>
     </div>
@@ -63,7 +63,7 @@
                 {% for poll in polls %}
                 <tr>
                     <td><span class="rb-code">{{ poll.id }}</span></td>
-                    <td><a href="{% url 'bot_poll_detail' poll.id %}">{{ poll.title }}</a></td>
+                    <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}">{{ poll.title }}</a></td>
                     <td>
                         {% if poll.status == "open" %}
                             <span class="rb-badge rb-badge-open">Faol</span>
@@ -73,7 +73,7 @@
                     </td>
                     <td class="rb-muted">{{ poll.deadline_at|truncatechars:16 }}</td>
                     <td style="text-align:right;">
-                        <a href="{% url 'bot_poll_detail' poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
+                        <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
                     </td>
                 </tr>
                 {% endfor %}

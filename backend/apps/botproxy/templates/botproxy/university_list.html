@@ -4,7 +4,7 @@
 {% block bot_content %}
 <div class="rb-header">
     <h1>Universitetlar <span class="rb-subtitle">O'zbekiston OTM boshqaruvi</span></h1>
-    <a href="{% url 'bot_university_create' %}" class="rb-btn rb-btn-primary">
+    <a href="{% url 'bot_university_create' svc=svc %}" class="rb-btn rb-btn-primary">
         <span class="material-symbols-outlined">add</span> Universitet qo'shish
     </a>
 </div>
@@ -19,7 +19,7 @@
             {% endfor %}
         </select>
         {% if selected_region %}
-        <a href="{% url 'bot_university_list' %}" class="rb-btn rb-btn-ghost rb-btn-sm">Tozalash</a>
+        <a href="{% url 'bot_university_list' svc=svc %}" class="rb-btn rb-btn-ghost rb-btn-sm">Tozalash</a>
         {% endif %}
     </form>
 </div>
@@ -30,13 +30,13 @@
     <div class="rb-card" style="margin-bottom:0;">
         <div class="rb-uni-card">
             {% if uni.logo_path %}
-            <img src="{% url 'bot_university_logo' uni.id %}" alt="{{ uni.short_name }}" class="rb-uni-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <img src="{% url 'bot_university_logo' svc=svc uni_id=uni.id %}" alt="{{ uni.short_name }}" class="rb-uni-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
             <div class="rb-uni-logo-placeholder" style="display:none;">{{ uni.code|truncatechars:2 }}</div>
             {% else %}
             <div class="rb-uni-logo-placeholder">{{ uni.code|truncatechars:2 }}</div>
             {% endif %}
             <div class="rb-uni-info">
-                <h3><a href="{% url 'bot_university_detail' uni.id %}">{{ uni.short_name }}</a> <span class="rb-code" style="font-size:0.6875rem;">{{ uni.code }}</span></h3>
+                <h3><a href="{% url 'bot_university_detail' svc=svc uni_id=uni.id %}">{{ uni.short_name }}</a> <span class="rb-code" style="font-size:0.6875rem;">{{ uni.code }}</span></h3>
                 <p class="rb-uni-full">{{ uni.full_name }}</p>
                 <div class="rb-uni-meta">
                     {% if uni.region %}
