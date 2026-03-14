@@ -299,11 +299,14 @@ document.querySelectorAll('.rb-avatar').forEach(el => {
     el.style.backgroundColor = `hsl(${uid % 360}, 45%, 55%)`;
 });
 
-// Theme-aware charts: set src with ?theme=dark when admin panel is in dark mode
+// Theme-aware charts: check localStorage directly (Alpine persist may not have set class yet)
 (function() {
-    const isDark = document.documentElement.classList.contains('dark');
+    var stored = localStorage.getItem('_x_adminTheme');
+    var isDark = stored === '"dark"' ||
+        ((stored === '"auto"' || !stored) && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+        document.documentElement.classList.contains('dark');
     document.querySelectorAll('img[data-chart-src]').forEach(img => {
-        let src = img.dataset.chartSrc;
+        var src = img.dataset.chartSrc;
         if (isDark) {
             src += (src.includes('?') ? '&' : '?') + 'theme=dark';
         }
