@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% block title %}{% block page_title %}Bot Management{% endblock %} | {{ block.super }}{% endblock %}
+{% block content %}
+<style>
+    .bot-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+    .bot-card { background: var(--body-bg, #fff); border: 1px solid var(--hairline-color, #ddd); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+    .bot-card h2 { margin-top: 0; font-size: 1.25rem; color: var(--body-fg, #333); }
+    .bot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .bot-stat { background: var(--darkened-bg, #f8f9fa); border-radius: 8px; padding: 1.25rem; text-align: center; }
+    .bot-stat .value { font-size: 2rem; font-weight: bold; color: var(--primary, #7c3aed); }
+    .bot-stat .label { color: var(--body-quiet-color, #666); font-size: 0.875rem; margin-top: 0.25rem; }
+    .bot-table { width: 100%; border-collapse: collapse; }
+    .bot-table th, .bot-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--hairline-color, #ddd); }
+    .bot-table th { background: var(--darkened-bg, #f8f9fa); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .bot-table tr:hover { background: var(--darkened-bg, #f8f9fa); }
+    .bot-btn { display: inline-block; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; }
+    .bot-btn-primary { background: var(--primary, #7c3aed); color: #fff; }
+    .bot-btn-primary:hover { opacity: 0.9; color: #fff; }
+    .bot-btn-danger { background: #dc3545; color: #fff; }
+    .bot-btn-danger:hover { opacity: 0.9; color: #fff; }
+    .bot-btn-outline { border: 1px solid var(--hairline-color, #ddd); background: transparent; color: var(--body-fg, #333); }
+    .bot-btn-outline:hover { background: var(--darkened-bg, #f8f9fa); }
+    .bot-btn-sm { padding: 0.25rem 0.75rem; font-size: 0.8rem; }
+    .bot-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .bot-badge-open { background: #d4edda; color: #155724; }
+    .bot-badge-closed { background: #f8d7da; color: #721c24; }
+    .bot-breadcrumb { margin-bottom: 1rem; font-size: 0.875rem; }
+    .bot-breadcrumb a { color: var(--primary, #7c3aed); text-decoration: none; }
+    .bot-breadcrumb span { color: var(--body-quiet-color, #666); margin: 0 0.5rem; }
+    .bot-form-group { margin-bottom: 1rem; }
+    .bot-form-group label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.875rem; }
+    .bot-form-group input, .bot-form-group textarea, .bot-form-group select {
+        width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--hairline-color, #ddd);
+        border-radius: 6px; font-size: 0.875rem; background: var(--body-bg, #fff); color: var(--body-fg, #333);
+    }
+    .bot-form-group textarea { min-height: 100px; font-family: monospace; }
+    .bot-form-group .help { font-size: 0.75rem; color: var(--body-quiet-color, #666); margin-top: 0.25rem; }
+    .bot-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .bot-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 0.5rem; }
+    .bot-status-dot.online { background: #28a745; }
+    .bot-status-dot.offline { background: #dc3545; }
+</style>
+<div class="bot-container">
+    {% block bot_content %}{% endblock %}
+</div>
+{% endblock %}

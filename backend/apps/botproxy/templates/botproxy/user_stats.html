@@ -1,0 +1,81 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Foydalanuvchilar{% endblock %}
+
+{% block bot_content %}
+<div class="bot-breadcrumb">
+    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
+    <span>/</span> Foydalanuvchilar
+</div>
+
+<h1>Foydalanuvchilar</h1>
+
+<div class="bot-grid">
+    <div class="bot-stat">
+        <div class="value">{{ user_count }}</div>
+        <div class="label">Jami foydalanuvchilar</div>
+    </div>
+</div>
+
+<!-- User Search -->
+<div class="bot-card">
+    <h2>Foydalanuvchi qidirish</h2>
+    <form method="get" style="display:flex; gap:0.5rem; align-items:flex-end;">
+        <div class="bot-form-group" style="margin:0; flex:1;">
+            <label for="user_id">Telegram User ID</label>
+            <input type="number" id="user_id" name="user_id" value="{{ search_id }}" placeholder="123456789">
+        </div>
+        <button type="submit" class="bot-btn bot-btn-primary" style="height:38px;">Qidirish</button>
+    </form>
+</div>
+
+<!-- User Detail -->
+{% if user_detail %}
+<div class="bot-card">
+    <h2>Foydalanuvchi: {{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
+    <table class="bot-table">
+        <tr><td style="width:200px; font-weight:600;">User ID</td><td><code>{{ user_detail.user_id }}</code></td></tr>
+        <tr><td style="font-weight:600;">Username</td><td>{{ user_detail.username|default:"-" }}</td></tr>
+        <tr><td style="font-weight:600;">Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
+        <tr><td style="font-weight:600;">Jami ovozlar</td><td>{{ user_detail.total_votes }}</td></tr>
+    </table>
+
+    {% if user_detail.votes %}
+    <h3 style="margin-top:1.5rem; font-size:1rem;">Ovoz berish tarixi</h3>
+    <table class="bot-table">
+        <thead>
+            <tr>
+                <th>So'rovnoma</th>
+                <th>Nomzod</th>
+                <th>Fakultet</th>
+                <th>Sana</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in user_detail.votes %}
+            <tr>
+                <td><a href="{% url 'bot_poll_detail' v.poll_id %}">{{ v.poll_title }}</a></td>
+                <td>{{ v.candidate_name }}</td>
+                <td>{{ v.faculty_code|default:"-" }}</td>
+                <td>{{ v.voted_at|truncatechars:16 }}</td>
+                <td>
+                    {% if v.poll_status == "open" %}
+                        <span class="bot-badge bot-badge-open">Faol</span>
+                    {% else %}
+                        <span class="bot-badge bot-badge-closed">Yopilgan</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% elif search_id %}
+<div class="bot-card">
+    <p style="text-align:center; color:var(--body-quiet-color, #666); padding:1rem;">
+        User {{ search_id }} topilmadi
+    </p>
+</div>
+{% endif %}
+{% endblock %}

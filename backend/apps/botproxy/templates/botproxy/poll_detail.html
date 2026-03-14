@@ -1,0 +1,148 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}{{ poll.title }}{% endblock %}
+
+{% block bot_content %}
+<div class="bot-breadcrumb">
+    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
+    <span>/</span> <a href="{% url 'bot_poll_list' %}">So'rovnomalar</a>
+    <span>/</span> {{ poll.title }}
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1 style="margin: 0;">
+        {{ poll.title }}
+        {% if poll.status == "open" %}
+            <span class="bot-badge bot-badge-open">Faol</span>
+        {% else %}
+            <span class="bot-badge bot-badge-closed">Yopilgan</span>
+        {% endif %}
+    </h1>
+    <div class="bot-actions">
+        {% if poll.status == "open" %}
+        <form method="post" action="{% url 'bot_poll_close' poll.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="bot-btn bot-btn-danger bot-btn-sm" onclick="return confirm('So\'rovnomani yopishni xohlaysizmi?');">Yopish</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'bot_export_csv' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">CSV</a>
+        <a href="{% url 'bot_export_json' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">JSON</a>
+        <a href="{% url 'bot_export_pdf' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">PDF</a>
+    </div>
+</div>
+
+<!-- Poll Info -->
+<div class="bot-card">
+    <h2>Ma'lumot</h2>
+    <table class="bot-table">
+        <tr><td style="width:200px; font-weight:600;">Tavsif</td><td>{{ poll.description }}</td></tr>
+        <tr><td style="font-weight:600;">Muddati</td><td>{{ poll.deadline_at }}</td></tr>
+        <tr><td style="font-weight:600;">Maks. ovozlar</td><td>{{ poll.max_votes_per_user }}</td></tr>
+        <tr><td style="font-weight:600;">CAPTCHA</td><td>{% if poll.captcha_enabled %}Ha{% else %}Yo'q{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">Ovoz o'zgartirish</td><td>{% if poll.allow_vote_change %}Ha{% else %}Yo'q{% endif %}</td></tr>
+        <tr><td style="font-weight:600;">Yaratilgan</td><td>{{ poll.created_at }}</td></tr>
+        {% if channels %}
+        <tr><td style="font-weight:600;">Kanallar</td><td>{{ channels|join:", " }}</td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Results Summary -->
+<div class="bot-grid">
+    <div class="bot-stat">
+        <div class="value">{{ results.total_voters }}</div>
+        <div class="label">Jami ovoz berganlar</div>
+    </div>
+    <div class="bot-stat">
+        <div class="value">{{ candidates|length }}</div>
+        <div class="label">Nomzodlar</div>
+    </div>
+    <div class="bot-stat">
+        <div class="value">{{ faculties|length }}</div>
+        <div class="label">Fakultetlar</div>
+    </div>
+</div>
+
+<!-- Top Candidates -->
+{% if top %}
+<div class="bot-card">
+    <h2>Top nomzodlar</h2>
+    <table class="bot-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Nomzod</th>
+                <th>Lavozim</th>
+                <th>Fakultet</th>
+                <th>Ovozlar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in top %}
+            <tr>
+                <td>
+                    {% if t.rank == 1 %}&#x1F947;{% elif t.rank == 2 %}&#x1F948;{% elif t.rank == 3 %}&#x1F949;{% else %}{{ t.rank }}{% endif %}
+                </td>
+                <td><strong>{{ t.candidate_name }}</strong></td>
+                <td>{{ t.position|default:"-" }}</td>
+                <td>{{ t.faculty_code|default:"-" }}</td>
+                <td><strong>{{ t.votes }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Full Results -->
+{% if results.results %}
+<div class="bot-card">
+    <h2>To'liq natijalar</h2>
+    <table class="bot-table">
+        <thead>
+            <tr>
+                <th>Fakultet</th>
+                <th>Nomzod</th>
+                <th>Ovozlar</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results.results %}
+            <tr>
+                <td>{{ r.faculty_code }}</td>
+                <td>{{ r.candidate_name }}</td>
+                <td>{{ r.votes }}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <div style="flex:1; background:var(--darkened-bg, #eee); border-radius:4px; height:8px; max-width:200px;">
+                            <div style="width:{{ r.percentage }}%; background:var(--primary, #7c3aed); height:100%; border-radius:4px;"></div>
+                        </div>
+                        <span>{{ r.percentage }}%</span>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="bot-card">
+    <h2>Grafiklar</h2>
+    <div class="bot-grid" style="grid-template-columns: 1fr 1fr;">
+        <div>
+            <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Ovozlar dinamikasi</h3>
+            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px;" loading="lazy">
+        </div>
+        <div>
+            <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Fakultetlar bo'yicha</h3>
+            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px;" loading="lazy">
+        </div>
+    </div>
+    <div style="margin-top:1rem;">
+        <h3 style="font-size:0.9rem; margin-bottom:0.5rem;">Soatlik faollik</h3>
+        <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; border-radius:8px; max-width:600px;" loading="lazy">
+    </div>
+</div>
+{% endblock %}

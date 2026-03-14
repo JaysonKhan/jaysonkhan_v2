@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'contact',
     'core',
     'interactions',
+    'botproxy',
 ]
 
 MIDDLEWARE = [
@@ -402,6 +403,37 @@ UNFOLD = {
                     },
                 ],
             },
+            {
+                "title": "Bot Management",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "smart_toy",
+                        "link": f"{_A}bot/dashboard/",
+                    },
+                    {
+                        "title": "Polls",
+                        "icon": "ballot",
+                        "link": f"{_A}bot/polls/",
+                    },
+                    {
+                        "title": "Bot Admins",
+                        "icon": "admin_panel_settings",
+                        "link": f"{_A}bot/admins/",
+                    },
+                    {
+                        "title": "Bot Users",
+                        "icon": "people",
+                        "link": f"{_A}bot/users/",
+                    },
+                ],
+            },
         ],
     },
 }
+
+# ── Bot API (hokimiyatbot integration) ───────────────────────────────────────
+BOT_API_BASE_URL = env('BOT_API_BASE_URL', default='http://161.97.177.218:8433')
+BOT_API_SECRET_KEY = env('BOT_API_SECRET_KEY', default='')
+BOT_API_TIMEOUT = env.int('BOT_API_TIMEOUT', default=30)

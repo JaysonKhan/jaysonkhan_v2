@@ -1,0 +1,57 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}So'rovnomalar{% endblock %}
+
+{% block bot_content %}
+<div class="bot-breadcrumb">
+    <a href="{% url 'bot_dashboard' %}">Dashboard</a>
+    <span>/</span> So'rovnomalar
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h1 style="margin: 0;">So'rovnomalar</h1>
+    <a href="{% url 'bot_poll_create' %}" class="bot-btn bot-btn-primary">+ Yangi so'rovnoma</a>
+</div>
+
+<div class="bot-card">
+    {% if polls %}
+    <table class="bot-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nomi</th>
+                <th>Tavsif</th>
+                <th>Status</th>
+                <th>Muddati</th>
+                <th>Yaratilgan</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for poll in polls %}
+            <tr>
+                <td>{{ poll.id }}</td>
+                <td><a href="{% url 'bot_poll_detail' poll.id %}">{{ poll.title }}</a></td>
+                <td>{{ poll.description|truncatechars:50 }}</td>
+                <td>
+                    {% if poll.status == "open" %}
+                        <span class="bot-badge bot-badge-open">Faol</span>
+                    {% else %}
+                        <span class="bot-badge bot-badge-closed">Yopilgan</span>
+                    {% endif %}
+                </td>
+                <td>{{ poll.deadline_at|truncatechars:16 }}</td>
+                <td>{{ poll.created_at|truncatechars:16 }}</td>
+                <td>
+                    <a href="{% url 'bot_poll_detail' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">Batafsil</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="text-align: center; color: var(--body-quiet-color, #666); padding: 2rem;">
+        Hech qanday so'rovnoma topilmadi
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

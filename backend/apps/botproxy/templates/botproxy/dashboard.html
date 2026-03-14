@@ -1,0 +1,71 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Bot Dashboard{% endblock %}
+
+{% block bot_content %}
+<h1>Bot Dashboard</h1>
+
+<div class="bot-grid">
+    <div class="bot-stat">
+        <div class="value">
+            {% if api_ok %}<span class="bot-status-dot online"></span>{% else %}<span class="bot-status-dot offline"></span>{% endif %}
+            {% if api_ok %}Online{% else %}Offline{% endif %}
+        </div>
+        <div class="label">Bot Status</div>
+    </div>
+    <div class="bot-stat">
+        <div class="value">{{ active_polls|default:"0" }}</div>
+        <div class="label">Faol so'rovnomalar</div>
+    </div>
+    <div class="bot-stat">
+        <div class="value">{{ user_count }}</div>
+        <div class="label">Jami foydalanuvchilar</div>
+    </div>
+    <div class="bot-stat">
+        <div class="value">{{ admin_ids|length }}</div>
+        <div class="label">Adminlar</div>
+    </div>
+</div>
+
+<div class="bot-actions" style="margin-bottom: 1.5rem;">
+    <a href="{% url 'bot_poll_create' %}" class="bot-btn bot-btn-primary">+ Yangi so'rovnoma</a>
+    <a href="{% url 'bot_poll_list' %}" class="bot-btn bot-btn-outline">Barcha so'rovnomalar</a>
+    <a href="{% url 'bot_admin_list' %}" class="bot-btn bot-btn-outline">Adminlar</a>
+    <a href="{% url 'bot_user_stats' %}" class="bot-btn bot-btn-outline">Foydalanuvchilar</a>
+</div>
+
+{% if polls %}
+<div class="bot-card">
+    <h2>So'rovnomalar</h2>
+    <table class="bot-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nomi</th>
+                <th>Status</th>
+                <th>Muddati</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for poll in polls %}
+            <tr>
+                <td>{{ poll.id }}</td>
+                <td><a href="{% url 'bot_poll_detail' poll.id %}">{{ poll.title }}</a></td>
+                <td>
+                    {% if poll.status == "open" %}
+                        <span class="bot-badge bot-badge-open">Faol</span>
+                    {% else %}
+                        <span class="bot-badge bot-badge-closed">Yopilgan</span>
+                    {% endif %}
+                </td>
+                <td>{{ poll.deadline_at|truncatechars:16 }}</td>
+                <td>
+                    <a href="{% url 'bot_poll_detail' poll.id %}" class="bot-btn bot-btn-outline bot-btn-sm">Batafsil</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
