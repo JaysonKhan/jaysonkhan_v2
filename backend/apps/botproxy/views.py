@@ -329,6 +329,20 @@ def user_stats(request):
     }))
 
 
+@staff_member_required
+def user_photo_proxy(request, user_id: int):
+    """Proxy user profile photo from bot API."""
+    client = _client()
+    photo_bytes = client.get_user_photo(user_id)
+    if not photo_bytes:
+        return HttpResponse(status=404)
+    return HttpResponse(
+        photo_bytes,
+        content_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 def _build_page_range(current: int, total: int) -> list:
     """Build a compact page range with ellipsis markers."""
     if total <= 7:

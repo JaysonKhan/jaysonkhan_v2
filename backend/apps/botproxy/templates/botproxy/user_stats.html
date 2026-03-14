@@ -2,6 +2,20 @@
 {% block page_title %}Foydalanuvchilar — Rektor Bot{% endblock %}
 
 {% block bot_content %}
+<style>
+.rb-avatar {
+    width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 0.875rem; color: #fff; flex-shrink: 0;
+}
+.rb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rb-avatar.no-photo::after { content: attr(data-initials); }
+.rb-avatar.no-photo img { display: none; }
+.rb-avatar-lg { width: 64px; height: 64px; font-size: 1.5rem; }
+.rb-user-row { display: flex; align-items: center; gap: 0.625rem; }
+.rb-user-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+</style>
+
 <div class="rb-header">
     <h1>
         Foydalanuvchilar
@@ -36,14 +50,22 @@
 <!-- User Detail (from search) -->
 {% if user_detail %}
 <div class="rb-card">
-    <div class="rb-card-header">
-        <h2>{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
-        <span class="rb-badge rb-badge-info">ID: {{ user_detail.user_id }}</span>
+    <div class="rb-user-header">
+        <div class="rb-avatar rb-avatar-lg" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
+            <img src="{% url 'bot_user_photo' user_detail.user_id %}"
+                 onerror="this.parentElement.classList.add('no-photo'); this.remove();"
+                 alt="">
+        </div>
+        <div>
+            <h2 style="margin:0;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
+            <span class="rb-badge rb-badge-info">ID: {{ user_detail.user_id }}</span>
+        </div>
     </div>
     <div class="rb-table-wrap">
         <table class="rb-table">
             <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
             <tr><td class="rb-muted"><strong>Username</strong></td><td>{{ user_detail.username|default:"-" }}</td></tr>
+            <tr><td class="rb-muted"><strong>Telefon</strong></td><td>{{ user_detail.phone_number|default:"-" }}</td></tr>
             <tr><td class="rb-muted"><strong>Ro'yxatdan o'tgan</strong></td><td>{{ user_detail.registered_at }}</td></tr>
             <tr><td class="rb-muted"><strong>Jami ovozlar</strong></td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
         </table>
@@ -104,9 +126,10 @@
         <table class="rb-table">
             <thead>
                 <tr>
-                    <th>User ID</th>
+                    <th style="width:48px;"></th>
                     <th>Ism</th>
                     <th>Username</th>
+                    <th>Telefon</th>
                     <th>Ro'yxatdan o'tgan</th>
                     <th>Ovozlar</th>
                     <th></th>
@@ -115,9 +138,23 @@
             <tbody>
                 {% for u in users %}
                 <tr>
-                    <td><span class="rb-code">{{ u.user_id }}</span></td>
-                    <td>{{ u.first_name }} {{ u.last_name|default:"" }}</td>
+                    <td>
+                        <div class="rb-avatar" data-uid="{{ u.user_id }}" data-initials="{{ u.first_name|first|upper|default:'?' }}">
+                            <img src="{% url 'bot_user_photo' u.user_id %}"
+                                 onerror="this.parentElement.classList.add('no-photo'); this.remove();"
+                                 alt="">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="rb-user-row">
+                            <div>
+                                <div style="font-weight:500;">{{ u.first_name }} {{ u.last_name|default:"" }}</div>
+                                <div class="rb-muted" style="font-size:0.75rem;">{{ u.user_id }}</div>
+                            </div>
+                        </div>
+                    </td>
                     <td class="rb-muted">{{ u.username|default:"-" }}</td>
+                    <td class="rb-muted">{{ u.phone_number|default:"-" }}</td>
                     <td class="rb-muted">{{ u.registered_at|truncatechars:16 }}</td>
                     <td><strong>{{ u.total_votes|default:"0" }}</strong></td>
                     <td style="text-align:right;">
@@ -161,4 +198,11 @@
     {% endif %}
 </div>
 {% endif %}
+
+<script>
+document.querySelectorAll('.rb-avatar').forEach(el => {
+    const uid = parseInt(el.dataset.uid) || 0;
+    el.style.backgroundColor = `hsl(${uid % 360}, 45%, 55%)`;
+});
+</script>
 {% endblock %}

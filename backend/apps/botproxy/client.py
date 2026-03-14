@@ -148,3 +148,10 @@ class BotAPIClient:
 
     def get_user_history(self, user_id: int) -> dict:
         return self._request("GET", f"/api/v1/users/{user_id}/history").json()
+
+    def get_user_photo(self, user_id: int) -> bytes | None:
+        """Fetch user profile photo as bytes. Returns None if not found."""
+        try:
+            return self._request("GET", f"/api/v1/users/{user_id}/photo").content
+        except BotAPIError:
+            return None
