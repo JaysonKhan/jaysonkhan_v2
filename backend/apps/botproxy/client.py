@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json as json_mod
 import logging
 import time
 
@@ -34,7 +35,6 @@ class BotAPIClient:
             self._secret.encode(), message.encode(), hashlib.sha256
         ).hexdigest()
         return {
-            "Authorization": f"Bearer {self._secret}",
             "X-Timestamp": timestamp,
             "X-Signature": signature,
             "Content-Type": "application/json",
@@ -44,7 +44,6 @@ class BotAPIClient:
         url = f"{self._base_url}{path}"
         body = kwargs.pop("content", "") or ""
         if "json" in kwargs:
-            import json as json_mod
             body = json_mod.dumps(kwargs.pop("json"))
             kwargs["content"] = body
 
@@ -52,7 +51,7 @@ class BotAPIClient:
         headers.update(kwargs.pop("headers", {}))
 
         try:
-            with httpx.Client(timeout=self._timeout, verify=False) as client:
+            with httpx.Client(timeout=self._timeout) as client:
                 resp = client.request(method, url, headers=headers, **kwargs)
         except httpx.ConnectError:
             raise BotAPIError(0, "Cannot connect to bot API server")

@@ -70,62 +70,89 @@ def poll_list(request):
 @staff_member_required
 def poll_detail(request, poll_id: int):
     client = _client()
+    # Primary data — redirect if poll itself can't be fetched
     try:
         poll_data = client.get_poll(poll_id)
-        results = client.get_results(poll_id)
-        top = client.get_top(poll_id, limit=10)
     except BotAPIError as e:
         _handle_api_error(request, e)
         return HttpResponseRedirect(reverse("bot_poll_list"))
 
+    # Secondary data — show partial page if these fail
+    results = {"total_voters": 0, "results": []}
+    top = []
+    try:
+        results = client.get_results(poll_id)
+    except BotAPIError as e:
+        logger.warning("Failed to fetch results for poll %d: %s", poll_id, e)
+    try:
+        top = client.get_top(poll_id, limit=10).get("top", [])
+    except BotAPIError as e:
+        logger.warning("Failed to fetch top for poll %d: %s", poll_id, e)
+
     return TemplateResponse(request, "botproxy/poll_detail.html", _ctx(request, {
         "poll": poll_data["poll"],
-        "faculties": poll_data["faculties"],
-        "candidates": poll_data["candidates"],
+        "faculties": poll_data.get("faculties", []),
+        "candidates": poll_data.get("candidates", []),
         "channels": poll_data.get("channels", []),
         "results": results,
-        "top": top.get("top", []),
+        "top": top,
     }))
 
 
 @staff_member_required
 def poll_create(request):
     if request.method == "POST":
-        client = _client()
-        data = {
-            "title": request.POST.get("title", ""),
-            "description": request.POST.get("description", ""),
-            "deadline_at": request.POST.get("deadline_at", ""),
-            "max_votes_per_user": int(request.POST.get("max_votes_per_user", 1)),
-            "captcha_enabled": request.POST.get("captcha_enabled") == "on",
-            "allow_vote_change": request.POST.get("allow_vote_change") == "on",
-            "created_by": request.user.pk,
-        }
+        title = request.POST.get("title", "").strip()
+        description = request.POST.get("description", "").strip()
+        deadline_at = request.POST.get("deadline_at", "").strip()
 
         # Parse faculties: "CODE:Name" lines
-        faculties_raw = request.POST.get("faculties", "").strip()
-        data["faculties"] = []
-        for line in faculties_raw.splitlines():
+        faculties = []
+        for line in request.POST.get("faculties", "").strip().splitlines():
             line = line.strip()
             if ":" in line:
                 code, name = line.split(":", 1)
-                data["faculties"].append([code.strip(), name.strip()])
+                faculties.append([code.strip(), name.strip()])
 
-        # Parse candidates: "FacultyCode:FullName" or "FacultyCode:FullName:Position" lines
-        candidates_raw = request.POST.get("candidates", "").strip()
-        data["candidates"] = []
-        for line in candidates_raw.splitlines():
+        # Parse candidates: "FacultyCode:FullName" or "FacultyCode:FullName:Position"
+        candidates = []
+        for line in request.POST.get("candidates", "").strip().splitlines():
             line = line.strip()
             if ":" in line:
                 parts = line.split(":", maxsplit=2)
-                data["candidates"].append([p.strip() for p in parts])
+                candidates.append([p.strip() for p in parts])
 
-        try:
-            result = client.create_poll(data)
-            messages.success(request, f"So'rovnoma yaratildi: {result['poll']['title']}")
-            return HttpResponseRedirect(reverse("bot_poll_detail", args=[result["poll"]["id"]]))
-        except BotAPIError as e:
-            _handle_api_error(request, e)
+        # Validate required fields before hitting the API
+        if not title or not description or not deadline_at:
+            messages.error(request, "Nomi, tavsif va muddati to'ldirilishi shart")
+        elif not faculties:
+            messages.error(request, "Kamida bitta fakultet kiritilishi kerak")
+        elif not candidates:
+            messages.error(request, "Kamida bitta nomzod kiritilishi kerak")
+        else:
+            try:
+                max_votes = int(request.POST.get("max_votes_per_user", 1))
+            except (ValueError, TypeError):
+                max_votes = 1
+
+            data = {
+                "title": title,
+                "description": description,
+                "deadline_at": deadline_at,
+                "max_votes_per_user": max_votes,
+                "captcha_enabled": request.POST.get("captcha_enabled") == "on",
+                "allow_vote_change": request.POST.get("allow_vote_change") == "on",
+                "created_by": request.user.pk,
+                "faculties": faculties,
+                "candidates": candidates,
+            }
+            client = _client()
+            try:
+                result = client.create_poll(data)
+                messages.success(request, f"So'rovnoma yaratildi: {result['poll']['title']}")
+                return HttpResponseRedirect(reverse("bot_poll_detail", args=[result["poll"]["id"]]))
+            except BotAPIError as e:
+                _handle_api_error(request, e)
 
     return TemplateResponse(request, "botproxy/poll_form.html", _ctx(request))
 
@@ -180,8 +207,13 @@ def export_json_view(request, poll_id: int):
                         headers={"Content-Disposition": f'attachment; filename="poll_{poll_id}.json"'})
 
 
+ALLOWED_CHART_TYPES = {"trend", "faculty", "hourly", "bar", "pie"}
+
+
 @staff_member_required
 def poll_chart(request, poll_id: int, chart_type: str):
+    if chart_type not in ALLOWED_CHART_TYPES:
+        return HttpResponse(status=400, content=b"Invalid chart type")
     client = _client()
     try:
         data = client.get_chart(poll_id, chart_type)
