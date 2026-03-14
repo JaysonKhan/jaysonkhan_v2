@@ -412,21 +412,6 @@ UNFOLD = {
                         "icon": "smart_toy",
                         "link": f"{_A}bot/dashboard/",
                     },
-                    {
-                        "title": "So'rovnomalar",
-                        "icon": "ballot",
-                        "link": f"{_A}bot/polls/",
-                    },
-                    {
-                        "title": "Bot Adminlar",
-                        "icon": "admin_panel_settings",
-                        "link": f"{_A}bot/admins/",
-                    },
-                    {
-                        "title": "Bot Foydalanuvchilar",
-                        "icon": "people",
-                        "link": f"{_A}bot/users/",
-                    },
                 ],
             },
         ],

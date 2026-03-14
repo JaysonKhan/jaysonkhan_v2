@@ -42,10 +42,10 @@
     </div>
     <div class="rb-table-wrap">
         <table class="rb-table">
-            <tr><td style="width:180px; font-weight:600; color:var(--body-quiet-color,#888);">User ID</td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Username</td><td>{{ user_detail.username|default:"-" }}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Jami ovozlar</td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
+            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
+            <tr><td class="rb-muted"><strong>Username</strong></td><td>{{ user_detail.username|default:"-" }}</td></tr>
+            <tr><td class="rb-muted"><strong>Ro'yxatdan o'tgan</strong></td><td>{{ user_detail.registered_at }}</td></tr>
+            <tr><td class="rb-muted"><strong>Jami ovozlar</strong></td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
         </table>
     </div>
 

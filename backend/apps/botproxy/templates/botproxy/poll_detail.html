@@ -63,14 +63,14 @@
     </div>
     <div class="rb-table-wrap">
         <table class="rb-table">
-            <tr><td style="width:180px; font-weight:600; color:var(--body-quiet-color,#888);">Tavsif</td><td>{{ poll.description }}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Muddati</td><td>{{ poll.deadline_at }}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Maks. ovozlar</td><td><span class="rb-code">{{ poll.max_votes_per_user }}</span></td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">CAPTCHA</td><td>{% if poll.captcha_enabled %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Ovoz o'zgartirish</td><td>{% if poll.allow_vote_change %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Yaratilgan</td><td>{{ poll.created_at }}</td></tr>
+            <tr><td style="width:180px;" class="rb-muted"><strong>Tavsif</strong></td><td>{{ poll.description }}</td></tr>
+            <tr><td class="rb-muted"><strong>Muddati</strong></td><td>{{ poll.deadline_at }}</td></tr>
+            <tr><td class="rb-muted"><strong>Maks. ovozlar</strong></td><td><span class="rb-code">{{ poll.max_votes_per_user }}</span></td></tr>
+            <tr><td class="rb-muted"><strong>CAPTCHA</strong></td><td>{% if poll.captcha_enabled %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
+            <tr><td class="rb-muted"><strong>Ovoz o'zgartirish</strong></td><td>{% if poll.allow_vote_change %}<span class="rb-badge rb-badge-open">Ha</span>{% else %}<span class="rb-badge rb-badge-closed">Yo'q</span>{% endif %}</td></tr>
+            <tr><td class="rb-muted"><strong>Yaratilgan</strong></td><td>{{ poll.created_at }}</td></tr>
             {% if channels %}
-            <tr><td style="font-weight:600; color:var(--body-quiet-color,#888);">Kanallar</td><td>{{ channels|join:", " }}</td></tr>
+            <tr><td class="rb-muted"><strong>Kanallar</strong></td><td>{{ channels|join:", " }}</td></tr>
             {% endif %}
         </table>
     </div>
@@ -160,15 +160,15 @@
     <div class="rb-grid-2">
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Ovozlar dinamikasi</p>
-            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
+            <img src="{% url 'bot_poll_chart' poll.id 'trend' %}" alt="Vote trend" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
         </div>
         <div>
             <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Fakultetlar bo'yicha</p>
-            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
+            <img src="{% url 'bot_poll_chart' poll.id 'faculty' %}" alt="Faculty chart" style="width:100%; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
         </div>
     </div>
     <hr class="rb-divider">
     <p class="rb-muted" style="font-size:0.8125rem; font-weight:600; margin:0 0 0.5rem;">Soatlik faollik</p>
-    <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--hairline-color,#e5e7eb);" loading="lazy">
+    <img src="{% url 'bot_poll_chart' poll.id 'hourly' %}" alt="Hourly chart" style="width:100%; max-width:640px; border-radius:8px; border:1px solid var(--rb-border);" loading="lazy">
 </div>
 {% endblock %}
