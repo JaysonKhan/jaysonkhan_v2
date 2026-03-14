@@ -47,7 +47,9 @@ class BotAPIClient:
             body = json_mod.dumps(kwargs.pop("json"))
             kwargs["content"] = body
 
-        headers = self._headers(method, path, body)
+        # Sign with path only (no query string) to match bot API's request.path
+        sign_path = path.split("?", 1)[0]
+        headers = self._headers(method, sign_path, body)
         headers.update(kwargs.pop("headers", {}))
 
         try:
