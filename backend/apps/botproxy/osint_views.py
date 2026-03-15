@@ -501,9 +501,16 @@ def osint_photo_proxy(request, entity_id: str):
     Query: ?refresh=1 to force re-download from Telegram.
 
     Strategiya (tez → sekin):
-      1. DB + disk cache — API chaqiruvsiz (tez)
-      2. photo_service → Bot API + Telethon download (sekin, rate limited)
-      3. Stale cache / photo_url — fallback
+      1. Django cache — negative cache (TelegramEntity yo'q bo'lgan entitylar uchun)
+      2. DB + disk cache — API chaqiruvsiz (tez)
+      3. photo_service → Bot API + Telethon download (sekin, rate limited)
+      4. Stale cache / photo_url — fallback
+
+    Negative cache muammosi:
+      get_entity_photo() faqat mavjud TelegramEntity ni yangilaydi.
+      common_groups_stat dagi 90+ user uchun TelegramEntity yo'q, shuning uchun
+      har safar Bot API + Telethon sinab ko'rilardi (va muvaffaqiyatsiz tugardi).
+      Django cache orqali 24 soatlik negative cache saqlash bu muammoni hal qiladi.
 
     Returns:
       - JPEG with browser caching (1 hour) if cache hit
@@ -512,6 +519,8 @@ def osint_photo_proxy(request, entity_id: str):
       - 503 if Telegram service unavailable and no cache
     """
     from pathlib import Path
+
+    from django.core.cache import cache
 
     from telegram.models import TelegramEntity
     from telegram.photo_service import _try_stale_cache, get_entity_photo
@@ -523,7 +532,14 @@ def osint_photo_proxy(request, entity_id: str):
 
     force = request.GET.get("refresh") == "1"
 
-    # ── 1. Fast path: DB + disk cache (API chaqiruvsiz) ──
+    # ── 1. Negative cache (TelegramEntity yo'q bo'lgan entitylar uchun) ──
+    # get_entity_photo() faqat mavjud TelegramEntity da has_photo=False saqlaydi.
+    # Agar TelegramEntity umuman yo'q bo'lsa, Django cache orqali eslaymiz.
+    neg_cache_key = f"osint_photo_neg:{clean_id}"
+    if not force and cache.get(neg_cache_key):
+        return HttpResponse(status=404)
+
+    # ── 2. Fast path: DB + disk cache (API chaqiruvsiz) ──
     if not force:
         try:
             entity_obj = TelegramEntity.objects.filter(
@@ -531,7 +547,7 @@ def osint_photo_proxy(request, entity_id: str):
             ).only("photo_file", "photo_url", "has_photo").first()
 
             if entity_obj:
-                # Negative cache — rasm yo'q
+                # Negative cache — rasm yo'q (DB da saqlangan)
                 if entity_obj.has_photo is False:
                     return HttpResponse(status=404)
 
@@ -554,7 +570,7 @@ def osint_photo_proxy(request, entity_id: str):
         except Exception:
             pass
 
-    # ── 2. Full photo service (Bot API + Telethon — sekinroq) ──
+    # ── 3. Full photo service (Bot API + Telethon — sekinroq) ──
     # clean_id ishlatamiz — photo_service ichida sanitize qiladi
     try:
         photo_bytes, content_type = get_entity_photo(clean_id, force_refresh=force)
@@ -577,6 +593,10 @@ def osint_photo_proxy(request, entity_id: str):
             headers={"Cache-Control": "public, max-age=3600"},
         )
 
+    # Rasm topilmadi — negative cache saqlash (24 soat)
+    # Bu faqat TelegramEntity yo'q bo'lgan entitylar uchun kerak —
+    # TelegramEntity bor bo'lsa, get_entity_photo() ichida has_photo=False saqlanadi.
+    cache.set(neg_cache_key, True, 86400)  # 24 soat
     return HttpResponse(status=404)
 
 
