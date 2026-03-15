@@ -100,13 +100,28 @@ def _ensure_event_loop() -> asyncio.AbstractEventLoop:
 
 
 def _get_api_config() -> tuple[int, str]:
-    """Return (api_id, api_hash). Raises RuntimeError if missing."""
+    """Return (api_id, api_hash).
+
+    Avval DB dan o'qiydi (admin paneldan sozlangan), keyin env fallback.
+    Raises RuntimeError if neither source has credentials.
+    """
+    # 1. DB (admin paneldan sozlangan — restart kerak emas)
+    try:
+        from telegram.models import TelegramSession
+
+        db_config = TelegramSession.get_api_config()
+        if db_config:
+            return db_config
+    except Exception:
+        pass
+
+    # 2. Fallback: environment variables
     api_id = getattr(settings, "TELEGRAM_API_ID", 0)
     api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
     if not api_id or not api_hash:
         raise RuntimeError(
             "TELEGRAM_API_ID va TELEGRAM_API_HASH sozlanmagan. "
-            "https://my.telegram.org/apps dan oling."
+            "Session sahifasidan yoki .env faylda sozlang."
         )
     return api_id, api_hash
 
@@ -256,12 +271,23 @@ def check_session_status() -> dict:
         configured: bool — API keys sozlanganmi
         authorized: bool — session avtorizatsiya qilinganmi
         user: dict | None — {id, first_name, last_name, username, phone}
+        api_id: int | None — hozirgi API ID (UI uchun)
+        api_hash_set: bool — API Hash sozlanganmi
     """
-    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
-    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
+    try:
+        api_id, api_hash = _get_api_config()
+    except RuntimeError:
+        # DB da ham env da ham yo'q — faqat DB config borligini tekshiramiz
+        from telegram.models import TelegramSession
 
-    if not api_id or not api_hash:
-        return {"configured": False, "authorized": False, "user": None}
+        db_config = TelegramSession.get_api_config()
+        return {
+            "configured": False,
+            "authorized": False,
+            "user": None,
+            "api_id": db_config[0] if db_config else None,
+            "api_hash_set": bool(db_config),
+        }
 
     # Load session string from Django thread (ORM-safe) BEFORE async
     session_string = _load_session_string()
@@ -313,7 +339,12 @@ def check_session_status() -> dict:
                 pass
 
     future = asyncio.run_coroutine_threadsafe(_check(), loop)
-    return future.result(timeout=30)
+    result = future.result(timeout=30)
+
+    # API config info ni qo'shish (UI uchun)
+    result["api_id"] = api_id
+    result["api_hash_set"] = bool(api_hash)
+    return result
 
 
 def setup_send_code(phone: str) -> dict:

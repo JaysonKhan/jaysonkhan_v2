@@ -10,6 +10,7 @@ urlpatterns = [
     path("telegram/session/verify/", session_views.telegram_session_verify, name="telegram_session_verify"),
     path("telegram/session/2fa/", session_views.telegram_session_2fa, name="telegram_session_2fa"),
     path("telegram/session/disconnect/", session_views.telegram_session_disconnect, name="telegram_session_disconnect"),
+    path("telegram/session/config/", session_views.telegram_session_save_config, name="telegram_session_config"),
     # ── OSINT ─────────────────────────────────────────────────────────────────
     path("osint/search/", osint_views.osint_search, name="osint_search"),
     path("osint/profile/<int:user_id>/", osint_views.osint_profile, name="osint_profile"),

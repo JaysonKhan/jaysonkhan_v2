@@ -70,6 +70,46 @@ html.dark .ts-msg.success { background: rgba(34,197,94,0.1); color: #4ade80; }
     display: inline-flex; align-items: center; gap: 0.5rem;
     color: var(--rb-fg-muted); font-size: 0.8125rem;
 }
+
+/* ── API Config Panel ── */
+.ts-config {
+    max-width: 560px; margin: 0 auto 1.5rem;
+}
+.ts-config-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.875rem 1.25rem; cursor: pointer; user-select: none;
+    border-radius: 12px; transition: background 0.15s;
+}
+.ts-config-header:hover { background: var(--rb-bg-muted); }
+.ts-config-title {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-weight: 600; font-size: 0.9375rem;
+}
+.ts-config-badge {
+    font-size: 0.6875rem; font-weight: 600;
+    padding: 0.125rem 0.5rem; border-radius: 999px;
+}
+.ts-config-badge.ok { background: rgba(34,197,94,0.15); color: #22c55e; }
+.ts-config-badge.warn { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.ts-config-chevron {
+    transition: transform 0.2s; font-size: 20px; color: var(--rb-fg-muted);
+}
+.ts-config.open .ts-config-chevron { transform: rotate(180deg); }
+.ts-config-body {
+    display: none; padding: 0 1.25rem 1.25rem;
+}
+.ts-config.open .ts-config-body { display: block; }
+.ts-config-inputs {
+    display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;
+}
+.ts-config-inputs .rb-form-group { flex: 1; min-width: 180px; margin: 0; }
+.ts-config-inputs .rb-form-group input {
+    font-family: "JetBrains Mono", monospace; font-size: 0.875rem;
+}
+.ts-config-hint {
+    font-size: 0.75rem; color: var(--rb-fg-muted); margin-top: 0.75rem;
+}
+.ts-config-hint a { color: var(--rb-primary); }
 </style>
 
 <div class="rb-header">
@@ -78,6 +118,40 @@ html.dark .ts-msg.success { background: rgba(34,197,94,0.1); color: #4ade80; }
         Telegram Session
         <span class="rb-subtitle">MTProto API sessiyasini sozlash va boshqarish</span>
     </h1>
+</div>
+
+<!-- ── API Config Panel ──────────────────────────────────────────────────── -->
+<div class="rb-card ts-config" id="ts-config-panel">
+    <div class="ts-config-header" onclick="toggleConfig()">
+        <div class="ts-config-title">
+            <span class="material-symbols-outlined" style="font-size:20px;">settings</span>
+            API Sozlamalari
+            <span class="ts-config-badge" id="ts-config-badge"></span>
+        </div>
+        <span class="material-symbols-outlined ts-config-chevron">expand_more</span>
+    </div>
+    <div class="ts-config-body">
+        <div id="ts-config-error" class="ts-msg"></div>
+        <div id="ts-config-success" class="ts-msg"></div>
+        <div class="ts-config-inputs">
+            <div class="rb-form-group">
+                <label for="ts-api-id">API ID</label>
+                <input type="number" id="ts-api-id" placeholder="12345678">
+            </div>
+            <div class="rb-form-group">
+                <label for="ts-api-hash">API Hash</label>
+                <input type="password" id="ts-api-hash" placeholder="abc123def456...">
+            </div>
+            <button class="rb-btn rb-btn-primary" id="ts-config-btn" onclick="saveConfig()" style="height:40px; white-space:nowrap;">
+                <span class="material-symbols-outlined">save</span> Saqlash
+            </button>
+        </div>
+        <p class="ts-config-hint">
+            <a href="https://my.telegram.org/apps" target="_blank" rel="noopener">my.telegram.org/apps</a>
+            dan yangi API ID va API Hash oling.
+            Saqlangandan keyin telefon raqam kiritib sessiya yaratasiz.
+        </p>
+    </div>
 </div>
 
 <div class="ts-wizard">
@@ -94,10 +168,13 @@ html.dark .ts-msg.success { background: rgba(34,197,94,0.1); color: #4ade80; }
         <span class="material-symbols-outlined ts-status-icon error">error</span>
         <h2 style="margin:0 0 0.5rem;">API sozlanmagan</h2>
         <p class="rb-muted" style="font-size:0.875rem;">
-            <code>TELEGRAM_API_ID</code> va <code>TELEGRAM_API_HASH</code> serverning
-            <code>.env</code> fayliga qo'shilmagan.
-            <a href="https://my.telegram.org/apps" target="_blank" rel="noopener">my.telegram.org</a> dan oling.
+            Yuqoridagi <strong>API Sozlamalari</strong> panelidan API ID va API Hash ni kiriting.
         </p>
+        <div class="ts-actions" style="margin-top:1rem;">
+            <button class="rb-btn rb-btn-primary" onclick="openConfig()">
+                <span class="material-symbols-outlined">settings</span> API Sozlamalari
+            </button>
+        </div>
     </div>
 
     <!-- Connected -->
@@ -234,6 +311,79 @@ html.dark .ts-msg.success { background: rgba(34,197,94,0.1); color: #4ade80; }
 var CSRF = '{{ csrf_token }}';
 var currentPhone = '';
 
+/* ── API Config Functions ──────────────────────────────────────────────── */
+
+function toggleConfig() {
+    document.getElementById('ts-config-panel').classList.toggle('open');
+}
+
+function openConfig() {
+    var panel = document.getElementById('ts-config-panel');
+    panel.classList.add('open');
+    setTimeout(function() { document.getElementById('ts-api-id').focus(); }, 100);
+}
+
+function updateConfigBadge(apiId, apiHashSet) {
+    var badge = document.getElementById('ts-config-badge');
+    if (apiId && apiHashSet) {
+        badge.textContent = 'ID: ' + apiId;
+        badge.className = 'ts-config-badge ok';
+    } else {
+        badge.textContent = 'Sozlanmagan';
+        badge.className = 'ts-config-badge warn';
+    }
+    // Pre-fill API ID if available
+    if (apiId) {
+        document.getElementById('ts-api-id').value = apiId;
+    }
+}
+
+function saveConfig() {
+    var apiId = document.getElementById('ts-api-id').value.trim();
+    var apiHash = document.getElementById('ts-api-hash').value.trim();
+    var errEl = document.getElementById('ts-config-error');
+    var succEl = document.getElementById('ts-config-success');
+    errEl.className = 'ts-msg';
+    succEl.className = 'ts-msg';
+
+    if (!apiId || !apiHash) {
+        errEl.textContent = 'API ID va API Hash ikkalasini ham kiriting';
+        errEl.className = 'ts-msg error';
+        return;
+    }
+
+    setLoading('ts-config-btn', true);
+
+    fetch("{% url 'telegram_session_config' %}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+        body: JSON.stringify({api_id: parseInt(apiId), api_hash: apiHash})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        setLoading('ts-config-btn', false);
+        if (d.ok) {
+            succEl.textContent = 'API sozlamalari saqlandi';
+            succEl.className = 'ts-msg success';
+            updateConfigBadge(parseInt(apiId), true);
+            // Clear API Hash input (xavfsizlik)
+            document.getElementById('ts-api-hash').value = '';
+            // Qayta status check (yangi config bilan)
+            setTimeout(checkStatus, 500);
+        } else {
+            errEl.textContent = d.error || 'Xatolik yuz berdi';
+            errEl.className = 'ts-msg error';
+        }
+    })
+    .catch(function() {
+        setLoading('ts-config-btn', false);
+        errEl.textContent = 'Server bilan bog\'lanishda xatolik';
+        errEl.className = 'ts-msg error';
+    });
+}
+
+/* ── Session Wizard Functions ──────────────────────────────────────────── */
+
 function goToStep(stepId) {
     document.querySelectorAll('.ts-step').forEach(function(el) { el.classList.remove('active'); });
     document.getElementById('ts-loading').style.display = 'none';
@@ -304,8 +454,13 @@ function checkStatus() {
     fetch("{% url 'telegram_session_status' %}")
         .then(function(r) { return r.json(); })
         .then(function(d) {
+            // Config badge ni yangilash
+            updateConfigBadge(d.api_id, d.api_hash_set);
+
             if (!d.configured) {
                 goToStep('step-not-configured');
+                // Config panelni avtomatik ochish
+                openConfig();
             } else if (d.authorized && d.user) {
                 renderUserInfo('ts-connected-user', d.user);
                 goToStep('step-connected');

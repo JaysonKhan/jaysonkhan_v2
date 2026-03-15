@@ -244,16 +244,31 @@ class EntitySource(models.Model):
 
 
 class TelegramSession(models.Model):
-    """Stores Telethon StringSession data in PostgreSQL.
+    """Stores Telethon session + API config in PostgreSQL.
 
     SQLite file-based session Gunicorn multi-worker muhitida ishlamaydi
     (database is locked / readonly database xatolari). Buning o'rniga
     session string sifatida PostgreSQL da saqlanadi.
 
-    Singleton — faqat bitta yozuv.
+    API credentials (api_id, api_hash) ham shu yerda saqlanadi —
+    admin paneldan boshqarish mumkin (.env ni o'zgartirmasdan).
+
+    Singleton — faqat bitta yozuv (pk=1).
     """
 
+    # ── API Credentials ──────────────────────────────────────────────────────
+    api_id = models.IntegerField(
+        null=True, blank=True,
+        help_text="Telegram API ID (my.telegram.org/apps dan oling)",
+    )
+    api_hash = models.CharField(
+        max_length=64, blank=True, default="",
+        help_text="Telegram API Hash",
+    )
+
+    # ── Session Data ─────────────────────────────────────────────────────────
     session_string = models.TextField(
+        blank=True, default="",
         help_text="Telethon StringSession.save() natijasi",
     )
     account_id = models.BigIntegerField(
@@ -309,3 +324,37 @@ class TelegramSession(models.Model):
     def clear_session(cls):
         """Delete all session records."""
         cls.objects.all().delete()
+
+    # ── API Config ───────────────────────────────────────────────────────────
+
+    @classmethod
+    def get_api_config(cls) -> tuple[int, str] | None:
+        """Get API credentials from DB.
+
+        Returns (api_id, api_hash) or None if not configured.
+        """
+        try:
+            obj = cls.objects.first()
+            if obj and obj.api_id and obj.api_hash:
+                return obj.api_id, obj.api_hash
+        except DatabaseError:
+            pass
+        return None
+
+    @classmethod
+    def save_api_config(cls, api_id: int, api_hash: str):
+        """Save API credentials (singleton — always pk=1).
+
+        session_string ni o'zgartirmaydi — faqat API config ni yangilaydi.
+        """
+        obj = cls.objects.first()
+        if obj:
+            obj.api_id = api_id
+            obj.api_hash = api_hash
+            obj.save(update_fields=["api_id", "api_hash", "updated_at"])
+        else:
+            cls.objects.create(
+                pk=1,
+                api_id=api_id,
+                api_hash=api_hash,
+            )
