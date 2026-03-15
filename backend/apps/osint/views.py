@@ -11,9 +11,10 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
-from botproxy.funstat_client import FunStatClient, FunStatAPIError
-from botproxy.models import OsintCache, OsintSearchLog
-from botproxy.osint_service import (
+from osint.exceptions import FunStatAPIError
+from osint.models import OsintCache, OsintSearchLog
+from osint.services.funstat_client import FunStatClient
+from osint.services.osint_service import (
     ENDPOINT_REGISTRY,
     fetch_channel_data,
     fetch_or_cache,
@@ -24,10 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def _detect_image_content_type(data: bytes) -> str:
-    """Rasm baytlaridan content-type ni aniqlash (magic bytes).
-
-    JPEG, PNG, WebP ni taniydi. Noma'lum bo'lsa JPEG qaytaradi.
-    """
+    """Rasm baytlaridan content-type ni aniqlash (magic bytes)."""
     if data[:3] == b"\xff\xd8\xff":
         return "image/jpeg"
     if data[:8] == b"\x89PNG\r\n\x1a\n":
@@ -38,15 +36,7 @@ def _detect_image_content_type(data: bytes) -> str:
 
 
 def _normalize_entity_id(raw: str | int) -> int | None:
-    """Telegram entity ID ni normalizatsiya qilish.
-
-    FunStat va Bot API manfiy ID qaytarishi mumkin:
-      - Kanal/supergroup: -1001234567890 → 1234567890 (bare channel_id)
-      - Guruh: -987654321 → 987654321 (bare chat_id)
-
-    Telethon PeerChannel/PeerChat faqat musbat (bare) ID kutadi.
-    Noto'g'ri qiymat berilganda None qaytaradi (ValueError oldini oladi).
-    """
+    """Telegram entity ID ni normalizatsiya qilish."""
     try:
         n = int(raw)
     except (ValueError, TypeError):
@@ -54,9 +44,7 @@ def _normalize_entity_id(raw: str | int) -> int | None:
     if n < 0:
         s = str(abs(n))
         if s.startswith("100") and len(s) > 10:
-            # -100XXXXXXXXXX → XXXXXXXXXX (channel/supergroup)
             return int(s[3:])
-        # -XXXXXXXXX → XXXXXXXXX (basic group)
         return abs(n)
     return n
 
@@ -73,13 +61,7 @@ def _ctx(request, extra: dict | None = None) -> dict:
 
 
 def _annotate_search_logs(logs: list) -> None:
-    """Har bir OsintSearchLog ga entity_name va has_photo qo'shish.
-
-    Ma'lumot manbalari (prioritet tartibida):
-    1. TelegramEntity (DB da mavjud bo'lsa — tez)
-    2. OsintCache stats_min / channel_profile (kesh ma'lumotlari)
-    3. So'rov matni (fallback)
-    """
+    """Har bir OsintSearchLog ga entity_name va has_photo qo'shish."""
     if not logs:
         return
 
@@ -117,7 +99,6 @@ def _annotate_search_logs(logs: list) -> None:
             continue
         data = entry.data or {}
         if entry.endpoint_type == "stats_min":
-            # stats_min: {first_name, last_name, ...} yoki {name, ...}
             parts = [data.get("first_name") or "", data.get("last_name") or ""]
             name = " ".join(p for p in parts if p).strip()
             if not name:
@@ -156,7 +137,7 @@ def _annotate_search_logs(logs: list) -> None:
         # OsintCache fallback
         if not s.entity_name and rid in cache_names:
             s.entity_name = cache_names[rid]
-            s.has_photo = True  # Agar stats_min bor bo'lsa, photo proxy ishlaydi
+            s.has_photo = True
 
         # Final fallback
         if not s.entity_name:
@@ -194,7 +175,6 @@ def osint_search(request):
                 return redirect(
                     reverse("osint_entity_profile", kwargs={"entity_id": result["user_id"]})
                 )
-            # Default: user/bot → existing profile
             return redirect(
                 reverse("osint_profile", kwargs={"user_id": result["user_id"]})
             )
@@ -204,13 +184,11 @@ def osint_search(request):
         OsintSearchLog.objects.filter(searched_by=request.user)
         .select_related("searched_by")[:15]
     )
-
-    # Annotate with entity names & photos
     _annotate_search_logs(recent)
 
     return TemplateResponse(
         request,
-        "botproxy/osint_search.html",
+        "osint/osint_search.html",
         _ctx(request, {"query": query, "error": error, "recent_searches": recent}),
     )
 
@@ -220,7 +198,6 @@ def osint_search(request):
 @staff_member_required
 def osint_profile(request, user_id: int):
     """User profile page with lazy-loading tree."""
-    # Log this visit so it appears in "So'nggi qidiruvlar"
     OsintSearchLog.objects.update_or_create(
         query=str(user_id),
         query_type="id",
@@ -233,7 +210,6 @@ def osint_profile(request, user_id: int):
 
     basic = fetch_or_cache("stats_min", user_id, user=request.user)
 
-    # Check which branches have cached data
     cached_branches = set(
         OsintCache.objects.filter(target_id=str(user_id)).values_list(
             "endpoint_type", flat=True
@@ -253,7 +229,7 @@ def osint_profile(request, user_id: int):
 
     return TemplateResponse(
         request,
-        "botproxy/osint_profile.html",
+        "osint/osint_profile.html",
         _ctx(request, {
             "user_id": user_id,
             "basic": basic,
@@ -313,7 +289,6 @@ def osint_text_search(request):
     except FunStatAPIError as e:
         return JsonResponse({"error": str(e)}, status=502)
 
-    # Smart parse response
     if isinstance(resp, dict) and "data" in resp:
         resp_data = resp["data"]
         resp_tech = resp.get("tech", {})
@@ -342,12 +317,11 @@ def osint_text_search(request):
 
 @staff_member_required
 def osint_entity_profile(request, entity_id: str):
-    """Kanal/guruh profil sahifasi — Telethon MTProto + FunStat get_group_info."""
+    """Kanal/guruh profil sahifasi."""
     eid = _normalize_entity_id(entity_id)
     if eid is None:
         return HttpResponse("Noto'g'ri entity ID", status=400)
 
-    # Log this visit
     OsintSearchLog.objects.update_or_create(
         query=str(eid),
         query_type="channel",
@@ -358,19 +332,16 @@ def osint_entity_profile(request, entity_id: str):
         },
     )
 
-    # Telethon MTProto profil
     profile = fetch_channel_data(
         operation="channel_profile",
         entity_id=eid,
         user=request.user,
     )
 
-    # Agar entity kanal/guruh emas bo'lsa (PeerUser xatosi) — user profilga redirect
     if profile.error and (
         "PeerUser" in (profile.error or "")
         or "kanal/guruh emas" in (profile.error or "")
     ):
-        # SearchLog ni ham to'g'rilash
         OsintSearchLog.objects.filter(
             query=str(eid),
             query_type="channel",
@@ -380,7 +351,6 @@ def osint_entity_profile(request, entity_id: str):
             reverse("osint_profile", kwargs={"user_id": eid})
         )
 
-    # FunStat group_info (qo'shimcha ma'lumot — 0.01 kredit)
     funstat_info = None
     try:
         funstat_info = fetch_or_cache(
@@ -391,7 +361,7 @@ def osint_entity_profile(request, entity_id: str):
 
     return TemplateResponse(
         request,
-        "botproxy/osint_entity_profile.html",
+        "osint/osint_entity_profile.html",
         _ctx(request, {
             "entity_id": eid,
             "profile": profile,
@@ -470,11 +440,7 @@ def osint_channel_search(request, entity_id: str):
 
 @staff_member_required
 def osint_message_photo(request, entity_id: str, msg_id: int):
-    """Serve photo from a channel/group message.
-
-    Telethon orqali yuklab olinadi, faylga keshlanadi.
-    Browser cache: 24 soat.
-    """
+    """Serve photo from a channel/group message."""
     from telegram.mtproto_service import get_message_photo
 
     eid = _normalize_entity_id(entity_id)
@@ -497,29 +463,7 @@ def osint_message_photo(request, entity_id: str, msg_id: int):
 
 @staff_member_required
 def osint_photo_proxy(request, entity_id: str):
-    """Serve cached Telegram profile photo for any entity (user/group/channel/bot).
-
-    URL: osint/photo/<entity_id>/
-    Query: ?refresh=1 to force re-download from Telegram.
-
-    Strategiya (tez → sekin):
-      1. Django cache — negative cache (TelegramEntity yo'q bo'lgan entitylar uchun)
-      2. DB + disk cache — API chaqiruvsiz (tez)
-      3. photo_service → Bot API + Telethon download (sekin, rate limited)
-      4. Stale cache / photo_url — fallback
-
-    Negative cache muammosi:
-      get_entity_photo() faqat mavjud TelegramEntity ni yangilaydi.
-      common_groups_stat dagi 90+ user uchun TelegramEntity yo'q, shuning uchun
-      har safar Bot API + Telethon sinab ko'rilardi (va muvaffaqiyatsiz tugardi).
-      Django cache orqali 24 soatlik negative cache saqlash bu muammoni hal qiladi.
-
-    Returns:
-      - JPEG with browser caching (1 hour) if cache hit
-      - 302 redirect to photo_url if external URL exists
-      - 404 if no photo available
-      - 503 if Telegram service unavailable and no cache
-    """
+    """Serve cached Telegram profile photo for any entity."""
     from pathlib import Path
 
     from django.core.cache import cache
@@ -527,23 +471,19 @@ def osint_photo_proxy(request, entity_id: str):
     from telegram.models import TelegramEntity
     from telegram.photo_service import _try_stale_cache, get_entity_photo
 
-    # entity_id ni tozalash (path traversal himoya)
     clean_id = str(entity_id).strip().lstrip("-")
     if not clean_id.isdigit():
         return HttpResponse(status=400)
 
     force = request.GET.get("refresh") == "1"
-    # Username — access_hash yo'q bo'lganda Telethon fallback uchun
     username = request.GET.get("u", "").strip().lstrip("@")[:64]
 
-    # ── 1. Negative cache (TelegramEntity yo'q bo'lgan entitylar uchun) ──
-    # get_entity_photo() faqat mavjud TelegramEntity da has_photo=False saqlaydi.
-    # Agar TelegramEntity umuman yo'q bo'lsa, Django cache orqali eslaymiz.
+    # 1. Negative cache
     neg_cache_key = f"osint_photo_neg:{clean_id}"
     if not force and cache.get(neg_cache_key):
         return HttpResponse(status=404)
 
-    # ── 2. Fast path: DB + disk cache (API chaqiruvsiz) ──
+    # 2. Fast path: DB + disk cache
     if not force:
         try:
             entity_obj = TelegramEntity.objects.filter(
@@ -551,11 +491,9 @@ def osint_photo_proxy(request, entity_id: str):
             ).only("photo_file", "photo_url", "has_photo").first()
 
             if entity_obj:
-                # Negative cache — rasm yo'q (DB da saqlangan)
                 if entity_obj.has_photo is False:
                     return HttpResponse(status=404)
 
-                # Disk cache hit
                 if entity_obj.photo_file:
                     abs_path = Path(settings.MEDIA_ROOT) / entity_obj.photo_file
                     if abs_path.exists():
@@ -568,21 +506,18 @@ def osint_photo_proxy(request, entity_id: str):
                                 headers={"Cache-Control": "public, max-age=3600"},
                             )
 
-                # photo_url redirect (Nginx orqali tez)
                 if entity_obj.photo_url:
                     return redirect(entity_obj.photo_url)
         except Exception:
             pass
 
-    # ── 3. Full photo service (Bot API + Telethon — sekinroq) ──
-    # clean_id ishlatamiz — photo_service ichida sanitize qiladi
+    # 3. Full photo service (Bot API + Telethon)
     try:
         photo_bytes, content_type = get_entity_photo(
             clean_id, force_refresh=force, username=username,
         )
     except RuntimeError as e:
         logger.warning("Telegram photo xizmati mavjud emas: %s", e)
-        # 503 da stale cache ni tekshirish
         stale_bytes, stale_ct = _try_stale_cache(clean_id)
         if stale_bytes:
             return HttpResponse(
@@ -599,10 +534,8 @@ def osint_photo_proxy(request, entity_id: str):
             headers={"Cache-Control": "public, max-age=3600"},
         )
 
-    # Rasm topilmadi — negative cache saqlash (24 soat)
-    # Bu faqat TelegramEntity yo'q bo'lgan entitylar uchun kerak —
-    # TelegramEntity bor bo'lsa, get_entity_photo() ichida has_photo=False saqlanadi.
-    cache.set(neg_cache_key, True, 86400)  # 24 soat
+    # Negative cache
+    cache.set(neg_cache_key, True, 86400)
     return HttpResponse(status=404)
 
 
@@ -610,13 +543,11 @@ def osint_photo_proxy(request, entity_id: str):
 
 @staff_member_required
 def osint_balance(request):
-    """AJAX: return last known FunStat balance from cached API responses."""
-    # Try to find balance from the most recent cache entry that has tech data
+    """AJAX: return last known FunStat balance."""
     for entry in OsintCache.objects.exclude(tech={}).order_by("-fetched_at")[:10]:
         if isinstance(entry.tech, dict) and entry.tech.get("current_ballance") is not None:
             return JsonResponse({"balance": entry.tech["current_ballance"]})
 
-    # Try from search log balance_after
     log = OsintSearchLog.objects.filter(
         balance_after__isnull=False,
     ).order_by("-searched_at").first()

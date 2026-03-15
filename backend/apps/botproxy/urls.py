@@ -1,6 +1,6 @@
 from django.urls import path
 
-from botproxy import osint_views, session_views, views
+from botproxy import session_views, views
 
 urlpatterns = [
     # ── Telegram Session Management ─────────────────────────────────────────
@@ -11,19 +11,6 @@ urlpatterns = [
     path("telegram/session/2fa/", session_views.telegram_session_2fa, name="telegram_session_2fa"),
     path("telegram/session/disconnect/", session_views.telegram_session_disconnect, name="telegram_session_disconnect"),
     path("telegram/session/config/", session_views.telegram_session_save_config, name="telegram_session_config"),
-    # ── OSINT ─────────────────────────────────────────────────────────────────
-    path("osint/search/", osint_views.osint_search, name="osint_search"),
-    path("osint/profile/<int:user_id>/", osint_views.osint_profile, name="osint_profile"),
-    path("osint/profile/<int:user_id>/branch/<str:branch>/", osint_views.osint_fetch_branch, name="osint_fetch_branch"),
-    path("osint/text-search/", osint_views.osint_text_search, name="osint_text_search"),
-    path("osint/balance/", osint_views.osint_balance, name="osint_balance"),
-    path("osint/photo/<str:entity_id>/", osint_views.osint_photo_proxy, name="osint_photo"),
-    # Kanal/Guruh OSINT (Telethon MTProto)
-    # str: chunki FunStat manfiy ID qaytarishi mumkin (-1001234567890)
-    path("osint/entity/<str:entity_id>/", osint_views.osint_entity_profile, name="osint_entity_profile"),
-    path("osint/entity/<str:entity_id>/messages/", osint_views.osint_channel_messages, name="osint_channel_messages"),
-    path("osint/entity/<str:entity_id>/search/", osint_views.osint_channel_search, name="osint_channel_search"),
-    path("osint/entity/<str:entity_id>/message/<int:msg_id>/photo/", osint_views.osint_message_photo, name="osint_message_photo"),
     # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),

@@ -1,19 +1,60 @@
-"""HTTP client for the FunStat OSINT API with Bearer JWT authentication."""
+"""HTTP client for the FunStat OSINT API with Bearer JWT authentication.
+
+Connection pooling: thread-safe singleton httpx.Client — TCP handshake overhead yo'q.
+Retry logic: 3 marta urinish, 429/502/503/504 uchun exponential backoff.
+"""
 from __future__ import annotations
 
+import atexit
 import logging
+import threading
+import time
 
 import httpx
 from django.conf import settings
 
+from osint.exceptions import FunStatAPIError
+
 logger = logging.getLogger(__name__)
 
+# ── Connection pool (thread-safe singleton) ──────────────────────────────────
 
-class FunStatAPIError(Exception):
-    def __init__(self, status: int, detail: str):
-        self.status = status
-        self.detail = detail
-        super().__init__(f"FunStat API error {status}: {detail}")
+_shared_client: httpx.Client | None = None
+_client_lock = threading.Lock()
+
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 1.0  # sekund
+RETRYABLE_STATUS_CODES = {429, 502, 503, 504}
+
+
+def _get_shared_client() -> httpx.Client:
+    """Thread-safe singleton httpx.Client with connection pooling."""
+    global _shared_client
+    if _shared_client is None or _shared_client.is_closed:
+        with _client_lock:
+            if _shared_client is None or _shared_client.is_closed:
+                _shared_client = httpx.Client(
+                    timeout=getattr(settings, "FUNSTAT_API_TIMEOUT", 30),
+                    limits=httpx.Limits(
+                        max_connections=10,
+                        max_keepalive_connections=5,
+                        keepalive_expiry=300,
+                    ),
+                    headers={
+                        "Authorization": f"Bearer {settings.FUNSTAT_API_TOKEN}",
+                        "Accept": "application/json",
+                    },
+                )
+    return _shared_client
+
+
+def _cleanup_client():
+    global _shared_client
+    if _shared_client and not _shared_client.is_closed:
+        _shared_client.close()
+
+
+atexit.register(_cleanup_client)
 
 
 class FunStatClient:
@@ -21,41 +62,76 @@ class FunStatClient:
 
     def __init__(self):
         self._base_url = settings.FUNSTAT_API_BASE_URL.rstrip("/")
-        self._token = settings.FUNSTAT_API_TOKEN
-        self._timeout = settings.FUNSTAT_API_TIMEOUT
-
-    def _headers(self) -> dict:
-        return {
-            "Authorization": f"Bearer {self._token}",
-            "Accept": "application/json",
-        }
 
     def _request(self, method: str, path: str, **kwargs) -> dict:
         url = f"{self._base_url}{path}"
-        try:
-            with httpx.Client(timeout=self._timeout) as client:
-                resp = client.request(method, url, headers=self._headers(), **kwargs)
-        except httpx.ConnectError:
-            raise FunStatAPIError(0, "FunStat serveriga ulanib bo'lmadi")
-        except httpx.TimeoutException:
-            raise FunStatAPIError(0, "FunStat API so'rovi vaqti o'tdi")
-        except httpx.HTTPError as e:
-            raise FunStatAPIError(0, f"HTTP xatoligi: {e}")
+        client = _get_shared_client()
+        last_error = None
 
-        if resp.status_code >= 400:
+        for attempt in range(MAX_RETRIES):
             try:
-                detail = resp.json().get("detail", resp.text)
-            except Exception:
-                detail = resp.text
-            raise FunStatAPIError(resp.status_code, detail)
+                resp = client.request(method, url, **kwargs)
+            except httpx.ConnectError as e:
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "FunStat %s %s ulanish xatosi, retry %d/%d (%.1fs)",
+                        method, path, attempt + 1, MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+                    continue
+                raise FunStatAPIError(0, "FunStat serveriga ulanib bo'lmadi")
+            except httpx.TimeoutException as e:
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2 ** attempt)
+                    logger.warning(
+                        "FunStat %s %s timeout, retry %d/%d (%.1fs)",
+                        method, path, attempt + 1, MAX_RETRIES, delay,
+                    )
+                    time.sleep(delay)
+                    continue
+                raise FunStatAPIError(0, "FunStat API so'rovi vaqti o'tdi")
+            except httpx.HTTPError as e:
+                raise FunStatAPIError(0, f"HTTP xatoligi: {e}")
 
-        data = resp.json()
-        if isinstance(data, dict) and data.get("success") is False:
-            raise FunStatAPIError(
-                resp.status_code,
-                data.get("detail", "API xatosi"),
-            )
-        return data
+            # Retryable status codes
+            if resp.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES - 1:
+                delay = RETRY_BASE_DELAY * (2 ** attempt)
+                if resp.status_code == 429:
+                    retry_after = resp.headers.get("Retry-After")
+                    if retry_after:
+                        try:
+                            delay = max(delay, float(retry_after))
+                        except ValueError:
+                            pass
+                logger.warning(
+                    "FunStat %s %s → %d, retry %d/%d (%.1fs)",
+                    method, path, resp.status_code, attempt + 1, MAX_RETRIES, delay,
+                )
+                time.sleep(delay)
+                continue
+
+            # Non-retryable error
+            if resp.status_code >= 400:
+                try:
+                    detail = resp.json().get("detail", resp.text)
+                except Exception:
+                    detail = resp.text
+                raise FunStatAPIError(resp.status_code, detail)
+
+            # Success
+            data = resp.json()
+            if isinstance(data, dict) and data.get("success") is False:
+                raise FunStatAPIError(
+                    resp.status_code,
+                    data.get("detail", "API xatosi"),
+                )
+            return data
+
+        # All retries exhausted
+        raise FunStatAPIError(0, f"Barcha urinishlar tugadi: {last_error}")
 
     # ─── Free endpoints ───────────────────────────────────────────────────────
 
@@ -111,8 +187,12 @@ class FunStatClient:
         return self._request("GET", f"/api/v1/users/{user_id}/common_groups_stat")
 
     def get_user_messages(
-        self, user_id: int, page: int = 1, page_size: int = 25,
-        group_id: int | None = None, text_contains: str | None = None,
+        self,
+        user_id: int,
+        page: int = 1,
+        page_size: int = 25,
+        group_id: int | None = None,
+        text_contains: str | None = None,
     ) -> dict:
         """User messages (cost: 10, paginated)."""
         params = f"?page={page}&pageSize={page_size}"
@@ -144,6 +224,7 @@ class FunStatClient:
     def text_search(self, query: str, page: int = 1, page_size: int = 25) -> dict:
         """Search who/when/where wrote text (cost: 0.1, paginated)."""
         from urllib.parse import quote
+
         return self._request(
             "GET",
             f"/api/v1/text/search?input={quote(query)}&page={page}&pageSize={page_size}",

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'interactions',
     'telegram',
     'botproxy',
+    'osint',
 ]
 
 MIDDLEWARE = [

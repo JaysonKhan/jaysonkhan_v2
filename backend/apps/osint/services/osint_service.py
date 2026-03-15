@@ -12,8 +12,9 @@ from typing import Any
 
 from django.utils import timezone
 
-from botproxy.funstat_client import FunStatClient, FunStatAPIError
-from botproxy.models import OsintCache, OsintSearchLog
+from osint.exceptions import FunStatAPIError
+from osint.models import OsintCache, OsintSearchLog
+from osint.services.funstat_client import FunStatClient
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OsintResult:
     """Wrapper for cached or fresh OSINT data."""
+
     data: Any = None
     tech: dict = field(default_factory=dict)
     cached: bool = False
@@ -30,25 +32,25 @@ class OsintResult:
 
 # endpoint_type → (client_method_name, cost_label, paginated?)
 ENDPOINT_REGISTRY: dict[str, tuple[str, str, bool]] = {
-    "stats_min":          ("get_user_stats_min",      "Bepul",     False),
-    "groups_count":       ("get_user_groups_count",    "Bepul",     False),
-    "messages_count":     ("get_user_messages_count",  "Bepul",     False),
-    "stats_full":         ("get_user_stats_full",      "1 kredit",  False),
-    "groups":             ("get_user_groups",          "5 kredit",  False),
-    "names":              ("get_user_names",           "3 kredit",  False),
-    "usernames":          ("get_user_usernames",       "3 kredit",  False),
-    "stickers":           ("get_user_stickers",        "1 kredit",  False),
-    "gifts":              ("get_user_gifts",           "5 kredit",  True),
-    "common_groups_stat": ("get_user_common_groups",   "5 kredit",  False),
-    "messages":           ("get_user_messages",        "10 kredit", True),
+    "stats_min":          ("get_user_stats_min",      "Bepul",       False),
+    "groups_count":       ("get_user_groups_count",    "Bepul",       False),
+    "messages_count":     ("get_user_messages_count",  "Bepul",       False),
+    "stats_full":         ("get_user_stats_full",      "1 kredit",    False),
+    "groups":             ("get_user_groups",          "5 kredit",    False),
+    "names":              ("get_user_names",           "3 kredit",    False),
+    "usernames":          ("get_user_usernames",       "3 kredit",    False),
+    "stickers":           ("get_user_stickers",        "1 kredit",    False),
+    "gifts":              ("get_user_gifts",           "5 kredit",    True),
+    "common_groups_stat": ("get_user_common_groups",   "5 kredit",    False),
+    "messages":           ("get_user_messages",        "10 kredit",   True),
     "group_info":         ("get_group_info",           "0.01 kredit", False),
 }
 
 # Telethon operatsiyalari uchun TTL (soatlarda)
 CHANNEL_CACHE_TTL = {
-    "channel_profile": 24,   # Profil — 24 soat
-    "channel_messages": 1,   # Xabarlar — 1 soat
-    "channel_search": 0.5,   # Qidirish — 30 daqiqa
+    "channel_profile": 24,    # Profil — 24 soat
+    "channel_messages": 1,    # Xabarlar — 1 soat
+    "channel_search": 0.5,    # Qidirish — 30 daqiqa
 }
 
 
@@ -129,28 +131,15 @@ def fetch_channel_data(
     limit: int = 20,
     user=None,
 ) -> OsintResult:
-    """Telethon MTProto operatsiyalari uchun cache-aware data fetching.
-
-    Operations:
-        channel_profile — kanal/guruh profili (TTL: 24 soat)
-        channel_messages — xabarlar ro'yxati (TTL: 1 soat)
-        channel_search — xabar qidirish (TTL: 30 daqiqa)
-
-    Cache key: (endpoint_type, target_id, page=1)
-    Search uchun target_id = "entity_id:query" (offset_id har xil bo'lgani uchun page=1)
-    """
+    """Telethon MTProto operatsiyalari uchun cache-aware data fetching."""
     entity_str = str(entity_id)
     ttl_hours = CHANNEL_CACHE_TTL.get(operation, 24)
 
-    # Cache key — search uchun query ni ham qo'shish
+    # Cache key
     if operation == "channel_search":
         cache_target = f"{entity_str}:{query}"
     else:
         cache_target = entity_str
-
-    # Offset/pagination uchun page sifatida offset_id ishlatamiz
-    # (0 = birinchi sahifa, keyingilar uchun offset_id)
-    cache_page = max(1, offset_id)
 
     # 1. Try cache (faqat birinchi sahifa uchun va force emas bo'lsa)
     if not force_refresh and offset_id == 0:
@@ -213,12 +202,10 @@ def fetch_channel_data(
 
 
 def _detect_entity_type(entity_id: int) -> str | None:
-    """DB dan entity turini aniqlash (API chaqiruvsiz).
-
-    Returns: 'user', 'bot', 'group', 'supergroup', 'channel', or None.
-    """
+    """DB dan entity turini aniqlash (API chaqiruvsiz)."""
     try:
         from telegram.models import TelegramEntity
+
         entity = TelegramEntity.objects.filter(
             telegram_id=entity_id,
         ).only("entity_type").first()
@@ -230,17 +217,12 @@ def _detect_entity_type(entity_id: int) -> str | None:
 
 
 def _resolve_via_telethon(username: str) -> dict | None:
-    """Telethon orqali username ni resolve qilish (FunStat fallback).
-
-    Returns dict: {id, entity_type, title/first_name, username} or None.
-    Rate limited — faqat FunStat topolmaganda ishlatiladi.
-    """
+    """Telethon orqali username ni resolve qilish (FunStat fallback)."""
     try:
         from telegram.telegram_client import (
             get_rate_limiter,
             get_telegram_client,
             run_async,
-            _handle_telethon_error,
         )
 
         limiter = get_rate_limiter()
@@ -252,6 +234,7 @@ def _resolve_via_telethon(username: str) -> dict | None:
 
         async def _resolve():
             from telethon.tl.types import Channel, Chat, User
+
             entity = await client.get_entity(username)
             if isinstance(entity, Channel):
                 return {
@@ -279,8 +262,7 @@ def _resolve_via_telethon(username: str) -> dict | None:
 
         result = run_async(_resolve())
 
-        # DB ga saqlash — FAQAT kanal/guruh uchun (PeerChannel/PeerChat hints uchun kerak).
-        # User/bot entitylarini saqlaMAYMIZ — ular faqat saytga login qilganda yaratiladi.
+        # DB ga saqlash — FAQAT kanal/guruh uchun
         if result and result["entity_type"] in ("channel", "supergroup", "group"):
             from telegram.models import EntitySource, TelegramEntity
 
@@ -309,12 +291,7 @@ def _resolve_via_telethon(username: str) -> dict | None:
 
 
 def resolve_and_search(query: str, user=None) -> dict:
-    """Resolve query to a Telegram entity (user, channel, group).
-
-    - Numeric → direct entity ID (free) + entity_type from DB
-    - @username → FunStat resolve → Telethon fallback
-    - Returns entity_type for routing (user/bot → profile, channel/group → entity_profile)
-    """
+    """Resolve query to a Telegram entity (user, channel, group)."""
     query = query.strip()
 
     if query.isdigit():
@@ -348,7 +325,6 @@ def resolve_and_search(query: str, user=None) -> dict:
     try:
         resp = client.resolve_username(username)
 
-        # Response might be {"data": [...], "tech": {...}} or direct data
         if isinstance(resp, dict) and "data" in resp:
             tech = resp.get("tech", {})
             data = resp["data"]
@@ -362,7 +338,6 @@ def resolve_and_search(query: str, user=None) -> dict:
             tech = {}
             data = []
 
-        # data could be a list of resolved_user or a single object
         resolved_id = None
         if isinstance(data, list) and data:
             resolved_id = data[0].get("id") if isinstance(data[0], dict) else None
@@ -395,7 +370,7 @@ def resolve_and_search(query: str, user=None) -> dict:
     except Exception as e:
         logger.warning("FunStat resolve xatolik (@%s): %s", username, e)
 
-    # 2. Telethon fallback — FunStat topolmagan entitylarni Telethon bilan resolve
+    # 2. Telethon fallback
     telethon_result = _resolve_via_telethon(username)
     if telethon_result:
         resolved_id = telethon_result["id"]

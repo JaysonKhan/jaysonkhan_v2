@@ -27,6 +27,7 @@ sitemaps = {
 
 urlpatterns = [
     path(ADMIN_URL + 'bot/', include('botproxy.urls')),
+    path(ADMIN_URL + 'osint/', include('osint.urls')),
     path(ADMIN_URL, admin.site.urls),
     path('api/admin/media-upload/', upload_media_view, name='admin_media_upload'),
 

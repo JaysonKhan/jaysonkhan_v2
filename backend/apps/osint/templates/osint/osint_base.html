@@ -1,0 +1,244 @@
+{% extends "admin/base_site.html" %}
+{% block title %}{% block page_title %}{% block osint_title %}OSINT{% endblock %} — FunStat{% endblock %} | {{ block.super }}{% endblock %}
+{% block content %}
+<style>
+    /* ── CSS Variables (Light / Dark) ────────────────────────────────────── */
+    .rb {
+        --rb-bg: #ffffff;
+        --rb-bg-elevated: #ffffff;
+        --rb-bg-muted: #f1f3f5;
+        --rb-fg: #1a1a1a;
+        --rb-fg-muted: #6b7280;
+        --rb-border: #e5e7eb;
+        --rb-border-light: #f0f0f0;
+        --rb-primary: #7c3aed;
+        --rb-primary-muted: rgba(124,58,237,0.1);
+        --rb-shadow: rgba(0,0,0,0.04);
+    }
+    html.dark .rb {
+        --rb-bg: #111827;
+        --rb-bg-elevated: #1f2937;
+        --rb-bg-muted: #1f2937;
+        --rb-fg: #f3f4f6;
+        --rb-fg-muted: #9ca3af;
+        --rb-border: #374151;
+        --rb-border-light: #1f2937;
+        --rb-primary: #a78bfa;
+        --rb-primary-muted: rgba(167,139,250,0.15);
+        --rb-shadow: rgba(0,0,0,0.2);
+    }
+
+    /* ── Reset & Base ─────────────────────────────────────────────────────── */
+    .rb { max-width: 1280px; margin: 0 auto; padding: 1.5rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--rb-fg); }
+
+    /* ── Navigation Tabs ──────────────────────────────────────────────────── */
+    .rb-nav { display: flex; gap: 0.25rem; margin-bottom: 2rem; background: var(--rb-bg-muted); border-radius: 12px; padding: 0.375rem; overflow-x: auto; }
+    .rb-nav a {
+        padding: 0.625rem 1.125rem; border-radius: 8px; text-decoration: none; font-size: 0.8125rem;
+        font-weight: 500; color: var(--rb-fg-muted); white-space: nowrap;
+        transition: all 0.15s ease; display: flex; align-items: center; gap: 0.375rem;
+    }
+    .rb-nav a:hover { background: var(--rb-bg-elevated); color: var(--rb-fg); }
+    .rb-nav a.active { background: var(--rb-bg-elevated); color: var(--rb-primary); font-weight: 600; box-shadow: 0 1px 3px var(--rb-shadow); }
+    html.dark .rb-nav a.active { box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    .rb-nav .material-symbols-outlined { font-size: 18px; }
+
+    /* ── Cards ────────────────────────────────────────────────────────────── */
+    .rb-card {
+        background: var(--rb-bg-elevated); border: 1px solid var(--rb-border);
+        border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem;
+        box-shadow: 0 1px 2px var(--rb-shadow);
+    }
+    .rb-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .rb-card-header h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--rb-fg); }
+
+    /* ── Stats Grid ──────────────────────────────────────────────────────── */
+    .rb-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .rb-stat {
+        background: var(--rb-bg-elevated); border: 1px solid var(--rb-border);
+        border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden;
+        box-shadow: 0 1px 2px var(--rb-shadow);
+    }
+    .rb-stat::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--rb-primary); border-radius: 12px 12px 0 0;
+    }
+    .rb-stat .value { font-size: 1.75rem; font-weight: 700; color: var(--rb-fg); line-height: 1.2; }
+    .rb-stat .label { color: var(--rb-fg-muted); font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.375rem; }
+    .rb-stat.accent-green::before { background: #22c55e; }
+    .rb-stat.accent-red::before { background: #ef4444; }
+    .rb-stat.accent-blue::before { background: #3b82f6; }
+    .rb-stat.accent-amber::before { background: #f59e0b; }
+
+    /* ── Tables ───────────────────────────────────────────────────────────── */
+    .rb-table-wrap { overflow-x: auto; margin: -0.25rem; padding: 0.25rem; }
+    .rb-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .rb-table th {
+        padding: 0.625rem 1rem; text-align: left; font-size: 0.6875rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.06em; color: var(--rb-fg-muted);
+        border-bottom: 2px solid var(--rb-border); background: transparent;
+    }
+    .rb-table td {
+        padding: 0.75rem 1rem; border-bottom: 1px solid var(--rb-border-light);
+        font-size: 0.875rem; color: var(--rb-fg); vertical-align: middle;
+    }
+    .rb-table tbody tr { transition: background 0.1s ease; }
+    .rb-table tbody tr:hover { background: var(--rb-bg-muted); }
+    .rb-table tbody tr:last-child td { border-bottom: none; }
+    .rb-table a { color: var(--rb-primary); text-decoration: none; font-weight: 500; }
+    .rb-table a:hover { text-decoration: underline; }
+
+    /* ── Buttons ──────────────────────────────────────────────────────────── */
+    .rb-btn {
+        display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none;
+        font-size: 0.8125rem; font-weight: 500; cursor: pointer; border: none;
+        transition: all 0.15s ease; line-height: 1.4;
+    }
+    .rb-btn-primary { background: var(--rb-primary); color: #fff; }
+    .rb-btn-primary:hover { opacity: 0.9; color: #fff; box-shadow: 0 2px 8px rgba(124,58,237,0.3); }
+    .rb-btn-outline { border: 1px solid var(--rb-border); background: var(--rb-bg-elevated); color: var(--rb-fg); }
+    .rb-btn-outline:hover { background: var(--rb-bg-muted); border-color: var(--rb-fg-muted); }
+    .rb-btn-ghost { background: transparent; color: var(--rb-fg-muted); padding: 0.375rem 0.75rem; }
+    .rb-btn-ghost:hover { background: var(--rb-bg-muted); color: var(--rb-fg); }
+    .rb-btn-sm { padding: 0.3125rem 0.75rem; font-size: 0.75rem; border-radius: 6px; }
+    .rb-btn .material-symbols-outlined { font-size: 16px; }
+
+    /* ── Badges ───────────────────────────────────────────────────────────── */
+    .rb-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1875rem 0.625rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em; }
+    .rb-badge-open { background: #dcfce7; color: #166534; }
+    .rb-badge-closed { background: #fef2f2; color: #991b1b; }
+    .rb-badge-info { background: #dbeafe; color: #1e40af; }
+    html.dark .rb-badge-open { background: rgba(34,197,94,0.15); color: #4ade80; }
+    html.dark .rb-badge-closed { background: rgba(239,68,68,0.15); color: #f87171; }
+    html.dark .rb-badge-info { background: rgba(59,130,246,0.15); color: #93c5fd; }
+
+    /* ── Forms ────────────────────────────────────────────────────────────── */
+    .rb-form-group { margin-bottom: 1.25rem; }
+    .rb-form-group label { display: block; font-weight: 600; margin-bottom: 0.375rem; font-size: 0.8125rem; color: var(--rb-fg); }
+    .rb-form-group input, .rb-form-group textarea, .rb-form-group select {
+        width: 100%; padding: 0.5625rem 0.875rem; border: 1px solid var(--rb-border);
+        border-radius: 8px; font-size: 0.875rem; background: var(--rb-bg); color: var(--rb-fg);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .rb-form-group input:focus, .rb-form-group textarea:focus, .rb-form-group select:focus {
+        outline: none; border-color: var(--rb-primary);
+        box-shadow: 0 0 0 3px var(--rb-primary-muted);
+    }
+
+    /* ── Utility ──────────────────────────────────────────────────────────── */
+    .rb-code { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 0.8125rem; background: var(--rb-bg-muted); padding: 0.125rem 0.5rem; border-radius: 4px; color: var(--rb-fg); }
+    .rb-muted { color: var(--rb-fg-muted); }
+    .rb-empty { text-align: center; padding: 3rem 1rem; color: var(--rb-fg-muted); }
+    .rb-empty .material-symbols-outlined { font-size: 48px; margin-bottom: 0.75rem; opacity: 0.4; display: block; }
+    .rb-empty p { font-size: 0.875rem; margin: 0; }
+    .rb .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; vertical-align: middle; }
+    .rb-divider { border: none; border-top: 1px solid var(--rb-border); margin: 1.25rem 0; }
+
+    /* ── OSINT-specific styles ─────────────────────────────────────────────── */
+    .rb-osint-balance {
+        margin-left: auto; display: flex; align-items: center; gap: 0.375rem;
+        font-size: 0.75rem; font-weight: 600; color: var(--rb-fg-muted);
+        padding: 0.375rem 0.75rem; background: var(--rb-bg-elevated);
+        border-radius: 8px; border: 1px solid var(--rb-border);
+    }
+    .rb-osint-balance .amount { color: var(--rb-primary); font-size: 0.875rem; }
+
+    .rb-cache-badge {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem;
+        font-weight: 600; letter-spacing: 0.02em;
+    }
+    .rb-cache-badge.fresh { background: #dcfce7; color: #166534; }
+    .rb-cache-badge.stale { background: #fef3c7; color: #92400e; }
+    html.dark .rb-cache-badge.fresh { background: rgba(34,197,94,0.15); color: #4ade80; }
+    html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+    .rb-cost-tag {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.625rem;
+        font-weight: 600; background: var(--rb-primary-muted); color: var(--rb-primary);
+    }
+    .rb-cost-tag.free { background: #dcfce7; color: #166534; }
+    html.dark .rb-cost-tag.free { background: rgba(34,197,94,0.15); color: #4ade80; }
+
+    /* ── Tree ──────────────────────────────────────────────────────────────── */
+    .rb-tree { list-style: none; padding: 0; margin: 0; }
+    .rb-tree-node {
+        border: 1px solid var(--rb-border); border-radius: 12px;
+        margin-bottom: 0.75rem; overflow: hidden;
+        background: var(--rb-bg-elevated);
+    }
+    .rb-tree-header {
+        display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem;
+        cursor: pointer; transition: background 0.15s ease; user-select: none;
+    }
+    .rb-tree-header:hover { background: var(--rb-bg-muted); }
+    .rb-tree-header .material-symbols-outlined.chevron {
+        font-size: 20px; transition: transform 0.2s ease; color: var(--rb-fg-muted);
+    }
+    .rb-tree-node.open .rb-tree-header .chevron { transform: rotate(90deg); }
+    .rb-tree-label { flex: 1; font-weight: 600; font-size: 0.875rem; }
+    .rb-tree-body {
+        display: none; padding: 0 1.25rem 1.25rem;
+        border-top: 1px solid var(--rb-border);
+    }
+    .rb-tree-node.open .rb-tree-body { display: block; }
+    .rb-tree-body .loading {
+        text-align: center; padding: 2rem; color: var(--rb-fg-muted); font-size: 0.8125rem;
+    }
+
+    /* ── Error/info boxes ──────────────────────────────────────────────────── */
+    .rb-error-box {
+        padding: 0.75rem 1rem; background: #fef2f2; border-radius: 8px;
+        color: #991b1b; font-size: 0.8125rem;
+    }
+    html.dark .rb-error-box { background: rgba(239,68,68,0.1); color: #fca5a5; }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
+</style>
+
+<div class="rb">
+    <nav class="rb-nav">
+        <a href="{% url 'osint_search' %}"
+           class="{% if request.resolver_match.url_name == 'osint_search' %}active{% endif %}">
+            <span class="material-symbols-outlined">search</span> Qidiruv
+        </a>
+        {% if user_id %}
+        <a href="{% url 'osint_profile' user_id=user_id %}"
+           class="{% if request.resolver_match.url_name == 'osint_profile' %}active{% endif %}">
+            <span class="material-symbols-outlined">person_search</span> Profil #{{ user_id }}
+        </a>
+        {% endif %}
+        {% if entity_id %}
+        <a href="{% url 'osint_entity_profile' entity_id=entity_id %}"
+           class="{% if 'entity' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="material-symbols-outlined">groups</span> Entity #{{ entity_id }}
+        </a>
+        {% endif %}
+        <a href="{% url 'telegram_session' %}"
+           class="{% if request.resolver_match.url_name == 'telegram_session' %}active{% endif %}">
+            <span class="material-symbols-outlined">key</span> Session
+        </a>
+        <div class="rb-osint-balance" id="balance-display">
+            <span class="material-symbols-outlined" style="font-size:16px;">account_balance_wallet</span>
+            Balans: <span class="amount" id="balance-amount">...</span>
+        </div>
+    </nav>
+
+    {% block osint_content %}{% endblock %}
+</div>
+
+<script>
+fetch("{% url 'osint_balance' %}")
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('balance-amount').textContent =
+            d.balance != null ? parseFloat(d.balance).toFixed(2) : '?';
+    })
+    .catch(() => {
+        document.getElementById('balance-amount').textContent = 'xato';
+    });
+</script>
+{% endblock %}
