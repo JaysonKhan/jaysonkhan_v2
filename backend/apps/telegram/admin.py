@@ -32,7 +32,7 @@ class TelegramEntityAdmin(ModelAdmin):
         "telegram_id", "entity_type",
         "first_name", "last_name", "username", "title",
         "phone", "bio",
-        "photo_url", "photo_file", "photo_fetched_at", "has_photo",
+        "photo_preview", "photo_url", "photo_file", "photo_fetched_at", "has_photo",
         "auth_date",
         "is_verified", "is_premium", "is_scam", "is_fake",
         "created_at", "updated_at",
@@ -48,7 +48,7 @@ class TelegramEntityAdmin(ModelAdmin):
             ),
         }),
         ("Photo", {
-            "fields": ("photo_url", "photo_file", "photo_fetched_at", "has_photo"),
+            "fields": ("photo_preview", "photo_url", "photo_file", "photo_fetched_at", "has_photo"),
         }),
         ("Metadata", {
             "fields": ("auth_date", "is_verified", "is_premium", "is_scam", "is_fake"),
@@ -57,6 +57,34 @@ class TelegramEntityAdmin(ModelAdmin):
             "fields": ("created_at", "updated_at"),
         }),
     ]
+
+    @admin.display(description="Photo")
+    def photo_preview(self, obj):
+        """Show avatar photo from photo_url or OSINT photo proxy."""
+        # Priority: OSINT cached photo → photo_url from Telegram Login Widget
+        if obj.has_photo and obj.photo_file:
+            try:
+                url = reverse("osint_photo", kwargs={"entity_id": str(obj.telegram_id)})
+                return format_html(
+                    '<img src="{}" style="width:80px;height:80px;border-radius:50%;'
+                    'border:2px solid rgba(255,255,255,0.15);object-fit:cover;">',
+                    url,
+                )
+            except Exception:
+                pass
+        if obj.photo_url:
+            return format_html(
+                '<img src="{}" style="width:80px;height:80px;border-radius:50%;'
+                'border:2px solid rgba(255,255,255,0.15);object-fit:cover;">',
+                obj.photo_url,
+            )
+        return format_html(
+            '<div style="width:80px;height:80px;border-radius:50%;'
+            'background:rgba(255,255,255,0.08);display:flex;align-items:center;'
+            'justify-content:center;font-size:28px;font-weight:700;color:rgba(255,255,255,0.4);">'
+            '{}</div>',
+            (obj.first_name or "?")[:1].upper(),
+        )
 
     @admin.display(description="User")
     def user_card(self, obj):

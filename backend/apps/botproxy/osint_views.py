@@ -81,6 +81,17 @@ def osint_search(request):
 @staff_member_required
 def osint_profile(request, user_id: int):
     """User profile page with lazy-loading tree."""
+    # Log this visit so it appears in "So'nggi qidiruvlar"
+    OsintSearchLog.objects.update_or_create(
+        query=str(user_id),
+        query_type="id",
+        searched_by=request.user,
+        defaults={
+            "resolved_id": user_id,
+            "searched_at": timezone.now(),
+        },
+    )
+
     basic = fetch_or_cache("stats_min", user_id, user=request.user)
 
     # Check which branches have cached data
