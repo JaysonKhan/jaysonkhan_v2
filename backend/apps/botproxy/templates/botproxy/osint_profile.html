@@ -47,23 +47,23 @@
     <!-- Quick stats from stats_min -->
     <div class="rb-stats" style="margin-bottom:0;">
         <div class="rb-stat accent-blue" style="padding:0.75rem;">
-            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_msg_count|default:"?" }}</div>
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_msg_count|default_if_none:"?" }}</div>
             <div class="label">Jami xabarlar</div>
         </div>
         <div class="rb-stat accent-green" style="padding:0.75rem;">
-            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_groups|default:"?" }}</div>
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.total_groups|default_if_none:"?" }}</div>
             <div class="label">Guruhlar</div>
         </div>
         <div class="rb-stat accent-amber" style="padding:0.75rem;">
-            <div class="value" style="font-size:1.25rem;">{{ basic.data.usernames_count|default:"?" }}</div>
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.usernames_count|default_if_none:"?" }}</div>
             <div class="label">Usernamelar</div>
         </div>
         <div class="rb-stat accent-red" style="padding:0.75rem;">
-            <div class="value" style="font-size:1.25rem;">{{ basic.data.names_count|default:"?" }}</div>
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.names_count|default_if_none:"?" }}</div>
             <div class="label">Ism o'zgarishlar</div>
         </div>
         <div class="rb-stat" style="padding:0.75rem;">
-            <div class="value" style="font-size:1.25rem;">{{ basic.data.adm_in_groups|default:"0" }}</div>
+            <div class="value" style="font-size:1.25rem;">{{ basic.data.adm_in_groups|default_if_none:"0" }}</div>
             <div class="label">Admin bo'lgan</div>
         </div>
     </div>
