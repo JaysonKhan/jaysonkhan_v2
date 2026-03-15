@@ -1,4 +1,5 @@
 {% extends "osint/osint_base.html" %}
+{% load static %}
 {% block osint_title %}Qidiruv{% endblock %}
 
 {% block osint_content %}
@@ -53,75 +54,6 @@
 
 <!-- Recent Searches -->
 {% if recent_searches %}
-<style>
-.recent-list { display:flex; flex-direction:column; gap:0; }
-.recent-row {
-    display:flex; align-items:center; gap:0.75rem;
-    padding:0.6rem 0.85rem;
-    border-bottom:1px solid var(--rb-border);
-    transition: background 0.15s;
-    text-decoration:none; color:inherit;
-}
-.recent-row:last-child { border-bottom:none; }
-.recent-row:hover { background:var(--rb-bg-muted); }
-
-.recent-photo {
-    width:36px; height:36px; border-radius:50%;
-    object-fit:cover; flex-shrink:0;
-    background:var(--rb-bg-muted); border:1.5px solid var(--rb-border);
-}
-.recent-photo-fallback {
-    width:36px; height:36px; border-radius:50%;
-    background:var(--rb-primary-muted); color:var(--rb-primary);
-    display:flex; align-items:center; justify-content:center;
-    font-size:14px; font-weight:600; flex-shrink:0;
-    text-transform:uppercase; border:1.5px solid var(--rb-border);
-}
-.recent-photo-fallback.channel { background:rgba(8,145,178,0.12); color:#06b6d4; }
-html.dark .recent-photo-fallback.channel { background:rgba(6,182,212,0.15); color:#22d3ee; }
-.recent-photo-fallback.text-search { background:var(--rb-bg-muted); color:var(--rb-fg-muted); }
-
-.recent-info { flex:1; min-width:0; }
-.recent-name {
-    font-weight:600; font-size:0.88rem;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    color:var(--rb-fg);
-}
-.recent-id {
-    font-size:0.75rem; color:var(--rb-fg-muted);
-    font-family:var(--rb-mono, monospace);
-}
-
-.recent-meta {
-    display:flex; align-items:center; gap:0.6rem;
-    flex-shrink:0;
-}
-.recent-type {
-    display:inline-block;
-    font-size:0.68rem; font-weight:500;
-    padding:2px 8px; border-radius:10px;
-    white-space:nowrap;
-}
-.recent-type.id { background:#dbeafe; color:#1d4ed8; }
-.recent-type.username { background:#e0e7ff; color:#4338ca; }
-.recent-type.channel { background:#ccfbf1; color:#0f766e; }
-.recent-type.text { background:#f3e8ff; color:#7c3aed; }
-html.dark .recent-type.id { background:rgba(59,130,246,0.15); color:#93c5fd; }
-html.dark .recent-type.username { background:rgba(99,102,241,0.15); color:#a5b4fc; }
-html.dark .recent-type.channel { background:rgba(20,184,166,0.15); color:#5eead4; }
-html.dark .recent-type.text { background:rgba(168,85,247,0.15); color:#c4b5fd; }
-
-.recent-date {
-    font-size:0.75rem; color:var(--rb-fg-muted);
-    white-space:nowrap;
-}
-.recent-cost {
-    font-size:0.75rem; color:var(--rb-fg-muted);
-    min-width:3rem; text-align:right;
-    white-space:nowrap;
-}
-</style>
-
 <div class="rb-card">
     <div class="rb-card-header">
         <h2>So'nggi qidiruvlar</h2>
@@ -186,59 +118,9 @@ html.dark .recent-type.text { background:rgba(168,85,247,0.15); color:#c4b5fd; }
 {% endif %}
 
 <script>
-document.getElementById('text-search-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    var q = document.getElementById('text-q').value.trim();
-    if (!q) return;
-    var container = document.getElementById('text-results');
-    container.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin">autorenew</span> Qidirilmoqda...</div>';
-
-    fetch("{% url 'osint_text_search' %}?q=" + encodeURIComponent(q))
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.error) {
-                var errDiv = document.createElement('div');
-                errDiv.className = 'rb-error-box';
-                errDiv.textContent = d.error;
-                container.innerHTML = '';
-                container.appendChild(errDiv);
-                return;
-            }
-            var items = d.data;
-            if (items && items.data) items = items.data;
-            if (!items || (Array.isArray(items) && items.length === 0)) {
-                container.innerHTML = '<div class="rb-muted" style="padding:1rem;">Natijalar topilmadi</div>';
-                return;
-            }
-            if (!Array.isArray(items)) items = [items];
-
-            var html = '<div class="rb-table-wrap"><table class="rb-table"><thead><tr><th>Matn</th><th>User</th><th>Guruh</th><th>Sana</th></tr></thead><tbody>';
-            items.forEach(function(item) {
-                var userId = item.user_id || '';
-                var text = item.text || '-';
-                if (text.length > 120) text = text.substring(0, 120) + '...';
-                var groupTitle = '';
-                if (item.group) groupTitle = item.group.title || '';
-                html += '<tr>' +
-                    '<td style="max-width:300px;word-break:break-word;">' + text + '</td>' +
-                    '<td><a href="' + ("{% url 'osint_profile' user_id=99999 %}".replace('99999', userId)) + '">' +
-                    (item.name || item.username || userId || '-') + '</a></td>' +
-                    '<td class="rb-muted">' + groupTitle + '</td>' +
-                    '<td class="rb-muted" style="white-space:nowrap;">' + (item.date || '-') + '</td>' +
-                    '</tr>';
-            });
-            html += '</tbody></table></div>';
-
-            if (d.tech) {
-                html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">' +
-                    'Narxi: ' + (d.tech.request_cost || 0) + ' | Balans: ' + (d.tech.current_ballance || '?') +
-                    '</div>';
-            }
-            container.innerHTML = html;
-        })
-        .catch(function() {
-            container.innerHTML = '<div class="rb-error-box">Xatolik yuz berdi</div>';
-        });
-});
+var TEXT_SEARCH_URL = "{% url 'osint_text_search' %}";
+var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
 </script>
+<script src="{% static 'osint/js/osint-core.js' %}"></script>
+<script src="{% static 'osint/js/osint-search.js' %}"></script>
 {% endblock %}
