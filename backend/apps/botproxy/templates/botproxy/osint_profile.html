@@ -127,6 +127,7 @@ var BRANCH_URLS = {};
 {% for node in tree %}
 BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_id branch=node.id %}";
 {% endfor %}
+var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
 
 function toggleBranch(header) {
     var node = header.closest('.rb-tree-node');
@@ -210,60 +211,154 @@ function renderBranchData(branch, response) {
 
     // Object → key-value table
     if (typeof data === 'object' && !Array.isArray(data)) {
-        html += '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
-        var keys = Object.keys(data);
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];
-            var val = data[key];
-            var display;
-            if (val === null || val === undefined) {
-                display = '<span class="rb-muted">—</span>';
-            } else if (typeof val === 'object') {
-                display = '<pre style="margin:0;font-size:0.75rem;white-space:pre-wrap;max-width:500px;overflow-x:auto;">' +
-                    JSON.stringify(val, null, 2) + '</pre>';
-            } else if (typeof val === 'boolean') {
-                display = val ? '<span class="rb-badge rb-badge-open">Ha</span>' : '<span class="rb-badge rb-badge-closed">Yo\'q</span>';
-            } else {
-                display = String(val);
-            }
-            html += '<tr><td class="rb-muted" style="width:220px;font-weight:600;">' + formatKey(key) + '</td><td>' + display + '</td></tr>';
-        }
-        html += '</tbody></table></div>';
+        html += renderKeyValueTable(data);
     }
 
-    // Array → auto-table
+    // Array → smart table
     if (Array.isArray(data) && data.length > 0) {
-        var cols = Object.keys(data[0]);
-        html += '<div class="rb-table-wrap"><table class="rb-table"><thead><tr>';
-        for (var c = 0; c < cols.length; c++) {
-            html += '<th>' + formatKey(cols[c]) + '</th>';
-        }
-        html += '</tr></thead><tbody>';
-        var limit = Math.min(data.length, 100);
-        for (var r = 0; r < limit; r++) {
-            html += '<tr>';
-            for (var c2 = 0; c2 < cols.length; c2++) {
-                var v = data[r][cols[c2]];
-                var cell;
-                if (v === null || v === undefined) cell = '<span class="rb-muted">—</span>';
-                else if (typeof v === 'boolean') cell = v ? 'Ha' : 'Yo\'q';
-                else if (typeof v === 'object') cell = JSON.stringify(v);
-                else cell = String(v);
-                html += '<td style="max-width:250px; overflow:hidden; text-overflow:ellipsis;">' + cell + '</td>';
-            }
-            html += '</tr>';
-        }
-        html += '</tbody></table></div>';
-        if (data.length > 100) {
-            html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
-        }
+        html += renderArrayTable(data, branch);
     }
 
     return html;
 }
 
+/* ── Smart cell renderer ─────────────────────────────────────────── */
+
+function renderCellValue(val, key) {
+    if (val === null || val === undefined) return '<span class="rb-muted">—</span>';
+    if (typeof val === 'boolean') {
+        return val ? '<span class="rb-badge rb-badge-open">Ha</span>' : '<span class="rb-badge rb-badge-closed">Yo\'q</span>';
+    }
+    // Nested object with title (group/chat) → show as Telegram link
+    if (typeof val === 'object' && !Array.isArray(val)) {
+        if (val.title) {
+            var link = val.username ? 'https://t.me/' + val.username : null;
+            var icon = val.isPrivate ? 'lock' : 'group';
+            var name = escapeHtml(val.title);
+            if (link) {
+                return '<a href="' + link + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">' +
+                    '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">' + icon + '</span> ' +
+                    name + '</a>';
+            }
+            return '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">' + icon + '</span> ' + name;
+        }
+        // Array like media_usage → comma join
+        if (Array.isArray(val)) return val.join(', ');
+        // Generic object → compact pre
+        return '<pre style="margin:0;font-size:0.7rem;white-space:pre-wrap;max-width:300px;overflow-x:auto;">' +
+            JSON.stringify(val, null, 1) + '</pre>';
+    }
+    if (Array.isArray(val)) return val.join(', ');
+    var s = String(val);
+    // Date-like strings → nice format
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return formatDate(s);
+    // Username fields → Telegram link
+    var kl = key ? key.toLowerCase() : '';
+    if ((kl.indexOf('username') !== -1 || kl === 'mainusername' || kl === 'main_username') && s && s !== 'null') {
+        return '<a href="https://t.me/' + escapeHtml(s) + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">@' + escapeHtml(s) + '</a>';
+    }
+    // User ID fields → OSINT profile link
+    if ((kl === 'user_id' || kl === 'from_user_id' || kl === 'to_user_id' || kl === 'id') && /^\d+$/.test(s) && s.length > 5) {
+        return '<a href="' + PROFILE_URL_TPL.replace('99999', s) + '" style="color:var(--rb-primary);text-decoration:none;">' + s + '</a>';
+    }
+    return escapeHtml(s);
+}
+
+function renderKeyValueTable(data) {
+    var html = '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        html += '<tr><td class="rb-muted" style="width:220px;font-weight:600;">' + formatKey(key) + '</td>' +
+            '<td>' + renderCellValue(data[key], key) + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    return html;
+}
+
+function renderArrayTable(data, branch) {
+    // Flatten nested objects: if a column has object values with known keys, expand them
+    var flatData = [];
+    var hasNestedObj = false;
+    // Detect nested object columns
+    var nestedCols = {};
+    var firstItem = data[0];
+    var origCols = Object.keys(firstItem);
+    for (var ci = 0; ci < origCols.length; ci++) {
+        var cv = firstItem[origCols[ci]];
+        if (cv && typeof cv === 'object' && !Array.isArray(cv) && cv.title) {
+            nestedCols[origCols[ci]] = true;
+            hasNestedObj = true;
+        }
+    }
+
+    // Build flat column list
+    var cols = [];
+    for (var ci2 = 0; ci2 < origCols.length; ci2++) {
+        if (nestedCols[origCols[ci2]]) {
+            // Replace e.g. "chat" with "chat.title", "chat.username"
+            var prefix = origCols[ci2];
+            var nestedKeys = Object.keys(firstItem[prefix]);
+            // Pick important keys: title, username, id, isPrivate
+            var pick = ['title', 'username', 'isPrivate'];
+            for (var nk = 0; nk < pick.length; nk++) {
+                if (nestedKeys.indexOf(pick[nk]) !== -1) {
+                    cols.push({key: prefix + '.' + pick[nk], nested: prefix, sub: pick[nk]});
+                }
+            }
+        } else {
+            cols.push({key: origCols[ci2], nested: null, sub: null});
+        }
+    }
+
+    var html = '<div class="rb-table-wrap"><table class="rb-table"><thead><tr>';
+    for (var c = 0; c < cols.length; c++) {
+        html += '<th>' + formatKey(cols[c].sub || cols[c].key) + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+    var limit = Math.min(data.length, 100);
+    for (var r = 0; r < limit; r++) {
+        html += '<tr>';
+        for (var c2 = 0; c2 < cols.length; c2++) {
+            var col = cols[c2];
+            var v;
+            if (col.nested) {
+                var parent = data[r][col.nested];
+                v = parent ? parent[col.sub] : null;
+                // For title column, render as Telegram link using parent object
+                if (col.sub === 'title' && parent) {
+                    var cell = renderCellValue(parent, col.nested);
+                    html += '<td style="max-width:300px;word-break:break-word;">' + cell + '</td>';
+                    continue;
+                }
+            } else {
+                v = data[r][col.key];
+            }
+            html += '<td style="max-width:250px; overflow:hidden; text-overflow:ellipsis;">' +
+                renderCellValue(v, col.sub || col.key) + '</td>';
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    if (data.length > 100) {
+        html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
+    }
+    return html;
+}
+
 function formatKey(key) {
     return key.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+}
+
+function formatDate(s) {
+    if (!s) return '<span class="rb-muted">—</span>';
+    return s.substring(0, 10) + ' ' + s.substring(11, 16);
+}
+
+function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 
 function refreshBranch(branch) {
