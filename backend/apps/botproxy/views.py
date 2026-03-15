@@ -144,6 +144,7 @@ def poll_detail(request, poll_id: int, svc="rektor"):
         "faculties": poll_data.get("faculties", []),
         "candidates": poll_data.get("candidates", []),
         "channels": poll_data.get("channels", []),
+        "posts": poll_data.get("posts", []),
         "results": results,
         "top": top,
         "university": university,
@@ -311,6 +312,20 @@ def poll_channel_remove(request, poll_id: int, svc="rektor"):
                 messages.success(request, f"Kanal o'chirildi: {channel}")
             except BotAPIError as e:
                 _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+
+
+# ─── Poll Posts Refresh ─────────────────────────────────────────────────────────
+
+@staff_member_required
+def poll_posts_refresh(request, poll_id: int, svc="rektor"):
+    if request.method == "POST":
+        client = _client(svc)
+        try:
+            client.refresh_poll_posts(poll_id)
+            messages.success(request, "Barcha kanal postlari muvaffaqiyatli yangilandi!")
+        except BotAPIError as e:
+            _handle_api_error(request, e)
     return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
 
 

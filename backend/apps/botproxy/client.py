@@ -105,6 +105,14 @@ class BotAPIClient:
     def remove_poll_channel(self, poll_id: int, channel: str) -> dict:
         return self._request("DELETE", f"/api/v1/polls/{poll_id}/channels/{channel}").json()
 
+    def get_poll_posts(self, poll_id: int) -> list[dict]:
+        """Get channel posts with timestamps: [{chat_id, message_id, channel_username, published_at, last_updated_at}]."""
+        return self._request("GET", f"/api/v1/polls/{poll_id}/posts").json().get("posts", [])
+
+    def refresh_poll_posts(self, poll_id: int) -> dict:
+        """Manually trigger immediate refresh of all channel posts."""
+        return self._request("POST", f"/api/v1/polls/{poll_id}/posts/refresh").json()
+
     def get_results(self, poll_id: int) -> dict:
         return self._request("GET", f"/api/v1/polls/{poll_id}/results").json()
 
