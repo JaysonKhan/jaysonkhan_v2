@@ -152,14 +152,14 @@ LOGGING = {
     },
 }
 
-# ── Cache: use Redis in production ───────────────────────────────────────────
+# ── Cache: FileBasedCache — shared across gunicorn workers ───────────────────
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'jaysonkhan-prod',
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/www/jaysonkhan/cache',
         'TIMEOUT': 300,
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            'MAX_ENTRIES': 5000,
         },
     }
 }
