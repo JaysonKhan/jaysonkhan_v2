@@ -12,7 +12,7 @@ import math
 from django.conf import settings as djsettings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
@@ -25,6 +25,7 @@ PER_PAGE = 25
 
 def _ctx(request, svc: str = "rektor", extra: dict | None = None) -> dict:
     """Base context with admin site vars and service info."""
+    _validate_svc(svc)
     from django.contrib import admin
     ctx = admin.site.each_context(request)
     ctx["svc"] = svc
@@ -34,7 +35,14 @@ def _ctx(request, svc: str = "rektor", extra: dict | None = None) -> dict:
     return ctx
 
 
+def _validate_svc(svc: str) -> None:
+    """Raise Http404 if the service name is not in BOT_SERVICES."""
+    if svc not in djsettings.BOT_SERVICES:
+        raise Http404(f"Unknown bot service: {svc}")
+
+
 def _client(svc: str = "rektor") -> BotAPIClient:
+    _validate_svc(svc)
     return BotAPIClient(service=svc)
 
 

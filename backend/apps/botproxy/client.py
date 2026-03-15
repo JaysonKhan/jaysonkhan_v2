@@ -6,6 +6,7 @@ import hmac
 import json as json_mod
 import logging
 import time
+from urllib.parse import quote, urlencode
 
 import httpx
 from django.conf import settings
@@ -18,6 +19,22 @@ class BotAPIError(Exception):
         self.status = status
         self.detail = detail
         super().__init__(f"Bot API error {status}: {detail}")
+
+
+# ─── Connection pool (one per base_url, reused across requests) ──────────────
+
+_pools: dict[str, httpx.Client] = {}
+
+
+def _get_pool(base_url: str, timeout: int = 30) -> httpx.Client:
+    """Get or create a persistent httpx.Client for the given base URL."""
+    if base_url not in _pools or _pools[base_url].is_closed:
+        _pools[base_url] = httpx.Client(
+            base_url=base_url,
+            timeout=timeout,
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+        )
+    return _pools[base_url]
 
 
 class BotAPIClient:
@@ -42,7 +59,6 @@ class BotAPIClient:
         }
 
     def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
-        url = f"{self._base_url}{path}"
         body = kwargs.pop("content", "") or ""
         if "json" in kwargs:
             body = json_mod.dumps(kwargs.pop("json"))
@@ -53,9 +69,9 @@ class BotAPIClient:
         headers = self._headers(method, sign_path, body)
         headers.update(kwargs.pop("headers", {}))
 
+        pool = _get_pool(self._base_url, self._timeout)
         try:
-            with httpx.Client(timeout=self._timeout) as client:
-                resp = client.request(method, url, headers=headers, **kwargs)
+            resp = pool.request(method, path, headers=headers, **kwargs)
         except httpx.ConnectError:
             raise BotAPIError(0, "Cannot connect to bot API server")
         except httpx.TimeoutException:
@@ -78,8 +94,10 @@ class BotAPIClient:
     # ─── Polls ───────────────────────────────────────────────────────────────
 
     def list_polls(self, status: str | None = None) -> list[dict]:
-        params = f"?status={status}" if status else ""
-        return self._request("GET", f"/api/v1/polls{params}").json()["polls"]
+        path = "/api/v1/polls"
+        if status:
+            path += f"?status={quote(status)}"
+        return self._request("GET", path).json()["polls"]
 
     def get_poll(self, poll_id: int) -> dict:
         return self._request("GET", f"/api/v1/polls/{poll_id}").json()
@@ -103,10 +121,10 @@ class BotAPIClient:
         return self._request("POST", f"/api/v1/polls/{poll_id}/channels", json={"channel": channel}).json()
 
     def remove_poll_channel(self, poll_id: int, channel: str) -> dict:
-        return self._request("DELETE", f"/api/v1/polls/{poll_id}/channels/{channel}").json()
+        return self._request("DELETE", f"/api/v1/polls/{poll_id}/channels/{quote(channel, safe='@')}").json()
 
     def get_poll_posts(self, poll_id: int) -> list[dict]:
-        """Get channel posts with timestamps: [{chat_id, message_id, channel_username, published_at, last_updated_at}]."""
+        """Get channel posts with timestamps."""
         return self._request("GET", f"/api/v1/polls/{poll_id}/posts").json().get("posts", [])
 
     def refresh_poll_posts(self, poll_id: int) -> dict:
@@ -142,8 +160,10 @@ class BotAPIClient:
         return self._request("GET", f"/api/v1/export/{poll_id}/pdf").content
 
     def get_chart(self, poll_id: int, chart_type: str, theme: str = "") -> bytes:
-        params = f"?theme={theme}" if theme else ""
-        return self._request("GET", f"/api/v1/export/{poll_id}/chart/{chart_type}{params}").content
+        path = f"/api/v1/export/{poll_id}/chart/{chart_type}"
+        if theme:
+            path += f"?theme={quote(theme)}"
+        return self._request("GET", path).content
 
     # ─── Admins ──────────────────────────────────────────────────────────────
 
@@ -164,8 +184,10 @@ class BotAPIClient:
     # ─── Universities ─────────────────────────────────────────────────────────
 
     def list_universities(self, region: str | None = None) -> list[dict]:
-        params = f"?region={region}" if region else ""
-        return self._request("GET", f"/api/v1/universities{params}").json()["universities"]
+        path = "/api/v1/universities"
+        if region:
+            path += f"?region={quote(region)}"
+        return self._request("GET", path).json()["universities"]
 
     def get_university(self, uni_id: int) -> dict:
         return self._request("GET", f"/api/v1/universities/{uni_id}").json()
@@ -185,16 +207,15 @@ class BotAPIClient:
     def upload_university_logo(self, uni_id: int, file_bytes: bytes, filename: str = "logo.png") -> dict:
         """Upload university logo as multipart form data."""
         import io
-        url = f"{self._base_url}/api/v1/universities/{uni_id}/logo"
         sign_path = f"/api/v1/universities/{uni_id}/logo"
         headers = self._headers("POST", sign_path, "")
         headers.pop("Content-Type", None)  # let httpx set multipart content type
+        pool = _get_pool(self._base_url, self._timeout)
         try:
-            with httpx.Client(timeout=self._timeout) as client:
-                resp = client.post(
-                    url, headers=headers,
-                    files={"logo": (filename, io.BytesIO(file_bytes), "image/png")},
-                )
+            resp = pool.post(
+                sign_path, headers=headers,
+                files={"logo": (filename, io.BytesIO(file_bytes), "image/png")},
+            )
         except (httpx.ConnectError, httpx.TimeoutException) as e:
             raise BotAPIError(0, str(e))
         if resp.status_code >= 400:
@@ -230,18 +251,15 @@ class BotAPIClient:
 
     def list_users(self, page: int = 1, per_page: int = 25, search: str = "",
                    sort: str = "", order: str = "asc") -> dict:
-        """List users with pagination, search, and sorting.
-
-        Returns {users: [...], total: int, page: int, per_page: int}.
-        sort: 'name', 'registered_at', 'total_votes' (empty = default)
-        order: 'asc' or 'desc'
-        """
-        params = f"?page={page}&per_page={per_page}"
+        """List users with pagination, search, and sorting."""
+        qs = {"page": page, "per_page": per_page}
         if search:
-            params += f"&search={search}"
+            qs["search"] = search
         if sort:
-            params += f"&sort={sort}&order={order}"
-        return self._request("GET", f"/api/v1/users{params}").json()
+            qs["sort"] = sort
+            qs["order"] = order
+        path = f"/api/v1/users?{urlencode(qs)}"
+        return self._request("GET", path).json()
 
     def get_user_history(self, user_id: int) -> dict:
         return self._request("GET", f"/api/v1/users/{user_id}/history").json()
@@ -255,10 +273,11 @@ class BotAPIClient:
 
     def get_user_growth_chart(self, days: int = 30, theme: str = "") -> bytes:
         """User registration trend chart as PNG."""
-        params = f"?days={days}"
+        qs = {"days": days}
         if theme:
-            params += f"&theme={theme}"
-        return self._request("GET", f"/api/v1/users/chart/growth{params}").content
+            qs["theme"] = theme
+        path = f"/api/v1/users/chart/growth?{urlencode(qs)}"
+        return self._request("GET", path).content
 
     def export_users_csv(self) -> bytes:
         """Download all users as CSV."""
