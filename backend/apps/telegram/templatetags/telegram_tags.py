@@ -13,7 +13,7 @@ Usage:
     {% tg_link user_id css_class="text-blue-400 hover:underline" %}
 """
 from django import template
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.utils.safestring import mark_safe
 
 register = template.Library()
@@ -33,7 +33,7 @@ def tg_link(telegram_id, text=None, css_class=""):
 
     try:
         url = reverse("osint_profile", kwargs={"user_id": int(telegram_id)})
-    except Exception:
+    except (NoReverseMatch, ValueError, TypeError):
         return str(telegram_id)
 
     display = text or telegram_id

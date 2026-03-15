@@ -13,7 +13,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
-from django.db import models
+from django.db import DatabaseError, models
 from django.utils import timezone
 
 
@@ -166,6 +166,24 @@ class TelegramEntity(models.Model):
         )
         return entity
 
+    @classmethod
+    def get_or_create_with_source(
+        cls, data: dict, service: str = "site",
+    ) -> TelegramEntity:
+        """Create/update entity and register its service source.
+
+        Combines get_or_create_from_telegram + EntitySource creation.
+        Used by all Telegram login views to avoid code duplication.
+
+        Args:
+            data: Telegram user data dict (id, first_name, etc.)
+            service: EntitySource.Service value (default: 'site')
+        """
+        entity = cls.get_or_create_from_telegram(data)
+        # Lazy import to avoid circular ref at class definition time
+        EntitySource.objects.get_or_create(entity=entity, service=service)
+        return entity
+
 
 # ── EntitySource ─────────────────────────────────────────────────────────────
 
@@ -256,7 +274,7 @@ class TelegramSession(models.Model):
         try:
             obj = cls.objects.first()
             return obj.session_string if obj else None
-        except Exception:
+        except DatabaseError:
             return None
 
     @classmethod
@@ -266,19 +284,18 @@ class TelegramSession(models.Model):
         account_id: int | None = None,
         account_name: str = "",
     ):
-        """Save or update session string (singleton — always updates first record)."""
-        obj = cls.objects.first()
-        if obj:
-            obj.session_string = session_string
-            obj.account_id = account_id
-            obj.account_name = account_name
-            obj.save()
-        else:
-            cls.objects.create(
-                session_string=session_string,
-                account_id=account_id,
-                account_name=account_name,
-            )
+        """Save or update session string (singleton — always pk=1).
+
+        Atomic via update_or_create — safe for Gunicorn multi-worker.
+        """
+        cls.objects.update_or_create(
+            pk=1,
+            defaults={
+                "session_string": session_string,
+                "account_id": account_id,
+                "account_name": account_name,
+            },
+        )
 
     @classmethod
     def clear_session(cls):

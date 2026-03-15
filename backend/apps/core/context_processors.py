@@ -17,7 +17,7 @@ def site_settings(request):
         try:
             from telegram.models import TelegramEntity
             tg_profile = TelegramEntity.objects.get(pk=profile_id)
-        except Exception:
+        except TelegramEntity.DoesNotExist:
             request.session.pop('tg_profile_id', None)
 
     return {

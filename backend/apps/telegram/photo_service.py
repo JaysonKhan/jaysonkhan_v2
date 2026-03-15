@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 PHOTO_DIR = "osint/photos"  # relative to MEDIA_ROOT
 DEFAULT_DOMAIN = "https://jaysonkhan.com"
+RATE_LIMIT_ACQUIRE_TIMEOUT = 10  # seconds to wait for rate limiter slot
 
 
 def _get_site_domain() -> str:
@@ -78,11 +79,11 @@ def _lookup_username(entity_id: int) -> str | None:
     """
     # 1. Check TelegramEntity itself
     try:
-        entity = TelegramEntity.objects.filter(telegram_id=entity_id).first()
-        if entity and entity.username:
-            return entity.username
-    except Exception:
-        pass
+        entity_obj = TelegramEntity.objects.filter(telegram_id=entity_id).first()
+        if entity_obj and entity_obj.username:
+            return entity_obj.username
+    except Exception as e:
+        logger.debug("TelegramEntity lookup failed for %s: %s", entity_id, e)
 
     # 2. Check OSINT cache for username history
     try:
@@ -111,8 +112,8 @@ def _lookup_username(entity_id: int) -> str | None:
             username = entry.data.get("username", "")
             if username:
                 return username
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("OsintCache username lookup failed for %s: %s", entity_id, e)
 
     return None
 
@@ -133,11 +134,11 @@ async def _download_photo(client, entity_id: int, username: str | None = None) -
     """
     from telethon.errors import FloodWaitError
 
-    entity = None
+    tg_entity = None
 
     # Strategy 1: Try by numeric ID (fast, works if entity in session cache)
     try:
-        entity = await client.get_entity(entity_id)
+        tg_entity = await client.get_entity(entity_id)
     except FloodWaitError:
         raise
     except ValueError:
@@ -146,22 +147,22 @@ async def _download_photo(client, entity_id: int, username: str | None = None) -
         logger.warning("Entity %s ni olishda xatolik: %s", entity_id, e)
 
     # Strategy 2: Try by username (if available)
-    if entity is None and username:
+    if tg_entity is None and username:
         try:
-            entity = await client.get_entity(username)
+            tg_entity = await client.get_entity(username)
             logger.info("Entity %s username '%s' orqali topildi", entity_id, username)
         except FloodWaitError:
             raise
         except Exception as e:
             logger.warning("Username '%s' orqali ham topilmadi: %s", username, e)
 
-    if entity is None:
+    if tg_entity is None:
         logger.warning("Entity %s hech qanday usul bilan topilmadi", entity_id)
         return None
 
     # Download photo
     try:
-        photo_bytes = await client.download_profile_photo(entity, file=bytes)
+        photo_bytes = await client.download_profile_photo(tg_entity, file=bytes)
         return photo_bytes
     except FloodWaitError:
         raise
@@ -206,7 +207,7 @@ def get_entity_photo(
 
     # 2. Rate limit check
     limiter = get_rate_limiter()
-    if not limiter.acquire(timeout=10):
+    if not limiter.acquire(timeout=RATE_LIMIT_ACQUIRE_TIMEOUT):
         logger.warning("Rate limit oshdi, entity %s uchun eski keshdan foydalaniladi", entity_str)
         return _try_stale_cache(entity_str)
 

@@ -1,6 +1,7 @@
 """Admin configuration for unified Telegram entities."""
 from django.contrib import admin
-from django.urls import reverse
+from django.db import DatabaseError
+from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 
@@ -104,7 +105,7 @@ class TelegramEntityAdmin(ModelAdmin):
                 url,
                 obj.telegram_id,
             )
-        except Exception:
+        except NoReverseMatch:
             return obj.telegram_id
 
     @admin.display(description="Services")
@@ -142,7 +143,7 @@ class TelegramSessionAdmin(ModelAdmin):
         """Singleton — faqat bitta yozuv."""
         try:
             return not TelegramSession.objects.exists()
-        except Exception:
+        except DatabaseError:
             return True
 
     def has_delete_permission(self, request, obj=None):

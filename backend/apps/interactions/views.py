@@ -19,7 +19,7 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
-from telegram.models import TelegramEntity, EntitySource
+from telegram.models import TelegramEntity
 from .models import Comment, Like
 from .notifications.ban_check import check_ban
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
@@ -79,7 +79,7 @@ def get_tg_profile(request):
     try:
         return TelegramEntity.objects.get(pk=profile_id)
     except TelegramEntity.DoesNotExist:
-        del request.session[SESSION_KEY]
+        request.session.pop(SESSION_KEY, None)
         return None
 
 
@@ -111,8 +111,7 @@ class TelegramAuthView(View):
 
         logger.info('[TelegramAuth] verification OK for id=%s', flat.get('id'))
 
-        entity = TelegramEntity.get_or_create_from_telegram(flat)
-        EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
+        entity = TelegramEntity.get_or_create_with_source(flat)
         request.session[SESSION_KEY] = entity.pk
         request.session.modified = True
         return redirect(next_url)
@@ -153,8 +152,7 @@ class TelegramLoginView(View):
         logger.info('[TelegramLogin] verification OK for id=%s', flat.get('id'))
 
         try:
-            entity = TelegramEntity.get_or_create_from_telegram(flat)
-            EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
+            entity = TelegramEntity.get_or_create_with_source(flat)
         except Exception as exc:
             logger.error('[TelegramLogin] DB error: %s', exc)
             return JsonResponse({'error': 'Server error'}, status=500)
@@ -207,8 +205,7 @@ class TelegramWebAppLoginView(View):
         logger.info('[WebAppLogin] verification OK for id=%s', user.get('id'))
 
         try:
-            entity = TelegramEntity.get_or_create_from_telegram(user)
-            EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
+            entity = TelegramEntity.get_or_create_with_source(user)
         except Exception as exc:
             logger.error('[WebAppLogin] DB error: %s', exc)
             return JsonResponse({'error': 'Server error'}, status=500)
@@ -472,17 +469,20 @@ class ToggleLikeView(View):
 
 
 def serialize_comment(comment, tg_profile_id=None):
+    # Cache reactions once (avoids duplicate iteration over prefetch cache)
+    reactions = list(comment.reactions.all())
+
     # Determine the requester's reaction if logged in
     user_reaction = None
     if tg_profile_id:
-        for r in comment.reactions.all():
+        for r in reactions:
             if r.author_id == tg_profile_id:
                 user_reaction = r.emoji
                 break
 
     # Build group reactions
     reaction_counts = {}
-    for r in comment.reactions.all():
+    for r in reactions:
         reaction_counts[r.emoji] = reaction_counts.get(r.emoji, 0) + 1
 
     return {

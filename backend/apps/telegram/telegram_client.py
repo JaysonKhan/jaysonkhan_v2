@@ -133,6 +133,29 @@ def _make_user_dict(me) -> dict:
     }
 
 
+def _format_account_name(me) -> str:
+    """Format a Telethon User into a human-readable account name."""
+    return f"{me.first_name or ''} @{me.username or me.id}"
+
+
+def _persist_and_clean_session(result: dict, log_suffix: str = "") -> None:
+    """Save session string to PostgreSQL and strip internal keys from result.
+
+    Must be called from the main (Django) thread — uses Django ORM.
+    """
+    if result.get("ok") and result.get("session_string"):
+        from telegram.models import TelegramSession
+
+        TelegramSession.save_session(
+            result["session_string"],
+            result.get("account_id"),
+            result.get("account_name", ""),
+        )
+        logger.info("Session string PostgreSQL ga saqlandi%s", log_suffix)
+    for key in ("session_string", "account_id", "account_name"):
+        result.pop(key, None)
+
+
 # ── Client Manager ───────────────────────────────────────────────────────────
 
 
@@ -370,7 +393,7 @@ def setup_verify_code(phone: str, code: str) -> dict:
 
         # Export session string (will be saved to DB in sync context)
         session_string = _setup_client.session.save()
-        account_name = f"{me.first_name or ''} @{me.username or me.id}"
+        account_name = _format_account_name(me)
 
         # Update the main singleton client
         with _lock:
@@ -388,20 +411,7 @@ def setup_verify_code(phone: str, code: str) -> dict:
     try:
         future = asyncio.run_coroutine_threadsafe(_verify(), loop)
         result = future.result(timeout=30)
-
-        # Save session to PostgreSQL in sync context (main thread, Django ORM-safe)
-        if result.get("ok") and result.get("session_string"):
-            from telegram.models import TelegramSession
-            TelegramSession.save_session(
-                result["session_string"],
-                result.get("account_id"),
-                result.get("account_name", ""),
-            )
-            logger.info("Session string PostgreSQL ga saqlandi")
-
-        # Clean internal keys before returning to view
-        for key in ("session_string", "account_id", "account_name"):
-            result.pop(key, None)
+        _persist_and_clean_session(result)
         return result
     except Exception as e:
         logger.exception("OTP tekshirishda xatolik: %s", e)
@@ -437,7 +447,7 @@ def setup_verify_2fa(password: str) -> dict:
 
         # Export session string (will be saved to DB in sync context)
         session_string = _setup_client.session.save()
-        account_name = f"{me.first_name or ''} @{me.username or me.id}"
+        account_name = _format_account_name(me)
 
         # Update the main singleton client
         with _lock:
@@ -454,20 +464,7 @@ def setup_verify_2fa(password: str) -> dict:
     try:
         future = asyncio.run_coroutine_threadsafe(_verify_2fa(), loop)
         result = future.result(timeout=30)
-
-        # Save session to PostgreSQL in sync context (main thread, Django ORM-safe)
-        if result.get("ok") and result.get("session_string"):
-            from telegram.models import TelegramSession
-            TelegramSession.save_session(
-                result["session_string"],
-                result.get("account_id"),
-                result.get("account_name", ""),
-            )
-            logger.info("Session string PostgreSQL ga saqlandi (2FA)")
-
-        # Clean internal keys before returning to view
-        for key in ("session_string", "account_id", "account_name"):
-            result.pop(key, None)
+        _persist_and_clean_session(result, " (2FA)")
         return result
     except Exception as e:
         logger.exception("2FA tekshirishda xatolik: %s", e)
