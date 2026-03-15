@@ -72,10 +72,10 @@ class TelegramEntity(models.Model):
         help_text="None=unknown, True=has photo, False=no photo (negative cache)",
     )
 
-    # ── Telegram Login Widget data ───────────────────────────────────────────
+    # ── Photo URL (universal — Login Widget yoki photo_service dan) ──────────
     photo_url = models.URLField(
         blank=True, default="",
-        help_text="Avatar URL from Telegram Login Widget",
+        help_text="Public avatar URL — photo service yuklaganda avtomatik yangilanadi",
     )
     auth_date = models.IntegerField(
         null=True, blank=True,
@@ -131,6 +131,10 @@ class TelegramEntity(models.Model):
         if not self.photo_file:
             return ""
         return str(Path(settings.MEDIA_ROOT) / self.photo_file)
+
+    def get_photo_url(self) -> str:
+        """Best available photo URL (photo_url > empty string)."""
+        return self.photo_url or ""
 
     # ── Class methods ────────────────────────────────────────────────────────
 

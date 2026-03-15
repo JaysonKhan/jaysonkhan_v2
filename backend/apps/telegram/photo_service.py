@@ -3,10 +3,14 @@
 Universal xizmat — istalgan Telegram entity (user, group, channel, bot)
 rasmini ID orqali oladi. 3 qatlam kesh: DB metadata + fayl tizimi + browser.
 
-Photo cache TelegramEntity modelida saqlanadi (alohida OsintPhotoCache emas):
+Photo cache TelegramEntity modelida saqlanadi:
   - photo_file: fayl yo'li (MEDIA_ROOT ga nisbiy)
+  - photo_url: to'liq URL (https://jaysonkhan.com/media/osint/photos/123.jpg)
   - photo_fetched_at: qachon yuklangan
   - has_photo: None=noma'lum, True=bor, False=yo'q (negative cache)
+
+Rasm yuklanganda photo_url avtomatik yangilanadi — har qanday joyda
+(admin, template, API) shu URL orqali rasmni ko'rsatish mumkin.
 
 Entity resolution strategy:
   1. Numeric ID orqali (tez, session cache da bo'lsa ishlaydi)
@@ -32,6 +36,12 @@ from telegram.models import TelegramEntity
 logger = logging.getLogger(__name__)
 
 PHOTO_DIR = "osint/photos"  # relative to MEDIA_ROOT
+DEFAULT_DOMAIN = "https://jaysonkhan.com"
+
+
+def _get_site_domain() -> str:
+    """Get site domain for constructing full photo URLs."""
+    return getattr(settings, "TELEGRAM_WEBHOOK_DOMAIN", DEFAULT_DOMAIN)
 
 
 def _photo_rel_path(entity_id: str | int) -> str:
@@ -42,6 +52,17 @@ def _photo_rel_path(entity_id: str | int) -> str:
 def _photo_abs_path(entity_id: str | int) -> Path:
     """Absolute filesystem path for a cached photo."""
     return Path(settings.MEDIA_ROOT) / _photo_rel_path(entity_id)
+
+
+def _photo_full_url(entity_id: str | int) -> str:
+    """Full public URL for a cached photo (served by Nginx).
+
+    Example: https://jaysonkhan.com/media/osint/photos/123456.jpg
+    """
+    domain = _get_site_domain().rstrip("/")
+    media_url = getattr(settings, "MEDIA_URL", "/media/")
+    rel_path = _photo_rel_path(entity_id)
+    return f"{domain}{media_url}{rel_path}"
 
 
 def _ensure_photo_dir():
@@ -224,23 +245,27 @@ def get_entity_photo(
         abs_path = _photo_abs_path(entity_str)
         abs_path.write_bytes(photo_bytes)
 
-        # Update or create TelegramEntity with photo cache
+        # Update or create TelegramEntity with photo cache + photo_url
         rel_path = _photo_rel_path(entity_str)
+        full_url = _photo_full_url(entity_str)
         TelegramEntity.objects.update_or_create(
             telegram_id=entity_int,
             defaults={
                 "photo_file": rel_path,
+                "photo_url": full_url,
                 "photo_fetched_at": timezone.now(),
                 "has_photo": True,
             },
         )
+        logger.info("Photo saved for entity %s → %s", entity_str, full_url)
         return photo_bytes, "image/jpeg"
 
-    # No photo — negative cache
+    # No photo — negative cache (clear photo_url if no photo)
     TelegramEntity.objects.update_or_create(
         telegram_id=entity_int,
         defaults={
             "has_photo": False,
+            "photo_url": "",
             "photo_fetched_at": timezone.now(),
         },
     )

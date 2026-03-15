@@ -60,23 +60,14 @@ class TelegramEntityAdmin(ModelAdmin):
 
     @admin.display(description="Photo")
     def photo_preview(self, obj):
-        """Show avatar photo from photo_url or OSINT photo proxy."""
-        # Priority: OSINT cached photo → photo_url from Telegram Login Widget
-        if obj.has_photo and obj.photo_file:
-            try:
-                url = reverse("osint_photo", kwargs={"entity_id": str(obj.telegram_id)})
-                return format_html(
-                    '<img src="{}" style="width:80px;height:80px;border-radius:50%;'
-                    'border:2px solid rgba(255,255,255,0.15);object-fit:cover;">',
-                    url,
-                )
-            except Exception:
-                pass
-        if obj.photo_url:
+        """Show avatar from photo_url (universal — photo service yoki Login Widget)."""
+        url = obj.get_photo_url()
+        if url:
             return format_html(
                 '<img src="{}" style="width:80px;height:80px;border-radius:50%;'
-                'border:2px solid rgba(255,255,255,0.15);object-fit:cover;">',
-                obj.photo_url,
+                'border:2px solid rgba(255,255,255,0.15);object-fit:cover;"'
+                ' onerror="this.style.display=\'none\'">',
+                url,
             )
         return format_html(
             '<div style="width:80px;height:80px;border-radius:50%;'
@@ -89,14 +80,16 @@ class TelegramEntityAdmin(ModelAdmin):
     @admin.display(description="User")
     def user_card(self, obj):
         name = obj.display_name
-        if obj.photo_url:
+        url = obj.get_photo_url()
+        if url:
             return format_html(
                 '<div style="display:flex;align-items:center;gap:10px;">'
                 '<img src="{}" style="width:28px;height:28px;border-radius:50%;'
-                'border:1px solid rgba(255,255,255,0.1);">'
+                'border:1px solid rgba(255,255,255,0.1);"'
+                ' onerror="this.style.display=\'none\'">'
                 '<span style="font-weight:600;">{}</span>'
                 "</div>",
-                obj.photo_url,
+                url,
                 name,
             )
         return name
