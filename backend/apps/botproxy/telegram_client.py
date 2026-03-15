@@ -1,7 +1,10 @@
-"""Thread-safe Telethon client manager with lazy singleton and rate limiting.
+"""Thread-safe Telethon client manager with StringSession and rate limiting.
 
 Django sync views bilan ishlash uchun background asyncio loop ishlatadi.
 Rate limiter Telegram FloodWait xatolarini oldini oladi.
+
+StringSession — session ma'lumotlari PostgreSQL da saqlanadi (SQLite fayl emas).
+Bu Gunicorn multi-worker muhitida xavfsiz ishlaydi (database is locked xatolari yo'q).
 
 Usage:
     from botproxy.telegram_client import get_telegram_client, run_async
@@ -93,6 +96,47 @@ def _ensure_event_loop() -> asyncio.AbstractEventLoop:
     return _loop
 
 
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+
+def _get_api_config() -> tuple[int, str]:
+    """Return (api_id, api_hash). Raises RuntimeError if missing."""
+    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
+    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
+    if not api_id or not api_hash:
+        raise RuntimeError(
+            "TELEGRAM_API_ID va TELEGRAM_API_HASH sozlanmagan. "
+            "https://my.telegram.org/apps dan oling."
+        )
+    return api_id, api_hash
+
+
+def _load_session_string() -> str | None:
+    """Load session string from PostgreSQL via TelegramSession model."""
+    from botproxy.models import TelegramSession
+    return TelegramSession.get_session_string()
+
+
+def _save_session_string(client, account_id: int | None = None,
+                         account_name: str = ""):
+    """Export current client session and save to PostgreSQL."""
+    from botproxy.models import TelegramSession
+    session_string = client.session.save()
+    TelegramSession.save_session(session_string, account_id, account_name)
+    logger.info("Session string PostgreSQL ga saqlandi (account: %s)", account_name)
+
+
+def _make_user_dict(me) -> dict:
+    """Create user info dict from Telethon User object."""
+    return {
+        "id": me.id,
+        "first_name": me.first_name or "",
+        "last_name": me.last_name or "",
+        "username": me.username or "",
+        "phone": me.phone or "",
+    }
+
+
 # ── Client Manager ───────────────────────────────────────────────────────────
 
 
@@ -102,20 +146,14 @@ def get_telegram_client():
     Thread-safe. Creates a dedicated asyncio event loop in a background
     thread on first call. Reconnects automatically on disconnect.
 
-    Raises RuntimeError if TELEGRAM_API_ID or TELEGRAM_API_HASH are not set,
-    or if the session is not authorized (run setup_telegram_session first).
+    Uses StringSession from PostgreSQL — no SQLite file locking issues
+    with multiple Gunicorn workers.
+
+    Raises RuntimeError if API keys or session are not set.
     """
     global _client
 
-    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
-    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
-    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
-
-    if not api_id or not api_hash:
-        raise RuntimeError(
-            "TELEGRAM_API_ID va TELEGRAM_API_HASH sozlanmagan. "
-            "https://my.telegram.org/apps dan oling."
-        )
+    api_id, api_hash = _get_api_config()
 
     with _lock:
         if _client is not None and _client.is_connected():
@@ -124,8 +162,17 @@ def get_telegram_client():
         loop = _ensure_event_loop()
 
         from telethon import TelegramClient
+        from telethon.sessions import StringSession
 
-        _client = TelegramClient(session_path, api_id, api_hash)
+        # Load session from PostgreSQL
+        session_string = _load_session_string()
+        if not session_string:
+            raise RuntimeError(
+                "Telegram session topilmadi. "
+                "Admin panel → Telegram Session sahifasidan sessiya yarating."
+            )
+
+        _client = TelegramClient(StringSession(session_string), api_id, api_hash)
 
         # Connect in the background loop
         future = asyncio.run_coroutine_threadsafe(_client.connect(), loop)
@@ -138,10 +185,10 @@ def get_telegram_client():
         if not auth_future.result(timeout=10):
             raise RuntimeError(
                 "Telegram session avtorizatsiya qilinmagan. "
-                "Ishga tushiring: python manage.py setup_telegram_session"
+                "Admin panel → Telegram Session sahifasidan qayta ulanish."
             )
 
-        logger.info("Telethon client muvaffaqiyatli ulandi")
+        logger.info("Telethon client muvaffaqiyatli ulandi (StringSession)")
         return _client
 
 
@@ -179,24 +226,11 @@ _setup_client = None
 _setup_phone_hash: str | None = None
 
 
-def _get_api_config() -> tuple[int, str, str]:
-    """Return (api_id, api_hash, session_path). Raises RuntimeError if missing."""
-    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
-    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
-    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
-    if not api_id or not api_hash:
-        raise RuntimeError(
-            "TELEGRAM_API_ID va TELEGRAM_API_HASH sozlanmagan. "
-            "https://my.telegram.org/apps dan oling."
-        )
-    return api_id, api_hash, session_path
-
-
 def check_session_status() -> dict:
     """Check current Telegram session status.
 
-    First tries the existing singleton client (_client), then falls back to
-    creating a temporary connection. This avoids SQLite session file conflicts.
+    Uses StringSession from PostgreSQL. Each worker can independently
+    load the session without file locking.
 
     Returns dict with:
         configured: bool — API keys sozlanganmi
@@ -205,7 +239,6 @@ def check_session_status() -> dict:
     """
     api_id = getattr(settings, "TELEGRAM_API_ID", 0)
     api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
-    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
 
     if not api_id or not api_hash:
         return {"configured": False, "authorized": False, "user": None}
@@ -214,8 +247,9 @@ def check_session_status() -> dict:
 
     async def _check():
         from telethon import TelegramClient
+        from telethon.sessions import StringSession
 
-        # 1. Try existing singleton client first
+        # 1. Try existing singleton client first (same worker, already connected)
         if _client is not None:
             try:
                 if not _client.is_connected():
@@ -225,19 +259,18 @@ def check_session_status() -> dict:
                     return {
                         "configured": True,
                         "authorized": True,
-                        "user": {
-                            "id": me.id,
-                            "first_name": me.first_name or "",
-                            "last_name": me.last_name or "",
-                            "username": me.username or "",
-                            "phone": me.phone or "",
-                        },
+                        "user": _make_user_dict(me),
                     }
             except Exception as e:
                 logger.warning("Singleton client tekshirishda xatolik: %s", e)
 
-        # 2. Try with a fresh temporary client
-        client = TelegramClient(session_path, api_id, api_hash)
+        # 2. Load StringSession from PostgreSQL
+        session_string = _load_session_string()
+        if not session_string:
+            return {"configured": True, "authorized": False, "user": None}
+
+        # 3. Create temporary client with StringSession (no file locking!)
+        client = TelegramClient(StringSession(session_string), api_id, api_hash)
         try:
             await client.connect()
             if await client.is_user_authorized():
@@ -245,13 +278,7 @@ def check_session_status() -> dict:
                 return {
                     "configured": True,
                     "authorized": True,
-                    "user": {
-                        "id": me.id,
-                        "first_name": me.first_name or "",
-                        "last_name": me.last_name or "",
-                        "username": me.username or "",
-                        "phone": me.phone or "",
-                    },
+                    "user": _make_user_dict(me),
                 }
             return {"configured": True, "authorized": False, "user": None}
         except Exception as e:
@@ -270,6 +297,8 @@ def check_session_status() -> dict:
 def setup_send_code(phone: str) -> dict:
     """Send OTP code to phone number for session setup.
 
+    Uses empty StringSession (new session, no file needed).
+
     Returns dict with:
         ok: bool
         phone_code_hash: str (Telethon internal)
@@ -277,12 +306,13 @@ def setup_send_code(phone: str) -> dict:
     """
     global _setup_client, _setup_phone_hash
 
-    api_id, api_hash, session_path = _get_api_config()
+    api_id, api_hash = _get_api_config()
     loop = _ensure_event_loop()
 
     async def _send():
         global _setup_client, _setup_phone_hash
         from telethon import TelegramClient
+        from telethon.sessions import StringSession
 
         # Close existing setup client if any
         if _setup_client:
@@ -291,7 +321,8 @@ def setup_send_code(phone: str) -> dict:
             except Exception:
                 pass
 
-        _setup_client = TelegramClient(session_path, api_id, api_hash)
+        # Empty StringSession — brand new session, no files
+        _setup_client = TelegramClient(StringSession(), api_id, api_hash)
         await _setup_client.connect()
 
         result = await _setup_client.send_code_request(phone)
@@ -308,6 +339,8 @@ def setup_send_code(phone: str) -> dict:
 
 def setup_verify_code(phone: str, code: str) -> dict:
     """Verify OTP code and sign in.
+
+    On success, exports StringSession and saves to PostgreSQL.
 
     Returns dict with:
         ok: bool
@@ -334,6 +367,11 @@ def setup_verify_code(phone: str, code: str) -> dict:
             return {"ok": False, "needs_2fa": False, "error": str(e), "user": None}
 
         me = await _setup_client.get_me()
+        user_dict = _make_user_dict(me)
+
+        # Save StringSession to PostgreSQL
+        account_name = f"{me.first_name or ''} @{me.username or me.id}"
+        _save_session_string(_setup_client, account_id=me.id, account_name=account_name)
 
         # Update the main singleton client
         with _lock:
@@ -342,13 +380,7 @@ def setup_verify_code(phone: str, code: str) -> dict:
         return {
             "ok": True,
             "needs_2fa": False,
-            "user": {
-                "id": me.id,
-                "first_name": me.first_name or "",
-                "last_name": me.last_name or "",
-                "username": me.username or "",
-                "phone": me.phone or "",
-            },
+            "user": user_dict,
         }
 
     try:
@@ -361,6 +393,8 @@ def setup_verify_code(phone: str, code: str) -> dict:
 
 def setup_verify_2fa(password: str) -> dict:
     """Verify 2FA password and complete sign in.
+
+    On success, exports StringSession and saves to PostgreSQL.
 
     Returns dict with:
         ok: bool
@@ -382,6 +416,11 @@ def setup_verify_2fa(password: str) -> dict:
             return {"ok": False, "error": str(e), "user": None}
 
         me = await _setup_client.get_me()
+        user_dict = _make_user_dict(me)
+
+        # Save StringSession to PostgreSQL
+        account_name = f"{me.first_name or ''} @{me.username or me.id}"
+        _save_session_string(_setup_client, account_id=me.id, account_name=account_name)
 
         # Update the main singleton client
         with _lock:
@@ -389,13 +428,7 @@ def setup_verify_2fa(password: str) -> dict:
 
         return {
             "ok": True,
-            "user": {
-                "id": me.id,
-                "first_name": me.first_name or "",
-                "last_name": me.last_name or "",
-                "username": me.username or "",
-                "phone": me.phone or "",
-            },
+            "user": user_dict,
         }
 
     try:
@@ -409,19 +442,16 @@ def setup_verify_2fa(password: str) -> dict:
 def disconnect_session() -> dict:
     """Disconnect and invalidate the current session.
 
+    Clears StringSession from PostgreSQL and disconnects all clients.
+
     Returns dict with ok: bool, error: str | None
     """
     global _client, _setup_client
-
-    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
-    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
-    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
 
     loop = _ensure_event_loop()
 
     async def _disconnect():
         global _client, _setup_client
-        from telethon import TelegramClient
 
         # Disconnect any existing clients
         for c in (_client, _setup_client):
@@ -434,12 +464,22 @@ def disconnect_session() -> dict:
         _client = None
         _setup_client = None
 
-        # Remove session files
+        # Clear session from PostgreSQL
+        from botproxy.models import TelegramSession
+        TelegramSession.clear_session()
+
+        # Also clean up legacy session files if they exist
         import os
-        for ext in ("", ".session"):
-            path = f"{session_path}{ext}"
-            if os.path.exists(path):
-                os.remove(path)
+        session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
+        if session_path:
+            for ext in ("", ".session"):
+                path = f"{session_path}{ext}"
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                        logger.info("Eski session fayl o'chirildi: %s", path)
+                    except Exception:
+                        pass
 
         return {"ok": True}
 
