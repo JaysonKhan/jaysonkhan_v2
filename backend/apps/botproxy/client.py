@@ -99,6 +99,12 @@ class BotAPIClient:
     def publish_poll(self, poll_id: int, channel: str) -> dict:
         return self._request("POST", f"/api/v1/polls/{poll_id}/publish", json={"channel": channel}).json()
 
+    def add_poll_channel(self, poll_id: int, channel: str) -> dict:
+        return self._request("POST", f"/api/v1/polls/{poll_id}/channels", json={"channel": channel}).json()
+
+    def remove_poll_channel(self, poll_id: int, channel: str) -> dict:
+        return self._request("DELETE", f"/api/v1/polls/{poll_id}/channels/{channel}").json()
+
     def get_results(self, poll_id: int) -> dict:
         return self._request("GET", f"/api/v1/polls/{poll_id}/results").json()
 

@@ -280,6 +280,40 @@ def poll_publish(request, poll_id: int, svc="rektor"):
     return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
 
 
+# ─── Poll Channels ──────────────────────────────────────────────────────────────
+
+@staff_member_required
+def poll_channel_add(request, poll_id: int, svc="rektor"):
+    if request.method == "POST":
+        channel = request.POST.get("channel", "").strip()
+        if not channel:
+            messages.error(request, "Kanal kiritilmagan")
+        elif not channel.startswith("@") and not channel.lstrip("-").isdigit():
+            messages.error(request, "Kanal formati noto'g'ri. @username yoki ID kiriting.")
+        else:
+            client = _client(svc)
+            try:
+                client.add_poll_channel(poll_id, channel)
+                messages.success(request, f"Majburiy kanal qo'shildi: {channel}")
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+
+
+@staff_member_required
+def poll_channel_remove(request, poll_id: int, svc="rektor"):
+    if request.method == "POST":
+        channel = request.POST.get("channel", "").strip()
+        if channel:
+            client = _client(svc)
+            try:
+                client.remove_poll_channel(poll_id, channel)
+                messages.success(request, f"Kanal o'chirildi: {channel}")
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+
+
 # ─── Export ──────────────────────────────────────────────────────────────────────
 
 @staff_member_required
