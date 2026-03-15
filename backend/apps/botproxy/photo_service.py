@@ -88,8 +88,12 @@ def _lookup_username(entity_id: int) -> str | None:
     return None
 
 
-async def _download_photo(entity_id: int, username: str | None = None) -> bytes | None:
+async def _download_photo(client, entity_id: int, username: str | None = None) -> bytes | None:
     """Download profile photo for an entity via Telethon.
+
+    IMPORTANT: `client` must be passed in from the sync caller (Django thread).
+    Don't call get_telegram_client() here — it uses Django ORM which doesn't
+    work from the background asyncio event loop thread.
 
     Strategy:
       1. Try numeric ID (works if entity is in session cache)
@@ -100,9 +104,6 @@ async def _download_photo(entity_id: int, username: str | None = None) -> bytes 
     """
     from telethon.errors import FloodWaitError
 
-    from botproxy.telegram_client import get_telegram_client
-
-    client = get_telegram_client()
     entity = None
 
     # Strategy 1: Try by numeric ID (fast, works if entity in session cache)
@@ -155,7 +156,7 @@ def get_entity_photo(
 
     Thread-safe. Rate-limited.
     """
-    from botproxy.telegram_client import get_rate_limiter, run_async
+    from botproxy.telegram_client import get_rate_limiter, get_telegram_client, run_async
 
     entity_str = str(entity_id)
 
@@ -186,8 +187,15 @@ def get_entity_photo(
     # Look up username for fallback resolution (Django ORM — main thread safe)
     username = _lookup_username(entity_int)
 
+    # Get Telethon client in sync context (Django ORM-safe for session loading)
     try:
-        photo_bytes = run_async(_download_photo(entity_int, username=username))
+        client = get_telegram_client()
+    except RuntimeError as e:
+        logger.error("Telegram client olishda xatolik: %s", e)
+        return None, None
+
+    try:
+        photo_bytes = run_async(_download_photo(client, entity_int, username=username))
     except Exception as e:
         error_name = type(e).__name__
         if "FloodWait" in error_name:
