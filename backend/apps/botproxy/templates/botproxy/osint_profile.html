@@ -275,6 +275,44 @@ var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
 var PHOTO_URL_TPL = "{% url 'osint_photo' entity_id='__EID__' %}";
 var ENTITY_URL_TPL = "{% url 'osint_entity_profile' entity_id=77777 %}";
 
+/* ── Lazy Photo Queue — ketma-ket yuklash (server yuklanmasdan) ──── */
+var _photoQueue = [];
+var _photoLoading = 0;
+var _photoMax = 2; // bir vaqtda max 2 ta rasm
+
+function initLazyPhotos(container) {
+    var imgs = container.querySelectorAll('img[data-lazy-src]');
+    for (var i = 0; i < imgs.length; i++) _photoQueue.push(imgs[i]);
+    _processQueue();
+}
+
+function _processQueue() {
+    while (_photoLoading < _photoMax && _photoQueue.length > 0) {
+        _loadPhoto(_photoQueue.shift());
+    }
+}
+
+function _loadPhoto(img) {
+    var src = img.getAttribute('data-lazy-src');
+    if (!src) { _processQueue(); return; }
+    _photoLoading++;
+    img.onload = function() {
+        img.removeAttribute('data-lazy-src');
+        img.style.display = ''; // ko'rsatish
+        _photoLoading--;
+        _processQueue();
+    };
+    img.onerror = function() {
+        img.style.display = 'none';
+        var fb = img.nextElementSibling;
+        if (fb) fb.style.display = 'flex';
+        img.removeAttribute('data-lazy-src');
+        _photoLoading--;
+        _processQueue();
+    };
+    img.src = src;
+}
+
 function toggleBranch(header) {
     var node = header.closest('.rb-tree-node');
     if (node.classList.contains('open')) {
@@ -316,6 +354,8 @@ function loadBranch(node, refresh) {
             }
             body.dataset.loaded = '1';
             body.innerHTML = renderBranchData(branch, d);
+            // Rasmlarni ketma-ket yuklash (serverga ortiqcha yuk tushmaslik uchun)
+            initLazyPhotos(body);
             // Update balance display
             if (d.tech && d.tech.current_ballance != null) {
                 var bal = document.getElementById('balance-amount');
@@ -388,13 +428,12 @@ function renderCellValue(val, key) {
         if (val.title) {
             var link = val.username ? 'https://t.me/' + val.username : null;
             var name = escapeHtml(val.title);
-            // Mini profile photo
+            // Mini profile photo (lazy)
             var photoHtml = '';
             if (val.id) {
                 var photoUrl = PHOTO_URL_TPL.replace('__EID__', val.id);
-                photoHtml = '<img src="' + photoUrl + '" ' +
-                    'style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);" ' +
-                    'onerror="this.style.display=\'none\'">';
+                photoHtml = '<img data-lazy-src="' + photoUrl + '" ' +
+                    'style="display:none;width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);">';
             }
             if (link) {
                 return photoHtml + '<a href="' + link + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">' +
@@ -417,12 +456,11 @@ function renderCellValue(val, key) {
     if ((kl.indexOf('username') !== -1 || kl === 'mainusername' || kl === 'main_username') && s && s !== 'null') {
         return '<a href="https://t.me/' + escapeHtml(s) + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">@' + escapeHtml(s) + '</a>';
     }
-    // User ID fields → OSINT profile link + mini photo
+    // User ID fields → OSINT profile link + mini photo (lazy)
     if ((kl === 'user_id' || kl === 'from_user_id' || kl === 'to_user_id' || kl === 'id') && /^\d+$/.test(s) && s.length > 5) {
         var userPhotoUrl = PHOTO_URL_TPL.replace('__EID__', s);
-        var userPhoto = '<img src="' + userPhotoUrl + '" ' +
-            'style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);" ' +
-            'onerror="this.style.display=\'none\'">';
+        var userPhoto = '<img data-lazy-src="' + userPhotoUrl + '" ' +
+            'style="display:none;width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);">';
         return userPhoto + '<a href="' + PROFILE_URL_TPL.replace('99999', s) + '" style="color:var(--rb-primary);text-decoration:none;">' + s + '</a>';
     }
     return escapeHtml(s);
@@ -539,9 +577,9 @@ function renderGroupsList(data) {
         var initial = (chat.title || '?').charAt(0).toUpperCase();
         var photoUrl = chat.id ? PHOTO_URL_TPL.replace('__EID__', chat.id) : '';
 
-        // Photo or fallback
+        // Photo or fallback (data-lazy-src → ketma-ket yuklanadi)
         var avatarHtml = photoUrl
-            ? '<img class="grp-avatar" src="' + photoUrl + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+            ? '<img class="grp-avatar" data-lazy-src="' + photoUrl + '" alt="">' +
               '<div class="grp-avatar-fallback" style="display:none">' + initial + '</div>'
             : '<div class="grp-avatar-fallback">' + initial + '</div>';
 
@@ -662,7 +700,7 @@ function renderCommonGroupsStat(data) {
         var profileUrl = uid ? PROFILE_URL_TPL.replace('99999', uid) : '#';
 
         var avatarHtml = photoUrl
-            ? '<img class="cgs-avatar" src="' + photoUrl + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+            ? '<img class="cgs-avatar" data-lazy-src="' + photoUrl + '" alt="">' +
               '<div class="cgs-avatar-fallback" style="display:none">' + initial + '</div>'
             : '<div class="cgs-avatar-fallback">' + initial + '</div>';
 
@@ -708,7 +746,7 @@ function renderUserMessages(data) {
         var msgId = m.messageId || m.messageid || m.message_id || '';
         var isPrivate = m.isPrivate || m.isprivate || false;
 
-        // Group photo — try username first, then group_id
+        // Group photo — lazy load (ketma-ket yuklanadi)
         var groupPhotoHtml = '';
         var photoSrc = '';
         if (groupId) {
@@ -717,8 +755,8 @@ function renderUserMessages(data) {
             photoSrc = PHOTO_URL_TPL.replace('__EID__', groupUsername);
         }
         if (photoSrc) {
-            groupPhotoHtml = '<img src="' + photoSrc + '" ' +
-                'onerror="this.style.display=\'none\'" alt="">';
+            groupPhotoHtml = '<img data-lazy-src="' + photoSrc + '" ' +
+                'alt="" style="display:none">';
         }
 
         // Group name → link to entity profile or Telegram

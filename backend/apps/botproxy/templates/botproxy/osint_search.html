@@ -140,7 +140,7 @@ html.dark .recent-type.text { background:rgba(168,85,247,0.15); color:#c4b5fd; }
         {% endif %}
             <!-- Photo -->
             {% if s.resolved_id %}
-            <img class="recent-photo"
+            <img class="recent-photo" loading="lazy"
                  src="{% url 'osint_photo' entity_id=s.resolved_id %}"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
                  alt="">

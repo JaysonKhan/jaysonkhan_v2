@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
@@ -475,25 +476,81 @@ def osint_photo_proxy(request, entity_id: str):
     URL: osint/photo/<entity_id>/
     Query: ?refresh=1 to force re-download from Telegram.
 
+    Strategiya (tez → sekin):
+      1. DB + disk cache — API chaqiruvsiz (tez)
+      2. photo_service → Bot API download (sekin, rate limited)
+      3. Stale cache / photo_url — fallback
+
     Returns:
-      - JPEG with browser caching (1 hour) if local cache hit
-      - 302 redirect to entity's photo_url if local cache miss but external URL exists
-      - 404 if no photo available at all
-      - 503 if Telegram client unavailable
+      - JPEG with browser caching (1 hour) if cache hit
+      - 302 redirect to photo_url if external URL exists
+      - 404 if no photo available
+      - 503 if Telegram service unavailable and no cache
     """
     # entity_id ni tozalash (path traversal himoya)
     clean_id = entity_id.strip().lstrip("-")
     if not clean_id.isdigit():
         return HttpResponse(status=400)
 
-    from telegram.photo_service import get_entity_photo
-
     force = request.GET.get("refresh") == "1"
+
+    # ── 1. Fast path: DB + disk cache (API chaqiruvsiz) ──
+    if not force:
+        from telegram.models import TelegramEntity
+
+        try:
+            entity_obj = TelegramEntity.objects.filter(
+                telegram_id=int(clean_id),
+            ).only("photo_file", "photo_url", "has_photo").first()
+
+            if entity_obj:
+                # Negative cache — rasm yo'q
+                if entity_obj.has_photo is False:
+                    return HttpResponse(status=404)
+
+                # Disk cache hit
+                if entity_obj.photo_file:
+                    from pathlib import Path
+
+                    abs_path = Path(settings.MEDIA_ROOT) / entity_obj.photo_file
+                    if abs_path.exists():
+                        data = abs_path.read_bytes()
+                        if len(data) > 100:
+                            ct = "image/jpeg"
+                            if data[:8] == b"\x89PNG\r\n\x1a\n":
+                                ct = "image/png"
+                            elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+                                ct = "image/webp"
+                            return HttpResponse(
+                                data,
+                                content_type=ct,
+                                headers={"Cache-Control": "public, max-age=3600"},
+                            )
+
+                # photo_url redirect (Nginx orqali tez)
+                if entity_obj.photo_url:
+                    return redirect(entity_obj.photo_url)
+        except Exception:
+            pass
+
+    # ── 2. Full photo service (Bot API download — sekinroq) ──
+    from telegram.photo_service import get_entity_photo
 
     try:
         photo_bytes, content_type = get_entity_photo(entity_id, force_refresh=force)
     except RuntimeError as e:
         logger.warning("Telegram photo xizmati mavjud emas: %s", e)
+
+        # 503 da stale cache ni tekshirish
+        from telegram.photo_service import _try_stale_cache
+
+        stale_bytes, stale_ct = _try_stale_cache(clean_id)
+        if stale_bytes:
+            return HttpResponse(
+                stale_bytes,
+                content_type=stale_ct,
+                headers={"Cache-Control": "public, max-age=300"},
+            )
         return HttpResponse(status=503)
 
     if photo_bytes and content_type:
@@ -502,18 +559,6 @@ def osint_photo_proxy(request, entity_id: str):
             content_type=content_type,
             headers={"Cache-Control": "public, max-age=3600"},
         )
-
-    # Fallback: redirect to entity's external photo_url (e.g. Telegram avatar)
-    try:
-        from telegram.models import TelegramEntity
-
-        entity_obj = TelegramEntity.objects.filter(
-            telegram_id=int(entity_id),
-        ).only("photo_url").first()
-        if entity_obj and entity_obj.photo_url:
-            return redirect(entity_obj.photo_url)
-    except (ValueError, TypeError):
-        pass
 
     return HttpResponse(status=404)
 
