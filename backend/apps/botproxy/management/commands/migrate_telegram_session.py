@@ -65,19 +65,36 @@ class Command(BaseCommand):
 
         loop = asyncio.new_event_loop()
         try:
-            result = loop.run_until_complete(self._migrate(api_id, api_hash, session_path))
-            if result:
-                self.stdout.write(self.style.SUCCESS("Muvaffaqiyatli migrate qilindi!"))
-            else:
+            result = loop.run_until_complete(
+                self._extract_session(api_id, api_hash, session_path)
+            )
+            if not result:
                 self.stderr.write(self.style.ERROR("Migrate qilib bo'lmadi"))
+                return
+
+            string_session, account_id, account_name = result
+
+            # Save to PostgreSQL (sync context — Django ORM works fine here)
+            TelegramSession.save_session(
+                session_string=string_session,
+                account_id=account_id,
+                account_name=account_name,
+            )
+            self.stdout.write(self.style.SUCCESS("PostgreSQL ga saqlandi"))
+            self.stdout.write(self.style.SUCCESS("Muvaffaqiyatli migrate qilindi!"))
         finally:
             loop.close()
 
-    async def _migrate(self, api_id: int, api_hash: str, session_path: str) -> bool:
+    async def _extract_session(
+        self, api_id: int, api_hash: str, session_path: str
+    ) -> tuple[str, int, str] | None:
+        """Extract StringSession from file-based session (async).
+
+        Returns (string_session, account_id, account_name) or None on failure.
+        Django ORM calls are NOT made here — only Telethon operations.
+        """
         from telethon import TelegramClient
         from telethon.sessions import StringSession
-
-        from botproxy.models import TelegramSession
 
         # 1. Open file-based session
         client = TelegramClient(session_path, api_id, api_hash)
@@ -88,15 +105,12 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(
                     "Session fayl mavjud, lekin avtorizatsiya qilinmagan"
                 ))
-                return False
+                return None
 
             me = await client.get_me()
             self.stdout.write(f"Account: {me.first_name} @{me.username} (ID: {me.id})")
 
-            # 2. Create a StringSession client with the same auth
-            # Export the session data
-            # We need to read the session file and convert it
-            # The easiest way: use the internal session save mechanism
+            # 2. Export session data to StringSession format
             string_session = StringSession.save(client.session)
             self.stdout.write(f"StringSession uzunligi: {len(string_session)} belgi")
 
@@ -111,23 +125,15 @@ class Command(BaseCommand):
             else:
                 self.stderr.write(self.style.ERROR("StringSession avtorizatsiya qilinmagan"))
                 await test_client.disconnect()
-                return False
+                return None
             await test_client.disconnect()
 
-            # 4. Save to PostgreSQL
             account_name = f"{me.first_name or ''} @{me.username or me.id}"
-            TelegramSession.save_session(
-                session_string=string_session,
-                account_id=me.id,
-                account_name=account_name,
-            )
-            self.stdout.write(self.style.SUCCESS("PostgreSQL ga saqlandi"))
-
-            return True
+            return string_session, me.id, account_name
 
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Xatolik: {e}"))
-            return False
+            return None
         finally:
             try:
                 await client.disconnect()
