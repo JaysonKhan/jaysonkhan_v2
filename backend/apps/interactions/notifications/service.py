@@ -58,18 +58,15 @@ class NotificationService:
 
         replier = escape(comment.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
-        content_url = self._content_url(comment)
 
         text = (
             f'↩️ <b>{replier}</b> sizning kommentingizga javob yozdi:\n\n'
             f'"{snippet}"'
         )
-        reply_markup = {
-            'inline_keyboard': [[{
-                'text': '💬 Javob berish',
-                'web_app': {'url': f'{self._domain}{content_url}#comment-{comment.id}'},
-            }]],
-        }
+        fallback_url = f'{self._domain}{self._content_url(comment)}#comment-{comment.id}'
+        reply_markup = self._deep_link_button(
+            '💬 Javob berish', f'c-{comment.id}', fallback_url,
+        )
         self.api.send_message(
             recipient.telegram_id, text, reply_markup=reply_markup,
         )
@@ -97,10 +94,12 @@ class NotificationService:
         if not self._admin_enabled('admin_notify_comments'):
             return
         author = escape(comment.author.display_name)
-        url = self._full_url(comment)
         snippet = escape(comment.text[:200]) if comment.text else ''
         text = f'💬 <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'💬 <b>{author}</b> komment yozdi:'
-        button = self._url_button('💬 Kommentni ko\'rish', f'{url}#comment-{comment.id}')
+        fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
+        button = self._deep_link_button(
+            '💬 Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+        )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
             text, comment.author, 'comment',
@@ -115,10 +114,12 @@ class NotificationService:
             return
         author = escape(comment.author.display_name)
         parent_author = escape(parent.author.display_name)
-        url = self._full_url(comment)
         snippet = escape(comment.text[:200]) if comment.text else ''
         text = f'↩️ <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'↩️ <b>{author}</b> → <b>{parent_author}</b>'
-        button = self._url_button('💬 Javobni ko\'rish', f'{url}#comment-{comment.id}')
+        fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
+        button = self._deep_link_button(
+            '💬 Javobni ko\'rish', f'c-{comment.id}', fallback_url,
+        )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
             text, comment.author, 'reply',
@@ -135,8 +136,11 @@ class NotificationService:
             f'{reaction.emoji} <b>{actor}</b> {verb} '
             f'{reaction.emoji} on <b>{comment_author}</b>\'s comment'
         )
-        url = self._comment_anchor_url(reaction.comment)
-        button = self._url_button(f'{reaction.emoji} Kommentni ko\'rish', url)
+        comment = reaction.comment
+        fallback_url = self._comment_anchor_url(comment)
+        button = self._deep_link_button(
+            f'{reaction.emoji} Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+        )
         self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button)
 
     def log_like(self, like, action: str) -> None:
@@ -147,12 +151,15 @@ class NotificationService:
             return
         actor = escape(like.author.display_name)
         title = self._content_title(obj)
-        obj_url = ''
-        if hasattr(obj, 'get_absolute_url'):
-            obj_url = f'{self._domain}{obj.get_absolute_url()}'
         emoji = '👍' if action == 'liked' else '👎'
         text = f'{emoji} <b>{actor}</b> {action} <b>{escape(title)}</b>'
-        button = self._url_button(f'{emoji} Ko\'rish', obj_url) if obj_url else None
+        startapp = self._content_startapp(obj)
+        fallback_url = ''
+        if hasattr(obj, 'get_absolute_url'):
+            fallback_url = f'{self._domain}{obj.get_absolute_url()}'
+        button = self._deep_link_button(
+            f'{emoji} Ko\'rish', startapp, fallback_url,
+        ) if (startapp or fallback_url) else None
         self._send_to_admin_group(text, like.author, 'like', reply_markup=button)
 
     def log_new_user(self, profile) -> None:
@@ -433,6 +440,28 @@ class NotificationService:
         if not comment.image:
             return None
         return f'{self._domain}{comment.image.url}'
+
+    def _deep_link_button(self, label: str, startapp: str, fallback_url: str = '') -> dict:
+        """Build inline keyboard with Mini App deep link button.
+
+        If deep link settings (bot username / app name) are configured,
+        the button opens the page inside Telegram's Mini App browser.
+        Otherwise falls back to a regular URL button.
+        """
+        deep_url = self._tg_deep_link(startapp) if startapp else ''
+        url = deep_url or fallback_url or self._domain
+        return {'inline_keyboard': [[{'text': label, 'url': url}]]}
+
+    @staticmethod
+    def _content_startapp(obj) -> str:
+        """Build startapp parameter for a content object (Post/Project)."""
+        model = obj.__class__.__name__.lower()
+        slug = getattr(obj, 'slug', '')
+        if model == 'post' and slug:
+            return f'post-{slug}'
+        if model == 'project' and slug:
+            return f'proj-{slug}'
+        return ''
 
     @staticmethod
     def _url_button(label: str, url: str) -> dict:

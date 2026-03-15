@@ -329,13 +329,46 @@ class TgAppRouterView(View):
     Deep link format: ``https://t.me/{bot}/{app}?startapp={param}``
 
     Parametrlar:
-        osint-p-{id}  → OSINT foydalanuvchi profili
-        osint-e-{id}  → OSINT entity (kanal/guruh) profili
-        home          → Bosh sahifa
+        osint-p-{id}   → OSINT foydalanuvchi profili
+        osint-e-{id}   → OSINT entity (kanal/guruh) profili
+        c-{id}         → Kommentga o'tish (post/project sahifasida)
+        post-{slug}    → Blog post
+        proj-{slug}    → Project
+        home           → Bosh sahifa
     """
 
     def get(self, request):
         start = request.GET.get('tgWebAppStartParam', '')
+
+        # Comment deep link — looks up the comment, redirects to its page
+        if start.startswith('c-'):
+            try:
+                comment_id = int(start[2:])
+                from interactions.models import Comment
+                comment = Comment.objects.select_related('content_type').get(pk=comment_id)
+                obj = comment.content_object
+                if obj and hasattr(obj, 'get_absolute_url'):
+                    return redirect(f'{obj.get_absolute_url()}#comment-{comment_id}')
+            except (ValueError, TypeError, Comment.DoesNotExist):
+                pass
+
+        # Blog post deep link
+        if start.startswith('post-'):
+            slug = start[5:]
+            if slug:
+                try:
+                    return redirect(reverse('blog_detail', kwargs={'slug': slug}))
+                except Exception:
+                    pass
+
+        # Project deep link
+        if start.startswith('proj-'):
+            slug = start[5:]
+            if slug:
+                try:
+                    return redirect(reverse('project_detail', kwargs={'slug': slug}))
+                except Exception:
+                    pass
 
         # OSINT user profile
         if start.startswith('osint-p-'):
