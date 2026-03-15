@@ -292,15 +292,40 @@ var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
 var PHOTO_URL_TPL = "{% url 'osint_photo' entity_id='__EID__' %}";
 var ENTITY_URL_TPL = "{% url 'osint_entity_profile' entity_id=77777 %}";
 
-/* ── Lazy Photo Queue — ketma-ket yuklash (server yuklanmasdan) ──── */
+/* ── Lazy Photo Queue — IntersectionObserver + ketma-ket yuklash ──── */
+/*
+ * Rasmlar faqat viewport yaqinida (200px) ko'rinsa yuklanadi.
+ * Ko'ringandan keyin ham bir vaqtda max 3 ta parallel so'rov.
+ * Agar IntersectionObserver mavjud bo'lmasa (eski browser) — barcha rasmlar
+ * to'g'ridan-to'g'ri queue ga tushadi.
+ */
 var _photoQueue = [];
 var _photoLoading = 0;
-var _photoMax = 2; // bir vaqtda max 2 ta rasm
+var _photoMax = 3; // bir vaqtda max 3 ta rasm (Nginx endi 10r/s, burst 30)
+var _photoObserver = null;
 
 function initLazyPhotos(container) {
     var imgs = container.querySelectorAll('img[data-lazy-src]');
-    for (var i = 0; i < imgs.length; i++) _photoQueue.push(imgs[i]);
-    _processQueue();
+    if (!imgs.length) return;
+
+    if ('IntersectionObserver' in window) {
+        if (!_photoObserver) {
+            _photoObserver = new IntersectionObserver(function(entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    if (entries[i].isIntersecting) {
+                        _photoObserver.unobserve(entries[i].target);
+                        _photoQueue.push(entries[i].target);
+                        _processQueue();
+                    }
+                }
+            }, { rootMargin: '200px' }); // 200px oldindan yuklash
+        }
+        for (var i = 0; i < imgs.length; i++) _photoObserver.observe(imgs[i]);
+    } else {
+        // Fallback: eski browserlar uchun barcha rasmlar ketma-ket
+        for (var i = 0; i < imgs.length; i++) _photoQueue.push(imgs[i]);
+        _processQueue();
+    }
 }
 
 function _processQueue() {
