@@ -3,6 +3,11 @@
 Universal xizmat — istalgan Telegram entity (user, group, channel, bot)
 rasmini ID orqali oladi. 3 qatlam kesh: DB metadata + fayl tizimi + browser.
 
+Entity resolution strategy:
+  1. Numeric ID orqali (tez, session cache da bo'lsa ishlaydi)
+  2. Username orqali (OSINT cache dan, Telegram API call kerak)
+  3. Hech biri ishlamasa → negative cache
+
 Usage:
     from botproxy.photo_service import get_entity_photo
 
@@ -39,10 +44,58 @@ def _ensure_photo_dir():
     photo_dir.mkdir(parents=True, exist_ok=True)
 
 
-async def _download_photo(entity_id: int) -> bytes | None:
+def _lookup_username(entity_id: int) -> str | None:
+    """Try to find a username for entity_id from OSINT cache data.
+
+    Checks usernames history, stats_full, and basic_info caches.
+    """
+    from botproxy.models import OsintCache
+
+    entity_str = str(entity_id)
+
+    # 1. Check usernames history (most recent username)
+    try:
+        entry = OsintCache.get_cached("usernames", entity_str)
+        if entry and isinstance(entry.data, list) and entry.data:
+            # Take the most recent username (first in list)
+            username = entry.data[0].get("name", "")
+            if username:
+                logger.debug("Username from usernames cache: %s", username)
+                return username
+    except Exception:
+        pass
+
+    # 2. Check stats_full
+    try:
+        entry = OsintCache.get_cached("stats_full", entity_str)
+        if entry and isinstance(entry.data, dict):
+            username = entry.data.get("username", "")
+            if username:
+                return username
+    except Exception:
+        pass
+
+    # 3. Check basic_info
+    try:
+        entry = OsintCache.get_cached("basic_info", entity_str)
+        if entry and isinstance(entry.data, dict):
+            username = entry.data.get("username", "")
+            if username:
+                return username
+    except Exception:
+        pass
+
+    return None
+
+
+async def _download_photo(entity_id: int, username: str | None = None) -> bytes | None:
     """Download profile photo for an entity via Telethon.
 
-    Returns photo bytes or None if no photo exists.
+    Strategy:
+      1. Try numeric ID (works if entity is in session cache)
+      2. If ValueError, try username from OSINT data (requires API call)
+      3. Return photo bytes or None
+
     Raises FloodWaitError if rate limited by Telegram.
     """
     from telethon.errors import FloodWaitError
@@ -50,18 +103,33 @@ async def _download_photo(entity_id: int) -> bytes | None:
     from botproxy.telegram_client import get_telegram_client
 
     client = get_telegram_client()
+    entity = None
 
+    # Strategy 1: Try by numeric ID (fast, works if entity in session cache)
     try:
         entity = await client.get_entity(entity_id)
     except FloodWaitError:
         raise
     except ValueError:
-        logger.warning("Entity %s Telegram da topilmadi", entity_id)
-        return None
+        logger.info("Entity %s ID orqali topilmadi, username ishlatiladi", entity_id)
     except Exception as e:
-        logger.exception("Entity %s ni olishda xatolik: %s", entity_id, e)
+        logger.warning("Entity %s ni olishda xatolik: %s", entity_id, e)
+
+    # Strategy 2: Try by username (if available)
+    if entity is None and username:
+        try:
+            entity = await client.get_entity(username)
+            logger.info("Entity %s username '%s' orqali topildi", entity_id, username)
+        except FloodWaitError:
+            raise
+        except Exception as e:
+            logger.warning("Username '%s' orqali ham topilmadi: %s", username, e)
+
+    if entity is None:
+        logger.warning("Entity %s hech qanday usul bilan topilmadi", entity_id)
         return None
 
+    # Download photo
     try:
         photo_bytes = await client.download_profile_photo(entity, file=bytes)
         return photo_bytes
@@ -115,8 +183,11 @@ def get_entity_photo(
         logger.warning("Noto'g'ri entity_id: %s", entity_id)
         return None, None
 
+    # Look up username for fallback resolution (Django ORM — main thread safe)
+    username = _lookup_username(entity_int)
+
     try:
-        photo_bytes = run_async(_download_photo(entity_int))
+        photo_bytes = run_async(_download_photo(entity_int, username=username))
     except Exception as e:
         error_name = type(e).__name__
         if "FloodWait" in error_name:
