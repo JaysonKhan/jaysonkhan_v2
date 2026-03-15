@@ -112,18 +112,14 @@ def _get_api_config() -> tuple[int, str]:
 
 
 def _load_session_string() -> str | None:
-    """Load session string from PostgreSQL via TelegramSession model."""
+    """Load session string from PostgreSQL via TelegramSession model.
+
+    IMPORTANT: Must be called from the main (Django) thread, not from
+    the background asyncio event loop thread. Django ORM may not have
+    a DB connection for the background thread.
+    """
     from botproxy.models import TelegramSession
     return TelegramSession.get_session_string()
-
-
-def _save_session_string(client, account_id: int | None = None,
-                         account_name: str = ""):
-    """Export current client session and save to PostgreSQL."""
-    from botproxy.models import TelegramSession
-    session_string = client.session.save()
-    TelegramSession.save_session(session_string, account_id, account_name)
-    logger.info("Session string PostgreSQL ga saqlandi (account: %s)", account_name)
 
 
 def _make_user_dict(me) -> dict:
@@ -155,6 +151,9 @@ def get_telegram_client():
 
     api_id, api_hash = _get_api_config()
 
+    # Load session string from Django thread (ORM-safe) BEFORE acquiring lock
+    session_string = _load_session_string()
+
     with _lock:
         if _client is not None and _client.is_connected():
             return _client
@@ -164,8 +163,6 @@ def get_telegram_client():
         from telethon import TelegramClient
         from telethon.sessions import StringSession
 
-        # Load session from PostgreSQL
-        session_string = _load_session_string()
         if not session_string:
             raise RuntimeError(
                 "Telegram session topilmadi. "
@@ -243,6 +240,9 @@ def check_session_status() -> dict:
     if not api_id or not api_hash:
         return {"configured": False, "authorized": False, "user": None}
 
+    # Load session string from Django thread (ORM-safe) BEFORE async
+    session_string = _load_session_string()
+
     loop = _ensure_event_loop()
 
     async def _check():
@@ -264,8 +264,7 @@ def check_session_status() -> dict:
             except Exception as e:
                 logger.warning("Singleton client tekshirishda xatolik: %s", e)
 
-        # 2. Load StringSession from PostgreSQL
-        session_string = _load_session_string()
+        # 2. Check if session string exists
         if not session_string:
             return {"configured": True, "authorized": False, "user": None}
 
@@ -362,16 +361,16 @@ def setup_verify_code(phone: str, code: str) -> dict:
         try:
             await _setup_client.sign_in(phone, code, phone_code_hash=_setup_phone_hash)
         except SessionPasswordNeededError:
-            return {"ok": False, "needs_2fa": True, "user": None}
+            return {"ok": False, "needs_2fa": True, "user": None, "session_string": None}
         except Exception as e:
-            return {"ok": False, "needs_2fa": False, "error": str(e), "user": None}
+            return {"ok": False, "needs_2fa": False, "error": str(e), "user": None, "session_string": None}
 
         me = await _setup_client.get_me()
         user_dict = _make_user_dict(me)
 
-        # Save StringSession to PostgreSQL
+        # Export session string (will be saved to DB in sync context)
+        session_string = _setup_client.session.save()
         account_name = f"{me.first_name or ''} @{me.username or me.id}"
-        _save_session_string(_setup_client, account_id=me.id, account_name=account_name)
 
         # Update the main singleton client
         with _lock:
@@ -381,11 +380,29 @@ def setup_verify_code(phone: str, code: str) -> dict:
             "ok": True,
             "needs_2fa": False,
             "user": user_dict,
+            "session_string": session_string,
+            "account_id": me.id,
+            "account_name": account_name,
         }
 
     try:
         future = asyncio.run_coroutine_threadsafe(_verify(), loop)
-        return future.result(timeout=30)
+        result = future.result(timeout=30)
+
+        # Save session to PostgreSQL in sync context (main thread, Django ORM-safe)
+        if result.get("ok") and result.get("session_string"):
+            from botproxy.models import TelegramSession
+            TelegramSession.save_session(
+                result["session_string"],
+                result.get("account_id"),
+                result.get("account_name", ""),
+            )
+            logger.info("Session string PostgreSQL ga saqlandi")
+
+        # Clean internal keys before returning to view
+        for key in ("session_string", "account_id", "account_name"):
+            result.pop(key, None)
+        return result
     except Exception as e:
         logger.exception("OTP tekshirishda xatolik: %s", e)
         return {"ok": False, "needs_2fa": False, "error": str(e)}
@@ -413,14 +430,14 @@ def setup_verify_2fa(password: str) -> dict:
         try:
             await _setup_client.sign_in(password=password)
         except Exception as e:
-            return {"ok": False, "error": str(e), "user": None}
+            return {"ok": False, "error": str(e), "user": None, "session_string": None}
 
         me = await _setup_client.get_me()
         user_dict = _make_user_dict(me)
 
-        # Save StringSession to PostgreSQL
+        # Export session string (will be saved to DB in sync context)
+        session_string = _setup_client.session.save()
         account_name = f"{me.first_name or ''} @{me.username or me.id}"
-        _save_session_string(_setup_client, account_id=me.id, account_name=account_name)
 
         # Update the main singleton client
         with _lock:
@@ -429,11 +446,29 @@ def setup_verify_2fa(password: str) -> dict:
         return {
             "ok": True,
             "user": user_dict,
+            "session_string": session_string,
+            "account_id": me.id,
+            "account_name": account_name,
         }
 
     try:
         future = asyncio.run_coroutine_threadsafe(_verify_2fa(), loop)
-        return future.result(timeout=30)
+        result = future.result(timeout=30)
+
+        # Save session to PostgreSQL in sync context (main thread, Django ORM-safe)
+        if result.get("ok") and result.get("session_string"):
+            from botproxy.models import TelegramSession
+            TelegramSession.save_session(
+                result["session_string"],
+                result.get("account_id"),
+                result.get("account_name", ""),
+            )
+            logger.info("Session string PostgreSQL ga saqlandi (2FA)")
+
+        # Clean internal keys before returning to view
+        for key in ("session_string", "account_id", "account_name"):
+            result.pop(key, None)
+        return result
     except Exception as e:
         logger.exception("2FA tekshirishda xatolik: %s", e)
         return {"ok": False, "error": str(e)}
@@ -464,9 +499,16 @@ def disconnect_session() -> dict:
         _client = None
         _setup_client = None
 
-        # Clear session from PostgreSQL
+        return {"ok": True}
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(_disconnect(), loop)
+        result = future.result(timeout=30)
+
+        # Clear session from PostgreSQL in sync context (Django ORM-safe)
         from botproxy.models import TelegramSession
         TelegramSession.clear_session()
+        logger.info("Session PostgreSQL dan o'chirildi")
 
         # Also clean up legacy session files if they exist
         import os
@@ -481,11 +523,7 @@ def disconnect_session() -> dict:
                     except Exception:
                         pass
 
-        return {"ok": True}
-
-    try:
-        future = asyncio.run_coroutine_threadsafe(_disconnect(), loop)
-        return future.result(timeout=30)
+        return result
     except Exception as e:
         logger.exception("Session uzishda xatolik: %s", e)
         return {"ok": False, "error": str(e)}
