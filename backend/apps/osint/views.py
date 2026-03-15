@@ -608,9 +608,26 @@ def osint_photo_proxy(request, entity_id: str):
     force = request.GET.get("refresh") == "1"
     username = request.GET.get("u", "").strip().lstrip("@")[:64]
 
-    # 1. Negative cache
+    # 1. Negative cache (Django cache — tez)
     neg_cache_key = f"osint_photo_neg:{clean_id}"
     if not force and cache.get(neg_cache_key):
+        # Diskda rasm bor bo'lishi mumkin — entity yaratilishidan OLDIN yuklangan
+        from telegram.photo_service import _photo_abs_path
+
+        abs_path = _photo_abs_path(clean_id)
+        if abs_path.exists():
+            data = abs_path.read_bytes()
+            if len(data) > 100:
+                ct = _detect_image_content_type(data)
+                from telegram.photo_service import _sync_photo_to_entity
+
+                _sync_photo_to_entity(int(clean_id), clean_id)
+                cache.delete(neg_cache_key)
+                return HttpResponse(
+                    data,
+                    content_type=ct,
+                    headers={"Cache-Control": "public, max-age=3600"},
+                )
         return HttpResponse(status=404)
 
     # 2. Fast path: DB + disk cache
@@ -621,10 +638,8 @@ def osint_photo_proxy(request, entity_id: str):
             ).only("photo_file", "photo_url", "has_photo").first()
 
             if entity_obj:
-                if entity_obj.has_photo is False:
-                    return HttpResponse(status=404)
-
-                if entity_obj.photo_file:
+                # has_photo=True va fayl diskda bor — tezkor javob
+                if entity_obj.has_photo and entity_obj.photo_file:
                     abs_path = Path(settings.MEDIA_ROOT) / entity_obj.photo_file
                     if abs_path.exists():
                         data = abs_path.read_bytes()
@@ -635,6 +650,29 @@ def osint_photo_proxy(request, entity_id: str):
                                 content_type=ct,
                                 headers={"Cache-Control": "public, max-age=3600"},
                             )
+
+                # has_photo=False lekin diskda fayl bo'lishi mumkin
+                # (masalan, entity yaratilishidan OLDIN rasm yuklangan)
+                # → get_entity_photo ga o'tkazish — u diskni tekshiradi
+                if entity_obj.has_photo is False:
+                    from telegram.photo_service import _photo_abs_path
+
+                    abs_path = _photo_abs_path(clean_id)
+                    if abs_path.exists():
+                        data = abs_path.read_bytes()
+                        if len(data) > 100:
+                            ct = _detect_image_content_type(data)
+                            # DB ni yangilash — keyingi safar tezkor bo'lishi uchun
+                            from telegram.photo_service import _sync_photo_to_entity
+
+                            _sync_photo_to_entity(int(clean_id), clean_id)
+                            return HttpResponse(
+                                data,
+                                content_type=ct,
+                                headers={"Cache-Control": "public, max-age=3600"},
+                            )
+                    # Diskda ham yo'q — haqiqiy negative cache
+                    return HttpResponse(status=404)
 
                 if entity_obj.photo_url:
                     return redirect(entity_obj.photo_url)

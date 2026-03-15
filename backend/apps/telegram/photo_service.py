@@ -339,6 +339,28 @@ def _download_photo_via_telethon(entity_id: int, username: str = "") -> bytes | 
         return None
 
 
+# ── DB Sync Helper ────────────────────────────────────────────────────────────
+
+
+def _sync_photo_to_entity(entity_int: int, entity_str: str) -> None:
+    """Diskdagi photo faylni TelegramEntity ga sinxronizatsiya qilish.
+
+    Fayl allaqachon diskda mavjud bo'lganda, DB metadatani yangilaydi:
+    photo_file, photo_url, has_photo=True, photo_fetched_at=now.
+    Faqat mavjud entity'larni yangilaydi — yangi entity yaratmaydi.
+    """
+    rel_path = _photo_rel_path(entity_str)
+    full_url = _photo_full_url(entity_str)
+    updated = TelegramEntity.objects.filter(telegram_id=entity_int).update(
+        photo_file=rel_path,
+        photo_url=full_url,
+        photo_fetched_at=timezone.now(),
+        has_photo=True,
+    )
+    if updated:
+        logger.info("Photo synced: entity %s → %s", entity_str, full_url)
+
+
 # ── Main Public API ──────────────────────────────────────────────────────────
 
 
@@ -371,20 +393,33 @@ def get_entity_photo(
         return None, None
 
     # 1. Check cache: TelegramEntity DB + filesystem
+    db_username = ""  # DB dan olingan username — Telethon fallback uchun
     if not force_refresh:
         try:
             entity_obj = TelegramEntity.objects.filter(
                 telegram_id=int(entity_str),
             ).first()
-            if entity_obj and not entity_obj.is_photo_stale:
-                if entity_obj.has_photo is False:
-                    return None, None  # Negative cache
-                if entity_obj.has_photo and entity_obj.photo_file:
-                    abs_path = _photo_abs_path(entity_str)
-                    if abs_path.exists():
-                        return abs_path.read_bytes(), "image/jpeg"
-                    # File deleted but cache entry exists — fall through to re-download
-            elif entity_obj is None:
+            if entity_obj:
+                db_username = entity_obj.username or ""
+                if not entity_obj.is_photo_stale:
+                    if entity_obj.has_photo is False:
+                        # Negative cache — lekin diskda fayl bo'lishi mumkin
+                        # (masalan, entity yaratilishidan OLDIN rasm yuklangan)
+                        abs_path = _photo_abs_path(entity_str)
+                        if abs_path.exists():
+                            photo_data = abs_path.read_bytes()
+                            if _is_valid_image(photo_data):
+                                _sync_photo_to_entity(
+                                    int(entity_str), entity_str,
+                                )
+                                return photo_data, "image/jpeg"
+                        return None, None  # Negative cache — diskda ham yo'q
+                    if entity_obj.has_photo and entity_obj.photo_file:
+                        abs_path = _photo_abs_path(entity_str)
+                        if abs_path.exists():
+                            return abs_path.read_bytes(), "image/jpeg"
+                        # File deleted but cache entry exists — fall through
+            else:
                 # TelegramEntity yo'q — disk keshni tekshirish
                 abs_path = _photo_abs_path(entity_str)
                 if abs_path.exists():
@@ -399,13 +434,28 @@ def get_entity_photo(
         logger.warning("Noto'g'ri entity_id: %s", entity_id)
         return None, None
 
+    # 2.5. Auto-lookup username from DB (Telethon fallback uchun)
+    # username parametr sifatida berilmagan bo'lsa, DB dan olish
+    effective_username = username or db_username
+    if not effective_username:
+        try:
+            ent = TelegramEntity.objects.filter(
+                telegram_id=entity_int,
+            ).only("username").first()
+            if ent and ent.username:
+                effective_username = ent.username
+        except Exception:
+            pass
+
     # 3. Download via Bot API (xavfsiz, ban xavfi yo'q)
     photo_bytes = _download_photo_via_bot_api(entity_int)
 
     # 3.5 Fallback: Telethon (Bot API ishlamasa — guruh/kanal/noma'lum user uchun)
-    # username berilgan bo'lsa, access_hash yo'q bo'lganda @username orqali urinadi
+    # username bilan access_hash yo'q bo'lganda @username orqali urinadi
     if not photo_bytes:
-        photo_bytes = _download_photo_via_telethon(entity_int, username=username)
+        photo_bytes = _download_photo_via_telethon(
+            entity_int, username=effective_username,
+        )
 
     # 4. Fallback: download from entity's external photo_url
     if not photo_bytes:
@@ -423,23 +473,18 @@ def get_entity_photo(
         _ensure_photo_dir()
         abs_path = _photo_abs_path(entity_str)
         abs_path.write_bytes(photo_bytes)
-
-        rel_path = _photo_rel_path(entity_str)
-        full_url = _photo_full_url(entity_str)
-        updated = TelegramEntity.objects.filter(telegram_id=entity_int).update(
-            photo_file=rel_path,
-            photo_url=full_url,
-            photo_fetched_at=timezone.now(),
-            has_photo=True,
-        )
-        if updated:
-            logger.info("Photo saqlandi: entity %s → %s", entity_str, full_url)
-        else:
-            logger.debug(
-                "Photo yuklandi (%s) lekin TelegramEntity yo'q — DB skip",
-                entity_str,
-            )
+        _sync_photo_to_entity(entity_int, entity_str)
         return photo_bytes, "image/jpeg"
+
+    # 5.5. Disk fallback — API lar ishlamagan bo'lsa ham, diskda rasm bor bo'lishi mumkin
+    # (masalan, avval Telethon orqali yuklangan, endi session o'zgargan)
+    abs_path = _photo_abs_path(entity_str)
+    if abs_path.exists():
+        photo_data = abs_path.read_bytes()
+        if _is_valid_image(photo_data):
+            _sync_photo_to_entity(entity_int, entity_str)
+            logger.info("Photo diskdan qayta topildi: entity %s", entity_str)
+            return photo_data, "image/jpeg"
 
     # No photo — negative cache (only update existing entities)
     # NOTE: photo_url ni tozalamaymiz — u Telegram Login Widget dan kelgan
