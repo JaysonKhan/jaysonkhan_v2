@@ -74,9 +74,18 @@ def fetch_or_cache(
             response = method(int(target_id))
     except FunStatAPIError as e:
         return OsintResult(error=str(e))
+    except Exception as e:
+        logger.exception("Unexpected error calling FunStat API: %s", e)
+        return OsintResult(error=f"API xatoligi: {e}")
 
-    api_data = response.get("data") if isinstance(response, dict) else response
-    api_tech = response.get("tech", {}) if isinstance(response, dict) else {}
+    # Smart parsing: some endpoints wrap in {"data": ..., "tech": ...},
+    # others return data directly at the top level.
+    if isinstance(response, dict) and "data" in response:
+        api_data = response["data"]
+        api_tech = response.get("tech", {})
+    else:
+        api_data = response if response is not None else {}
+        api_tech = {}
 
     # 3. Store in cache
     entry = OsintCache.set_cache(
@@ -121,13 +130,25 @@ def resolve_and_search(query: str, user=None) -> dict:
     client = FunStatClient()
     try:
         resp = client.resolve_username(username)
-        tech = resp.get("tech", {})
-        data = resp.get("data", [])
+
+        # Response might be {"data": [...], "tech": {...}} or direct data
+        if isinstance(resp, dict) and "data" in resp:
+            tech = resp.get("tech", {})
+            data = resp["data"]
+        elif isinstance(resp, list):
+            tech = {}
+            data = resp
+        elif isinstance(resp, dict):
+            tech = {}
+            data = resp
+        else:
+            tech = {}
+            data = []
 
         # data could be a list of resolved_user or a single object
         resolved_id = None
         if isinstance(data, list) and data:
-            resolved_id = data[0].get("id")
+            resolved_id = data[0].get("id") if isinstance(data[0], dict) else None
         elif isinstance(data, dict):
             resolved_id = data.get("id")
 
@@ -146,4 +167,7 @@ def resolve_and_search(query: str, user=None) -> dict:
             "cost": tech.get("request_cost", 0),
         }
     except FunStatAPIError as e:
+        return {"user_id": None, "error": str(e), "tech": {}, "cost": 0}
+    except Exception as e:
+        logger.exception("Unexpected error resolving username: %s", e)
         return {"user_id": None, "error": str(e), "tech": {}, "cost": 0}

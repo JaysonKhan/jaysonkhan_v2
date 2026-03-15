@@ -39,6 +39,8 @@ class FunStatClient:
             raise FunStatAPIError(0, "FunStat serveriga ulanib bo'lmadi")
         except httpx.TimeoutException:
             raise FunStatAPIError(0, "FunStat API so'rovi vaqti o'tdi")
+        except httpx.HTTPError as e:
+            raise FunStatAPIError(0, f"HTTP xatoligi: {e}")
 
         if resp.status_code >= 400:
             try:

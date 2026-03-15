@@ -106,7 +106,7 @@ def osint_profile(request, user_id: int):
             "user_id": user_id,
             "basic": basic,
             "tree": tree,
-            "balance": basic.tech.get("current_ballance") if basic.tech else None,
+            "balance": basic.tech.get("current_ballance") if basic.tech and isinstance(basic.tech, dict) else None,
         }),
     )
 
