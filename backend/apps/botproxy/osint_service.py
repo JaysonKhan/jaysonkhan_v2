@@ -282,23 +282,18 @@ def _resolve_via_telethon(username: str) -> dict | None:
 
         result = run_async(_resolve())
 
-        # DB ga saqlash
-        if result:
+        # DB ga saqlash — FAQAT kanal/guruh uchun (PeerChannel/PeerChat hints uchun kerak).
+        # User/bot entitylarini saqlaMAYMIZ — ular faqat saytga login qilganda yaratiladi.
+        if result and result["entity_type"] in ("channel", "supergroup", "group"):
             from telegram.models import EntitySource, TelegramEntity
-            etype = result["entity_type"]
-            defaults = {
-                "entity_type": etype,
-                "username": result.get("username", ""),
-            }
-            if etype in ("channel", "supergroup", "group"):
-                defaults["title"] = result.get("title", "")
-            else:
-                defaults["first_name"] = result.get("first_name", "")
-                defaults["last_name"] = result.get("last_name", "")
 
             entity_obj, _ = TelegramEntity.objects.update_or_create(
                 telegram_id=result["id"],
-                defaults=defaults,
+                defaults={
+                    "entity_type": result["entity_type"],
+                    "username": result.get("username", ""),
+                    "title": result.get("title", ""),
+                },
             )
             EntitySource.objects.get_or_create(
                 entity=entity_obj,
