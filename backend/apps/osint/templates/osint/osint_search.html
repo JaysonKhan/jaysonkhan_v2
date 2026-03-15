@@ -78,7 +78,7 @@
                  alt="">
             <span class="recent-photo-fallback {% if s.query_type == 'channel' %}channel{% endif %}"
                   style="display:none;">
-                {{ s.entity_name|truncatechars:1 }}
+                {{ s.entity_name|first }}
             </span>
             {% elif s.query_type == "text" %}
             <span class="recent-photo-fallback text-search">
@@ -86,7 +86,7 @@
             </span>
             {% else %}
             <span class="recent-photo-fallback {% if s.query_type == 'channel' %}channel{% endif %}">
-                {{ s.entity_name|truncatechars:1 }}
+                {{ s.entity_name|first }}
             </span>
             {% endif %}
 
