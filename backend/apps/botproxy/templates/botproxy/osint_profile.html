@@ -170,6 +170,53 @@
 }
 .drawer-stat .val { font-weight:700; font-size:1rem; color:var(--rb-fg); }
 .drawer-stat .lbl { color:var(--rb-fg-muted); margin-top:0.125rem; }
+/* Common groups stat cards */
+.cgs-card {
+    display:flex; align-items:center; gap:0.75rem; padding:0.625rem 0.75rem;
+    border:1px solid var(--rb-border); border-radius:10px; margin-bottom:0.5rem;
+    transition:background 0.15s, border-color 0.15s;
+    text-decoration:none; color:inherit;
+}
+.cgs-card:hover { background:var(--rb-bg-muted); border-color:var(--rb-primary); }
+.cgs-avatar {
+    width:40px; height:40px; border-radius:50%; object-fit:cover; flex-shrink:0;
+    border:1.5px solid var(--rb-border); background:var(--rb-bg-muted);
+}
+.cgs-avatar-fallback {
+    width:40px; height:40px; border-radius:50%; flex-shrink:0;
+    background:var(--rb-primary-muted); display:flex; align-items:center;
+    justify-content:center; font-size:1rem; font-weight:700; color:var(--rb-primary);
+    border:1.5px solid var(--rb-border);
+}
+.cgs-info { flex:1; min-width:0; }
+.cgs-name { font-weight:600; font-size:0.8125rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cgs-sub { font-size:0.6875rem; color:var(--rb-fg-muted); }
+.cgs-count {
+    padding:0.25rem 0.625rem; border-radius:999px; font-size:0.75rem;
+    font-weight:700; flex-shrink:0;
+    background:var(--rb-primary-muted); color:var(--rb-primary);
+}
+/* User messages compact */
+.umsg-row { padding:0.5rem 0; border-bottom:1px solid var(--rb-border); }
+.umsg-row:last-child { border-bottom:none; }
+.umsg-header {
+    display:flex; align-items:center; gap:0.5rem;
+    font-size:0.6875rem; color:var(--rb-fg-muted); margin-bottom:0.25rem; flex-wrap:wrap;
+}
+.umsg-group {
+    display:inline-flex; align-items:center; gap:4px;
+    font-weight:600; color:var(--rb-fg); font-size:0.75rem;
+}
+.umsg-group img {
+    width:16px; height:16px; border-radius:50%; object-fit:cover;
+    border:1px solid var(--rb-border); background:var(--rb-bg-muted);
+}
+.umsg-text { font-size:0.8125rem; line-height:1.5; word-break:break-word; color:var(--rb-fg); }
+.umsg-media-badge {
+    display:inline-flex; align-items:center; gap:2px;
+    padding:0.0625rem 0.375rem; border-radius:999px; font-size:0.5625rem;
+    font-weight:600; background:var(--rb-primary-muted); color:var(--rb-primary);
+}
 </style>
 
 <!-- Data Tree (Shajara) -->
@@ -303,10 +350,14 @@ function renderBranchData(branch, response) {
         html += renderKeyValueTable(data);
     }
 
-    // Array → groups branch gets special rendering, others get table
+    // Array → specialized renders for groups, common_groups_stat, messages
     if (Array.isArray(data) && data.length > 0) {
         if (branch === 'groups' && data[0] && data[0].chat) {
             html += renderGroupsList(data);
+        } else if (branch === 'common_groups_stat') {
+            html += renderCommonGroupsStat(data);
+        } else if (branch === 'messages') {
+            html += renderUserMessages(data);
         } else {
             html += renderArrayTable(data, branch);
         }
@@ -582,6 +633,117 @@ function closeDrawer() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeDrawer();
 });
+
+/* ── Common Groups Stat — card list ──────────────────────────── */
+
+function renderCommonGroupsStat(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+        var u = data[i];
+        var uid = u.user_id || u.id || '';
+        var firstName = escapeHtml(u.first_name || '');
+        var lastName = escapeHtml(u.last_name || '');
+        var name = (firstName + ' ' + lastName).trim() || 'ID: ' + uid;
+        var initial = (firstName || String(uid)).charAt(0).toUpperCase();
+        var username = u.username || u.mainUsername || '';
+        var commonCount = u.common_groups || u.commonGroups || 0;
+        var isActive = u.is_user_active;
+        var photoUrl = uid ? PHOTO_URL_TPL.replace('__EID__', uid) : '';
+        var profileUrl = uid ? PROFILE_URL_TPL.replace('99999', uid) : '#';
+
+        var avatarHtml = photoUrl
+            ? '<img class="cgs-avatar" src="' + photoUrl + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+              '<div class="cgs-avatar-fallback" style="display:none">' + initial + '</div>'
+            : '<div class="cgs-avatar-fallback">' + initial + '</div>';
+
+        var subParts = [];
+        if (username) subParts.push('@' + escapeHtml(username));
+        subParts.push('ID: ' + uid);
+
+        var activeBadge = '';
+        if (isActive === true) activeBadge = '<span class="rb-badge rb-badge-open" style="font-size:0.5625rem;">Faol</span>';
+        else if (isActive === false) activeBadge = '<span class="rb-badge rb-badge-closed" style="font-size:0.5625rem;">Nofaol</span>';
+
+        html += '<a class="cgs-card" href="' + profileUrl + '">' +
+            avatarHtml +
+            '<div class="cgs-info">' +
+                '<div class="cgs-name">' + name + ' ' + activeBadge + '</div>' +
+                '<div class="cgs-sub">' + subParts.join(' · ') + '</div>' +
+            '</div>' +
+            '<div class="cgs-count">' + commonCount + ' guruh</div>' +
+            '<span class="material-symbols-outlined" style="font-size:16px;color:var(--rb-fg-muted);flex-shrink:0;">chevron_right</span>' +
+        '</a>';
+    }
+    return html;
+}
+
+/* ── User Messages — compact cards ──────────────────────────── */
+
+function renderUserMessages(data) {
+    var mediaIcons = {
+        'Image': 'image', 'Video': 'videocam', 'Sticker': 'emoji_emotions',
+        'Document': 'description', 'Voice': 'mic', 'Audio': 'music_note',
+        'Animation': 'gif', 'Contact': 'person', 'Location': 'location_on',
+        'Poll': 'poll', 'Dice': 'casino', 'Game': 'sports_esports'
+    };
+
+    var html = '';
+    var limit = Math.min(data.length, 100);
+    for (var i = 0; i < limit; i++) {
+        var m = data[i];
+        // Group/chat info
+        var groupTitle = escapeHtml(m.title || '');
+        var groupUsername = m.username || '';
+        var groupPhotoHtml = '';
+        // Try to get group photo via group search
+        if (groupUsername) {
+            groupPhotoHtml = '<img src="' + PHOTO_URL_TPL.replace('__EID__', groupUsername) + '" ' +
+                'onerror="this.style.display=\'none\'" alt="">';
+        }
+
+        // Date
+        var date = m.date || '';
+        if (date.indexOf('T') > -1) date = date.substring(0, 10) + ' ' + date.substring(11, 16);
+        else if (date.length > 16) date = date.substring(0, 16);
+
+        // Media
+        var mediaBadge = '';
+        var mediaName = m.mediaName || m.medianame || '';
+        var mediaCode = m.mediaCode || m.mediacode || '';
+        if (mediaName) {
+            var icon = mediaIcons[mediaName] || 'attachment';
+            mediaBadge = '<span class="umsg-media-badge">' +
+                '<span class="material-symbols-outlined" style="font-size:11px;">' + icon + '</span>' +
+                escapeHtml(mediaName) + '</span>';
+        }
+
+        // Text
+        var text = escapeHtml(m.text || '');
+        if (text.length > 250) text = text.substring(0, 250) + '...';
+
+        // Privacy
+        var privBadge = '';
+        if (m.isPrivate || m.isprivate) {
+            privBadge = '<span class="rb-badge rb-badge-info" style="font-size:0.5625rem;">Yopiq</span>';
+        }
+
+        html += '<div class="umsg-row">' +
+            '<div class="umsg-header">' +
+                '<span class="umsg-group">' + groupPhotoHtml + escapeHtml(groupTitle) + '</span>' +
+                (groupUsername ? '<span style="color:var(--rb-primary);font-size:0.625rem;">@' + escapeHtml(groupUsername) + '</span>' : '') +
+                privBadge +
+                mediaBadge +
+                '<span style="margin-left:auto;">' + date + '</span>' +
+                '<span style="font-family:var(--rb-mono,monospace);opacity:0.5;font-size:0.625rem;">#' + (m.messageId || m.messageid || '') + '</span>' +
+            '</div>' +
+            (text ? '<div class="umsg-text">' + text + '</div>' : '') +
+        '</div>';
+    }
+    if (data.length > 100) {
+        html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
+    }
+    return html;
+}
 
 function refreshBranch(branch) {
     var node = document.querySelector('.rb-tree-node[data-branch="' + branch + '"]');

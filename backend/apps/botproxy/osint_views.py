@@ -79,9 +79,11 @@ def _annotate_search_logs(logs: list) -> None:
             continue
         data = entry.data or {}
         if entry.endpoint_type == "stats_min":
-            name = data.get("name") or data.get("first_name") or ""
-            if not name and isinstance(data, dict):
-                name = data.get("username") or ""
+            # stats_min: {first_name, last_name, ...} yoki {name, ...}
+            parts = [data.get("first_name") or "", data.get("last_name") or ""]
+            name = " ".join(p for p in parts if p).strip()
+            if not name:
+                name = data.get("name") or data.get("username") or ""
             if name:
                 cache_names[tid] = name
         elif entry.endpoint_type == "channel_profile":
@@ -315,6 +317,21 @@ def osint_entity_profile(request, entity_id: int):
         entity_id=entity_id,
         user=request.user,
     )
+
+    # Agar entity kanal/guruh emas bo'lsa (PeerUser xatosi) — user profilga redirect
+    if profile.error and (
+        "PeerUser" in (profile.error or "")
+        or "kanal/guruh emas" in (profile.error or "")
+    ):
+        # SearchLog ni ham to'g'rilash
+        OsintSearchLog.objects.filter(
+            query=str(entity_id),
+            query_type="channel",
+            searched_by=request.user,
+        ).update(query_type="id")
+        return redirect(
+            reverse("osint_profile", kwargs={"user_id": entity_id})
+        )
 
     # FunStat group_info (qo'shimcha ma'lumot — 0.01 kredit)
     funstat_info = None
