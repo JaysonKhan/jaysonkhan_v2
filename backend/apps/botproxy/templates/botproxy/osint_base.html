@@ -74,8 +74,14 @@ html.dark .rb-error-box { background: rgba(239,68,68,0.1); color: #fca5a5; }
     </a>
     {% if user_id %}
     <a href="{% url 'osint_profile' user_id=user_id %}"
-       class="{% if 'profile' in request.resolver_match.url_name %}active{% endif %}">
+       class="{% if request.resolver_match.url_name == 'osint_profile' %}active{% endif %}">
         <span class="material-symbols-outlined">person_search</span> Profil #{{ user_id }}
+    </a>
+    {% endif %}
+    {% if entity_id %}
+    <a href="{% url 'osint_entity_profile' entity_id=entity_id %}"
+       class="{% if 'entity' in request.resolver_match.url_name %}active{% endif %}">
+        <span class="material-symbols-outlined">groups</span> Entity #{{ entity_id }}
     </a>
     {% endif %}
     <a href="{% url 'telegram_session' %}"

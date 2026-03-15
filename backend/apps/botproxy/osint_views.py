@@ -15,6 +15,7 @@ from botproxy.funstat_client import FunStatClient, FunStatAPIError
 from botproxy.models import OsintCache, OsintSearchLog
 from botproxy.osint_service import (
     ENDPOINT_REGISTRY,
+    fetch_channel_data,
     fetch_or_cache,
     resolve_and_search,
 )
@@ -52,13 +53,19 @@ PROFILE_TREE = [
 
 @staff_member_required
 def osint_search(request):
-    """Search by Telegram ID or @username."""
+    """Search by Telegram ID or @username — routes to user or entity profile."""
     query = request.GET.get("q", "").strip()
     error = None
 
     if query:
         result = resolve_and_search(query, user=request.user)
         if result["user_id"]:
+            entity_type = result.get("entity_type", "user")
+            if entity_type in ("channel", "supergroup", "group"):
+                return redirect(
+                    reverse("osint_entity_profile", kwargs={"entity_id": result["user_id"]})
+                )
+            # Default: user/bot → existing profile
             return redirect(
                 reverse("osint_profile", kwargs={"user_id": result["user_id"]})
             )
@@ -193,6 +200,104 @@ def osint_text_search(request):
     return JsonResponse({
         "data": resp_data,
         "tech": resp_tech,
+    })
+
+
+# ─── Entity Profile (Channel/Group) ──────────────────────────────────────
+
+@staff_member_required
+def osint_entity_profile(request, entity_id: int):
+    """Kanal/guruh profil sahifasi — Telethon MTProto + FunStat get_group_info."""
+    # Log this visit
+    OsintSearchLog.objects.update_or_create(
+        query=str(entity_id),
+        query_type="channel",
+        searched_by=request.user,
+        defaults={
+            "resolved_id": entity_id,
+            "searched_at": timezone.now(),
+        },
+    )
+
+    # Telethon MTProto profil
+    profile = fetch_channel_data(
+        operation="channel_profile",
+        entity_id=entity_id,
+        user=request.user,
+    )
+
+    # FunStat group_info (qo'shimcha ma'lumot — 0.01 kredit)
+    funstat_info = None
+    try:
+        funstat_info = fetch_or_cache(
+            "group_info", entity_id, user=request.user,
+        )
+    except Exception:
+        pass
+
+    return TemplateResponse(
+        request,
+        "botproxy/osint_entity_profile.html",
+        _ctx(request, {
+            "entity_id": entity_id,
+            "profile": profile,
+            "funstat_info": funstat_info,
+        }),
+    )
+
+
+@staff_member_required
+def osint_channel_messages(request, entity_id: int):
+    """AJAX: kanal/guruh xabarlari (offset_id cursor pagination)."""
+    offset_id = max(0, int(request.GET.get("offset_id", 0)))
+    limit = min(50, max(1, int(request.GET.get("limit", 20))))
+    force = request.GET.get("refresh") == "1"
+
+    result = fetch_channel_data(
+        operation="channel_messages",
+        entity_id=entity_id,
+        offset_id=offset_id,
+        limit=limit,
+        force_refresh=force,
+        user=request.user,
+    )
+
+    if result.error:
+        return JsonResponse({"error": result.error}, status=502)
+
+    return JsonResponse({
+        "data": result.data,
+        "cached": result.cached,
+        "cached_at": result.cached_at,
+    })
+
+
+@staff_member_required
+def osint_channel_search(request, entity_id: int):
+    """AJAX: kanal ichida xabar qidirish."""
+    query = request.GET.get("q", "").strip()
+    if not query:
+        return JsonResponse({"error": "Qidiruv so'zi kiritilmagan"}, status=400)
+
+    offset_id = max(0, int(request.GET.get("offset_id", 0)))
+    limit = min(50, max(1, int(request.GET.get("limit", 20))))
+
+    result = fetch_channel_data(
+        operation="channel_search",
+        entity_id=entity_id,
+        query=query,
+        offset_id=offset_id,
+        limit=limit,
+        user=request.user,
+    )
+
+    if result.error:
+        return JsonResponse({"error": result.error}, status=502)
+
+    return JsonResponse({
+        "data": result.data,
+        "cached": result.cached,
+        "cached_at": result.cached_at,
     })
 
 

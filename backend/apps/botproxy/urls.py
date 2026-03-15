@@ -18,6 +18,10 @@ urlpatterns = [
     path("osint/text-search/", osint_views.osint_text_search, name="osint_text_search"),
     path("osint/balance/", osint_views.osint_balance, name="osint_balance"),
     path("osint/photo/<str:entity_id>/", osint_views.osint_photo_proxy, name="osint_photo"),
+    # Kanal/Guruh OSINT (Telethon MTProto)
+    path("osint/entity/<int:entity_id>/", osint_views.osint_entity_profile, name="osint_entity_profile"),
+    path("osint/entity/<int:entity_id>/messages/", osint_views.osint_channel_messages, name="osint_channel_messages"),
+    path("osint/entity/<int:entity_id>/search/", osint_views.osint_channel_search, name="osint_channel_search"),
     # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),

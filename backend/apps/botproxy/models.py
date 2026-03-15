@@ -37,12 +37,16 @@ class OsintCache(models.Model):
         ("basic_info", "Basic Info (0.10)"),
         ("resolve_username", "Resolve Username (0.10)"),
         ("username_usage", "Username Usage (0.1)"),
-        # Groups
+        # Groups (FunStat)
         ("group_info", "Group Info (0.01)"),
         ("group_members", "Group Members (15)"),
         ("common_groups", "Common Groups (0.5)"),
         # Text
         ("text_search", "Text Search (0.1)"),
+        # Channel/Group (Telethon MTProto)
+        ("channel_profile", "Channel Profile (Telethon)"),
+        ("channel_messages", "Channel Messages (Telethon)"),
+        ("channel_search", "Channel Search (Telethon)"),
     ]
 
     endpoint_type = models.CharField(max_length=30, choices=ENDPOINT_CHOICES, db_index=True)
@@ -118,6 +122,7 @@ class OsintSearchLog(models.Model):
         ("id", "User ID"),
         ("username", "Username"),
         ("text", "Text Search"),
+        ("channel", "Channel/Group"),
     ]
 
     query = models.CharField(max_length=255)

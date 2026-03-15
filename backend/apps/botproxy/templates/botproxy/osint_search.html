@@ -6,18 +6,18 @@
     <h1>
         <span class="material-symbols-outlined" style="vertical-align:middle;">person_search</span>
         OSINT Qidiruv
-        <span class="rb-subtitle">Telegram foydalanuvchini ID yoki @username bo'yicha qidiring</span>
+        <span class="rb-subtitle">Telegram foydalanuvchi, kanal yoki guruhni ID yoki @username bo'yicha qidiring</span>
     </h1>
 </div>
 
 <!-- Main Search -->
 <div class="rb-card">
     <div class="rb-card-header">
-        <h2>Foydalanuvchi qidirish</h2>
+        <h2>Foydalanuvchi / Kanal / Guruh qidirish</h2>
     </div>
     <form method="get" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
         <div class="rb-form-group" style="margin:0; flex:2; min-width:280px;">
-            <label for="q">Telegram ID yoki @username</label>
+            <label for="q">Telegram ID, @username yoki kanal nomi</label>
             <input type="text" id="q" name="q" value="{{ query }}"
                    placeholder="123456789 yoki @username" autofocus>
         </div>
@@ -73,15 +73,29 @@
                 <tr>
                     <td>
                         {% if s.resolved_id %}
-                        <a href="{% url 'osint_profile' user_id=s.resolved_id %}">{{ s.query }}</a>
+                            {% if s.query_type == "channel" %}
+                            <a href="{% url 'osint_entity_profile' entity_id=s.resolved_id %}">{{ s.query }}</a>
+                            {% else %}
+                            <a href="{% url 'osint_profile' user_id=s.resolved_id %}">{{ s.query }}</a>
+                            {% endif %}
                         {% else %}
                         {{ s.query }}
                         {% endif %}
                     </td>
-                    <td><span class="rb-badge rb-badge-info">{{ s.get_query_type_display }}</span></td>
+                    <td>
+                        {% if s.query_type == "channel" %}
+                        <span class="rb-badge rb-badge-open">{{ s.get_query_type_display }}</span>
+                        {% else %}
+                        <span class="rb-badge rb-badge-info">{{ s.get_query_type_display }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if s.resolved_id %}
-                        <a href="{% url 'osint_profile' user_id=s.resolved_id %}" class="rb-code">{{ s.resolved_id }}</a>
+                            {% if s.query_type == "channel" %}
+                            <a href="{% url 'osint_entity_profile' entity_id=s.resolved_id %}" class="rb-code">{{ s.resolved_id }}</a>
+                            {% else %}
+                            <a href="{% url 'osint_profile' user_id=s.resolved_id %}" class="rb-code">{{ s.resolved_id }}</a>
+                            {% endif %}
                         {% else %}-{% endif %}
                     </td>
                     <td class="rb-muted">{{ s.searched_at|date:"Y-m-d H:i" }}</td>

@@ -1,8 +1,13 @@
-"""Service layer for OSINT operations — cache-aware data fetching."""
+"""Service layer for OSINT operations — cache-aware data fetching.
+
+FunStat (user OSINT) + Telethon MTProto (kanal/guruh operatsiyalari) uchun
+yagona service layer. Barcha natijalar OsintCache orqali keshlanadi.
+"""
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Any
 
 from django.utils import timezone
@@ -36,6 +41,14 @@ ENDPOINT_REGISTRY: dict[str, tuple[str, str, bool]] = {
     "gifts":              ("get_user_gifts",           "5 kredit",  True),
     "common_groups_stat": ("get_user_common_groups",   "5 kredit",  False),
     "messages":           ("get_user_messages",        "10 kredit", True),
+    "group_info":         ("get_group_info",           "0.01 kredit", False),
+}
+
+# Telethon operatsiyalari uchun TTL (soatlarda)
+CHANNEL_CACHE_TTL = {
+    "channel_profile": 24,   # Profil — 24 soat
+    "channel_messages": 1,   # Xabarlar — 1 soat
+    "channel_search": 0.5,   # Qidirish — 30 daqiqa
 }
 
 
@@ -107,31 +120,238 @@ def fetch_or_cache(
     )
 
 
-def resolve_and_search(query: str, user=None) -> dict:
-    """Resolve query to a Telegram user_id.
+def fetch_channel_data(
+    operation: str,
+    entity_id: int | str,
+    force_refresh: bool = False,
+    query: str = "",
+    offset_id: int = 0,
+    limit: int = 20,
+    user=None,
+) -> OsintResult:
+    """Telethon MTProto operatsiyalari uchun cache-aware data fetching.
 
-    - Numeric → direct user ID (free)
-    - @username → resolve_username API call (cost 0.10)
+    Operations:
+        channel_profile — kanal/guruh profili (TTL: 24 soat)
+        channel_messages — xabarlar ro'yxati (TTL: 1 soat)
+        channel_search — xabar qidirish (TTL: 30 daqiqa)
+
+    Cache key: (endpoint_type, target_id, page=1)
+    Search uchun target_id = "entity_id:query" (offset_id har xil bo'lgani uchun page=1)
+    """
+    entity_str = str(entity_id)
+    ttl_hours = CHANNEL_CACHE_TTL.get(operation, 24)
+
+    # Cache key — search uchun query ni ham qo'shish
+    if operation == "channel_search":
+        cache_target = f"{entity_str}:{query}"
+    else:
+        cache_target = entity_str
+
+    # Offset/pagination uchun page sifatida offset_id ishlatamiz
+    # (0 = birinchi sahifa, keyingilar uchun offset_id)
+    cache_page = max(1, offset_id)
+
+    # 1. Try cache (faqat birinchi sahifa uchun va force emas bo'lsa)
+    if not force_refresh and offset_id == 0:
+        cached = OsintCache.get_cached(operation, cache_target, page=1)
+        if cached:
+            age = timezone.now() - cached.fetched_at
+            if age < timedelta(hours=ttl_hours):
+                return OsintResult(
+                    data=cached.data,
+                    tech=cached.tech,
+                    cached=True,
+                    cached_at=cached.fetched_at.isoformat(),
+                )
+
+    # 2. Fetch from Telethon MTProto
+    from telegram.mtproto_service import (
+        get_channel_messages,
+        get_entity_profile,
+        search_channel_messages,
+    )
+
+    if operation == "channel_profile":
+        result = get_entity_profile(entity_id)
+    elif operation == "channel_messages":
+        result = get_channel_messages(entity_id, limit=limit, offset_id=offset_id)
+    elif operation == "channel_search":
+        result = search_channel_messages(entity_id, query=query, limit=limit, offset_id=offset_id)
+    else:
+        return OsintResult(error=f"Noma'lum operatsiya: {operation}")
+
+    if result.error:
+        return OsintResult(error=result.error)
+
+    if result.rate_limited:
+        return OsintResult(error=result.error or "Rate limit — kutib turing")
+
+    # 3. Cache the result (faqat birinchi sahifa va profil uchun)
+    api_data = result.data or {}
+    tech_info = {"source": "telethon_mtproto"}
+
+    if operation == "channel_profile" or offset_id == 0:
+        entry = OsintCache.set_cache(
+            endpoint_type=operation,
+            target_id=cache_target,
+            data=api_data,
+            tech=tech_info,
+            page=1,
+            user=user,
+        )
+        cached_at = entry.fetched_at.isoformat()
+    else:
+        cached_at = timezone.now().isoformat()
+
+    return OsintResult(
+        data=api_data,
+        tech=tech_info,
+        cached=False,
+        cached_at=cached_at,
+    )
+
+
+# ── Entity Type Detection ──────────────────────────────────────────────────
+
+
+def _detect_entity_type(entity_id: int) -> str | None:
+    """DB dan entity turini aniqlash (API chaqiruvsiz).
+
+    Returns: 'user', 'bot', 'group', 'supergroup', 'channel', or None.
+    """
+    try:
+        from telegram.models import TelegramEntity
+        entity = TelegramEntity.objects.filter(
+            telegram_id=entity_id,
+        ).only("entity_type").first()
+        if entity:
+            return entity.entity_type
+    except Exception:
+        pass
+    return None
+
+
+def _resolve_via_telethon(username: str) -> dict | None:
+    """Telethon orqali username ni resolve qilish (FunStat fallback).
+
+    Returns dict: {id, entity_type, title/first_name, username} or None.
+    Rate limited — faqat FunStat topolmaganda ishlatiladi.
+    """
+    try:
+        from telegram.telegram_client import (
+            get_rate_limiter,
+            get_telegram_client,
+            run_async,
+            _handle_telethon_error,
+        )
+
+        limiter = get_rate_limiter()
+        if not limiter.acquire(timeout=10):
+            logger.warning("Telethon resolve rate limited: @%s", username)
+            return None
+
+        client = get_telegram_client()
+
+        async def _resolve():
+            from telethon.tl.types import Channel, Chat, User
+            entity = await client.get_entity(username)
+            if isinstance(entity, Channel):
+                return {
+                    "id": entity.id,
+                    "entity_type": "channel" if entity.broadcast else "supergroup",
+                    "title": entity.title or "",
+                    "username": entity.username or "",
+                }
+            elif isinstance(entity, Chat):
+                return {
+                    "id": entity.id,
+                    "entity_type": "group",
+                    "title": entity.title or "",
+                    "username": "",
+                }
+            elif isinstance(entity, User):
+                return {
+                    "id": entity.id,
+                    "entity_type": "bot" if entity.bot else "user",
+                    "first_name": entity.first_name or "",
+                    "last_name": entity.last_name or "",
+                    "username": entity.username or "",
+                }
+            return None
+
+        result = run_async(_resolve())
+
+        # DB ga saqlash
+        if result:
+            from telegram.models import EntitySource, TelegramEntity
+            etype = result["entity_type"]
+            defaults = {
+                "entity_type": etype,
+                "username": result.get("username", ""),
+            }
+            if etype in ("channel", "supergroup", "group"):
+                defaults["title"] = result.get("title", "")
+            else:
+                defaults["first_name"] = result.get("first_name", "")
+                defaults["last_name"] = result.get("last_name", "")
+
+            entity_obj, _ = TelegramEntity.objects.update_or_create(
+                telegram_id=result["id"],
+                defaults=defaults,
+            )
+            EntitySource.objects.get_or_create(
+                entity=entity_obj,
+                service="osint",
+                defaults={"role": "searched"},
+            )
+
+        return result
+
+    except RuntimeError as e:
+        logger.warning("Telethon resolve xatolik (@%s): %s", username, e)
+        return None
+    except Exception as e:
+        logger.warning("Telethon resolve xatolik (@%s): %s", username, e)
+        return None
+
+
+def resolve_and_search(query: str, user=None) -> dict:
+    """Resolve query to a Telegram entity (user, channel, group).
+
+    - Numeric → direct entity ID (free) + entity_type from DB
+    - @username → FunStat resolve → Telethon fallback
+    - Returns entity_type for routing (user/bot → profile, channel/group → entity_profile)
     """
     query = query.strip()
 
     if query.isdigit():
+        entity_id = int(query)
+        entity_type = _detect_entity_type(entity_id) or "user"
+
         OsintSearchLog.objects.update_or_create(
             query=query,
-            query_type="id",
+            query_type="channel" if entity_type in ("channel", "supergroup", "group") else "id",
             searched_by=user,
             defaults={
-                "resolved_id": int(query),
+                "resolved_id": entity_id,
                 "searched_at": timezone.now(),
             },
         )
-        return {"user_id": int(query), "error": None, "tech": {}, "cost": 0}
+        return {
+            "user_id": entity_id,
+            "entity_type": entity_type,
+            "error": None,
+            "tech": {},
+            "cost": 0,
+        }
 
     # Username
     username = query.lstrip("@")
     if not username:
-        return {"user_id": None, "error": "Bo'sh so'rov", "tech": {}, "cost": 0}
+        return {"user_id": None, "entity_type": None, "error": "Bo'sh so'rov", "tech": {}, "cost": 0}
 
+    # 1. FunStat orqali resolve qilish
     client = FunStatClient()
     try:
         resp = client.resolve_username(username)
@@ -157,25 +377,60 @@ def resolve_and_search(query: str, user=None) -> dict:
         elif isinstance(data, dict):
             resolved_id = data.get("id")
 
+        if resolved_id:
+            entity_type = _detect_entity_type(resolved_id) or "user"
+            OsintSearchLog.objects.update_or_create(
+                query=query,
+                query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
+                searched_by=user,
+                defaults={
+                    "resolved_id": resolved_id,
+                    "searched_at": timezone.now(),
+                    "api_cost": tech.get("request_cost", 0),
+                    "balance_after": tech.get("current_ballance"),
+                },
+            )
+            return {
+                "user_id": resolved_id,
+                "entity_type": entity_type,
+                "error": None,
+                "tech": tech,
+                "cost": tech.get("request_cost", 0),
+            }
+
+    except FunStatAPIError:
+        pass
+    except Exception as e:
+        logger.warning("FunStat resolve xatolik (@%s): %s", username, e)
+
+    # 2. Telethon fallback — FunStat topolmagan entitylarni Telethon bilan resolve
+    telethon_result = _resolve_via_telethon(username)
+    if telethon_result:
+        resolved_id = telethon_result["id"]
+        entity_type = telethon_result["entity_type"]
+
         OsintSearchLog.objects.update_or_create(
             query=query,
-            query_type="username",
+            query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
             searched_by=user,
             defaults={
                 "resolved_id": resolved_id,
                 "searched_at": timezone.now(),
-                "api_cost": tech.get("request_cost", 0),
-                "balance_after": tech.get("current_ballance"),
+                "api_cost": 0,
             },
         )
         return {
             "user_id": resolved_id,
-            "error": None if resolved_id else f"'{username}' topilmadi",
-            "tech": tech,
-            "cost": tech.get("request_cost", 0),
+            "entity_type": entity_type,
+            "error": None,
+            "tech": {"source": "telethon"},
+            "cost": 0,
         }
-    except FunStatAPIError as e:
-        return {"user_id": None, "error": str(e), "tech": {}, "cost": 0}
-    except Exception as e:
-        logger.exception("Unexpected error resolving username: %s", e)
-        return {"user_id": None, "error": str(e), "tech": {}, "cost": 0}
+
+    return {
+        "user_id": None,
+        "entity_type": None,
+        "error": f"'{username}' topilmadi",
+        "tech": {},
+        "cost": 0,
+    }
