@@ -234,8 +234,16 @@
 fetch("{% url 'osint_balance' %}")
     .then(r => r.json())
     .then(d => {
-        document.getElementById('balance-amount').textContent =
-            d.balance != null ? parseFloat(d.balance).toFixed(2) : '?';
+        var el = document.getElementById('balance-amount');
+        if (d.balance != null) {
+            el.textContent = parseFloat(d.balance).toFixed(2);
+            if (d.low_balance) {
+                el.style.color = '#ef4444';
+                el.title = 'Balans past! 500 kreditdan kam qoldi.';
+            }
+        } else {
+            el.textContent = '?';
+        }
     })
     .catch(() => {
         document.getElementById('balance-amount').textContent = 'xato';

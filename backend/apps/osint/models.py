@@ -146,3 +146,46 @@ class OsintSearchLog(models.Model):
 
     def __str__(self):
         return f"{self.query_type}:{self.query} at {self.searched_at}"
+
+
+class OsintAuditLog(models.Model):
+    """Detailed audit trail for all OSINT API operations."""
+
+    ACTION_CHOICES = [
+        ("branch_fetch", "Branch Fetch"),
+        ("search", "Search"),
+        ("resolve", "Resolve"),
+        ("text_search", "Text Search"),
+        ("channel_messages", "Channel Messages"),
+        ("channel_search", "Channel Search"),
+        ("photo_proxy", "Photo Proxy"),
+        ("balance_check", "Balance Check"),
+    ]
+
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES, db_index=True)
+    endpoint_type = models.CharField(max_length=30, blank=True, default="")
+    target_id = models.CharField(max_length=255, blank=True, default="")
+    cached = models.BooleanField(default=False, help_text="Whether result was served from cache")
+    api_cost = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    balance_after = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    duration_ms = models.PositiveIntegerField(null=True, blank=True, help_text="API call duration in milliseconds")
+    error = models.TextField(blank=True, default="", help_text="Error message if the operation failed")
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    performed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-performed_at"]
+        verbose_name = "OSINT Audit Log"
+        verbose_name_plural = "OSINT Audit Logs"
+        indexes = [
+            models.Index(fields=["-performed_at"]),
+            models.Index(fields=["action", "-performed_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.action}:{self.target_id} at {self.performed_at}"

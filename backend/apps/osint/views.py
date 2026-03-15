@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
@@ -12,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from osint.exceptions import FunStatAPIError
-from osint.models import OsintCache, OsintSearchLog
+from osint.models import OsintAuditLog, OsintCache, OsintSearchLog
 from osint.services.funstat_client import FunStatClient
 from osint.services.osint_service import (
     ENDPOINT_REGISTRY,
@@ -22,6 +23,9 @@ from osint.services.osint_service import (
 )
 
 logger = logging.getLogger(__name__)
+
+# ── Balance threshold ─────────────────────────────────────────────────────
+BALANCE_WARNING_THRESHOLD = 500  # kredit
 
 
 def _detect_image_content_type(data: bytes) -> str:
@@ -144,6 +148,52 @@ def _annotate_search_logs(logs: list) -> None:
             s.entity_name = s.query
 
 
+def _log_audit(
+    action: str,
+    target_id: str = "",
+    endpoint_type: str = "",
+    cached: bool = False,
+    api_cost: float = 0,
+    balance_after: float | None = None,
+    duration_ms: int | None = None,
+    error: str = "",
+    user=None,
+) -> None:
+    """Write an audit log entry (fire-and-forget)."""
+    try:
+        OsintAuditLog.objects.create(
+            action=action,
+            endpoint_type=endpoint_type,
+            target_id=str(target_id),
+            cached=cached,
+            api_cost=api_cost,
+            balance_after=balance_after,
+            duration_ms=duration_ms,
+            error=error[:500] if error else "",
+            performed_by=user if user and hasattr(user, "pk") else None,
+        )
+    except Exception:
+        logger.exception("Audit log yozishda xatolik")
+
+
+def _get_last_known_balance() -> float | None:
+    """Oxirgi ma'lum balansni qaytarish."""
+    for entry in OsintCache.objects.exclude(tech={}).order_by("-fetched_at")[:10]:
+        if isinstance(entry.tech, dict) and entry.tech.get("current_ballance") is not None:
+            try:
+                return float(entry.tech["current_ballance"])
+            except (ValueError, TypeError):
+                continue
+
+    log = OsintSearchLog.objects.filter(
+        balance_after__isnull=False,
+    ).order_by("-searched_at").first()
+    if log:
+        return float(log.balance_after)
+
+    return None
+
+
 # ── Profile tree definition ──────────────────────────────────────────────────
 
 PROFILE_TREE = [
@@ -248,16 +298,46 @@ def osint_fetch_branch(request, user_id: int, branch: str):
         return JsonResponse({"error": "Noma'lum bo'lim"}, status=400)
 
     force = request.GET.get("refresh") == "1"
+    confirmed = request.GET.get("confirmed") == "1"
     try:
         page = max(1, int(request.GET.get("page", 1)))
     except (ValueError, TypeError):
         page = 1
 
+    # Balance check for paid endpoints (cache miss or force refresh)
+    is_free = branch in ("stats_min", "groups_count", "messages_count", "reputation")
+    if not is_free and not confirmed:
+        cached_entry = OsintCache.get_cached(branch, str(user_id), page)
+        if cached_entry is None or force:
+            balance = _get_last_known_balance()
+            if balance is not None and balance < BALANCE_WARNING_THRESHOLD:
+                return JsonResponse({
+                    "requires_confirmation": True,
+                    "balance": balance,
+                    "branch": branch,
+                    "message": f"Balans past ({balance:.0f} kredit). Davom etasizmi?",
+                })
+
+    t0 = time.monotonic()
     result = fetch_or_cache(
         endpoint_type=branch,
         target_id=user_id,
         page=page,
         force_refresh=force,
+        user=request.user,
+    )
+    duration_ms = int((time.monotonic() - t0) * 1000)
+
+    # Audit log
+    _log_audit(
+        action="branch_fetch",
+        target_id=str(user_id),
+        endpoint_type=branch,
+        cached=result.cached,
+        api_cost=result.tech.get("request_cost", 0) if isinstance(result.tech, dict) else 0,
+        balance_after=result.tech.get("current_ballance") if isinstance(result.tech, dict) else None,
+        duration_ms=duration_ms,
+        error=result.error or "",
         user=request.user,
     )
 
@@ -283,11 +363,24 @@ def osint_text_search(request):
     if not query:
         return JsonResponse({"error": "Qidiruv so'zi kiritilmagan"}, status=400)
 
+    t0 = time.monotonic()
     client = FunStatClient()
+    err_msg = ""
     try:
         resp = client.text_search(query, page=page)
     except FunStatAPIError as e:
-        return JsonResponse({"error": str(e)}, status=502)
+        err_msg = str(e)
+        _log_audit(
+            action="text_search",
+            target_id=query,
+            endpoint_type="text_search",
+            error=err_msg,
+            duration_ms=int((time.monotonic() - t0) * 1000),
+            user=request.user,
+        )
+        return JsonResponse({"error": err_msg}, status=502)
+
+    duration_ms = int((time.monotonic() - t0) * 1000)
 
     if isinstance(resp, dict) and "data" in resp:
         resp_data = resp["data"]
@@ -296,15 +389,28 @@ def osint_text_search(request):
         resp_data = resp if resp is not None else {}
         resp_tech = {}
 
+    cost = resp_tech.get("request_cost", 0)
+    balance = resp_tech.get("current_ballance")
+
     OsintSearchLog.objects.update_or_create(
         query=query,
         query_type="text",
         searched_by=request.user,
         defaults={
             "searched_at": timezone.now(),
-            "api_cost": resp_tech.get("request_cost", 0),
-            "balance_after": resp_tech.get("current_ballance"),
+            "api_cost": cost,
+            "balance_after": balance,
         },
+    )
+
+    _log_audit(
+        action="text_search",
+        target_id=query,
+        endpoint_type="text_search",
+        api_cost=cost,
+        balance_after=balance,
+        duration_ms=duration_ms,
+        user=request.user,
     )
 
     return JsonResponse({
@@ -544,14 +650,8 @@ def osint_photo_proxy(request, entity_id: str):
 @staff_member_required
 def osint_balance(request):
     """AJAX: return last known FunStat balance."""
-    for entry in OsintCache.objects.exclude(tech={}).order_by("-fetched_at")[:10]:
-        if isinstance(entry.tech, dict) and entry.tech.get("current_ballance") is not None:
-            return JsonResponse({"balance": entry.tech["current_ballance"]})
-
-    log = OsintSearchLog.objects.filter(
-        balance_after__isnull=False,
-    ).order_by("-searched_at").first()
-    if log:
-        return JsonResponse({"balance": float(log.balance_after)})
-
-    return JsonResponse({"balance": None})
+    balance = _get_last_known_balance()
+    return JsonResponse({
+        "balance": balance,
+        "low_balance": balance is not None and balance < BALANCE_WARNING_THRESHOLD,
+    })

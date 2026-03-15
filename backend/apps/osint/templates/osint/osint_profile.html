@@ -367,18 +367,41 @@ function toggleBranch(header) {
     loadBranch(node, false);
 }
 
-function loadBranch(node, refresh) {
+function loadBranch(node, refresh, confirmed) {
     var branch = node.dataset.branch;
     var body = node.querySelector('.rb-tree-body');
     body.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span><p>Yuklanmoqda...</p></div>';
 
     var url = BRANCH_URLS[branch];
     if (!url) { body.innerHTML = '<div class="rb-error-box">URL topilmadi</div>'; return; }
-    if (refresh) url += '?refresh=1';
+    var params = [];
+    if (refresh) params.push('refresh=1');
+    if (confirmed) params.push('confirmed=1');
+    if (params.length) url += '?' + params.join('&');
 
     fetch(url)
         .then(function(r) { return r.json(); })
         .then(function(d) {
+            // Balance confirmation dialog
+            if (d.requires_confirmation) {
+                body.innerHTML = '<div style="padding:1.25rem; text-align:center;">' +
+                    '<div style="margin-bottom:1rem;">' +
+                    '<span class="material-symbols-outlined" style="font-size:40px; color:#f59e0b;">warning</span>' +
+                    '</div>' +
+                    '<h3 style="margin:0 0 0.5rem; font-size:1rem; font-weight:600;">Balans past</h3>' +
+                    '<p style="color:var(--rb-fg-muted); font-size:0.875rem; margin:0 0 1rem;">' +
+                    'Hozirgi balans: <strong style="color:var(--rb-fg);">' + parseFloat(d.balance).toFixed(0) + ' kredit</strong><br>' +
+                    'Bu operatsiya kredit sarflaydi. Davom etasizmi?' +
+                    '</p>' +
+                    '<div style="display:flex; gap:0.5rem; justify-content:center;">' +
+                    '<button class="rb-btn rb-btn-primary" onclick="loadBranch(this.closest(\'.rb-tree-node\'), ' + (refresh ? 'true' : 'false') + ', true)">' +
+                    '<span class="material-symbols-outlined" style="font-size:16px;">check</span> Davom etish</button>' +
+                    '<button class="rb-btn rb-btn-outline" onclick="this.closest(\'.rb-tree-node\').classList.remove(\'open\')">' +
+                    'Bekor qilish</button>' +
+                    '</div></div>';
+                return;
+            }
+
             if (d.error) {
                 var errMsg = d.error;
                 // Parse common API errors for better display
