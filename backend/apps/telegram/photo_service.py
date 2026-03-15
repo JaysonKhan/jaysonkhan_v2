@@ -73,9 +73,12 @@ def _ensure_photo_dir():
 
 
 def _lookup_username(entity_id: int) -> str | None:
-    """Try to find a username for entity_id from OSINT cache data.
+    """Try to find a username for entity_id.
 
-    Checks: TelegramEntity username, then OSINT cache (usernames, stats_full, basic_info).
+    Lookup chain (cheapest first):
+      1. TelegramEntity DB
+      2. OsintCache: usernames, stats_full, basic_info
+      3. FunStat API: basic_info (0.10 kredit, lazy fetch + cache)
     """
     # 1. Check TelegramEntity itself
     try:
@@ -106,7 +109,7 @@ def _lookup_username(entity_id: int) -> str | None:
             if username:
                 return username
 
-        # basic_info
+        # basic_info (cached)
         entry = OsintCache.get_cached("basic_info", entity_str)
         if entry and isinstance(entry.data, dict):
             username = entry.data.get("username", "")
@@ -114,6 +117,47 @@ def _lookup_username(entity_id: int) -> str | None:
                 return username
     except Exception as e:
         logger.debug("OsintCache username lookup failed for %s: %s", entity_id, e)
+
+    # 3. Lazy fetch: basic_info from FunStat API (0.10 kredit)
+    return _fetch_username_from_api(entity_id)
+
+
+def _fetch_username_from_api(entity_id: int) -> str | None:
+    """Fetch username from FunStat basic_info API (0.10 kredit per entity).
+
+    Called only when all cache sources failed. Result is cached in OsintCache
+    for future lookups.
+    """
+    try:
+        from botproxy.funstat_client import FunStatClient
+        from botproxy.models import OsintCache
+
+        client = FunStatClient()
+        resp = client.get_basic_info([entity_id])
+
+        # Parse response: {"data": {...}, "tech": {...}}
+        if not isinstance(resp, dict):
+            return None
+
+        data = resp.get("data", {})
+        tech = resp.get("tech", {})
+
+        # Cache the result for future use
+        entity_str = str(entity_id)
+        if data:
+            OsintCache.objects.update_or_create(
+                endpoint_type="basic_info",
+                target_id=entity_str,
+                page=1,
+                defaults={"data": data, "tech": tech, "fetched_at": timezone.now()},
+            )
+
+        username = data.get("username", "")
+        if username:
+            logger.info("Username from FunStat basic_info: %s → %s", entity_id, username)
+            return username
+    except Exception as e:
+        logger.debug("FunStat basic_info fetch failed for %s: %s", entity_id, e)
 
     return None
 
