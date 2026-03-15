@@ -427,7 +427,7 @@ UNFOLD = {
                     {
                         "title": "OSINT",
                         "icon": "person_search",
-                        "link": f"{_A}bot/osint/search/",
+                        "link": f"{_A}osint/search/",
                     },
                 ],
             },
