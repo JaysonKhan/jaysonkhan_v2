@@ -81,19 +81,36 @@ class TelegramEntityAdmin(ModelAdmin):
     @admin.display(description="User")
     def user_card(self, obj):
         name = obj.display_name
+        letter = (obj.first_name or obj.title or name or "?")[:1].upper()
         url = obj.get_photo_url()
         if url:
             return format_html(
                 '<div style="display:flex;align-items:center;gap:10px;">'
                 '<img src="{}" style="width:28px;height:28px;border-radius:50%;'
                 'border:1px solid rgba(255,255,255,0.1);"'
-                ' onerror="this.style.display=\'none\'">'
+                ' onerror="this.style.display=\'none\';'
+                'this.nextElementSibling.style.display=\'flex\'">'
+                '<div style="display:none;width:28px;height:28px;border-radius:50%;'
+                'background:rgba(99,102,241,0.25);align-items:center;justify-content:center;'
+                'font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);'
+                'flex-shrink:0;">{}</div>'
                 '<span style="font-weight:600;">{}</span>'
                 "</div>",
                 url,
+                letter,
                 name,
             )
-        return name
+        return format_html(
+            '<div style="display:flex;align-items:center;gap:10px;">'
+            '<div style="width:28px;height:28px;border-radius:50%;'
+            'background:rgba(99,102,241,0.25);display:flex;align-items:center;'
+            'justify-content:center;font-size:13px;font-weight:700;'
+            'color:rgba(255,255,255,0.7);flex-shrink:0;">{}</div>'
+            '<span style="font-weight:600;">{}</span>'
+            "</div>",
+            letter,
+            name,
+        )
 
     @admin.display(description="Telegram ID")
     def tg_id_link(self, obj):
