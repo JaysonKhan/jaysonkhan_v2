@@ -14,8 +14,15 @@
 </div>
 
 <div class="rb-card">
-    <form method="post">
+    <form method="post" id="pollForm">
         {% csrf_token %}
+
+        <!-- ═══════════ SECTION 1: Asosiy ma'lumotlar ═══════════ -->
+        <div class="rb-section-header">
+            <span class="rb-section-num">1</span>
+            <span class="material-symbols-outlined">info</span>
+            <h3>Asosiy ma'lumotlar</h3>
+        </div>
 
         <div class="rb-form-group">
             <label for="title">Nomi <span class="req">*</span></label>
@@ -48,8 +55,6 @@
             </div>
         </div>
 
-        <hr class="rb-divider">
-
         <!-- University selection -->
         <div class="rb-form-group">
             <label for="university_id">Universitet</label>
@@ -62,20 +67,55 @@
             <div class="help">Universitet tanlanganda fakultetlar avtomatik yuklanadi</div>
         </div>
 
-        <div class="rb-form-group">
-            <label for="faculties">
-                Fakultetlar <span class="req">*</span>
-                <span id="fac-loading" style="display:none; font-weight:400; color:var(--rb-primary); margin-left:0.5rem; font-size:0.8125rem;">yuklanmoqda...</span>
-            </label>
-            <textarea id="faculties" name="faculties" required placeholder="Har bir qator: KOD:Nomi&#10;Masalan:&#10;IT:Axborot texnologiyalari&#10;IQTISOD:Iqtisodiyot"></textarea>
-            <div class="help">Har bir qatorda <code>KOD:Nomi</code> formatida yozing. Universitet tanlanganda avtomatik to'ldiriladi.</div>
+        <hr class="rb-divider">
+
+        <!-- ═══════════ SECTION 2: Fakultetlar ═══════════ -->
+        <div class="rb-section-header">
+            <span class="rb-section-num">2</span>
+            <span class="material-symbols-outlined">account_tree</span>
+            <h3>Fakultetlar</h3>
+            <span class="rb-badge rb-badge-info" id="fac-count">0</span>
+            <span id="fac-loading" class="rb-loading-indicator" style="display:none;">
+                <span class="material-symbols-outlined rb-spin">progress_activity</span>
+                yuklanmoqda...
+            </span>
         </div>
 
-        <div class="rb-form-group">
-            <label for="candidates">Nomzodlar <span class="req">*</span></label>
-            <textarea id="candidates" name="candidates" required placeholder="Har bir qator: FakultetKod:Ism:Lavozim&#10;Masalan:&#10;IT:Aliyev Ali:Dekan&#10;IQTISOD:Karimov Karim:Dekan"></textarea>
-            <div class="help">Har bir qatorda <code>FakultetKod:Ism</code> yoki <code>FakultetKod:Ism:Lavozim</code> formatida yozing</div>
+        <div id="fac-list" class="rb-dynamic-list">
+            <div id="fac-empty" class="rb-dynamic-empty">
+                <span class="material-symbols-outlined">school</span>
+                <p>Hali fakultet qo'shilmagan. Universitet tanlang yoki qo'lda qo'shing.</p>
+            </div>
         </div>
+
+        <button type="button" id="fac-add" class="rb-btn rb-btn-outline rb-btn-sm" style="margin-top:0.75rem;">
+            <span class="material-symbols-outlined">add</span> Fakultet qo'shish
+        </button>
+
+        <hr class="rb-divider">
+
+        <!-- ═══════════ SECTION 3: Nomzodlar ═══════════ -->
+        <div class="rb-section-header">
+            <span class="rb-section-num">3</span>
+            <span class="material-symbols-outlined">person</span>
+            <h3>Nomzodlar</h3>
+            <span class="rb-badge rb-badge-info" id="cand-count">0</span>
+        </div>
+
+        <div id="cand-list" class="rb-dynamic-list">
+            <div id="cand-empty" class="rb-dynamic-empty">
+                <span class="material-symbols-outlined">how_to_vote</span>
+                <p>Hali nomzod qo'shilmagan.</p>
+            </div>
+        </div>
+
+        <button type="button" id="cand-add" class="rb-btn rb-btn-outline rb-btn-sm" style="margin-top:0.75rem;">
+            <span class="material-symbols-outlined">add</span> Nomzod qo'shish
+        </button>
+
+        <!-- Hidden JSON fields for submission -->
+        <input type="hidden" name="faculties_json" id="faculties_json">
+        <input type="hidden" name="candidates_json" id="candidates_json">
 
         <hr class="rb-divider">
 
@@ -90,32 +130,285 @@
 
 <script>
 (function() {
-    var uniSelect = document.getElementById('university_id');
-    var facTextarea = document.getElementById('faculties');
-    var facLoading = document.getElementById('fac-loading');
+    // ── State ─────────────────────────────────────────────────────
+    var faculties = [];   // [{id, code, name}]
+    var candidates = [];  // [{id, facultyCode, fullName, position}]
+    var nextId = 1;
 
-    if (!uniSelect) return;
+    // ── DOM references ────────────────────────────────────────────
+    var facList      = document.getElementById('fac-list');
+    var facEmpty     = document.getElementById('fac-empty');
+    var facCount     = document.getElementById('fac-count');
+    var facAddBtn    = document.getElementById('fac-add');
+    var facLoading   = document.getElementById('fac-loading');
+    var candList     = document.getElementById('cand-list');
+    var candEmpty    = document.getElementById('cand-empty');
+    var candCount    = document.getElementById('cand-count');
+    var candAddBtn   = document.getElementById('cand-add');
+    var uniSelect    = document.getElementById('university_id');
+    var form         = document.getElementById('pollForm');
 
-    uniSelect.addEventListener('change', function() {
-        var uniId = this.value;
-        if (!uniId) return;
+    // ── Utility ───────────────────────────────────────────────────
+    function esc(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+               .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
-        facLoading.style.display = 'inline';
-        fetch("{% url 'bot_university_faculties' svc=svc uni_id=0 %}".replace('/0/', '/' + uniId + '/'))
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                facLoading.style.display = 'none';
-                if (data.faculties && data.faculties.length > 0) {
-                    var lines = data.faculties.map(function(f) {
-                        return f.code + ':' + f.name;
-                    });
-                    facTextarea.value = lines.join('\n');
-                }
-            })
-            .catch(function() {
-                facLoading.style.display = 'none';
-            });
+    // ── Faculty functions ─────────────────────────────────────────
+    function addFaculty(code, name) {
+        var fac = { id: nextId++, code: code || '', name: name || '' };
+        faculties.push(fac);
+        renderFaculties();
+        syncCandidateDropdowns();
+        return fac;
+    }
+
+    function removeFaculty(id) {
+        faculties = faculties.filter(function(f) { return f.id !== id; });
+        renderFaculties();
+        syncCandidateDropdowns();
+    }
+
+    function renderFaculties() {
+        // Remove existing rows (keep empty-state div)
+        var rows = facList.querySelectorAll('.rb-dynamic-row');
+        for (var i = 0; i < rows.length; i++) rows[i].remove();
+
+        facEmpty.style.display = faculties.length === 0 ? '' : 'none';
+        facCount.textContent = faculties.length;
+
+        faculties.forEach(function(fac, idx) {
+            var row = buildFacultyRow(fac, idx);
+            facList.appendChild(row);
+            requestAnimationFrame(function() { row.classList.add('rb-row-enter'); });
+        });
+    }
+
+    function buildFacultyRow(fac, idx) {
+        var div = document.createElement('div');
+        div.className = 'rb-dynamic-row';
+        div.dataset.id = fac.id;
+
+        div.innerHTML =
+            '<span class="rb-row-num">#' + (idx + 1) + '</span>' +
+            '<input type="text" class="rb-row-input rb-row-code" value="' + esc(fac.code) +
+                '" placeholder="KOD" data-field="code">' +
+            '<input type="text" class="rb-row-input rb-row-name" value="' + esc(fac.name) +
+                '" placeholder="Fakultet nomi" data-field="name">' +
+            '<button type="button" class="rb-btn rb-btn-ghost rb-btn-sm rb-row-remove" title="O\'chirish">' +
+                '<span class="material-symbols-outlined" style="color:#ef4444;">close</span>' +
+            '</button>';
+
+        // Bind input events → update state
+        var inputs = div.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+            (function(inp) {
+                inp.addEventListener('input', function() {
+                    fac[this.dataset.field] = this.value;
+                    this.classList.remove('rb-input-error');
+                    if (this.dataset.field === 'code') syncCandidateDropdowns();
+                });
+            })(inputs[i]);
+        }
+
+        // Remove button
+        div.querySelector('.rb-row-remove').addEventListener('click', function() {
+            div.classList.add('rb-row-exit');
+            setTimeout(function() { removeFaculty(fac.id); }, 200);
+        });
+
+        return div;
+    }
+
+    // ── Candidate functions ───────────────────────────────────────
+    function addCandidate(facultyCode, fullName, position) {
+        var cand = {
+            id: nextId++,
+            facultyCode: facultyCode || '',
+            fullName: fullName || '',
+            position: position || ''
+        };
+        candidates.push(cand);
+        renderCandidates();
+        return cand;
+    }
+
+    function removeCandidate(id) {
+        candidates = candidates.filter(function(c) { return c.id !== id; });
+        renderCandidates();
+    }
+
+    function renderCandidates() {
+        var rows = candList.querySelectorAll('.rb-dynamic-row');
+        for (var i = 0; i < rows.length; i++) rows[i].remove();
+
+        candEmpty.style.display = candidates.length === 0 ? '' : 'none';
+        candCount.textContent = candidates.length;
+
+        candidates.forEach(function(cand, idx) {
+            var row = buildCandidateRow(cand, idx);
+            candList.appendChild(row);
+            requestAnimationFrame(function() { row.classList.add('rb-row-enter'); });
+        });
+    }
+
+    function buildFacultyOptions(selectedCode) {
+        var html = '<option value="">— Fakultet —</option>';
+        faculties.forEach(function(f) {
+            var sel = f.code && f.code === selectedCode ? ' selected' : '';
+            html += '<option value="' + esc(f.code) + '"' + sel + '>' +
+                    esc(f.code) + (f.name ? ' — ' + esc(f.name) : '') + '</option>';
+        });
+        return html;
+    }
+
+    function buildCandidateRow(cand, idx) {
+        var div = document.createElement('div');
+        div.className = 'rb-dynamic-row rb-dynamic-row-candidate';
+        div.dataset.id = cand.id;
+
+        div.innerHTML =
+            '<span class="rb-row-num">#' + (idx + 1) + '</span>' +
+            '<select class="rb-row-input rb-row-faculty-select" data-field="facultyCode">' +
+                buildFacultyOptions(cand.facultyCode) +
+            '</select>' +
+            '<input type="text" class="rb-row-input rb-row-fullname" value="' + esc(cand.fullName) +
+                '" placeholder="Ism familiya" data-field="fullName">' +
+            '<input type="text" class="rb-row-input rb-row-position" value="' + esc(cand.position) +
+                '" placeholder="Lavozim (ixtiyoriy)" data-field="position">' +
+            '<button type="button" class="rb-btn rb-btn-ghost rb-btn-sm rb-row-remove" title="O\'chirish">' +
+                '<span class="material-symbols-outlined" style="color:#ef4444;">close</span>' +
+            '</button>';
+
+        // Select change
+        div.querySelector('select').addEventListener('change', function() {
+            cand.facultyCode = this.value;
+        });
+
+        // Input changes
+        var inputs = div.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+            (function(inp) {
+                inp.addEventListener('input', function() {
+                    cand[this.dataset.field] = this.value;
+                    this.classList.remove('rb-input-error');
+                });
+            })(inputs[i]);
+        }
+
+        // Remove
+        div.querySelector('.rb-row-remove').addEventListener('click', function() {
+            div.classList.add('rb-row-exit');
+            setTimeout(function() { removeCandidate(cand.id); }, 200);
+        });
+
+        return div;
+    }
+
+    function syncCandidateDropdowns() {
+        var selects = candList.querySelectorAll('.rb-row-faculty-select');
+        for (var i = 0; i < selects.length; i++) {
+            var sel = selects[i];
+            var cur = sel.value;
+            sel.innerHTML = buildFacultyOptions(cur);
+        }
+    }
+
+    // ── University auto-populate ──────────────────────────────────
+    if (uniSelect) {
+        uniSelect.addEventListener('change', function() {
+            var uniId = this.value;
+            if (!uniId) return;
+
+            facLoading.style.display = 'inline-flex';
+            fetch("{% url 'bot_university_faculties' svc=svc uni_id=0 %}".replace('/0/', '/' + uniId + '/'))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    facLoading.style.display = 'none';
+                    if (data.faculties && data.faculties.length > 0) {
+                        faculties = [];
+                        data.faculties.forEach(function(f) {
+                            var fac = { id: nextId++, code: f.code || '', name: f.name || '' };
+                            faculties.push(fac);
+                        });
+                        renderFaculties();
+                        syncCandidateDropdowns();
+                    }
+                })
+                .catch(function() {
+                    facLoading.style.display = 'none';
+                });
+        });
+    }
+
+    // ── Add buttons ───────────────────────────────────────────────
+    facAddBtn.addEventListener('click', function() {
+        addFaculty('', '');
+        // Focus the new code input
+        var rows = facList.querySelectorAll('.rb-dynamic-row');
+        var last = rows[rows.length - 1];
+        if (last) {
+            var firstInput = last.querySelector('.rb-row-code');
+            if (firstInput) setTimeout(function() { firstInput.focus(); }, 50);
+        }
     });
+
+    candAddBtn.addEventListener('click', function() {
+        addCandidate('', '', '');
+        // Focus the new fullname input
+        var rows = candList.querySelectorAll('.rb-dynamic-row');
+        var last = rows[rows.length - 1];
+        if (last) {
+            var nameInput = last.querySelector('.rb-row-fullname');
+            if (nameInput) setTimeout(function() { nameInput.focus(); }, 50);
+        }
+    });
+
+    // ── Form submission ───────────────────────────────────────────
+    form.addEventListener('submit', function(e) {
+        // Serialize faculties → [[code, name], ...]
+        var facData = [];
+        var hasError = false;
+
+        faculties.forEach(function(f) {
+            var code = (f.code || '').trim();
+            var name = (f.name || '').trim();
+            if (code && name) {
+                facData.push([code, name]);
+            }
+        });
+
+        // Serialize candidates → [[facultyCode, fullName, position?], ...]
+        var candData = [];
+        candidates.forEach(function(c) {
+            var fullName = (c.fullName || '').trim();
+            if (!fullName) return;
+            var arr = [(c.facultyCode || '').trim(), fullName];
+            var pos = (c.position || '').trim();
+            if (pos) arr.push(pos);
+            candData.push(arr);
+        });
+
+        // Validate: at least 1 candidate
+        if (candData.length === 0) {
+            e.preventDefault();
+            // Highlight empty candidate rows
+            var nameInputs = candList.querySelectorAll('.rb-row-fullname');
+            for (var i = 0; i < nameInputs.length; i++) {
+                if (!nameInputs[i].value.trim()) nameInputs[i].classList.add('rb-input-error');
+            }
+            // Scroll to candidates section
+            candList.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        document.getElementById('faculties_json').value = JSON.stringify(facData);
+        document.getElementById('candidates_json').value = JSON.stringify(candData);
+    });
+
+    // ── Initial render ────────────────────────────────────────────
+    renderFaculties();
+    renderCandidates();
 })();
 </script>
 {% endblock %}

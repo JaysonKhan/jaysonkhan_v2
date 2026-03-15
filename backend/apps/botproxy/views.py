@@ -5,6 +5,7 @@ selects which bot API to connect to via BOT_SERVICES settings.
 """
 from __future__ import annotations
 
+import json
 import logging
 import math
 
@@ -159,21 +160,35 @@ def poll_create(request, svc="rektor"):
         deadline_at = request.POST.get("deadline_at", "").strip()
         university_id = request.POST.get("university_id", "").strip()
 
-        # Parse faculties: "CODE:Name" lines
-        faculties = []
-        for line in request.POST.get("faculties", "").strip().splitlines():
-            line = line.strip()
-            if ":" in line:
-                code, name = line.split(":", 1)
-                faculties.append([code.strip(), name.strip()])
+        # Parse faculties from JSON (dynamic form) or legacy textarea fallback
+        faculties_json = request.POST.get("faculties_json", "").strip()
+        if faculties_json:
+            try:
+                faculties = json.loads(faculties_json)  # [[code, name], ...]
+            except (json.JSONDecodeError, TypeError):
+                faculties = []
+        else:
+            faculties = []
+            for line in request.POST.get("faculties", "").strip().splitlines():
+                line = line.strip()
+                if ":" in line:
+                    code, name = line.split(":", 1)
+                    faculties.append([code.strip(), name.strip()])
 
-        # Parse candidates: "FacultyCode:FullName" or "FacultyCode:FullName:Position"
-        candidates = []
-        for line in request.POST.get("candidates", "").strip().splitlines():
-            line = line.strip()
-            if ":" in line:
-                parts = line.split(":", maxsplit=2)
-                candidates.append([p.strip() for p in parts])
+        # Parse candidates from JSON (dynamic form) or legacy textarea fallback
+        candidates_json = request.POST.get("candidates_json", "").strip()
+        if candidates_json:
+            try:
+                candidates = json.loads(candidates_json)  # [[fac_code, name, position?], ...]
+            except (json.JSONDecodeError, TypeError):
+                candidates = []
+        else:
+            candidates = []
+            for line in request.POST.get("candidates", "").strip().splitlines():
+                line = line.strip()
+                if ":" in line:
+                    parts = line.split(":", maxsplit=2)
+                    candidates.append([p.strip() for p in parts])
 
         # Validate required fields before hitting the API
         if not title or not description or not deadline_at:
