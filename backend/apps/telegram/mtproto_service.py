@@ -74,6 +74,10 @@ async def _resolve_entity(client, entity_id: int | str):
     Telethon get_entity(int) musbat raqamni PeerUser deb oladi.
     Bu funksiya DB hints va multiple peer types orqali to'g'ri resolve qiladi.
 
+    Manfiy ID lar ham qo'llab-quvvatlanadi:
+      -100XXXXXXXXXX → PeerChannel(XXXXXXXXXX)
+      -XXXXXXXXX → PeerChat(XXXXXXXXX)
+
     Tartib:
       1. Username (eng ishonchli — hech qachon PeerUser xatosi bermaydi)
       2. DB dan entity_type bo'yicha to'g'ri Peer → PeerChannel / PeerChat
@@ -83,7 +87,36 @@ async def _resolve_entity(client, entity_id: int | str):
     """
     from telethon.tl.types import PeerChannel, PeerChat
 
-    eid = int(entity_id)
+    raw = int(entity_id)
+
+    # Manfiy ID normalizatsiya: -100xxx → PeerChannel, -xxx → PeerChat
+    if raw < 0:
+        s = str(abs(raw))
+        if s.startswith("100") and len(s) > 10:
+            eid = int(s[3:])
+            logger.debug("Manfiy ID normalizatsiya: %s → PeerChannel(%s)", raw, eid)
+            try:
+                return await client.get_entity(PeerChannel(eid))
+            except Exception:
+                pass
+            # DB dan username bilan urinish
+            _, username = _get_entity_hints(eid)
+            if username:
+                try:
+                    return await client.get_entity(username)
+                except Exception:
+                    pass
+            return await client.get_entity(PeerChannel(eid))
+        else:
+            eid = abs(raw)
+            logger.debug("Manfiy ID normalizatsiya: %s → PeerChat(%s)", raw, eid)
+            try:
+                return await client.get_entity(PeerChat(eid))
+            except Exception:
+                pass
+            return await client.get_entity(PeerChat(eid))
+
+    eid = raw
     entity_type, username = _get_entity_hints(eid)
 
     # 1. Username orqali — eng ishonchli yo'l

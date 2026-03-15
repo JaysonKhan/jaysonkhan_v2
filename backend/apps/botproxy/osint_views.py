@@ -23,6 +23,26 @@ from botproxy.osint_service import (
 logger = logging.getLogger(__name__)
 
 
+def _normalize_entity_id(raw: str | int) -> int:
+    """Telegram entity ID ni normalizatsiya qilish.
+
+    FunStat va Bot API manfiy ID qaytarishi mumkin:
+      - Kanal/supergroup: -1001234567890 → 1234567890 (bare channel_id)
+      - Guruh: -987654321 → 987654321 (bare chat_id)
+
+    Telethon PeerChannel/PeerChat faqat musbat (bare) ID kutadi.
+    """
+    n = int(raw)
+    if n < 0:
+        s = str(abs(n))
+        if s.startswith("100") and len(s) > 10:
+            # -100XXXXXXXXXX → XXXXXXXXXX (channel/supergroup)
+            return int(s[3:])
+        # -XXXXXXXXX → XXXXXXXXX (basic group)
+        return abs(n)
+    return n
+
+
 def _ctx(request, extra: dict | None = None) -> dict:
     """Base context for OSINT views."""
     from django.contrib import admin
@@ -298,15 +318,17 @@ def osint_text_search(request):
 # ─── Entity Profile (Channel/Group) ──────────────────────────────────────
 
 @staff_member_required
-def osint_entity_profile(request, entity_id: int):
+def osint_entity_profile(request, entity_id: str):
     """Kanal/guruh profil sahifasi — Telethon MTProto + FunStat get_group_info."""
+    eid = _normalize_entity_id(entity_id)
+
     # Log this visit
     OsintSearchLog.objects.update_or_create(
-        query=str(entity_id),
+        query=str(eid),
         query_type="channel",
         searched_by=request.user,
         defaults={
-            "resolved_id": entity_id,
+            "resolved_id": eid,
             "searched_at": timezone.now(),
         },
     )
@@ -314,7 +336,7 @@ def osint_entity_profile(request, entity_id: int):
     # Telethon MTProto profil
     profile = fetch_channel_data(
         operation="channel_profile",
-        entity_id=entity_id,
+        entity_id=eid,
         user=request.user,
     )
 
@@ -325,19 +347,19 @@ def osint_entity_profile(request, entity_id: int):
     ):
         # SearchLog ni ham to'g'rilash
         OsintSearchLog.objects.filter(
-            query=str(entity_id),
+            query=str(eid),
             query_type="channel",
             searched_by=request.user,
         ).update(query_type="id")
         return redirect(
-            reverse("osint_profile", kwargs={"user_id": entity_id})
+            reverse("osint_profile", kwargs={"user_id": eid})
         )
 
     # FunStat group_info (qo'shimcha ma'lumot — 0.01 kredit)
     funstat_info = None
     try:
         funstat_info = fetch_or_cache(
-            "group_info", entity_id, user=request.user,
+            "group_info", eid, user=request.user,
         )
     except Exception:
         pass
@@ -346,7 +368,7 @@ def osint_entity_profile(request, entity_id: int):
         request,
         "botproxy/osint_entity_profile.html",
         _ctx(request, {
-            "entity_id": entity_id,
+            "entity_id": eid,
             "profile": profile,
             "funstat_info": funstat_info,
         }),
@@ -354,15 +376,16 @@ def osint_entity_profile(request, entity_id: int):
 
 
 @staff_member_required
-def osint_channel_messages(request, entity_id: int):
+def osint_channel_messages(request, entity_id: str):
     """AJAX: kanal/guruh xabarlari (offset_id cursor pagination)."""
+    eid = _normalize_entity_id(entity_id)
     offset_id = max(0, int(request.GET.get("offset_id", 0)))
     limit = min(50, max(1, int(request.GET.get("limit", 20))))
     force = request.GET.get("refresh") == "1"
 
     result = fetch_channel_data(
         operation="channel_messages",
-        entity_id=entity_id,
+        entity_id=eid,
         offset_id=offset_id,
         limit=limit,
         force_refresh=force,
@@ -380,8 +403,9 @@ def osint_channel_messages(request, entity_id: int):
 
 
 @staff_member_required
-def osint_channel_search(request, entity_id: int):
+def osint_channel_search(request, entity_id: str):
     """AJAX: kanal ichida xabar qidirish."""
+    eid = _normalize_entity_id(entity_id)
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"error": "Qidiruv so'zi kiritilmagan"}, status=400)
@@ -391,7 +415,7 @@ def osint_channel_search(request, entity_id: int):
 
     result = fetch_channel_data(
         operation="channel_search",
-        entity_id=entity_id,
+        entity_id=eid,
         query=query,
         offset_id=offset_id,
         limit=limit,
@@ -411,7 +435,7 @@ def osint_channel_search(request, entity_id: int):
 # ─── Message Photo Proxy ──────────────────────────────────────────────────────
 
 @staff_member_required
-def osint_message_photo(request, entity_id: int, msg_id: int):
+def osint_message_photo(request, entity_id: str, msg_id: int):
     """Serve photo from a channel/group message.
 
     Telethon orqali yuklab olinadi, faylga keshlanadi.
@@ -419,7 +443,8 @@ def osint_message_photo(request, entity_id: int, msg_id: int):
     """
     from telegram.mtproto_service import get_message_photo
 
-    result = get_message_photo(entity_id, msg_id)
+    eid = _normalize_entity_id(entity_id)
+    result = get_message_photo(eid, msg_id)
     if result.error or not result.data:
         return HttpResponse(status=404)
 
