@@ -1,26 +1,22 @@
 """Telegram profile photo download and caching service.
 
-Bot API yondashuv — xavfsiz, ban xavfi yo'q.
-Telethon (MTProto) ISHLATILMAYDI — akkaunt ban bo'lish xavfi tufayli.
+Rasm yuklash strategiyasi (tezlikdan sekinlikka):
+  1. Cache: DB metadata + fayl tizimi (API chaqiruvsiz — tez)
+  2. Bot API: getUserProfilePhotos (bot ko'rgan userlar uchun — xavfsiz)
+  3. Telethon MTProto: download_profile_photo (Bot API ishlamasa — fallback)
+  4. photo_url: TelegramEntity.photo_url (Login Widget avatar — oxirgi fallback)
+  5. Negative cache: has_photo=False (1 kun TTL — takroriy so'rovlarni kamaytirish)
+
+Bot API va Telethon farqi:
+  - Bot API = xavfsiz, 30 req/sec, faqat bot bilan aloqa qilgan userlar uchun
+  - Telethon = guruh/kanal/noma'lum userlar uchun, rate limited (15 req/min)
+  - Ikkalasi ham TelegramRateLimiter orqali cheklanadi
 
 Photo cache TelegramEntity modelida saqlanadi:
   - photo_file: fayl yo'li (MEDIA_ROOT ga nisbiy)
-  - photo_url: to'liq URL (https://jaysonkhan.com/media/osint/photos/123.jpg)
+  - photo_url: to'liq URL (Nginx orqali serve qilinadi)
   - photo_fetched_at: qachon yuklangan
   - has_photo: None=noma'lum, True=bor, False=yo'q (negative cache)
-
-Photo resolution strategy:
-  1. Cache: DB metadata + fayl tizimi (tez)
-  2. Bot API: getUserProfilePhotos (bot ko'rgan userlar uchun)
-  3. photo_url fallback: TelegramEntity.photo_url (Login Widget avatar)
-  4. Negative cache: 1 kun (qayta urinish tez)
-
-Nima uchun Telethon emas?
-  - Telethon = user account API (MTProto) → contacts.ResolveUsername rate limit
-  - Ko'p chaqirsa → akkaunt ban/muzlatiladi
-  - Bot API = rasmiy, xavfsiz, 30 req/sec limit
-  - getUserProfilePhotos faqat bot bilan aloqa qilgan userlar uchun ishlaydi
-  - Qolganlar uchun photo_url fallback (Login Widget avatar URL)
 
 Usage:
     from telegram.photo_service import get_entity_photo
@@ -335,15 +331,16 @@ def get_entity_photo(
     entity_id: int | str,
     force_refresh: bool = False,
 ) -> tuple[bytes | None, str | None]:
-    """Get profile photo for a Telegram entity.
+    """Get profile photo for a Telegram entity (user/group/channel).
 
     Returns (photo_bytes, content_type) or (None, None).
 
-    Strategy (xavfsiz — Telethon/MTProto ISHLATILMAYDI):
-      1. Cache: DB metadata + fayl tizimi (tez)
-      2. Bot API: getUserProfilePhotos (xavfsiz, ban xavfi yo'q)
-      3. photo_url fallback: TelegramEntity.photo_url (Login Widget avatar)
-      4. Negative cache: has_photo=False (1 kun TTL)
+    Strategy (tezlikdan sekinlikka):
+      1. Cache: DB metadata + fayl tizimi (API chaqiruvsiz)
+      2. Bot API: getUserProfilePhotos (bot ko'rgan userlar uchun)
+      3. Telethon: download_profile_photo (guruh/kanal/noma'lum userlar uchun)
+      4. photo_url: TelegramEntity.photo_url (Login Widget avatar)
+      5. Negative cache: has_photo=False (1 kun TTL)
     """
     # 0. Sanitize entity_id (path traversal oldini olish)
     entity_str = _sanitize_entity_id(entity_id)
@@ -451,7 +448,7 @@ def _try_stale_cache(entity_str: str) -> tuple[bytes | None, str | None]:
             abs_path = _photo_abs_path(safe_id)
             if abs_path.exists():
                 return abs_path.read_bytes(), "image/jpeg"
-    except (ValueError, TelegramEntity.DoesNotExist):
+    except (ValueError, TypeError):
         pass
     # 2. Bare filesystem cache (TelegramEntity yo'q)
     abs_path = _photo_abs_path(safe_id)

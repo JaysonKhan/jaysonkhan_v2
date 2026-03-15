@@ -197,7 +197,11 @@ document.getElementById('text-search-form').addEventListener('submit', function(
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.error) {
-                container.innerHTML = '<div class="rb-error-box">' + d.error + '</div>';
+                var errDiv = document.createElement('div');
+                errDiv.className = 'rb-error-box';
+                errDiv.textContent = d.error;
+                container.innerHTML = '';
+                container.appendChild(errDiv);
                 return;
             }
             var items = d.data;

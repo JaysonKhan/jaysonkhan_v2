@@ -113,8 +113,10 @@ async def _resolve_entity(client, entity_id: int | str):
             try:
                 return await client.get_entity(PeerChat(eid))
             except Exception:
-                pass
-            return await client.get_entity(PeerChat(eid))
+                logger.debug("PeerChat(%s) muvaffaqiyatsiz, PeerChannel sinab ko'rilmoqda", eid)
+            # Oddiy guruh PeerChat bilan ishlamasa, PeerChannel bilan urinish
+            # (ba'zan supergroup ga migrate qilingan guruhlar)
+            return await client.get_entity(PeerChannel(eid))
 
     eid = raw
     entity_type, username = _get_entity_hints(eid)

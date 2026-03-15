@@ -9,7 +9,6 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
-
 from django.utils import timezone
 
 from botproxy.funstat_client import FunStatClient, FunStatAPIError
@@ -24,7 +23,21 @@ from botproxy.osint_service import (
 logger = logging.getLogger(__name__)
 
 
-def _normalize_entity_id(raw: str | int) -> int:
+def _detect_image_content_type(data: bytes) -> str:
+    """Rasm baytlaridan content-type ni aniqlash (magic bytes).
+
+    JPEG, PNG, WebP ni taniydi. Noma'lum bo'lsa JPEG qaytaradi.
+    """
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and len(data) > 11 and data[8:12] == b"WEBP":
+        return "image/webp"
+    return "image/jpeg"
+
+
+def _normalize_entity_id(raw: str | int) -> int | None:
     """Telegram entity ID ni normalizatsiya qilish.
 
     FunStat va Bot API manfiy ID qaytarishi mumkin:
@@ -32,8 +45,12 @@ def _normalize_entity_id(raw: str | int) -> int:
       - Guruh: -987654321 → 987654321 (bare chat_id)
 
     Telethon PeerChannel/PeerChat faqat musbat (bare) ID kutadi.
+    Noto'g'ri qiymat berilganda None qaytaradi (ValueError oldini oladi).
     """
-    n = int(raw)
+    try:
+        n = int(raw)
+    except (ValueError, TypeError):
+        return None
     if n < 0:
         s = str(abs(n))
         if s.startswith("100") and len(s) > 10:
@@ -253,7 +270,10 @@ def osint_fetch_branch(request, user_id: int, branch: str):
         return JsonResponse({"error": "Noma'lum bo'lim"}, status=400)
 
     force = request.GET.get("refresh") == "1"
-    page = max(1, int(request.GET.get("page", 1)))
+    try:
+        page = max(1, int(request.GET.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
 
     result = fetch_or_cache(
         endpoint_type=branch,
@@ -322,6 +342,8 @@ def osint_text_search(request):
 def osint_entity_profile(request, entity_id: str):
     """Kanal/guruh profil sahifasi — Telethon MTProto + FunStat get_group_info."""
     eid = _normalize_entity_id(entity_id)
+    if eid is None:
+        return HttpResponse("Noto'g'ri entity ID", status=400)
 
     # Log this visit
     OsintSearchLog.objects.update_or_create(
@@ -380,8 +402,13 @@ def osint_entity_profile(request, entity_id: str):
 def osint_channel_messages(request, entity_id: str):
     """AJAX: kanal/guruh xabarlari (offset_id cursor pagination)."""
     eid = _normalize_entity_id(entity_id)
-    offset_id = max(0, int(request.GET.get("offset_id", 0)))
-    limit = min(50, max(1, int(request.GET.get("limit", 20))))
+    if eid is None:
+        return JsonResponse({"error": "Noto'g'ri entity ID"}, status=400)
+    try:
+        offset_id = max(0, int(request.GET.get("offset_id", 0)))
+        limit = min(50, max(1, int(request.GET.get("limit", 20))))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Noto'g'ri parametr"}, status=400)
     force = request.GET.get("refresh") == "1"
 
     result = fetch_channel_data(
@@ -407,12 +434,16 @@ def osint_channel_messages(request, entity_id: str):
 def osint_channel_search(request, entity_id: str):
     """AJAX: kanal ichida xabar qidirish."""
     eid = _normalize_entity_id(entity_id)
+    if eid is None:
+        return JsonResponse({"error": "Noto'g'ri entity ID"}, status=400)
     query = request.GET.get("q", "").strip()
     if not query:
         return JsonResponse({"error": "Qidiruv so'zi kiritilmagan"}, status=400)
-
-    offset_id = max(0, int(request.GET.get("offset_id", 0)))
-    limit = min(50, max(1, int(request.GET.get("limit", 20))))
+    try:
+        offset_id = max(0, int(request.GET.get("offset_id", 0)))
+        limit = min(50, max(1, int(request.GET.get("limit", 20))))
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Noto'g'ri parametr"}, status=400)
 
     result = fetch_channel_data(
         operation="channel_search",
@@ -445,21 +476,14 @@ def osint_message_photo(request, entity_id: str, msg_id: int):
     from telegram.mtproto_service import get_message_photo
 
     eid = _normalize_entity_id(entity_id)
+    if eid is None:
+        return HttpResponse(status=400)
     result = get_message_photo(eid, msg_id)
     if result.error or not result.data:
         return HttpResponse(status=404)
 
-    # Detect content type from magic bytes
     data = result.data
-    if data[:3] == b"\xff\xd8\xff":
-        ct = "image/jpeg"
-    elif data[:8] == b"\x89PNG\r\n\x1a\n":
-        ct = "image/png"
-    elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
-        ct = "image/webp"
-    else:
-        ct = "image/jpeg"
-
+    ct = _detect_image_content_type(data)
     return HttpResponse(
         data,
         content_type=ct,
@@ -478,7 +502,7 @@ def osint_photo_proxy(request, entity_id: str):
 
     Strategiya (tez → sekin):
       1. DB + disk cache — API chaqiruvsiz (tez)
-      2. photo_service → Bot API download (sekin, rate limited)
+      2. photo_service → Bot API + Telethon download (sekin, rate limited)
       3. Stale cache / photo_url — fallback
 
     Returns:
@@ -487,8 +511,13 @@ def osint_photo_proxy(request, entity_id: str):
       - 404 if no photo available
       - 503 if Telegram service unavailable and no cache
     """
+    from pathlib import Path
+
+    from telegram.models import TelegramEntity
+    from telegram.photo_service import _try_stale_cache, get_entity_photo
+
     # entity_id ni tozalash (path traversal himoya)
-    clean_id = entity_id.strip().lstrip("-")
+    clean_id = str(entity_id).strip().lstrip("-")
     if not clean_id.isdigit():
         return HttpResponse(status=400)
 
@@ -496,8 +525,6 @@ def osint_photo_proxy(request, entity_id: str):
 
     # ── 1. Fast path: DB + disk cache (API chaqiruvsiz) ──
     if not force:
-        from telegram.models import TelegramEntity
-
         try:
             entity_obj = TelegramEntity.objects.filter(
                 telegram_id=int(clean_id),
@@ -510,17 +537,11 @@ def osint_photo_proxy(request, entity_id: str):
 
                 # Disk cache hit
                 if entity_obj.photo_file:
-                    from pathlib import Path
-
                     abs_path = Path(settings.MEDIA_ROOT) / entity_obj.photo_file
                     if abs_path.exists():
                         data = abs_path.read_bytes()
                         if len(data) > 100:
-                            ct = "image/jpeg"
-                            if data[:8] == b"\x89PNG\r\n\x1a\n":
-                                ct = "image/png"
-                            elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
-                                ct = "image/webp"
+                            ct = _detect_image_content_type(data)
                             return HttpResponse(
                                 data,
                                 content_type=ct,
@@ -533,17 +554,13 @@ def osint_photo_proxy(request, entity_id: str):
         except Exception:
             pass
 
-    # ── 2. Full photo service (Bot API download — sekinroq) ──
-    from telegram.photo_service import get_entity_photo
-
+    # ── 2. Full photo service (Bot API + Telethon — sekinroq) ──
+    # clean_id ishlatamiz — photo_service ichida sanitize qiladi
     try:
-        photo_bytes, content_type = get_entity_photo(entity_id, force_refresh=force)
+        photo_bytes, content_type = get_entity_photo(clean_id, force_refresh=force)
     except RuntimeError as e:
         logger.warning("Telegram photo xizmati mavjud emas: %s", e)
-
         # 503 da stale cache ni tekshirish
-        from telegram.photo_service import _try_stale_cache
-
         stale_bytes, stale_ct = _try_stale_cache(clean_id)
         if stale_bytes:
             return HttpResponse(

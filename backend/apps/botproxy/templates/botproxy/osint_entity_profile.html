@@ -129,21 +129,23 @@
 </div>
 <script>
 (function() {
-    var data = {{ funstat_info.data|safe }};
+    var data = JSON.parse('{{ funstat_info.data|escapejs }}');
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
         document.getElementById('funstat-data').innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Ma\'lumot topilmadi</div>';
         return;
     }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     var html = '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
     var keys = Object.keys(data);
     for (var i = 0; i < keys.length; i++) {
         var val = data[keys[i]];
         if (val === null || val === undefined) val = '—';
-        if (typeof val === 'boolean') val = val ? 'Ha' : 'Yo\'q';
-        if (typeof val === 'object') val = JSON.stringify(val);
+        else if (typeof val === 'boolean') val = val ? 'Ha' : 'Yo\'q';
+        else if (typeof val === 'object') val = JSON.stringify(val);
+        else val = String(val);
         html += '<tr><td class="rb-muted" style="width:220px;font-weight:600;">' +
-            keys[i].replace(/_/g, ' ').replace(/\b\w/g, function(l){return l.toUpperCase();}) +
-            '</td><td>' + val + '</td></tr>';
+            esc(keys[i].replace(/_/g, ' ').replace(/\b\w/g, function(l){return l.toUpperCase();})) +
+            '</td><td>' + esc(val) + '</td></tr>';
     }
     html += '</tbody></table></div>';
     document.getElementById('funstat-data').innerHTML = html;

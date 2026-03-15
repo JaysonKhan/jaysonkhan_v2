@@ -184,9 +184,6 @@ def fetch_channel_data(
     if result.error:
         return OsintResult(error=result.error)
 
-    if result.rate_limited:
-        return OsintResult(error=result.error or "Rate limit — kutib turing")
-
     # 3. Cache the result (faqat birinchi sahifa va profil uchun)
     api_data = result.data or {}
     tech_info = {"source": "telethon_mtproto"}
