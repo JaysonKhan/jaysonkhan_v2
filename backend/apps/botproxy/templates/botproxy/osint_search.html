@@ -141,7 +141,7 @@ html.dark .recent-type.text { background:rgba(168,85,247,0.15); color:#c4b5fd; }
             <!-- Photo -->
             {% if s.resolved_id %}
             <img class="recent-photo" loading="lazy"
-                 src="{% url 'osint_photo' entity_id=s.resolved_id %}"
+                 src="{% url 'osint_photo' entity_id=s.resolved_id %}{% if s.entity_username %}?u={{ s.entity_username }}{% endif %}"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
                  alt="">
             <span class="recent-photo-fallback {% if s.query_type == 'channel' %}channel{% endif %}"

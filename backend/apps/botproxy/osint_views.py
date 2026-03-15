@@ -133,6 +133,7 @@ def _annotate_search_logs(logs: list) -> None:
     for s in logs:
         s.has_photo = False
         s.entity_name = ""
+        s.entity_username = ""  # photo proxy username fallback uchun
 
         if not s.resolved_id:
             s.entity_name = s.query
@@ -143,6 +144,7 @@ def _annotate_search_logs(logs: list) -> None:
 
         if entity:
             s.has_photo = entity.has_photo
+            s.entity_username = entity.username or ""
             if entity.entity_type in ("channel", "supergroup", "group"):
                 s.entity_name = entity.title or entity.username or ""
             else:
