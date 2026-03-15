@@ -261,9 +261,10 @@ def get_entity_photo(
         return photo_bytes, "image/jpeg"
 
     # No photo — negative cache (only update existing entities)
+    # NOTE: photo_url ni tozalamaymiz — u Telegram Login Widget dan kelgan
+    # external avatar URL bo'lishi mumkin, photo_service boshqarmaydi.
     TelegramEntity.objects.filter(telegram_id=entity_int).update(
         has_photo=False,
-        photo_url="",
         photo_fetched_at=timezone.now(),
     )
     return None, None

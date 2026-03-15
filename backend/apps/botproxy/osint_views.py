@@ -204,7 +204,12 @@ def osint_photo_proxy(request, entity_id: str):
 
     URL: osint/photo/<entity_id>/
     Query: ?refresh=1 to force re-download from Telegram.
-    Returns JPEG with browser caching (1 hour) or 404/503.
+
+    Returns:
+      - JPEG with browser caching (1 hour) if local cache hit
+      - 302 redirect to entity's photo_url if local cache miss but external URL exists
+      - 404 if no photo available at all
+      - 503 if Telegram client unavailable
     """
     from telegram.photo_service import get_entity_photo
 
@@ -222,6 +227,18 @@ def osint_photo_proxy(request, entity_id: str):
             content_type=content_type,
             headers={"Cache-Control": "public, max-age=3600"},
         )
+
+    # Fallback: redirect to entity's external photo_url (e.g. Telegram avatar)
+    try:
+        from telegram.models import TelegramEntity
+
+        entity_obj = TelegramEntity.objects.filter(
+            telegram_id=int(entity_id),
+        ).only("photo_url").first()
+        if entity_obj and entity_obj.photo_url:
+            return redirect(entity_obj.photo_url)
+    except (ValueError, TypeError):
+        pass
 
     return HttpResponse(status=404)
 

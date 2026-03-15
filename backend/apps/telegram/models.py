@@ -119,9 +119,17 @@ class TelegramEntity(models.Model):
 
     @property
     def is_photo_stale(self) -> bool:
-        """Photo keshi eskirganmi (default 7 kun)."""
+        """Photo keshi eskirganmi.
+
+        Positive cache (has_photo=True): 7 kun (OSINT_PHOTO_CACHE_DAYS).
+        Negative cache (has_photo=False): 1 kun — tezroq qayta urinish.
+        """
         if not self.photo_fetched_at:
             return True
+        if self.has_photo is False:
+            # Negative cache — tezroq expire bo'lsin
+            neg_ttl = getattr(settings, "OSINT_PHOTO_NEG_CACHE_DAYS", 1)
+            return timezone.now() - self.photo_fetched_at > timedelta(days=neg_ttl)
         ttl = getattr(settings, "OSINT_PHOTO_CACHE_DAYS", 7)
         return timezone.now() - self.photo_fetched_at > timedelta(days=ttl)
 
