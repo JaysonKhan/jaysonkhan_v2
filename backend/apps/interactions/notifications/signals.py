@@ -13,7 +13,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from interactions.models import Comment, CommentReaction, Like
-from telegram.models import TelegramEntity
+from telegram.models import TelegramEntity, EntitySource
 from .service import NotificationService, fire_and_forget
 
 logger = logging.getLogger('interactions.notifications')
@@ -78,14 +78,18 @@ def on_like_deleted(sender, instance, **kwargs):
     fire_and_forget(svc.log_like, instance, 'unliked')
 
 
-# ── New user signal ──────────────────────────────────────────────────────────
+# ── New user / new service signal ─────────────────────────────────────────────
+# Fires on EntitySource creation, not TelegramEntity.
+# This covers BOTH:
+#   - Completely new user (first EntitySource created after TelegramEntity)
+#   - Existing user discovered via new service (e.g., OSINT user logs into website)
 
-@receiver(post_save, sender=TelegramEntity)
-def on_profile_created(sender, instance, created, **kwargs):
+@receiver(post_save, sender=EntitySource)
+def on_source_created(sender, instance, created, **kwargs):
     if not created:
         return
     svc = _get_service()
-    fire_and_forget(svc.log_new_user, instance)
+    fire_and_forget(svc.log_new_user, instance.entity)
 
 
 # ── Contact message signal ───────────────────────────────────────────────────

@@ -166,9 +166,6 @@ class NotificationService:
         if not self._admin_enabled('admin_notify_new_users'):
             return
 
-        import time
-        time.sleep(0.5)  # EntitySource yaratilishini kutish
-
         # ── FunStat stats_min (bepul) ─────────────────────────────────────
         funstat = {}
         if profile.entity_type in ('user', 'bot'):
