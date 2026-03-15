@@ -422,6 +422,11 @@ UNFOLD = {
                         "icon": "person_search",
                         "link": f"{_A}bot/osint/search/",
                     },
+                    {
+                        "title": "Telegram Session",
+                        "icon": "key",
+                        "link": f"{_A}bot/telegram/session/",
+                    },
                 ],
             },
         ],

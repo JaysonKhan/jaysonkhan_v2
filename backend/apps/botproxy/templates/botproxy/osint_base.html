@@ -78,6 +78,10 @@ html.dark .rb-error-box { background: rgba(239,68,68,0.1); color: #fca5a5; }
         <span class="material-symbols-outlined">person_search</span> Profil #{{ user_id }}
     </a>
     {% endif %}
+    <a href="{% url 'telegram_session' %}"
+       class="{% if request.resolver_match.url_name == 'telegram_session' %}active{% endif %}">
+        <span class="material-symbols-outlined">key</span> Session
+    </a>
     <div class="rb-osint-balance" id="balance-display">
         <span class="material-symbols-outlined" style="font-size:16px;">account_balance_wallet</span>
         Balans: <span class="amount" id="balance-amount">...</span>

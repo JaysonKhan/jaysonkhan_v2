@@ -1,8 +1,15 @@
 from django.urls import path
 
-from botproxy import osint_views, views
+from botproxy import osint_views, session_views, views
 
 urlpatterns = [
+    # ── Telegram Session Management ─────────────────────────────────────────
+    path("telegram/session/", session_views.telegram_session_page, name="telegram_session"),
+    path("telegram/session/status/", session_views.telegram_session_status, name="telegram_session_status"),
+    path("telegram/session/send-code/", session_views.telegram_session_send_code, name="telegram_session_send_code"),
+    path("telegram/session/verify/", session_views.telegram_session_verify, name="telegram_session_verify"),
+    path("telegram/session/2fa/", session_views.telegram_session_2fa, name="telegram_session_2fa"),
+    path("telegram/session/disconnect/", session_views.telegram_session_disconnect, name="telegram_session_disconnect"),
     # ── OSINT ─────────────────────────────────────────────────────────────────
     path("osint/search/", osint_views.osint_search, name="osint_search"),
     path("osint/profile/<int:user_id>/", osint_views.osint_profile, name="osint_profile"),

@@ -170,3 +170,254 @@ def shutdown_client():
             except Exception:
                 logger.exception("Telethon client ni uzishda xatolik")
             _client = None
+
+
+# ── Session Setup Helpers ─────────────────────────────────────────────────────
+
+# Temporary client for session setup (phone → OTP → sign in flow)
+_setup_client = None
+_setup_phone_hash: str | None = None
+
+
+def _get_api_config() -> tuple[int, str, str]:
+    """Return (api_id, api_hash, session_path). Raises RuntimeError if missing."""
+    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
+    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
+    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
+    if not api_id or not api_hash:
+        raise RuntimeError(
+            "TELEGRAM_API_ID va TELEGRAM_API_HASH sozlanmagan. "
+            "https://my.telegram.org/apps dan oling."
+        )
+    return api_id, api_hash, session_path
+
+
+def check_session_status() -> dict:
+    """Check current Telegram session status.
+
+    Returns dict with:
+        configured: bool — API keys sozlanganmi
+        authorized: bool — session avtorizatsiya qilinganmi
+        user: dict | None — {id, first_name, last_name, username, phone}
+    """
+    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
+    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
+    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
+
+    if not api_id or not api_hash:
+        return {"configured": False, "authorized": False, "user": None}
+
+    loop = _ensure_event_loop()
+
+    async def _check():
+        from telethon import TelegramClient
+
+        client = TelegramClient(session_path, api_id, api_hash)
+        try:
+            await client.connect()
+            if await client.is_user_authorized():
+                me = await client.get_me()
+                return {
+                    "configured": True,
+                    "authorized": True,
+                    "user": {
+                        "id": me.id,
+                        "first_name": me.first_name or "",
+                        "last_name": me.last_name or "",
+                        "username": me.username or "",
+                        "phone": me.phone or "",
+                    },
+                }
+            return {"configured": True, "authorized": False, "user": None}
+        except Exception as e:
+            logger.exception("Session status tekshirishda xatolik: %s", e)
+            return {"configured": True, "authorized": False, "user": None, "error": str(e)}
+        finally:
+            await client.disconnect()
+
+    future = asyncio.run_coroutine_threadsafe(_check(), loop)
+    return future.result(timeout=30)
+
+
+def setup_send_code(phone: str) -> dict:
+    """Send OTP code to phone number for session setup.
+
+    Returns dict with:
+        ok: bool
+        phone_code_hash: str (Telethon internal)
+        error: str | None
+    """
+    global _setup_client, _setup_phone_hash
+
+    api_id, api_hash, session_path = _get_api_config()
+    loop = _ensure_event_loop()
+
+    async def _send():
+        global _setup_client, _setup_phone_hash
+        from telethon import TelegramClient
+
+        # Close existing setup client if any
+        if _setup_client:
+            try:
+                await _setup_client.disconnect()
+            except Exception:
+                pass
+
+        _setup_client = TelegramClient(session_path, api_id, api_hash)
+        await _setup_client.connect()
+
+        result = await _setup_client.send_code_request(phone)
+        _setup_phone_hash = result.phone_code_hash
+        return {"ok": True, "phone_code_hash": result.phone_code_hash}
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(_send(), loop)
+        return future.result(timeout=30)
+    except Exception as e:
+        logger.exception("OTP yuborishda xatolik: %s", e)
+        return {"ok": False, "error": str(e)}
+
+
+def setup_verify_code(phone: str, code: str) -> dict:
+    """Verify OTP code and sign in.
+
+    Returns dict with:
+        ok: bool
+        needs_2fa: bool — True if 2FA password required
+        user: dict | None — user info if successful
+        error: str | None
+    """
+    global _setup_client, _setup_phone_hash, _client
+
+    if not _setup_client:
+        return {"ok": False, "error": "Avval telefon raqam kiriting", "needs_2fa": False}
+
+    loop = _ensure_event_loop()
+
+    async def _verify():
+        global _client
+        from telethon.errors import SessionPasswordNeededError
+
+        try:
+            await _setup_client.sign_in(phone, code, phone_code_hash=_setup_phone_hash)
+        except SessionPasswordNeededError:
+            return {"ok": False, "needs_2fa": True, "user": None}
+        except Exception as e:
+            return {"ok": False, "needs_2fa": False, "error": str(e), "user": None}
+
+        me = await _setup_client.get_me()
+
+        # Update the main singleton client
+        with _lock:
+            _client = _setup_client
+
+        return {
+            "ok": True,
+            "needs_2fa": False,
+            "user": {
+                "id": me.id,
+                "first_name": me.first_name or "",
+                "last_name": me.last_name or "",
+                "username": me.username or "",
+                "phone": me.phone or "",
+            },
+        }
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(_verify(), loop)
+        return future.result(timeout=30)
+    except Exception as e:
+        logger.exception("OTP tekshirishda xatolik: %s", e)
+        return {"ok": False, "needs_2fa": False, "error": str(e)}
+
+
+def setup_verify_2fa(password: str) -> dict:
+    """Verify 2FA password and complete sign in.
+
+    Returns dict with:
+        ok: bool
+        user: dict | None
+        error: str | None
+    """
+    global _setup_client, _client
+
+    if not _setup_client:
+        return {"ok": False, "error": "Session yo'q — qaytadan boshlang"}
+
+    loop = _ensure_event_loop()
+
+    async def _verify_2fa():
+        global _client
+        try:
+            await _setup_client.sign_in(password=password)
+        except Exception as e:
+            return {"ok": False, "error": str(e), "user": None}
+
+        me = await _setup_client.get_me()
+
+        # Update the main singleton client
+        with _lock:
+            _client = _setup_client
+
+        return {
+            "ok": True,
+            "user": {
+                "id": me.id,
+                "first_name": me.first_name or "",
+                "last_name": me.last_name or "",
+                "username": me.username or "",
+                "phone": me.phone or "",
+            },
+        }
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(_verify_2fa(), loop)
+        return future.result(timeout=30)
+    except Exception as e:
+        logger.exception("2FA tekshirishda xatolik: %s", e)
+        return {"ok": False, "error": str(e)}
+
+
+def disconnect_session() -> dict:
+    """Disconnect and invalidate the current session.
+
+    Returns dict with ok: bool, error: str | None
+    """
+    global _client, _setup_client
+
+    api_id = getattr(settings, "TELEGRAM_API_ID", 0)
+    api_hash = getattr(settings, "TELEGRAM_API_HASH", "")
+    session_path = getattr(settings, "TELEGRAM_SESSION_PATH", "")
+
+    loop = _ensure_event_loop()
+
+    async def _disconnect():
+        global _client, _setup_client
+        from telethon import TelegramClient
+
+        # Disconnect any existing clients
+        for c in (_client, _setup_client):
+            if c:
+                try:
+                    if c.is_connected():
+                        await c.log_out()
+                except Exception:
+                    pass
+        _client = None
+        _setup_client = None
+
+        # Remove session files
+        import os
+        for ext in ("", ".session"):
+            path = f"{session_path}{ext}"
+            if os.path.exists(path):
+                os.remove(path)
+
+        return {"ok": True}
+
+    try:
+        future = asyncio.run_coroutine_threadsafe(_disconnect(), loop)
+        return future.result(timeout=30)
+    except Exception as e:
+        logger.exception("Session uzishda xatolik: %s", e)
+        return {"ok": False, "error": str(e)}
