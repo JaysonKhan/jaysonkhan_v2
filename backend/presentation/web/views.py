@@ -1,3 +1,4 @@
+import json
 import uuid
 
 from django.core.cache import cache
@@ -5,7 +6,7 @@ from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.views import View
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.contenttypes.models import ContentType
 from portfolio.services import PortfolioService, PortfolioRepository
@@ -320,13 +321,20 @@ class ContactView(TemplateView):
 
 
 class TgAppRouterView(View):
-    """Telegram Mini App deep link router.
+    """Telegram Mini App deep link router + auto-login trampoline.
 
     BotFather da ``/newapp`` bilan ro'yxatdan o'tgan Mini App shu
-    URL ga yo'naltiriladi. ``startapp`` parametri orqali kerakli
-    sahifaga redirect qiladi.
+    URL ga yo'naltiriladi.
 
     Deep link format: ``https://t.me/{bot}/{app}?startapp={param}``
+
+    Muammo: Server-side 302 redirect ``initData`` ni yo'qotadi (URL hash
+    fragment serverga yuborilmaydi, redirect qilganda yo'qoladi).
+
+    Yechim: "Trampoline" sahifa — avval ``initData`` bilan auto-login
+    qiladi, so'ng JS orqali target sahifaga yo'naltiradi.  Agar user
+    allaqachon login bo'lgan bo'lsa yoki Telegram konteksti yo'q bo'lsa,
+    darhol redirect qiladi.
 
     Parametrlar:
         osint-p-{id}   → OSINT foydalanuvchi profili
@@ -337,18 +345,63 @@ class TgAppRouterView(View):
         home           → Bosh sahifa
     """
 
+    # Minimal HTML that does auto-login before navigating away.
+    # %(target)s and %(login)s are filled with json.dumps() values.
+    _TRAMPOLINE = (
+        '<!DOCTYPE html>'
+        '<html><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<script src="https://telegram.org/js/telegram-web-app.js"></script>'
+        '<style>body{margin:0;display:flex;justify-content:center;'
+        'align-items:center;height:100vh;background:#0f172a;'
+        'color:#94a3b8;font-family:sans-serif}</style>'
+        '</head><body><p>Loading\u2026</p><script>'
+        '(function(){'
+        'var t=%(target)s,u=%(login)s;'
+        'if(window.Telegram&&window.Telegram.WebApp){'
+        'window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}'
+        'if(window.Telegram&&window.Telegram.WebApp'
+        '&&window.Telegram.WebApp.initData){'
+        'fetch(u,{method:"POST",credentials:"same-origin",'
+        'headers:{"Content-Type":"application/json"},'
+        'body:JSON.stringify({init_data:window.Telegram.WebApp.initData})})'
+        '.then(function(){window.location.replace(t)})'
+        '.catch(function(){window.location.replace(t)})'
+        '}else{window.location.replace(t)}'
+        '})();'
+        '</script></body></html>'
+    )
+
     def get(self, request):
         start = request.GET.get('tgWebAppStartParam', '')
+        target_url = self._resolve_target(start)
 
-        # Comment deep link — looks up the comment, redirects to its page
+        # Already logged in — skip trampoline, redirect immediately
+        if get_tg_profile(request):
+            return redirect(target_url)
+
+        # Render trampoline: auto-login via initData → JS redirect
+        login_url = reverse('interactions:telegram_webapp_login')
+        html = self._TRAMPOLINE % {
+            'target': json.dumps(target_url),
+            'login': json.dumps(login_url),
+        }
+        return HttpResponse(html, content_type='text/html')
+
+    @staticmethod
+    def _resolve_target(start: str) -> str:
+        """Map ``startapp`` parameter to a local URL path."""
+
+        # Comment deep link
         if start.startswith('c-'):
             try:
                 comment_id = int(start[2:])
-                from interactions.models import Comment
-                comment = Comment.objects.select_related('content_type').get(pk=comment_id)
+                comment = Comment.objects.select_related(
+                    'content_type',
+                ).get(pk=comment_id)
                 obj = comment.content_object
                 if obj and hasattr(obj, 'get_absolute_url'):
-                    return redirect(f'{obj.get_absolute_url()}#comment-{comment_id}')
+                    return f'{obj.get_absolute_url()}#comment-{comment_id}'
             except (ValueError, TypeError, Comment.DoesNotExist):
                 pass
 
@@ -357,7 +410,7 @@ class TgAppRouterView(View):
             slug = start[5:]
             if slug:
                 try:
-                    return redirect(reverse('blog_detail', kwargs={'slug': slug}))
+                    return reverse('blog_detail', kwargs={'slug': slug})
                 except Exception:
                     pass
 
@@ -366,7 +419,7 @@ class TgAppRouterView(View):
             slug = start[5:]
             if slug:
                 try:
-                    return redirect(reverse('project_detail', kwargs={'slug': slug}))
+                    return reverse('project_detail', kwargs={'slug': slug})
                 except Exception:
                     pass
 
@@ -374,9 +427,9 @@ class TgAppRouterView(View):
         if start.startswith('osint-p-'):
             try:
                 user_id = int(start[8:])
-                return redirect(reverse(
+                return reverse(
                     'osint_profile', kwargs={'user_id': user_id},
-                ))
+                )
             except (ValueError, TypeError):
                 pass
 
@@ -384,9 +437,13 @@ class TgAppRouterView(View):
         if start.startswith('osint-e-'):
             entity_id = start[8:]
             if entity_id.isdigit():
-                return redirect(reverse(
-                    'osint_entity_profile', kwargs={'entity_id': entity_id},
-                ))
+                try:
+                    return reverse(
+                        'osint_entity_profile',
+                        kwargs={'entity_id': entity_id},
+                    )
+                except Exception:
+                    pass
 
         # Default — home page
-        return redirect('home')
+        return reverse('home')
