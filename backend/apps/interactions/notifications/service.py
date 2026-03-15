@@ -158,11 +158,102 @@ class NotificationService:
     def log_new_user(self, profile) -> None:
         if not self._admin_enabled('admin_notify_new_users'):
             return
+
+        import time
+        time.sleep(0.5)  # EntitySource yaratilishini kutish
+
+        # ── Entity type ───────────────────────────────────────────────────
+        type_map = {
+            'user': ('👤', 'Foydalanuvchi'),
+            'bot': ('🤖', 'Bot'),
+            'group': ('👥', 'Guruh'),
+            'supergroup': ('👥', 'Superguruh'),
+            'channel': ('📢', 'Kanal'),
+        }
+        emoji, type_label = type_map.get(profile.entity_type, ('👤', 'Noma\'lum'))
+
         name = escape(profile.display_name)
-        username = f' (@{escape(profile.username)})' if profile.username else ''
-        text = f'👤 Yangi user: <b>{name}</b>{username}'
-        button = self._url_button('🌐 Saytga o\'tish', self._domain)
-        self._send_to_admin_group(text, profile, 'new_user', reply_markup=button)
+        lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
+
+        # ── Asosiy ma'lumotlar ────────────────────────────────────────────
+        info_parts = [f'🆔 <code>{profile.telegram_id}</code>']
+        if profile.username:
+            info_parts.append(f'@{escape(profile.username)}')
+        lines.append(' · '.join(info_parts))
+
+        if profile.phone:
+            lines.append(f'📱 <code>{escape(profile.phone)}</code>')
+
+        # ── Qaysi servis orqali? ──────────────────────────────────────────
+        try:
+            from telegram.models import EntitySource
+            sources = list(
+                EntitySource.objects.filter(entity=profile)
+                .values_list('service', flat=True)
+            )
+            if sources:
+                svc_labels = {
+                    'site': '🌐 Sayt (Login)',
+                    'osint': '🔍 OSINT',
+                    'rektor': '🎓 Rektor Bot',
+                    'ovoz': '🗳 Ovoz Bot',
+                }
+                src_str = ', '.join(svc_labels.get(s, s) for s in sources)
+                lines.append(f'📡 {src_str}')
+        except Exception:
+            pass
+
+        # ── Badgelar ──────────────────────────────────────────────────────
+        badges = []
+        if getattr(profile, 'is_premium', False):
+            badges.append('⭐️ Premium')
+        if getattr(profile, 'is_verified', False):
+            badges.append('✅ Tasdiqlangan')
+        if getattr(profile, 'is_scam', False):
+            badges.append('⚠️ SCAM')
+        if getattr(profile, 'is_fake', False):
+            badges.append('🚫 FAKE')
+        if badges:
+            lines.append(' · '.join(badges))
+
+        # ── Bio ───────────────────────────────────────────────────────────
+        bio = getattr(profile, 'bio', '')
+        if bio:
+            lines.append(f'💬 <i>{escape(bio[:120])}</i>')
+
+        text = '\n'.join(lines)
+
+        # ── Tugmalar ──────────────────────────────────────────────────────
+        buttons = []
+        try:
+            from django.urls import reverse
+            if profile.entity_type in ('channel', 'supergroup', 'group'):
+                osint_url = reverse(
+                    'osint_entity_profile',
+                    kwargs={'entity_id': profile.telegram_id},
+                )
+            else:
+                osint_url = reverse(
+                    'osint_profile',
+                    kwargs={'user_id': profile.telegram_id},
+                )
+            buttons.append([{
+                'text': '🔍 OSINT',
+                'url': f'{self._domain}{osint_url}',
+            }])
+        except Exception:
+            pass
+        buttons.append([
+            {'text': '⚙️ Admin', 'url': self._admin_entity_url(profile)},
+            {'text': '🌐 Sayt', 'url': self._domain},
+        ])
+
+        reply_markup = {'inline_keyboard': buttons}
+        photo_url = profile.get_photo_url() or None
+        self._send_to_admin_group(
+            text, profile, 'new_user',
+            reply_markup=reply_markup, photo_url=photo_url,
+        )
 
     def log_contact_message(self, contact) -> None:
         if not self._admin_enabled('admin_notify_contacts'):
@@ -193,6 +284,18 @@ class NotificationService:
     @property
     def _domain(self) -> str:
         return getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', DEFAULT_DOMAIN)
+
+    def _admin_entity_url(self, profile) -> str:
+        """Admin change page URL for a TelegramEntity."""
+        try:
+            from django.urls import reverse
+            path = reverse(
+                'admin:telegram_telegramentity_change',
+                args=[profile.pk],
+            )
+            return f'{self._domain}{path}'
+        except Exception:
+            return self._domain
 
     def _send_to_admin_group(
         self,
