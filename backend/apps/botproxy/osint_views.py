@@ -211,6 +211,11 @@ def osint_photo_proxy(request, entity_id: str):
       - 404 if no photo available at all
       - 503 if Telegram client unavailable
     """
+    # entity_id ni tozalash (path traversal himoya)
+    clean_id = entity_id.strip().lstrip("-")
+    if not clean_id.isdigit():
+        return HttpResponse(status=400)
+
     from telegram.photo_service import get_entity_photo
 
     force = request.GET.get("refresh") == "1"

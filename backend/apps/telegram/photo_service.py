@@ -45,6 +45,25 @@ PHOTO_DIR = "osint/photos"  # relative to MEDIA_ROOT
 DEFAULT_DOMAIN = "https://jaysonkhan.com"
 BOT_API_TIMEOUT = 15  # seconds for Bot API HTTP calls
 
+# Ruxsat berilgan domenlar — boshqa domenlardan rasm yuklamaymiz (SSRF himoya)
+ALLOWED_PHOTO_DOMAINS = {
+    "t.me",
+    "telegram.org",
+    "cdn4.telegram-cdn.org",
+    "cdn5.telegram-cdn.org",
+    "jaysonkhan.com",
+}
+
+# Minimal rasm hajmi (bytes) — SVG, HTML, xato sahifalar ni filtrlash
+MIN_PHOTO_SIZE = 500  # 500 bytes dan kichik rasm bo'lmaydi
+# Image magic bytes for validation
+IMAGE_MAGIC_BYTES = {
+    b"\xff\xd8\xff": "image/jpeg",      # JPEG
+    b"\x89PNG": "image/png",             # PNG
+    b"GIF8": "image/gif",               # GIF
+    b"RIFF": "image/webp",              # WebP (RIFF header)
+}
+
 
 def _get_site_domain() -> str:
     """Get site domain for constructing full photo URLs."""
@@ -76,6 +95,53 @@ def _ensure_photo_dir():
     """Create the photo cache directory if it doesn't exist."""
     photo_dir = Path(settings.MEDIA_ROOT) / PHOTO_DIR
     photo_dir.mkdir(parents=True, exist_ok=True)
+
+
+def _sanitize_entity_id(entity_id: str | int) -> str | None:
+    """Validate and sanitize entity_id for safe filesystem use.
+
+    Path traversal oldini olish: faqat raqam yoki raqam-prefiks qabul qiladi.
+    Returns sanitized string or None if invalid.
+    """
+    entity_str = str(entity_id).strip()
+    # Faqat raqamlar (manfiy bo'lishi mumkin — channel/supergroup)
+    if not entity_str.lstrip("-").isdigit():
+        logger.warning("Xavfsiz emas entity_id: %s", entity_str[:50])
+        return None
+    return entity_str
+
+
+def _is_valid_image(data: bytes) -> bool:
+    """Check if bytes represent a real image (not SVG, HTML, or error page).
+
+    Magic bytes orqali tekshiradi — fayl kengaytmasiga ishonmaymiz.
+    """
+    if len(data) < MIN_PHOTO_SIZE:
+        return False
+    for magic in IMAGE_MAGIC_BYTES:
+        if data[:len(magic)] == magic:
+            return True
+    return False
+
+
+def _is_allowed_photo_url(url: str) -> bool:
+    """Check if photo URL is from a trusted Telegram domain.
+
+    SSRF oldini olish — faqat Telegram CDN domenlaridan yuklaymiz.
+    """
+    from urllib.parse import urlparse
+
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+        # Subdomen ham tekshiriladi (cdn1.telegram-cdn.org va h.k.)
+        for allowed in ALLOWED_PHOTO_DOMAINS:
+            if host == allowed or host.endswith(f".{allowed}"):
+                return True
+        logger.warning("Ruxsatsiz photo URL domeni: %s", host)
+        return False
+    except Exception:
+        return False
 
 
 # ── Bot API Photo Download ──────────────────────────────────────────────────
@@ -153,17 +219,23 @@ def _download_photo_via_bot_api(entity_id: int) -> bytes | None:
             resp = client.get(
                 f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
             )
-            if resp.status_code == 200 and len(resp.content) > 100:
+            if resp.status_code == 200 and _is_valid_image(resp.content):
                 logger.info(
                     "Photo Bot API orqali yuklandi: entity %s (%d bytes)",
                     entity_id, len(resp.content),
                 )
                 return resp.content
 
-            logger.warning(
-                "Photo download xatolik (%s): HTTP %s",
-                entity_id, resp.status_code,
-            )
+            if resp.status_code == 200:
+                logger.warning(
+                    "Bot API rasm emas (%s): %d bytes, magic=%s",
+                    entity_id, len(resp.content), resp.content[:8].hex(),
+                )
+            else:
+                logger.warning(
+                    "Photo download xatolik (%s): HTTP %s",
+                    entity_id, resp.status_code,
+                )
             return None
 
     except httpx.TimeoutException:
@@ -179,18 +251,33 @@ def _download_photo_from_url(photo_url: str) -> bytes | None:
 
     Fallback sifatida ishlatiladi — Bot API user ni topolmaganda,
     TelegramEntity.photo_url dan rasmni yuklab oladi.
+
+    Xavfsizlik:
+      - Faqat Telegram domenlaridan ruxsat (SSRF oldini olish)
+      - Yuklab olingan faylni image magic bytes orqali tekshiradi
+      - SVG, HTML va boshqa noto'g'ri fayllarni filtrlaydi
     """
     if not photo_url:
         return None
+
+    # ── SSRF himoya — faqat ishonchli domenlardan yuklaymiz ──
+    if not _is_allowed_photo_url(photo_url):
+        return None
+
     try:
         with httpx.Client(timeout=BOT_API_TIMEOUT, follow_redirects=True) as client:
             resp = client.get(photo_url)
-            if resp.status_code == 200 and len(resp.content) > 100:
+            if resp.status_code == 200 and _is_valid_image(resp.content):
                 logger.info(
                     "Photo URL dan yuklandi: %s (%d bytes)",
                     photo_url[:80], len(resp.content),
                 )
                 return resp.content
+            if resp.status_code == 200:
+                logger.debug(
+                    "Photo URL rasm emas (%s): %d bytes",
+                    photo_url[:80], len(resp.content),
+                )
     except Exception as e:
         logger.debug("Photo URL yuklashda xatolik (%s): %s", photo_url[:80], e)
     return None
@@ -213,13 +300,16 @@ def get_entity_photo(
       3. photo_url fallback: TelegramEntity.photo_url (Login Widget avatar)
       4. Negative cache: has_photo=False (1 kun TTL)
     """
-    entity_str = str(entity_id)
+    # 0. Sanitize entity_id (path traversal oldini olish)
+    entity_str = _sanitize_entity_id(entity_id)
+    if not entity_str:
+        return None, None
 
     # 1. Check cache: TelegramEntity DB + filesystem
     if not force_refresh:
         try:
             entity_obj = TelegramEntity.objects.filter(
-                telegram_id=int(entity_id),
+                telegram_id=int(entity_str),
             ).first()
             if entity_obj and not entity_obj.is_photo_stale:
                 if entity_obj.has_photo is False:
@@ -237,9 +327,9 @@ def get_entity_photo(
         except (ValueError, TypeError):
             pass
 
-    # 2. Validate entity_id
+    # 2. Validate entity_id (numeric)
     try:
-        entity_int = int(entity_id)
+        entity_int = int(entity_str)
     except (ValueError, TypeError):
         logger.warning("Noto'g'ri entity_id: %s", entity_id)
         return None, None
@@ -297,20 +387,25 @@ def _try_stale_cache(entity_str: str) -> tuple[bytes | None, str | None]:
     Checks both DB-tracked cache and bare filesystem cache (for entities
     that may not have a TelegramEntity record).
     """
+    # Sanitize (path traversal himoya)
+    safe_id = _sanitize_entity_id(entity_str)
+    if not safe_id:
+        return None, None
+
     # 1. DB-tracked cache
     try:
         entity_obj = TelegramEntity.objects.filter(
-            telegram_id=int(entity_str),
+            telegram_id=int(safe_id),
             has_photo=True,
         ).first()
         if entity_obj and entity_obj.photo_file:
-            abs_path = _photo_abs_path(entity_str)
+            abs_path = _photo_abs_path(safe_id)
             if abs_path.exists():
                 return abs_path.read_bytes(), "image/jpeg"
     except (ValueError, TelegramEntity.DoesNotExist):
         pass
     # 2. Bare filesystem cache (TelegramEntity yo'q)
-    abs_path = _photo_abs_path(entity_str)
+    abs_path = _photo_abs_path(safe_id)
     if abs_path.exists():
         return abs_path.read_bytes(), "image/jpeg"
     return None, None

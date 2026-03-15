@@ -29,6 +29,15 @@ _lock = threading.Lock()
 _loop = None
 _loop_thread = None
 
+# ── Cooldown / Circuit Breaker ──────────────────────────────────────────────
+# Agar Telegram connection xato bo'lsa, darhol qayta urinmaslik uchun.
+# Bu akkauntni FloodWait / ban dan himoya qiladi.
+
+_last_connection_error: float = 0.0  # monotonic timestamp of last connection failure
+_connection_cooldown: float = 30.0   # sekundda — xato bo'lgandan keyin kutish
+_last_otp_sent: float = 0.0         # monotonic timestamp of last OTP send
+_otp_cooldown: float = 60.0         # sekundda — OTP orasida minimum kutish
+
 
 # ── Rate Limiter ─────────────────────────────────────────────────────────────
 
@@ -112,8 +121,8 @@ def _get_api_config() -> tuple[int, str]:
         db_config = TelegramSession.get_api_config()
         if db_config:
             return db_config
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("DB dan API config o'qishda xatolik: %s", e)
 
     # 2. Fallback: environment variables
     api_id = getattr(settings, "TELEGRAM_API_ID", 0)
@@ -183,9 +192,21 @@ def get_telegram_client():
     Uses StringSession from PostgreSQL — no SQLite file locking issues
     with multiple Gunicorn workers.
 
+    Connection cooldown: agar oldingi ulanish xato bo'lsa, 30 sekund
+    kutmasdan qayta urinmaydi (ban oldini olish).
+
     Raises RuntimeError if API keys or session are not set.
     """
-    global _client
+    global _client, _last_connection_error
+
+    # ── Connection cooldown — xato bo'lganda Telegram ni spam qilmaslik ──
+    if _last_connection_error > 0:
+        elapsed = time.monotonic() - _last_connection_error
+        if elapsed < _connection_cooldown:
+            remaining = int(_connection_cooldown - elapsed)
+            raise RuntimeError(
+                f"Telegram ulanish xatosi. {remaining} sekund kutib qayta urining."
+            )
 
     api_id, api_hash = _get_api_config()
 
@@ -209,20 +230,27 @@ def get_telegram_client():
 
         _client = TelegramClient(StringSession(session_string), api_id, api_hash)
 
-        # Connect in the background loop
-        future = asyncio.run_coroutine_threadsafe(_client.connect(), loop)
-        future.result(timeout=30)
+        try:
+            # Connect in the background loop
+            future = asyncio.run_coroutine_threadsafe(_client.connect(), loop)
+            future.result(timeout=30)
 
-        # Check authorization
-        auth_future = asyncio.run_coroutine_threadsafe(
-            _client.is_user_authorized(), loop
-        )
-        if not auth_future.result(timeout=10):
-            raise RuntimeError(
-                "Telegram session avtorizatsiya qilinmagan. "
-                "Admin panel → Telegram Session sahifasidan qayta ulanish."
+            # Check authorization
+            auth_future = asyncio.run_coroutine_threadsafe(
+                _client.is_user_authorized(), loop
             )
+            if not auth_future.result(timeout=10):
+                raise RuntimeError(
+                    "Telegram session avtorizatsiya qilinmagan. "
+                    "Admin panel → Telegram Session sahifasidan qayta ulanish."
+                )
+        except Exception:
+            _last_connection_error = time.monotonic()
+            _client = None
+            raise
 
+        # Muvaffaqiyatli — cooldown ni tozalash
+        _last_connection_error = 0.0
         logger.info("Telethon client muvaffaqiyatli ulandi (StringSession)")
         return _client
 
@@ -252,6 +280,75 @@ def shutdown_client():
             except Exception:
                 logger.exception("Telethon client ni uzishda xatolik")
             _client = None
+
+
+# ── Telethon Error Handler ────────────────────────────────────────────────────
+
+
+def _handle_telethon_error(exc: Exception, context: str = "") -> str:
+    """Convert Telethon exceptions to user-friendly Uzbek messages.
+
+    Eng muhimi FloodWaitError ni ushlab, kutish vaqtini ko'rsatish —
+    foydalanuvchi bilmasa qayta urinadi va ban oladi.
+    """
+    error_str = str(exc)
+
+    # FloodWaitError — Telegram rate limit. Eng xavfli, chunki
+    # qayta urinish banni uzaytiradi.
+    try:
+        from telethon.errors import FloodWaitError
+        if isinstance(exc, FloodWaitError):
+            wait_sec = exc.seconds
+            if wait_sec >= 3600:
+                wait_human = f"{wait_sec // 3600} soat {(wait_sec % 3600) // 60} daqiqa"
+            elif wait_sec >= 60:
+                wait_human = f"{wait_sec // 60} daqiqa {wait_sec % 60} sekund"
+            else:
+                wait_human = f"{wait_sec} sekund"
+            logger.warning(
+                "FloodWaitError (%s): %d sekund kutish kerak",
+                context, wait_sec,
+            )
+            return (
+                f"⚠️ Telegram cheklovi: {wait_human} kutish kerak. "
+                f"Tez-tez urinish banga olib keladi!"
+            )
+    except ImportError:
+        pass
+
+    # PhoneNumberBannedError / PhoneNumberFloodError
+    if "banned" in error_str.lower() or "phone_number_banned" in error_str.lower():
+        logger.error("Telefon raqam banlangan (%s): %s", context, error_str)
+        return "🚫 Bu telefon raqam Telegram tomonidan banlangan. Boshqa raqam ishlating."
+
+    if "flood" in error_str.lower():
+        logger.warning("Flood xatolik (%s): %s", context, error_str)
+        return "⚠️ Telegram rate limit. Bir necha daqiqa kutib qayta urinib ko'ring."
+
+    # PhoneCodeInvalidError
+    if "phone_code_invalid" in error_str.lower() or "code is invalid" in error_str.lower():
+        return "❌ Noto'g'ri kod. Qaytadan kiriting."
+
+    # PhoneCodeExpiredError
+    if "phone_code_expired" in error_str.lower() or "code has expired" in error_str.lower():
+        return "⏰ Kod muddati o'tgan. Yangi kod so'rang."
+
+    # PasswordHashInvalidError
+    if "password" in error_str.lower() and "invalid" in error_str.lower():
+        return "❌ Noto'g'ri parol."
+
+    # ApiIdInvalidError
+    if "api_id" in error_str.lower() and "invalid" in error_str.lower():
+        return "🚫 API ID noto'g'ri. my.telegram.org dan tekshiring."
+
+    # AuthKeyError — session buzilgan
+    if "auth" in error_str.lower() and "key" in error_str.lower():
+        logger.error("AuthKey xatolik (%s): %s", context, error_str)
+        return "🔑 Session buzilgan. Qaytadan ulanish kerak."
+
+    # Generic
+    logger.exception("%s da xatolik: %s", context, exc)
+    return f"Xatolik: {error_str}"
 
 
 # ── Session Setup Helpers ─────────────────────────────────────────────────────
@@ -351,13 +448,24 @@ def setup_send_code(phone: str) -> dict:
     """Send OTP code to phone number for session setup.
 
     Uses empty StringSession (new session, no file needed).
+    OTP orasida minimum 60 sekund kutish — spam oldini olish.
 
     Returns dict with:
         ok: bool
         phone_code_hash: str (Telethon internal)
         error: str | None
     """
-    global _setup_client, _setup_phone_hash
+    global _setup_client, _setup_phone_hash, _last_otp_sent
+
+    # ── OTP rate limit — tez-tez OTP so'rash akkauntni banga olib keladi ──
+    now = time.monotonic()
+    elapsed_since_otp = now - _last_otp_sent
+    if _last_otp_sent > 0 and elapsed_since_otp < _otp_cooldown:
+        remaining = int(_otp_cooldown - elapsed_since_otp)
+        return {
+            "ok": False,
+            "error": f"OTP tez-tez so'rash mumkin emas. {remaining} sekund kuting.",
+        }
 
     api_id, api_hash = _get_api_config()
     loop = _ensure_event_loop()
@@ -384,10 +492,13 @@ def setup_send_code(phone: str) -> dict:
 
     try:
         future = asyncio.run_coroutine_threadsafe(_send(), loop)
-        return future.result(timeout=30)
+        result = future.result(timeout=30)
+        if result.get("ok"):
+            _last_otp_sent = time.monotonic()
+        return result
     except Exception as e:
-        logger.exception("OTP yuborishda xatolik: %s", e)
-        return {"ok": False, "error": str(e)}
+        error_msg = _handle_telethon_error(e, "OTP yuborish")
+        return {"ok": False, "error": error_msg}
 
 
 def setup_verify_code(phone: str, code: str) -> dict:
@@ -445,8 +556,8 @@ def setup_verify_code(phone: str, code: str) -> dict:
         _persist_and_clean_session(result)
         return result
     except Exception as e:
-        logger.exception("OTP tekshirishda xatolik: %s", e)
-        return {"ok": False, "needs_2fa": False, "error": str(e)}
+        error_msg = _handle_telethon_error(e, "OTP tekshirish")
+        return {"ok": False, "needs_2fa": False, "error": error_msg}
 
 
 def setup_verify_2fa(password: str) -> dict:
@@ -498,8 +609,8 @@ def setup_verify_2fa(password: str) -> dict:
         _persist_and_clean_session(result, " (2FA)")
         return result
     except Exception as e:
-        logger.exception("2FA tekshirishda xatolik: %s", e)
-        return {"ok": False, "error": str(e)}
+        error_msg = _handle_telethon_error(e, "2FA tekshirish")
+        return {"ok": False, "error": error_msg}
 
 
 def disconnect_session() -> dict:
