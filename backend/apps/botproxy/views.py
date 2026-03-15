@@ -396,6 +396,7 @@ def export_json_view(request, poll_id: int, svc="rektor"):
 
 
 ALLOWED_CHART_TYPES = {"trend", "faculty", "hourly", "bar", "pie"}
+ALLOWED_THEMES = {"", "light", "dark"}
 
 
 @staff_member_required
@@ -403,6 +404,8 @@ def poll_chart(request, poll_id: int, chart_type: str, svc="rektor"):
     if chart_type not in ALLOWED_CHART_TYPES:
         return HttpResponse(status=400, content=b"Invalid chart type")
     theme = request.GET.get("theme", "")
+    if theme not in ALLOWED_THEMES:
+        theme = ""
     client = _client(svc)
     try:
         data = client.get_chart(poll_id, chart_type, theme=theme)
@@ -556,6 +559,8 @@ def user_photo_proxy(request, user_id: int, svc="rektor"):
 def user_growth_chart(request, svc="rektor"):
     """Proxy user growth chart PNG from bot API."""
     theme = request.GET.get("theme", "")
+    if theme not in ALLOWED_THEMES:
+        theme = ""
     client = _client(svc)
     try:
         data = client.get_user_growth_chart(days=30, theme=theme)

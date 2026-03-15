@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json as json_mod
 import logging
+import threading
 import time
 from urllib.parse import quote, urlencode
 
@@ -24,17 +25,19 @@ class BotAPIError(Exception):
 # ─── Connection pool (one per base_url, reused across requests) ──────────────
 
 _pools: dict[str, httpx.Client] = {}
+_pools_lock = threading.Lock()
 
 
 def _get_pool(base_url: str, timeout: int = 30) -> httpx.Client:
-    """Get or create a persistent httpx.Client for the given base URL."""
-    if base_url not in _pools or _pools[base_url].is_closed:
-        _pools[base_url] = httpx.Client(
-            base_url=base_url,
-            timeout=timeout,
-            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
-        )
-    return _pools[base_url]
+    """Get or create a persistent httpx.Client for the given base URL (thread-safe)."""
+    with _pools_lock:
+        if base_url not in _pools or _pools[base_url].is_closed:
+            _pools[base_url] = httpx.Client(
+                base_url=base_url,
+                timeout=timeout,
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            )
+        return _pools[base_url]
 
 
 class BotAPIClient:

@@ -190,7 +190,7 @@
                 <tr>
                     <th style="width:48px;"></th>
                     <th>
-                        <a href="?sort=name&order={% if sort == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="rb-sort-link">
+                        <a href="?sort=name&order={% if sort == 'name' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="rb-sort-link">
                             Ism
                             {% if sort == "name" %}
                                 <span class="material-symbols-outlined">{% if order == "asc" %}arrow_upward{% else %}arrow_downward{% endif %}</span>
@@ -200,7 +200,7 @@
                     <th>Username</th>
                     <th>Telefon</th>
                     <th>
-                        <a href="?sort=registered_at&order={% if sort == 'registered_at' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="rb-sort-link">
+                        <a href="?sort=registered_at&order={% if sort == 'registered_at' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="rb-sort-link">
                             Ro'yxatdan o'tgan
                             {% if sort == "registered_at" %}
                                 <span class="material-symbols-outlined">{% if order == "asc" %}arrow_upward{% else %}arrow_downward{% endif %}</span>
@@ -208,7 +208,7 @@
                         </a>
                     </th>
                     <th>
-                        <a href="?sort=total_votes&order={% if sort == 'total_votes' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="rb-sort-link">
+                        <a href="?sort=total_votes&order={% if sort == 'total_votes' and order == 'asc' %}desc{% else %}asc{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}" class="rb-sort-link">
                             Ovozlar
                             {% if sort == "total_votes" %}
                                 <span class="material-symbols-outlined">{% if order == "asc" %}arrow_upward{% else %}arrow_downward{% endif %}</span>
@@ -253,7 +253,7 @@
     {% if total_pages > 1 %}
     <div class="rb-pagination">
         {% if has_prev %}
-            <a href="?page={{ page|add:"-1" }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">
+            <a href="?page={{ page|add:"-1" }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">
                 <span class="material-symbols-outlined">chevron_left</span>
             </a>
         {% else %}
@@ -266,12 +266,12 @@
             {% elif p == page %}
                 <span class="active">{{ p }}</span>
             {% else %}
-                <a href="?page={{ p }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">{{ p }}</a>
+                <a href="?page={{ p }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">{{ p }}</a>
             {% endif %}
         {% endfor %}
 
         {% if has_next %}
-            <a href="?page={{ page|add:"1" }}{% if search_query %}&q={{ search_query }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">
+            <a href="?page={{ page|add:"1" }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if sort %}&sort={{ sort }}&order={{ order }}{% endif %}">
                 <span class="material-symbols-outlined">chevron_right</span>
             </a>
         {% else %}
