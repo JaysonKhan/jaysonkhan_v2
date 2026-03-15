@@ -29,8 +29,11 @@ Usage:
 """
 from __future__ import annotations
 
+import html as html_mod
 import logging
+import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -341,7 +344,116 @@ def search_channel_messages(
         return MTProtoResult(error=error_msg)
 
 
+# ── Message Photo Download ─────────────────────────────────────────────────
+
+
+MSG_PHOTO_DIR = "osint/msg_photos"
+
+
+def _msg_photo_path(entity_id: int, msg_id: int) -> Path:
+    """Absolute filesystem path for cached message photo."""
+    from django.conf import settings
+
+    return Path(settings.MEDIA_ROOT) / MSG_PHOTO_DIR / f"{entity_id}_{msg_id}.jpg"
+
+
+def get_message_photo(entity_id: int | str, message_id: int) -> MTProtoResult:
+    """Download photo from a specific channel message.
+
+    Keshda bo'lsa — fayldan qaytaradi. Aks holda Telethon orqali yuklab oladi.
+    Cache: MEDIA_ROOT/osint/msg_photos/{entity_id}_{msg_id}.jpg
+
+    Rate: 1 slot (faqat yangi yuklashda).
+    Returns MTProtoResult with data=bytes or error.
+    """
+    eid = int(entity_id)
+
+    # 1. Check file cache
+    abs_path = _msg_photo_path(eid, message_id)
+    if abs_path.exists():
+        try:
+            photo_bytes = abs_path.read_bytes()
+            if len(photo_bytes) > 100:
+                return MTProtoResult(data=photo_bytes)
+        except Exception:
+            pass
+
+    # 2. Download via Telethon
+    from telegram.telegram_client import (
+        _handle_telethon_error,
+        get_rate_limiter,
+        get_telegram_client,
+        run_async,
+    )
+
+    limiter = get_rate_limiter()
+    if not limiter.acquire(timeout=15):
+        return MTProtoResult(error="Rate limit", rate_limited=True)
+
+    try:
+        client = get_telegram_client()
+
+        async def _fetch():
+            entity = await _resolve_entity(client, entity_id)
+            messages = await client.get_messages(entity, ids=[message_id])
+            if not messages or not messages[0]:
+                return None
+            msg = messages[0]
+            if not msg.media:
+                return None
+            return await client.download_media(msg.media, file=bytes)
+
+        photo_bytes = run_async(_fetch())
+        if not photo_bytes:
+            return MTProtoResult(error="Rasm topilmadi")
+
+        # Save to file cache
+        try:
+            abs_path.parent.mkdir(parents=True, exist_ok=True)
+            abs_path.write_bytes(photo_bytes)
+        except Exception as e:
+            logger.warning("Xabar rasmini keshga saqlashda xatolik: %s", e)
+
+        return MTProtoResult(data=photo_bytes)
+
+    except RuntimeError as e:
+        return MTProtoResult(error=str(e))
+    except Exception as e:
+        error_msg = _handle_telethon_error(e, "message_photo")
+        return MTProtoResult(error=error_msg)
+
+
 # ── Helpers ─────────────────────────────────────────────────────────────────
+
+
+def _entities_to_html(text: str, entities) -> str:
+    """Telegram entities (bold, italic, link, code, etc.) → safe HTML.
+
+    Telethon extensions.html.unparse() ishlatadi. Fallback: escaped text.
+    """
+    if not text:
+        return ""
+    if not entities:
+        return html_mod.escape(text).replace("\n", "<br>")
+    try:
+        from telethon.extensions import html as tl_html
+
+        result = tl_html.unparse(text, entities)
+        # tg:// protocol links → https://t.me/
+        result = re.sub(
+            r'<a href="tg://resolve\?domain=([^"]*)"',
+            r'<a href="https://t.me/\1"',
+            result,
+        )
+        # Ensure all links open in new tab
+        result = re.sub(
+            r"<a href=",
+            '<a target="_blank" rel="noopener" href=',
+            result,
+        )
+        return result.replace("\n", "<br>")
+    except Exception:
+        return html_mod.escape(text).replace("\n", "<br>")
 
 
 def _serialize_message(msg) -> dict:
@@ -350,6 +462,7 @@ def _serialize_message(msg) -> dict:
         "id": msg.id,
         "date": msg.date.isoformat() if msg.date else None,
         "text": msg.text or "",
+        "text_html": _entities_to_html(msg.text or "", msg.entities),
         "from_id": msg.sender_id,
         "views": msg.views,
         "forwards": msg.forwards,

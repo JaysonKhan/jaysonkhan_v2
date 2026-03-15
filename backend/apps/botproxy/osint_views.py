@@ -301,6 +301,39 @@ def osint_channel_search(request, entity_id: int):
     })
 
 
+# ─── Message Photo Proxy ──────────────────────────────────────────────────────
+
+@staff_member_required
+def osint_message_photo(request, entity_id: int, msg_id: int):
+    """Serve photo from a channel/group message.
+
+    Telethon orqali yuklab olinadi, faylga keshlanadi.
+    Browser cache: 24 soat.
+    """
+    from telegram.mtproto_service import get_message_photo
+
+    result = get_message_photo(entity_id, msg_id)
+    if result.error or not result.data:
+        return HttpResponse(status=404)
+
+    # Detect content type from magic bytes
+    data = result.data
+    if data[:3] == b"\xff\xd8\xff":
+        ct = "image/jpeg"
+    elif data[:8] == b"\x89PNG\r\n\x1a\n":
+        ct = "image/png"
+    elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        ct = "image/webp"
+    else:
+        ct = "image/jpeg"
+
+    return HttpResponse(
+        data,
+        content_type=ct,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 # ─── Photo Proxy ─────────────────────────────────────────────────────────────
 
 @staff_member_required

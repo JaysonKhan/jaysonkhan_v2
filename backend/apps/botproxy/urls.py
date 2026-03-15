@@ -22,6 +22,7 @@ urlpatterns = [
     path("osint/entity/<int:entity_id>/", osint_views.osint_entity_profile, name="osint_entity_profile"),
     path("osint/entity/<int:entity_id>/messages/", osint_views.osint_channel_messages, name="osint_channel_messages"),
     path("osint/entity/<int:entity_id>/search/", osint_views.osint_channel_search, name="osint_channel_search"),
+    path("osint/entity/<int:entity_id>/message/<int:msg_id>/photo/", osint_views.osint_message_photo, name="osint_message_photo"),
     # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),
