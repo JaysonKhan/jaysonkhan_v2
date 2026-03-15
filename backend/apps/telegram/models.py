@@ -152,6 +152,10 @@ class TelegramEntity(models.Model):
 
         Universal factory — Login Widget, OSINT, bot API dan foydalanadi.
 
+        MUHIM: Faqat bo'sh bo'lmagan qiymatlar bilan yangilaydi — mavjud
+        ma'lumotlar (masalan, OSINT dan olingan phone, bio) ustiga bo'sh
+        qiymat yozilmaydi.
+
         Args:
             data: dict with keys: id, first_name, last_name, username,
                   photo_url, auth_date (all optional except id)
@@ -159,12 +163,15 @@ class TelegramEntity(models.Model):
         telegram_id = int(data["id"])
         defaults = {}
 
+        # Faqat bo'sh bo'lmagan qiymatlarni qo'shish — mavjud datani
+        # yo'qotmaslik uchun (masalan, OSINT dan phone/bio bor,
+        # Login Widget da yo'q — ustiga yozilmasligi kerak)
         for field in ("first_name", "last_name", "username"):
-            if field in data:
-                defaults[field] = data[field] or ""
+            if data.get(field):
+                defaults[field] = data[field]
 
-        if "photo_url" in data:
-            defaults["photo_url"] = data["photo_url"] or ""
+        if data.get("photo_url"):
+            defaults["photo_url"] = data["photo_url"]
         if "auth_date" in data:
             defaults["auth_date"] = int(data["auth_date"])
 
