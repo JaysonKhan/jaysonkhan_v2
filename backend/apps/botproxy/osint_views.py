@@ -112,19 +112,6 @@ def osint_profile(request, user_id: int):
                 n["is_stale"] = entry.is_stale
         tree.append(n)
 
-    # Best available photo: TelegramEntity.photo_url → empty
-    from telegram.models import TelegramEntity
-
-    entity_photo_url = ""
-    entity_obj = TelegramEntity.objects.filter(
-        telegram_id=user_id,
-    ).only("photo_url", "has_photo", "photo_file").first()
-    if entity_obj:
-        if entity_obj.has_photo and entity_obj.photo_file:
-            entity_photo_url = "proxy"  # Use proxy (local cache)
-        elif entity_obj.photo_url:
-            entity_photo_url = entity_obj.photo_url  # External avatar
-
     return TemplateResponse(
         request,
         "botproxy/osint_profile.html",
@@ -133,7 +120,6 @@ def osint_profile(request, user_id: int):
             "basic": basic,
             "tree": tree,
             "balance": basic.tech.get("current_ballance") if basic.tech and isinstance(basic.tech, dict) else None,
-            "entity_photo_url": entity_photo_url,
         }),
     )
 

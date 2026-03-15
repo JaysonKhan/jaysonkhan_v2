@@ -190,7 +190,7 @@ def get_entity_photo(
 
     entity_str = str(entity_id)
 
-    # 1. Check cache via TelegramEntity
+    # 1. Check cache: TelegramEntity DB + filesystem
     if not force_refresh:
         try:
             entity_obj = TelegramEntity.objects.filter(telegram_id=int(entity_id)).first()
@@ -202,6 +202,11 @@ def get_entity_photo(
                     if abs_path.exists():
                         return abs_path.read_bytes(), "image/jpeg"
                     # File deleted but cache entry exists — fall through to re-download
+            elif entity_obj is None:
+                # TelegramEntity yo'q — disk keshni tekshirish
+                abs_path = _photo_abs_path(entity_str)
+                if abs_path.exists():
+                    return abs_path.read_bytes(), "image/jpeg"
         except (ValueError, TypeError):
             pass
 
@@ -271,7 +276,12 @@ def get_entity_photo(
 
 
 def _try_stale_cache(entity_str: str) -> tuple[bytes | None, str | None]:
-    """Attempt to return a stale cached photo as fallback (circuit breaker)."""
+    """Attempt to return a stale cached photo as fallback (circuit breaker).
+
+    Checks both DB-tracked cache and bare filesystem cache (for entities
+    that may not have a TelegramEntity record).
+    """
+    # 1. DB-tracked cache
     try:
         entity_obj = TelegramEntity.objects.filter(
             telegram_id=int(entity_str),
@@ -283,4 +293,8 @@ def _try_stale_cache(entity_str: str) -> tuple[bytes | None, str | None]:
                 return abs_path.read_bytes(), "image/jpeg"
     except (ValueError, TelegramEntity.DoesNotExist):
         pass
+    # 2. Bare filesystem cache (TelegramEntity yo'q)
+    abs_path = _photo_abs_path(entity_str)
+    if abs_path.exists():
+        return abs_path.read_bytes(), "image/jpeg"
     return None, None

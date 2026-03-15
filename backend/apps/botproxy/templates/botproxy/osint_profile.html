@@ -15,7 +15,6 @@
     <div style="display:flex; align-items:flex-start; gap:1rem;">
         <!-- Profile Photo -->
         <div style="flex-shrink:0;">
-            {% if entity_photo_url == "proxy" %}
             <img
                 src="{% url 'osint_photo' entity_id=user_id %}"
                 alt="Avatar"
@@ -25,21 +24,6 @@
             <div style="display:none; width:72px; height:72px; border-radius:50%; background:var(--rb-primary-muted, rgba(99,102,241,0.15)); align-items:center; justify-content:center; font-size:1.75rem; font-weight:700; color:var(--rb-primary); border:2px solid var(--rb-border);">
                 {{ basic.data.first_name|default:"?"|truncatechars:1 }}
             </div>
-            {% elif entity_photo_url %}
-            <img
-                src="{{ entity_photo_url }}"
-                alt="Avatar"
-                style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--rb-border); background:var(--rb-bg-muted);"
-                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-            >
-            <div style="display:none; width:72px; height:72px; border-radius:50%; background:var(--rb-primary-muted, rgba(99,102,241,0.15)); align-items:center; justify-content:center; font-size:1.75rem; font-weight:700; color:var(--rb-primary); border:2px solid var(--rb-border);">
-                {{ basic.data.first_name|default:"?"|truncatechars:1 }}
-            </div>
-            {% else %}
-            <div style="display:flex; width:72px; height:72px; border-radius:50%; background:var(--rb-primary-muted, rgba(99,102,241,0.15)); align-items:center; justify-content:center; font-size:1.75rem; font-weight:700; color:var(--rb-primary); border:2px solid var(--rb-border);">
-                {{ basic.data.first_name|default:"?"|truncatechars:1 }}
-            </div>
-            {% endif %}
         </div>
         <!-- Name + Info -->
         <div style="flex:1; min-width:200px;">
