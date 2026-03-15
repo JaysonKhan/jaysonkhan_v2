@@ -234,21 +234,16 @@ def sync_entity_from_osint(telegram_id: int, osint_data: dict) -> None:
     if bio:
         defaults["bio"] = bio
 
-    # Boolean maydonlar — faqat API da aniq kelganda o'rnatish
-    if osint_data.get("is_premium"):
-        defaults["is_premium"] = True
-    if osint_data.get("is_verified"):
-        defaults["is_verified"] = True
-    if osint_data.get("is_scam"):
-        defaults["is_scam"] = True
-    if osint_data.get("is_fake"):
-        defaults["is_fake"] = True
+    # Boolean maydonlar — kalit mavjud bo'lsa True/False ni ham yozish
+    # (avval faqat True yozilardi, False ga qaytarish imkonsiz edi)
+    for flag in ("is_premium", "is_verified", "is_scam", "is_fake"):
+        if flag in osint_data:
+            defaults[flag] = bool(osint_data[flag])
 
-    # Entity type
+    # Entity type — faqat bot ekanligini aniqlash,
+    # "user" ni majburan yozmaslik (channel/group ni buzadi)
     if osint_data.get("is_bot") or osint_data.get("bot"):
         defaults["entity_type"] = "bot"
-    else:
-        defaults["entity_type"] = "user"
 
     try:
         entity, _ = TelegramEntity.objects.update_or_create(
@@ -366,8 +361,13 @@ def resolve_and_search(query: str, user=None) -> dict:
     """Resolve query to a Telegram entity (user, channel, group)."""
     query = query.strip()
 
-    if query.isdigit():
+    # isdigit() doesn't handle negative IDs (channels: -100xxx)
+    try:
         entity_id = int(query)
+    except ValueError:
+        entity_id = None
+
+    if entity_id is not None:
         entity_type = _detect_entity_type(entity_id) or "user"
 
         if not OsintSearchLog.objects.filter(

@@ -47,6 +47,8 @@ class NotificationService:
 
     def notify_reply(self, comment) -> None:
         """Notify the parent-comment author that someone replied."""
+        if not comment.author:
+            return
         parent = comment.parent
         if not parent or not parent.author:
             return
@@ -77,6 +79,8 @@ class NotificationService:
         *action*: ``'added'`` or ``'removed'``.
         """
         comment = reaction.comment
+        if not comment or not comment.author or not reaction.author:
+            return
         if reaction.author_id == comment.author_id:
             return
         recipient = comment.author
@@ -92,6 +96,8 @@ class NotificationService:
 
     def log_new_comment(self, comment) -> None:
         if not self._admin_enabled('admin_notify_comments'):
+            return
+        if not comment.author:
             return
         author = escape(comment.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
@@ -330,10 +336,10 @@ class NotificationService:
     def log_contact_message(self, contact) -> None:
         if not self._admin_enabled('admin_notify_contacts'):
             return
-        name = escape(contact.name)
-        email = escape(contact.email)
-        subject = escape(contact.subject)
-        body = escape(contact.message[:300])
+        name = escape(contact.name or '')
+        email = escape(contact.email or '')
+        subject = escape(contact.subject or '')
+        body = escape((contact.message or '')[:300])
         text = (
             f'📩 Yangi xabar:\n'
             f'<b>From:</b> {name} ({email})\n'
@@ -342,7 +348,7 @@ class NotificationService:
         )
         admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
         admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
-        button = self._url_button('📩 Admin panelda ko\'rish', admin_url)
+        button = {'inline_keyboard': [[{'text': '📩 Admin panelda ko\'rish', 'url': admin_url}]]}
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
 
     # ── Private helpers ──────────────────────────────────────────────────────
@@ -405,8 +411,11 @@ class NotificationService:
         else:
             result = self.api.send_message(group_id, text, reply_markup=reply_markup)
 
-        if result and result.get('ok'):
-            msg_id = result['result']['message_id']
+        msg_data = result.get('result') if result else None
+        if result and result.get('ok') and msg_data:
+            msg_id = msg_data.get('message_id')
+            if not msg_id:
+                return None
             AdminLogMessage.objects.create(
                 message_id=msg_id,
                 profile=profile,
@@ -459,18 +468,6 @@ class NotificationService:
         if model == 'project' and slug:
             return f'proj-{slug}'
         return ''
-
-    @staticmethod
-    def _url_button(label: str, url: str) -> dict:
-        """Build a single inline-keyboard row with one URL button.
-
-        Note: ``web_app`` type only works in private chats, not groups.
-        ``url`` type opens in Telegram's in-app browser on mobile,
-        and in the system browser on desktop — this is a Telegram limitation.
-        """
-        return {
-            'inline_keyboard': [[{'text': label, 'url': url}]],
-        }
 
     @staticmethod
     def _content_url(comment) -> str:

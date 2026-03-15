@@ -433,17 +433,17 @@ class TgAppRouterView(View):
             except (ValueError, TypeError):
                 pass
 
-        # OSINT entity profile (channel/group)
+        # OSINT entity profile (channel/group) — supports negative IDs
         if start.startswith('osint-e-'):
             entity_id = start[8:]
-            if entity_id.isdigit():
-                try:
-                    return reverse(
-                        'osint_entity_profile',
-                        kwargs={'entity_id': entity_id},
-                    )
-                except Exception:
-                    pass
+            try:
+                int(entity_id)  # validate numeric (incl. negative)
+                return reverse(
+                    'osint_entity_profile',
+                    kwargs={'entity_id': entity_id},
+                )
+            except (ValueError, Exception):
+                pass
 
         # Default — home page
         return reverse('home')

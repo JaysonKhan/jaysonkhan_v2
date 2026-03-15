@@ -7,6 +7,7 @@ are registered at startup.
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Optional
 
 from django.db.models.signals import post_save, post_delete
@@ -20,12 +21,15 @@ logger = logging.getLogger('interactions.notifications')
 
 # Lazy singleton — avoids creating an httpx client at import time.
 _service: Optional[NotificationService] = None
+_service_lock = threading.Lock()
 
 
 def _get_service() -> NotificationService:
     global _service
     if _service is None:
-        _service = NotificationService()
+        with _service_lock:
+            if _service is None:  # double-checked locking
+                _service = NotificationService()
     return _service
 
 
@@ -57,6 +61,11 @@ def on_reaction_saved(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=CommentReaction)
 def on_reaction_deleted(sender, instance, **kwargs):
+    # Guard: comment or author may have been cascade-deleted already
+    try:
+        _ = instance.comment.author
+    except Exception:
+        return
     svc = _get_service()
     fire_and_forget(svc.notify_reaction, instance, 'removed')
     fire_and_forget(svc.log_reaction, instance, 'removed')
@@ -74,6 +83,12 @@ def on_like_created(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Like)
 def on_like_deleted(sender, instance, **kwargs):
+    # Guard: content_object may have been cascade-deleted already
+    try:
+        if not instance.content_object:
+            return
+    except Exception:
+        return
     svc = _get_service()
     fire_and_forget(svc.log_like, instance, 'unliked')
 

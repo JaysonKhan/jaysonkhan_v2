@@ -345,7 +345,8 @@ class AddCommentView(View):
             return JsonResponse({'error': 'Invalid content type'}, status=404)
 
         # Verify the target object actually exists (EXISTS query, no full row load)
-        if not ct.model_class().objects.filter(pk=object_id).exists():
+        model_cls = ct.model_class()
+        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
             return JsonResponse({'error': 'Target object not found'}, status=404)
 
         parent = None
@@ -450,7 +451,8 @@ class ToggleLikeView(View):
             return JsonResponse({'error': 'Invalid content type'}, status=404)
 
         # Verify the target object actually exists (EXISTS query, no full row load)
-        if not ct.model_class().objects.filter(pk=object_id).exists():
+        model_cls = ct.model_class()
+        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
             return JsonResponse({'error': 'Target object not found'}, status=404)
 
         like, created = Like.objects.get_or_create(
@@ -544,7 +546,7 @@ class ListCommentsView(View):
         paginator = Paginator(qs, 10)
         page_obj = paginator.get_page(page)
 
-        tg_profile_id = request.session.get('tg_profile_id')
+        tg_profile_id = request.session.get(SESSION_KEY)
         data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
 
         return JsonResponse({
@@ -570,7 +572,7 @@ class ListRepliesView(View):
         paginator = Paginator(qs, 10)
         page_obj = paginator.get_page(page)
 
-        tg_profile_id = request.session.get('tg_profile_id')
+        tg_profile_id = request.session.get(SESSION_KEY)
         data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
 
         return JsonResponse({
