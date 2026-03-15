@@ -283,6 +283,51 @@ def _download_photo_from_url(photo_url: str) -> bytes | None:
     return None
 
 
+# ── Telethon Fallback (Bot API ishlamasa) ─────────────────────────────────────
+
+
+def _download_photo_via_telethon(entity_id: int) -> bytes | None:
+    """Download profile photo via Telethon MTProto.
+
+    Bot API faqat bot bilan aloqa qilgan userlar uchun ishlaydi.
+    Guruh, kanal va boshqa userlar uchun Telethon kerak.
+
+    Rate limited — mavjud TelegramRateLimiter orqali.
+    Xatoliklar jimgina qaytariladi (None), log qilinadi.
+    """
+    try:
+        from telegram.telegram_client import (
+            get_rate_limiter,
+            get_telegram_client,
+            run_async,
+        )
+
+        limiter = get_rate_limiter()
+        if not limiter.acquire(timeout=5):
+            logger.debug("Telethon photo: rate limit, skip %s", entity_id)
+            return None
+
+        client = get_telegram_client()
+
+        async def _fetch():
+            return await client.download_profile_photo(entity_id, file=bytes)
+
+        photo_bytes = run_async(_fetch())
+        if photo_bytes and _is_valid_image(photo_bytes):
+            logger.info(
+                "Photo Telethon orqali yuklandi: entity %s (%d bytes)",
+                entity_id, len(photo_bytes),
+            )
+            return photo_bytes
+        return None
+    except RuntimeError as e:
+        logger.debug("Telethon client mavjud emas (%s): %s", entity_id, e)
+        return None
+    except Exception as e:
+        logger.debug("Telethon photo download (%s): %s", entity_id, e)
+        return None
+
+
 # ── Main Public API ──────────────────────────────────────────────────────────
 
 
@@ -336,6 +381,10 @@ def get_entity_photo(
 
     # 3. Download via Bot API (xavfsiz, ban xavfi yo'q)
     photo_bytes = _download_photo_via_bot_api(entity_int)
+
+    # 3.5 Fallback: Telethon (Bot API ishlamasa — guruh/kanal/noma'lum user uchun)
+    if not photo_bytes:
+        photo_bytes = _download_photo_via_telethon(entity_int)
 
     # 4. Fallback: download from entity's external photo_url
     if not photo_bytes:
