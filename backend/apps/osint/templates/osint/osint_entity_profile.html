@@ -181,15 +181,15 @@
     </div>
 </div>
 
-{% if funstat_info and funstat_info.data %}
-<script>window._funstatData = JSON.parse('{{ funstat_info.data|escapejs }}');</script>
+{% if funstat_json %}
+<script>window._funstatData = {{ funstat_json|safe }};</script>
 {% endif %}
 <script>
 var ENTITY_ID = {{ entity_id }};
 var MESSAGES_URL = "{% url 'osint_channel_messages' entity_id=entity_id %}";
 var SEARCH_URL = "{% url 'osint_channel_search' entity_id=entity_id %}";
 var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
-var MSG_PHOTO_URL_TPL = "{% url 'osint_message_photo' entity_id=entity_id msg_id=88888 %}";
+var MSG_PHOTO_URL_TPL = "{% url 'osint_message_photo' entity_id=entity_id msg_id=7777788888 %}";
 </script>
 <script src="{% static 'osint/js/osint-core.js' %}"></script>
 <script src="{% static 'osint/js/osint-entity.js' %}"></script>

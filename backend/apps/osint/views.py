@@ -1,6 +1,7 @@
 """OSINT views for FunStat Telegram intelligence."""
 from __future__ import annotations
 
+import json
 import logging
 import time
 
@@ -248,15 +249,16 @@ def osint_search(request):
 @staff_member_required
 def osint_profile(request, user_id: int):
     """User profile page with lazy-loading tree."""
-    OsintSearchLog.objects.update_or_create(
-        query=str(user_id),
-        query_type="id",
-        searched_by=request.user,
-        defaults={
-            "resolved_id": user_id,
-            "searched_at": timezone.now(),
-        },
-    )
+    # Faqat yangi qidiruv bo'lsa log yozish (mavjud resolved_id bilan dublikat yaratmaslik)
+    if not OsintSearchLog.objects.filter(
+        resolved_id=user_id, searched_by=request.user,
+    ).exists():
+        OsintSearchLog.objects.create(
+            query=str(user_id),
+            query_type="id",
+            searched_by=request.user,
+            resolved_id=user_id,
+        )
 
     basic = fetch_or_cache("stats_min", user_id, user=request.user)
 
@@ -358,7 +360,10 @@ def osint_fetch_branch(request, user_id: int, branch: str):
 def osint_text_search(request):
     """AJAX: text search across messages."""
     query = request.GET.get("q", "").strip()
-    page = max(1, int(request.GET.get("page", 1)))
+    try:
+        page = max(1, int(request.GET.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
 
     if not query:
         return JsonResponse({"error": "Qidiruv so'zi kiritilmagan"}, status=400)
@@ -428,15 +433,16 @@ def osint_entity_profile(request, entity_id: str):
     if eid is None:
         return HttpResponse("Noto'g'ri entity ID", status=400)
 
-    OsintSearchLog.objects.update_or_create(
-        query=str(eid),
-        query_type="channel",
-        searched_by=request.user,
-        defaults={
-            "resolved_id": eid,
-            "searched_at": timezone.now(),
-        },
-    )
+    # Faqat yangi qidiruv bo'lsa log yozish
+    if not OsintSearchLog.objects.filter(
+        resolved_id=eid, searched_by=request.user,
+    ).exists():
+        OsintSearchLog.objects.create(
+            query=str(eid),
+            query_type="channel",
+            searched_by=request.user,
+            resolved_id=eid,
+        )
 
     profile = fetch_channel_data(
         operation="channel_profile",
@@ -465,6 +471,14 @@ def osint_entity_profile(request, entity_id: str):
     except Exception:
         pass
 
+    # FunStat data ni JSON string sifatida tayyorlash (template'da safe filter bilan)
+    funstat_json = ""
+    if funstat_info and funstat_info.data:
+        try:
+            funstat_json = json.dumps(funstat_info.data, ensure_ascii=False)
+        except (TypeError, ValueError):
+            funstat_json = ""
+
     return TemplateResponse(
         request,
         "osint/osint_entity_profile.html",
@@ -472,6 +486,7 @@ def osint_entity_profile(request, entity_id: str):
             "entity_id": eid,
             "profile": profile,
             "funstat_info": funstat_info,
+            "funstat_json": funstat_json,
         }),
     )
 

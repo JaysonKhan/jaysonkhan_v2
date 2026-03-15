@@ -38,12 +38,12 @@ function renderFunstatData(data) {
 
 function renderMessageRow(msg) {
     // Text — prefer text_html (with Telegram formatting), fallback to escaped plain text
-    var textContent = msg.text_html || escapeHtml(msg.text || '');
+    var textContent = msg.text_html ? sanitizeHtml(msg.text_html) : escapeHtml(msg.text || '');
 
     // Photo — inline image for photo media
     var photoHtml = '';
     if (msg.has_media && msg.media_type === 'photo') {
-        var photoUrl = MSG_PHOTO_URL_TPL.replace('88888', msg.id);
+        var photoUrl = MSG_PHOTO_URL_TPL.replace('7777788888', msg.id);
         photoHtml = '<div class="msg-photo">' +
             '<img src="' + photoUrl + '" alt="" loading="lazy" ' +
             'onclick="window.open(this.src, \'_blank\')" ' +

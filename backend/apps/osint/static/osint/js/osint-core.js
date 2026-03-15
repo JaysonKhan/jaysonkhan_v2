@@ -11,6 +11,52 @@ function escapeHtml(s) {
     return d.innerHTML;
 }
 
+/**
+ * Sanitize HTML — faqat xavfsiz Telegram formatlash teglarini qoldirish.
+ * Ruxsat: <b>, <i>, <u>, <s>, <code>, <pre>, <a href="...">, <br>
+ * Boshqa hamma teglar olib tashlanadi (XSS himoya).
+ */
+function sanitizeHtml(html) {
+    if (!html) return '';
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+
+    function cleanNode(parent) {
+        var children = Array.prototype.slice.call(parent.childNodes);
+        for (var i = 0; i < children.length; i++) {
+            var node = children[i];
+            if (node.nodeType === 3) continue; // text node — safe
+            if (node.nodeType !== 1) { node.remove(); continue; } // comment etc
+
+            var tag = node.tagName.toLowerCase();
+            var allowed = ['b', 'strong', 'i', 'em', 'u', 's', 'del', 'code', 'pre', 'a', 'br', 'span'];
+            if (allowed.indexOf(tag) === -1) {
+                // Ruxsat berilmagan teg — faqat textContent qoldirish
+                var text = document.createTextNode(node.textContent || '');
+                parent.replaceChild(text, node);
+                continue;
+            }
+            // <a> tegida faqat href qoldirish, boshqa attributelarni olib tashlash
+            if (tag === 'a') {
+                var href = node.getAttribute('href') || '';
+                // faqat http/https/tg linklar ruxsat
+                if (!/^(https?:|tg:)/i.test(href)) href = '#';
+                // barcha attributelarni olib tashlash
+                while (node.attributes.length > 0) node.removeAttribute(node.attributes[0].name);
+                node.setAttribute('href', href);
+                node.setAttribute('target', '_blank');
+                node.setAttribute('rel', 'noopener noreferrer');
+            } else {
+                // boshqa teglarda barcha attributelarni olib tashlash
+                while (node.attributes.length > 0) node.removeAttribute(node.attributes[0].name);
+            }
+            cleanNode(node);
+        }
+    }
+    cleanNode(tmp);
+    return tmp.innerHTML;
+}
+
 /* ── Date formatting ─────────────────────────────────────────────── */
 
 function formatDate(s) {

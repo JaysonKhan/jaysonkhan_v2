@@ -38,18 +38,18 @@ document.getElementById('text-search-form').addEventListener('submit', function(
                 var groupTitle = '';
                 if (item.group) groupTitle = item.group.title || '';
                 html += '<tr>' +
-                    '<td style="max-width:300px;word-break:break-word;">' + text + '</td>' +
-                    '<td><a href="' + PROFILE_URL_TPL.replace('99999', userId) + '">' +
-                    (item.name || item.username || userId || '-') + '</a></td>' +
-                    '<td class="rb-muted">' + groupTitle + '</td>' +
-                    '<td class="rb-muted" style="white-space:nowrap;">' + (item.date || '-') + '</td>' +
+                    '<td style="max-width:300px;word-break:break-word;">' + escapeHtml(text) + '</td>' +
+                    '<td><a href="' + PROFILE_URL_TPL.replace('99999', escapeHtml(String(userId))) + '">' +
+                    escapeHtml(item.name || item.username || String(userId) || '-') + '</a></td>' +
+                    '<td class="rb-muted">' + escapeHtml(groupTitle) + '</td>' +
+                    '<td class="rb-muted" style="white-space:nowrap;">' + escapeHtml(item.date || '-') + '</td>' +
                     '</tr>';
             });
             html += '</tbody></table></div>';
 
             if (d.tech) {
                 html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">' +
-                    'Narxi: ' + (d.tech.request_cost || 0) + ' | Balans: ' + (d.tech.current_ballance || '?') +
+                    'Narxi: ' + escapeHtml(String(d.tech.request_cost || 0)) + ' | Balans: ' + escapeHtml(String(d.tech.current_ballance || '?')) +
                     '</div>';
             }
             container.innerHTML = html;
