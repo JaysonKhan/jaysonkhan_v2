@@ -153,7 +153,18 @@ function loadBranch(node, refresh) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.error) {
-                body.innerHTML = '<div class="rb-error-box">' + d.error + '</div>';
+                var errMsg = d.error;
+                // Parse common API errors for better display
+                if (errMsg.indexOf('403') !== -1) {
+                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">lock</span> Ruxsat berilmagan — bu ma\'lumotga kirish huquqi yo\'q (403 Forbidden)';
+                } else if (errMsg.indexOf('404') !== -1) {
+                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">search_off</span> Ma\'lumot topilmadi (404)';
+                } else if (errMsg.indexOf('401') !== -1) {
+                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">key_off</span> Autentifikatsiya xatosi — token muddati o\'tgan bo\'lishi mumkin (401)';
+                } else if (errMsg.indexOf('429') !== -1) {
+                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">speed</span> So\'rovlar limiti oshib ketdi — biroz kuting (429)';
+                }
+                body.innerHTML = '<div class="rb-error-box">' + errMsg + '</div>';
                 return;
             }
             body.dataset.loaded = '1';

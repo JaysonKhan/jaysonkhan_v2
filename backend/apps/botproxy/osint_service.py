@@ -5,6 +5,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from django.utils import timezone
+
 from botproxy.funstat_client import FunStatClient, FunStatAPIError
 from botproxy.models import OsintCache, OsintSearchLog
 
@@ -114,11 +116,14 @@ def resolve_and_search(query: str, user=None) -> dict:
     query = query.strip()
 
     if query.isdigit():
-        OsintSearchLog.objects.create(
+        OsintSearchLog.objects.update_or_create(
             query=query,
             query_type="id",
-            resolved_id=int(query),
             searched_by=user,
+            defaults={
+                "resolved_id": int(query),
+                "searched_at": timezone.now(),
+            },
         )
         return {"user_id": int(query), "error": None, "tech": {}, "cost": 0}
 
@@ -152,13 +157,16 @@ def resolve_and_search(query: str, user=None) -> dict:
         elif isinstance(data, dict):
             resolved_id = data.get("id")
 
-        OsintSearchLog.objects.create(
+        OsintSearchLog.objects.update_or_create(
             query=query,
             query_type="username",
-            resolved_id=resolved_id,
             searched_by=user,
-            api_cost=tech.get("request_cost", 0),
-            balance_after=tech.get("current_ballance"),
+            defaults={
+                "resolved_id": resolved_id,
+                "searched_at": timezone.now(),
+                "api_cost": tech.get("request_cost", 0),
+                "balance_after": tech.get("current_ballance"),
+            },
         )
         return {
             "user_id": resolved_id,

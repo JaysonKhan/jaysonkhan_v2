@@ -9,6 +9,8 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
+from django.utils import timezone
+
 from botproxy.funstat_client import FunStatClient, FunStatAPIError
 from botproxy.models import OsintCache, OsintSearchLog
 from botproxy.osint_service import (
@@ -158,17 +160,28 @@ def osint_text_search(request):
     except FunStatAPIError as e:
         return JsonResponse({"error": str(e)}, status=502)
 
-    OsintSearchLog.objects.create(
+    # Smart parse response
+    if isinstance(resp, dict) and "data" in resp:
+        resp_data = resp["data"]
+        resp_tech = resp.get("tech", {})
+    else:
+        resp_data = resp if resp is not None else {}
+        resp_tech = {}
+
+    OsintSearchLog.objects.update_or_create(
         query=query,
         query_type="text",
         searched_by=request.user,
-        api_cost=resp.get("tech", {}).get("request_cost", 0),
-        balance_after=resp.get("tech", {}).get("current_ballance"),
+        defaults={
+            "searched_at": timezone.now(),
+            "api_cost": resp_tech.get("request_cost", 0),
+            "balance_after": resp_tech.get("current_ballance"),
+        },
     )
 
     return JsonResponse({
-        "data": resp.get("data", {}),
-        "tech": resp.get("tech", {}),
+        "data": resp_data,
+        "tech": resp_tech,
     })
 
 
@@ -176,13 +189,17 @@ def osint_text_search(request):
 
 @staff_member_required
 def osint_balance(request):
-    """AJAX: check current FunStat balance (uses free reputation endpoint)."""
-    client = FunStatClient()
-    try:
-        # Use one of the free test IDs to get tech.current_ballance
-        resp = client.get_user_stats_min(8104838448)
-        return JsonResponse({
-            "balance": resp.get("tech", {}).get("current_ballance"),
-        })
-    except FunStatAPIError as e:
-        return JsonResponse({"error": str(e)}, status=502)
+    """AJAX: return last known FunStat balance from cached API responses."""
+    # Try to find balance from the most recent cache entry that has tech data
+    for entry in OsintCache.objects.exclude(tech={}).order_by("-fetched_at")[:10]:
+        if isinstance(entry.tech, dict) and entry.tech.get("current_ballance") is not None:
+            return JsonResponse({"balance": entry.tech["current_ballance"]})
+
+    # Try from search log balance_after
+    log = OsintSearchLog.objects.filter(
+        balance_after__isnull=False,
+    ).order_by("-searched_at").first()
+    if log:
+        return JsonResponse({"balance": float(log.balance_after)})
+
+    return JsonResponse({"balance": None})
