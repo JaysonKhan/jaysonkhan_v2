@@ -283,24 +283,34 @@ class NotificationService:
 
         # ── Tugmalar ──────────────────────────────────────────────────────
         buttons = []
-        try:
-            from django.urls import reverse
-            if profile.entity_type in ('channel', 'supergroup', 'group'):
-                osint_url = reverse(
-                    'osint_entity_profile',
-                    kwargs={'entity_id': profile.telegram_id},
-                )
-            else:
-                osint_url = reverse(
-                    'osint_profile',
-                    kwargs={'user_id': profile.telegram_id},
-                )
-            buttons.append([{
-                'text': '🔍 OSINT',
-                'url': f'{self._domain}{osint_url}',
-            }])
-        except Exception:
-            pass
+        # OSINT — Mini App deep link (Telegram ichida ochiladi)
+        if profile.entity_type in ('channel', 'supergroup', 'group'):
+            startapp = f'osint-e-{profile.telegram_id}'
+        else:
+            startapp = f'osint-p-{profile.telegram_id}'
+        deep_url = self._tg_deep_link(startapp)
+        if deep_url:
+            buttons.append([{'text': '🔍 OSINT', 'url': deep_url}])
+        else:
+            # Fallback — oddiy URL
+            try:
+                from django.urls import reverse
+                if profile.entity_type in ('channel', 'supergroup', 'group'):
+                    osint_url = reverse(
+                        'osint_entity_profile',
+                        kwargs={'entity_id': profile.telegram_id},
+                    )
+                else:
+                    osint_url = reverse(
+                        'osint_profile',
+                        kwargs={'user_id': profile.telegram_id},
+                    )
+                buttons.append([{
+                    'text': '🔍 OSINT',
+                    'url': f'{self._domain}{osint_url}',
+                }])
+            except Exception:
+                pass
         buttons.append([
             {'text': '⚙️ Admin', 'url': self._admin_entity_url(profile)},
             {'text': '🌐 Sayt', 'url': self._domain},
@@ -354,6 +364,18 @@ class NotificationService:
             return f'{self._domain}{path}'
         except Exception:
             return self._domain
+
+    def _tg_deep_link(self, startapp: str) -> str:
+        """Build t.me Mini App deep link.
+
+        Format: https://t.me/{bot_username}/{app_name}?startapp={param}
+        Telegram bu linkni Mini App sifatida ochadi (in-app browser).
+        """
+        bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
+        app_name = getattr(settings, 'TELEGRAM_WEBAPP_SHORT_NAME', '')
+        if bot_username and app_name:
+            return f'https://t.me/{bot_username}/{app_name}?startapp={startapp}'
+        return ''
 
     def _send_to_admin_group(
         self,

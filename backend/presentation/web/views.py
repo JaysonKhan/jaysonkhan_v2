@@ -2,10 +2,11 @@ import uuid
 
 from django.core.cache import cache
 from django.views.generic import TemplateView, ListView, DetailView, FormView
-from django.urls import reverse_lazy
+from django.views import View
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.contenttypes.models import ContentType
 from portfolio.services import PortfolioService, PortfolioRepository
 from portfolio.models import Project
@@ -313,3 +314,46 @@ class ContactView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+# ── Telegram Mini App router ─────────────────────────────────────────────────
+
+
+class TgAppRouterView(View):
+    """Telegram Mini App deep link router.
+
+    BotFather da ``/newapp`` bilan ro'yxatdan o'tgan Mini App shu
+    URL ga yo'naltiriladi. ``startapp`` parametri orqali kerakli
+    sahifaga redirect qiladi.
+
+    Deep link format: ``https://t.me/{bot}/{app}?startapp={param}``
+
+    Parametrlar:
+        osint-p-{id}  → OSINT foydalanuvchi profili
+        osint-e-{id}  → OSINT entity (kanal/guruh) profili
+        home          → Bosh sahifa
+    """
+
+    def get(self, request):
+        start = request.GET.get('tgWebAppStartParam', '')
+
+        # OSINT user profile
+        if start.startswith('osint-p-'):
+            try:
+                user_id = int(start[8:])
+                return redirect(reverse(
+                    'osint_profile', kwargs={'user_id': user_id},
+                ))
+            except (ValueError, TypeError):
+                pass
+
+        # OSINT entity profile (channel/group)
+        if start.startswith('osint-e-'):
+            entity_id = start[8:]
+            if entity_id.isdigit():
+                return redirect(reverse(
+                    'osint_entity_profile', kwargs={'entity_id': entity_id},
+                ))
+
+        # Default — home page
+        return redirect('home')
