@@ -120,7 +120,7 @@ function loadMessages(offsetId, refresh) {
 
             if (d.error) {
                 if (offsetId === 0) {
-                    container.innerHTML = '<div class="rb-error-box">' + escapeHtml(d.error) + '</div>';
+                    container.innerHTML = buildErrorCard(d.error, "loadMessages(0, true)");
                 }
                 return;
             }
@@ -157,7 +157,7 @@ function loadMessages(offsetId, refresh) {
         })
         .catch(function() {
             if (offsetId === 0) {
-                container.innerHTML = '<div class="rb-error-box">Xatolik yuz berdi</div>';
+                container.innerHTML = buildErrorCard('Ulanish xatosi (0)', "loadMessages(0, true)");
             }
         });
 }
@@ -192,7 +192,7 @@ function searchMessages(query, offsetId) {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (d.error) {
-                container.innerHTML = '<div class="rb-error-box">' + escapeHtml(d.error) + '</div>';
+                container.innerHTML = buildErrorCard(d.error);
                 return;
             }
 
@@ -221,7 +221,7 @@ function searchMessages(query, offsetId) {
             }
         })
         .catch(function() {
-            container.innerHTML = '<div class="rb-error-box">Qidirishda xatolik yuz berdi</div>';
+            container.innerHTML = buildErrorCard('Ulanish xatosi (0)');
         });
 }
 

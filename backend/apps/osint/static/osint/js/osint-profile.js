@@ -11,9 +11,11 @@ function toggleBranch(header) {
     var node = header.closest('.rb-tree-node');
     if (node.classList.contains('open')) {
         node.classList.remove('open');
+        node.setAttribute('aria-expanded', 'false');
         return;
     }
     node.classList.add('open');
+    node.setAttribute('aria-expanded', 'true');
     var body = node.querySelector('.rb-tree-body');
     if (body.dataset.loaded === '1') return;
     loadBranch(node, false);
@@ -25,7 +27,7 @@ function loadBranch(node, refresh, confirmed) {
     body.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span><p>Yuklanmoqda...</p></div>';
 
     var url = BRANCH_URLS[branch];
-    if (!url) { body.innerHTML = '<div class="rb-error-box">URL topilmadi</div>'; return; }
+    if (!url) { body.innerHTML = buildErrorCard('URL topilmadi'); return; }
     var params = [];
     if (refresh) params.push('refresh=1');
     if (confirmed) params.push('confirmed=1');
@@ -36,37 +38,27 @@ function loadBranch(node, refresh, confirmed) {
         .then(function(d) {
             // Balance confirmation dialog
             if (d.requires_confirmation) {
-                body.innerHTML = '<div style="padding:1.25rem; text-align:center;">' +
-                    '<div style="margin-bottom:1rem;">' +
-                    '<span class="material-symbols-outlined" style="font-size:40px; color:#f59e0b;">warning</span>' +
-                    '</div>' +
-                    '<h3 style="margin:0 0 0.5rem; font-size:1rem; font-weight:600;">Balans past</h3>' +
-                    '<p style="color:var(--rb-fg-muted); font-size:0.875rem; margin:0 0 1rem;">' +
-                    'Hozirgi balans: <strong style="color:var(--rb-fg);">' + parseFloat(d.balance).toFixed(0) + ' kredit</strong><br>' +
-                    'Bu operatsiya kredit sarflaydi. Davom etasizmi?' +
-                    '</p>' +
-                    '<div style="display:flex; gap:0.5rem; justify-content:center;">' +
-                    '<button class="rb-btn rb-btn-primary" onclick="loadBranch(this.closest(\'.rb-tree-node\'), ' + (refresh ? 'true' : 'false') + ', true)">' +
-                    '<span class="material-symbols-outlined" style="font-size:16px;">check</span> Davom etish</button>' +
-                    '<button class="rb-btn rb-btn-outline" onclick="this.closest(\'.rb-tree-node\').classList.remove(\'open\')">' +
-                    'Bekor qilish</button>' +
-                    '</div></div>';
+                body.innerHTML = '<div class="rb-muted" style="padding:1rem; text-align:center; font-size:0.875rem;">Tasdiqlash kutilmoqda...</div>';
+                ConfirmDialog.show({
+                    title: 'Balans past',
+                    message: 'Bu operatsiya kredit sarflaydi. Davom etasizmi?',
+                    balance: d.balance,
+                    confirmText: 'Davom etish',
+                    cancelText: 'Bekor qilish'
+                }).then(function(ok) {
+                    if (ok) {
+                        loadBranch(node, refresh, true);
+                    } else {
+                        node.classList.remove('open');
+                        body.innerHTML = '';
+                    }
+                });
                 return;
             }
 
             if (d.error) {
-                var errMsg = d.error;
-                // Parse common API errors for better display
-                if (errMsg.indexOf('403') !== -1) {
-                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">lock</span> Ruxsat berilmagan \u2014 bu ma\'lumotga kirish huquqi yo\'q (403 Forbidden)';
-                } else if (errMsg.indexOf('404') !== -1) {
-                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">search_off</span> Ma\'lumot topilmadi (404)';
-                } else if (errMsg.indexOf('401') !== -1) {
-                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">key_off</span> Autentifikatsiya xatosi \u2014 token muddati o\'tgan bo\'lishi mumkin (401)';
-                } else if (errMsg.indexOf('429') !== -1) {
-                    errMsg = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">speed</span> So\'rovlar limiti oshib ketdi \u2014 biroz kuting (429)';
-                }
-                body.innerHTML = '<div class="rb-error-box">' + errMsg + '</div>';
+                var retryFn = "refreshBranch('" + branch + "')";
+                body.innerHTML = buildErrorCard(d.error, retryFn);
                 return;
             }
             body.dataset.loaded = '1';
@@ -80,7 +72,8 @@ function loadBranch(node, refresh, confirmed) {
             }
         })
         .catch(function() {
-            body.innerHTML = '<div class="rb-error-box">Xatolik yuz berdi</div>';
+            var retryFn = "refreshBranch('" + branch + "')";
+            body.innerHTML = buildErrorCard('Ulanish xatosi (0)', retryFn);
         });
 }
 
@@ -390,12 +383,20 @@ function openGroupDrawer(idx) {
     html += '</div>';
 
     document.getElementById('drawer-body').innerHTML = html;
-    document.getElementById('group-drawer').classList.add('open');
+    var drawer = document.getElementById('group-drawer');
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+
+    // Focus trap: focus the close button
+    var closeBtn = drawer.querySelector('.osint-drawer-header button');
+    if (closeBtn) closeBtn.focus();
 }
 
 function closeDrawer() {
-    document.getElementById('group-drawer').classList.remove('open');
+    var drawer = document.getElementById('group-drawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
 }
 

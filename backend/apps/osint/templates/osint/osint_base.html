@@ -4,7 +4,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'osint/css/osint.css' %}">
 <div class="rb">
-    <nav class="rb-nav">
+    <nav class="rb-nav" role="navigation" aria-label="OSINT navigatsiya">
         <a href="{% url 'osint_search' %}"
            class="{% if request.resolver_match.url_name == 'osint_search' %}active{% endif %}">
             <span class="material-symbols-outlined">search</span> Qidiruv

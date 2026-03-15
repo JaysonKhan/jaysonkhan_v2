@@ -18,7 +18,7 @@
         <div style="flex-shrink:0;">
             <img
                 src="{% url 'osint_photo' entity_id=user_id %}"
-                alt="Avatar"
+                alt="{{ basic.data.first_name|default:'Foydalanuvchi' }} profil rasmi"
                 style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--rb-border); background:var(--rb-bg-muted);"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
             >
@@ -101,11 +101,11 @@
 {% endif %}
 
 <!-- Drawer (right-side panel) -->
-<div id="group-drawer" class="osint-drawer" onclick="if(event.target===this)closeDrawer()">
+<div id="group-drawer" class="osint-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawer-title" onclick="if(event.target===this)closeDrawer()">
     <div class="osint-drawer-panel">
         <div class="osint-drawer-header">
             <h3 id="drawer-title">Guruh</h3>
-            <button class="rb-btn rb-btn-ghost rb-btn-sm" onclick="closeDrawer()">
+            <button class="rb-btn rb-btn-ghost rb-btn-sm" onclick="closeDrawer()" aria-label="Yopish">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -123,11 +123,13 @@
         <span class="rb-muted" style="font-size:0.75rem;">Bo'limni bosib oching. Ma'lumot API orqali yuklanadi va saqlanadi.</span>
     </div>
 
-    <ul class="rb-tree">
+    <ul class="rb-tree" role="tree" aria-label="Ma'lumotlar daraxti">
         {% for node in tree %}
         <li class="rb-tree-node {% if node.auto_load and node.has_cache %}open{% endif %}" data-branch="{{ node.id }}" data-user="{{ user_id }}"
-            {% if node.paginated %}data-paginated="1"{% endif %}>
-            <div class="rb-tree-header" onclick="toggleBranch(this)">
+            {% if node.paginated %}data-paginated="1"{% endif %}
+            role="treeitem" aria-expanded="{% if node.auto_load and node.has_cache %}true{% else %}false{% endif %}">
+            <div class="rb-tree-header" onclick="toggleBranch(this)" tabindex="0" role="button"
+                 aria-label="{{ node.label }}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBranch(this);}">
                 <span class="material-symbols-outlined chevron">chevron_right</span>
                 <span class="material-symbols-outlined" style="font-size:20px; color:var(--rb-primary);">{{ node.icon }}</span>
                 <span class="rb-tree-label">{{ node.label }}</span>

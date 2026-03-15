@@ -16,7 +16,7 @@
     <div class="rb-card-header">
         <h2>Foydalanuvchi / Kanal / Guruh qidirish</h2>
     </div>
-    <form method="get" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+    <form method="get" role="search" aria-label="Foydalanuvchi qidirish" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
         <div class="rb-form-group" style="margin:0; flex:2; min-width:280px;">
             <label for="q">Telegram ID, @username yoki kanal nomi</label>
             <input type="text" id="q" name="q" value="{{ query }}"
@@ -40,7 +40,7 @@
         <h2>Matn bo'yicha qidiruv</h2>
         <span class="rb-cost-tag">0.1 kredit</span>
     </div>
-    <form id="text-search-form" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
+    <form id="text-search-form" role="search" aria-label="Matn qidirish" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
         <div class="rb-form-group" style="margin:0; flex:2; min-width:280px;">
             <label for="text-q">Xabar matni</label>
             <input type="text" id="text-q" placeholder="Qidiriladigan matn...">
