@@ -1,6 +1,7 @@
 """HTTP client for the hokimiyatbot REST API with HMAC-SHA256 authentication."""
 from __future__ import annotations
 
+import atexit
 import hashlib
 import hmac
 import json as json_mod
@@ -38,6 +39,20 @@ def _get_pool(base_url: str, timeout: int = 30) -> httpx.Client:
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
             )
         return _pools[base_url]
+
+
+def _cleanup_pools() -> None:
+    """Close all persistent httpx.Client pools at process exit."""
+    with _pools_lock:
+        for url, client in _pools.items():
+            try:
+                client.close()
+            except Exception:
+                pass
+        _pools.clear()
+
+
+atexit.register(_cleanup_pools)
 
 
 class BotAPIClient:

@@ -1,4 +1,5 @@
 {% extends "botproxy/base.html" %}
+{% load botproxy_tags %}
 {% block page_title %}{{ uni.short_name }}{% endblock %}
 
 {% block bot_content %}
@@ -30,7 +31,7 @@
                 {% if uni.website %}
                 {% with website=uni.website %}
                 {% if "://" in website %}
-                <span><span class="material-symbols-outlined">language</span> <a href="{{ website }}" target="_blank" rel="noopener noreferrer">{{ website }}</a></span>
+                <span><span class="material-symbols-outlined">language</span> <a href="{{ website|safe_url }}" target="_blank" rel="noopener noreferrer">{{ website }}</a></span>
                 {% else %}
                 <span><span class="material-symbols-outlined">language</span> <a href="https://{{ website }}" target="_blank" rel="noopener noreferrer">{{ website }}</a></span>
                 {% endif %}

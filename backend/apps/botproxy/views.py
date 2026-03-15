@@ -231,7 +231,7 @@ def poll_create(request, svc="rektor"):
                 "max_votes_per_user": max_votes,
                 "captcha_enabled": request.POST.get("captcha_enabled") == "on",
                 "allow_vote_change": request.POST.get("allow_vote_change") == "on",
-                "created_by": request.user.pk,
+                "created_by": 0,  # admin panel sentinel (Django PK ≠ Telegram ID)
                 "faculties": faculties,
                 "candidates": candidates,
             }
@@ -440,7 +440,7 @@ def admin_add(request, svc="rektor"):
         if user_id.isdigit():
             client = _client(svc)
             try:
-                client.add_admin(int(user_id), added_by=request.user.pk, role=role)
+                client.add_admin(int(user_id), added_by=0, role=role)  # admin panel sentinel
                 role_label = "Bosh Admin" if role == "super_admin" else "Admin"
                 messages.success(request, f"{role_label} qo'shildi: {user_id}")
             except BotAPIError as e:
