@@ -746,6 +746,7 @@ function renderCommonGroupsStat(data) {
         var commonCount = u.common_groups || u.commonGroups || 0;
         var isActive = u.is_user_active;
         var photoUrl = uid ? PHOTO_URL_TPL.replace('__EID__', uid) : '';
+        if (photoUrl && username) photoUrl += '?u=' + encodeURIComponent(username);
         var profileUrl = uid ? PROFILE_URL_TPL.replace('99999', uid) : '#';
 
         var avatarHtml = photoUrl

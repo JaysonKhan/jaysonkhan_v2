@@ -282,11 +282,14 @@ def _download_photo_from_url(photo_url: str) -> bytes | None:
 # ── Telethon Fallback (Bot API ishlamasa) ─────────────────────────────────────
 
 
-def _download_photo_via_telethon(entity_id: int) -> bytes | None:
+def _download_photo_via_telethon(entity_id: int, username: str = "") -> bytes | None:
     """Download profile photo via Telethon MTProto.
 
     Bot API faqat bot bilan aloqa qilgan userlar uchun ishlaydi.
     Guruh, kanal va boshqa userlar uchun Telethon kerak.
+
+    Agar entity_id bilan access_hash topilmasa va username berilgan bo'lsa,
+    @username orqali resolve qilib rasmni yuklaydi.
 
     Rate limited — mavjud TelegramRateLimiter orqali.
     Xatoliklar jimgina qaytariladi (None), log qilinadi.
@@ -306,7 +309,19 @@ def _download_photo_via_telethon(entity_id: int) -> bytes | None:
         client = get_telegram_client()
 
         async def _fetch():
-            return await client.download_profile_photo(entity_id, file=bytes)
+            try:
+                return await client.download_profile_photo(entity_id, file=bytes)
+            except (ValueError, TypeError):
+                # access_hash yo'q — username orqali urinish
+                if username:
+                    logger.debug(
+                        "access_hash yo'q (%s), @%s orqali urinish",
+                        entity_id, username,
+                    )
+                    return await client.download_profile_photo(
+                        f"@{username}", file=bytes,
+                    )
+                return None
 
         photo_bytes = run_async(_fetch())
         if photo_bytes and _is_valid_image(photo_bytes):
@@ -330,15 +345,23 @@ def _download_photo_via_telethon(entity_id: int) -> bytes | None:
 def get_entity_photo(
     entity_id: int | str,
     force_refresh: bool = False,
+    username: str = "",
 ) -> tuple[bytes | None, str | None]:
     """Get profile photo for a Telegram entity (user/group/channel).
 
     Returns (photo_bytes, content_type) or (None, None).
 
+    Args:
+        entity_id: Telegram user/channel/group ID
+        force_refresh: True = cache'ni e'tiborsiz qoldirish
+        username: Telegram @username (access_hash yo'q bo'lganda fallback)
+
     Strategy (tezlikdan sekinlikka):
       1. Cache: DB metadata + fayl tizimi (API chaqiruvsiz)
       2. Bot API: getUserProfilePhotos (bot ko'rgan userlar uchun)
       3. Telethon: download_profile_photo (guruh/kanal/noma'lum userlar uchun)
+         3.1. entity_id bilan → access_hash session cache'dan
+         3.2. @username bilan → access_hash kerak emas (fallback)
       4. photo_url: TelegramEntity.photo_url (Login Widget avatar)
       5. Negative cache: has_photo=False (1 kun TTL)
     """
@@ -380,8 +403,9 @@ def get_entity_photo(
     photo_bytes = _download_photo_via_bot_api(entity_int)
 
     # 3.5 Fallback: Telethon (Bot API ishlamasa — guruh/kanal/noma'lum user uchun)
+    # username berilgan bo'lsa, access_hash yo'q bo'lganda @username orqali urinadi
     if not photo_bytes:
-        photo_bytes = _download_photo_via_telethon(entity_int)
+        photo_bytes = _download_photo_via_telethon(entity_int, username=username)
 
     # 4. Fallback: download from entity's external photo_url
     if not photo_bytes:

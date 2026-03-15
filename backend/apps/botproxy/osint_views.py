@@ -531,6 +531,8 @@ def osint_photo_proxy(request, entity_id: str):
         return HttpResponse(status=400)
 
     force = request.GET.get("refresh") == "1"
+    # Username — access_hash yo'q bo'lganda Telethon fallback uchun
+    username = request.GET.get("u", "").strip().lstrip("@")[:64]
 
     # ── 1. Negative cache (TelegramEntity yo'q bo'lgan entitylar uchun) ──
     # get_entity_photo() faqat mavjud TelegramEntity da has_photo=False saqlaydi.
@@ -573,7 +575,9 @@ def osint_photo_proxy(request, entity_id: str):
     # ── 3. Full photo service (Bot API + Telethon — sekinroq) ──
     # clean_id ishlatamiz — photo_service ichida sanitize qiladi
     try:
-        photo_bytes, content_type = get_entity_photo(clean_id, force_refresh=force)
+        photo_bytes, content_type = get_entity_photo(
+            clean_id, force_refresh=force, username=username,
+        )
     except RuntimeError as e:
         logger.warning("Telegram photo xizmati mavjud emas: %s", e)
         # 503 da stale cache ni tekshirish
