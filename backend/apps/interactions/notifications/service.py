@@ -162,6 +162,17 @@ class NotificationService:
         import time
         time.sleep(0.5)  # EntitySource yaratilishini kutish
 
+        # ── FunStat stats_min (bepul) ─────────────────────────────────────
+        funstat = {}
+        if profile.entity_type in ('user', 'bot'):
+            try:
+                from osint.services.osint_service import fetch_or_cache
+                result = fetch_or_cache('stats_min', profile.telegram_id)
+                if result and result.data:
+                    funstat = result.data
+            except Exception:
+                logger.debug('FunStat stats_min failed for %s', profile.telegram_id)
+
         # ── Entity type ───────────────────────────────────────────────────
         type_map = {
             'user': ('👤', 'Foydalanuvchi'),
@@ -172,17 +183,24 @@ class NotificationService:
         }
         emoji, type_label = type_map.get(profile.entity_type, ('👤', 'Noma\'lum'))
 
-        name = escape(profile.display_name)
+        # Ism — FunStat dan yangilangan bo'lishi mumkin
+        fs_name = ''
+        if funstat:
+            parts = [funstat.get('first_name', ''), funstat.get('last_name', '')]
+            fs_name = ' '.join(p for p in parts if p).strip()
+        name = escape(fs_name or profile.display_name)
         lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
 
         # ── Asosiy ma'lumotlar ────────────────────────────────────────────
+        username = funstat.get('username') or profile.username
         info_parts = [f'🆔 <code>{profile.telegram_id}</code>']
-        if profile.username:
-            info_parts.append(f'@{escape(profile.username)}')
+        if username:
+            info_parts.append(f'@{escape(username)}')
         lines.append(' · '.join(info_parts))
 
-        if profile.phone:
-            lines.append(f'📱 <code>{escape(profile.phone)}</code>')
+        phone = funstat.get('phone') or profile.phone
+        if phone:
+            lines.append(f'📱 <code>{escape(phone)}</code>')
 
         # ── Qaysi servis orqali? ──────────────────────────────────────────
         try:
@@ -205,21 +223,61 @@ class NotificationService:
 
         # ── Badgelar ──────────────────────────────────────────────────────
         badges = []
-        if getattr(profile, 'is_premium', False):
+        if funstat.get('is_premium') or getattr(profile, 'is_premium', False):
             badges.append('⭐️ Premium')
-        if getattr(profile, 'is_verified', False):
+        if funstat.get('is_verified') or getattr(profile, 'is_verified', False):
             badges.append('✅ Tasdiqlangan')
-        if getattr(profile, 'is_scam', False):
+        if funstat.get('is_scam') or getattr(profile, 'is_scam', False):
             badges.append('⚠️ SCAM')
-        if getattr(profile, 'is_fake', False):
+        if funstat.get('is_fake') or getattr(profile, 'is_fake', False):
             badges.append('🚫 FAKE')
+        if funstat.get('is_bot'):
+            badges.append('🤖 Bot')
+        is_active = funstat.get('is_active')
+        if is_active is True:
+            badges.append('🟢 Faol')
+        elif is_active is False:
+            badges.append('🔴 Nofaol')
         if badges:
             lines.append(' · '.join(badges))
 
+        # ── FunStat statistika ────────────────────────────────────────────
+        if funstat:
+            stats_parts = []
+            total_msg = funstat.get('total_msg_count')
+            if total_msg:
+                stats_parts.append(f'💬 {total_msg:,} xabar')
+            total_grp = funstat.get('total_groups')
+            if total_grp:
+                stats_parts.append(f'👥 {total_grp} guruh')
+            adm = funstat.get('adm_in_groups')
+            if adm:
+                stats_parts.append(f'👑 {adm} admin')
+            if stats_parts:
+                lines.append(' · '.join(stats_parts))
+
+            history_parts = []
+            unames = funstat.get('usernames_count')
+            if unames:
+                history_parts.append(f'📝 {unames} username')
+            names = funstat.get('names_count')
+            if names:
+                history_parts.append(f'✏️ {names} ism')
+            if history_parts:
+                lines.append(' · '.join(history_parts))
+
+            # Faollik davri
+            first_d = funstat.get('first_msg_date', '')
+            last_d = funstat.get('last_msg_date', '')
+            if first_d and last_d:
+                lines.append(f'📅 {str(first_d)[:10]} — {str(last_d)[:10]}')
+            elif first_d:
+                lines.append(f'📅 {str(first_d)[:10]} dan beri')
+
         # ── Bio ───────────────────────────────────────────────────────────
-        bio = getattr(profile, 'bio', '')
+        bio = funstat.get('about') or funstat.get('bio') or getattr(profile, 'bio', '')
         if bio:
-            lines.append(f'💬 <i>{escape(bio[:120])}</i>')
+            lines.append(f'💬 <i>{escape(str(bio)[:120])}</i>')
 
         text = '\n'.join(lines)
 
