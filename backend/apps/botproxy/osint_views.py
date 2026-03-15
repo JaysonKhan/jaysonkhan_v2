@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -183,6 +183,36 @@ def osint_text_search(request):
         "data": resp_data,
         "tech": resp_tech,
     })
+
+
+# ─── Photo Proxy ─────────────────────────────────────────────────────────────
+
+@staff_member_required
+def osint_photo_proxy(request, entity_id: str):
+    """Serve cached Telegram profile photo for any entity (user/group/channel/bot).
+
+    URL: osint/photo/<entity_id>/
+    Query: ?refresh=1 to force re-download from Telegram.
+    Returns JPEG with browser caching (1 hour) or 404/503.
+    """
+    from botproxy.photo_service import get_entity_photo
+
+    force = request.GET.get("refresh") == "1"
+
+    try:
+        photo_bytes, content_type = get_entity_photo(entity_id, force_refresh=force)
+    except RuntimeError as e:
+        logger.warning("Telegram photo xizmati mavjud emas: %s", e)
+        return HttpResponse(status=503)
+
+    if photo_bytes and content_type:
+        return HttpResponse(
+            photo_bytes,
+            content_type=content_type,
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    return HttpResponse(status=404)
 
 
 # ─── AJAX: Balance ───────────────────────────────────────────────────────────

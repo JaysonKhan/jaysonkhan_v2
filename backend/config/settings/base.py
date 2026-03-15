@@ -454,3 +454,13 @@ BOT_SERVICES = {
 FUNSTAT_API_BASE_URL = env('FUNSTAT_API_BASE_URL', default='https://funstat.in')
 FUNSTAT_API_TOKEN = env('FUNSTAT_API_TOKEN', default='')
 FUNSTAT_API_TIMEOUT = env.int('FUNSTAT_API_TIMEOUT', default=30)
+
+# ── Telegram MTProto API (profil rasmlarni yuklash uchun) ──────────────────
+TELEGRAM_API_ID = env.int('TELEGRAM_API_ID', default=0)
+TELEGRAM_API_HASH = env('TELEGRAM_API_HASH', default='')
+TELEGRAM_SESSION_PATH = env(
+    'TELEGRAM_SESSION_PATH',
+    default=str(BASE_DIR.parent / '.telegram_session'),
+)
+OSINT_PHOTO_CACHE_DAYS = env.int('OSINT_PHOTO_CACHE_DAYS', default=7)
+OSINT_PHOTO_MAX_REQUESTS_PER_MIN = env.int('OSINT_PHOTO_MAX_REQUESTS_PER_MIN', default=15)

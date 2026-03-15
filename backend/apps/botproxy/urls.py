@@ -9,6 +9,7 @@ urlpatterns = [
     path("osint/profile/<int:user_id>/branch/<str:branch>/", osint_views.osint_fetch_branch, name="osint_fetch_branch"),
     path("osint/text-search/", osint_views.osint_text_search, name="osint_text_search"),
     path("osint/balance/", osint_views.osint_balance, name="osint_balance"),
+    path("osint/photo/<str:entity_id>/", osint_views.osint_photo_proxy, name="osint_photo"),
     # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),

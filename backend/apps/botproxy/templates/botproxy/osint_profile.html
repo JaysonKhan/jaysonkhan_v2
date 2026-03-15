@@ -12,8 +12,21 @@
 <!-- User Header -->
 {% if basic.data %}
 <div class="rb-card">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
-        <div>
+    <div style="display:flex; align-items:flex-start; gap:1rem;">
+        <!-- Profile Photo -->
+        <div style="flex-shrink:0;">
+            <img
+                src="{% url 'osint_photo' entity_id=user_id %}"
+                alt="Avatar"
+                style="width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid var(--rb-border); background:var(--rb-bg-muted);"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div style="display:none; width:72px; height:72px; border-radius:50%; background:var(--rb-primary-muted, rgba(99,102,241,0.15)); align-items:center; justify-content:center; font-size:1.75rem; font-weight:700; color:var(--rb-primary); border:2px solid var(--rb-border);">
+                {{ basic.data.first_name|default:"?"|truncatechars:1 }}
+            </div>
+        </div>
+        <!-- Name + Info -->
+        <div style="flex:1; min-width:200px;">
             <h1 style="margin:0; font-size:1.5rem; font-weight:700;">
                 {{ basic.data.first_name|default:"" }} {{ basic.data.last_name|default:"" }}
                 {% if basic.data.is_bot %}<span class="rb-badge rb-badge-info">BOT</span>{% endif %}
@@ -24,7 +37,8 @@
                 <span class="rb-code">ID: {{ user_id }}</span>
             </div>
         </div>
-        <div style="text-align:right;">
+        <!-- Cache badge -->
+        <div style="text-align:right; flex-shrink:0;">
             {% if basic.cached %}
             <span class="rb-cache-badge fresh">
                 <span class="material-symbols-outlined" style="font-size:12px;">cached</span>
@@ -128,6 +142,7 @@ var BRANCH_URLS = {};
 BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_id branch=node.id %}";
 {% endfor %}
 var PROFILE_URL_TPL = "{% url 'osint_profile' user_id=99999 %}";
+var PHOTO_URL_TPL = "{% url 'osint_photo' entity_id='__EID__' %}";
 
 function toggleBranch(header) {
     var node = header.closest('.rb-tree-node');
@@ -229,18 +244,24 @@ function renderCellValue(val, key) {
     if (typeof val === 'boolean') {
         return val ? '<span class="rb-badge rb-badge-open">Ha</span>' : '<span class="rb-badge rb-badge-closed">Yo\'q</span>';
     }
-    // Nested object with title (group/chat) → show as Telegram link
+    // Nested object with title (group/chat) → show as Telegram link + mini photo
     if (typeof val === 'object' && !Array.isArray(val)) {
         if (val.title) {
             var link = val.username ? 'https://t.me/' + val.username : null;
-            var icon = val.isPrivate ? 'lock' : 'group';
             var name = escapeHtml(val.title);
+            // Mini profile photo
+            var photoHtml = '';
+            if (val.id) {
+                var photoUrl = PHOTO_URL_TPL.replace('__EID__', val.id);
+                photoHtml = '<img src="' + photoUrl + '" ' +
+                    'style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);" ' +
+                    'onerror="this.style.display=\'none\'">';
+            }
             if (link) {
-                return '<a href="' + link + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">' +
-                    '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">' + icon + '</span> ' +
+                return photoHtml + '<a href="' + link + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">' +
                     name + '</a>';
             }
-            return '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">' + icon + '</span> ' + name;
+            return photoHtml + name;
         }
         // Array like media_usage → comma join
         if (Array.isArray(val)) return val.join(', ');
@@ -257,9 +278,13 @@ function renderCellValue(val, key) {
     if ((kl.indexOf('username') !== -1 || kl === 'mainusername' || kl === 'main_username') && s && s !== 'null') {
         return '<a href="https://t.me/' + escapeHtml(s) + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">@' + escapeHtml(s) + '</a>';
     }
-    // User ID fields → OSINT profile link
+    // User ID fields → OSINT profile link + mini photo
     if ((kl === 'user_id' || kl === 'from_user_id' || kl === 'to_user_id' || kl === 'id') && /^\d+$/.test(s) && s.length > 5) {
-        return '<a href="' + PROFILE_URL_TPL.replace('99999', s) + '" style="color:var(--rb-primary);text-decoration:none;">' + s + '</a>';
+        var userPhotoUrl = PHOTO_URL_TPL.replace('__EID__', s);
+        var userPhoto = '<img src="' + userPhotoUrl + '" ' +
+            'style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);" ' +
+            'onerror="this.style.display=\'none\'">';
+        return userPhoto + '<a href="' + PROFILE_URL_TPL.replace('99999', s) + '" style="color:var(--rb-primary);text-decoration:none;">' + s + '</a>';
     }
     return escapeHtml(s);
 }

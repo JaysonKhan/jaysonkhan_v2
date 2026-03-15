@@ -56,6 +56,10 @@ backend/media/
 # Node
 node_modules/
 
+# Telegram session files
+*.session
+*.session-journal
+
 # AI agent tools
 /output/
 /docs/

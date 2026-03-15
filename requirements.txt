@@ -31,6 +31,9 @@ MarkupSafe==3.0.3
 # HTTP client (Telegram Bot API calls)
 httpx==0.28.1
 
+# Telegram MTProto API (OSINT profile photos)
+telethon==1.42.0
+
 # Timezone
 tzdata==2025.3
 typing_extensions==4.15.0

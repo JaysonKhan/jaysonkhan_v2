@@ -6,6 +6,7 @@ Run: python manage.py makemigrations botproxy && python manage.py migrate
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
@@ -137,3 +138,72 @@ class OsintSearchLog(models.Model):
 
     def __str__(self):
         return f"{self.query_type}:{self.query} at {self.searched_at}"
+
+
+class OsintPhotoCache(models.Model):
+    """Filesystem-backed cache metadata for Telegram profile photos.
+
+    Photos are stored at MEDIA_ROOT/osint/photos/{entity_id}.jpg.
+    This model tracks cache validity and negative results (entity has no photo).
+    """
+
+    entity_id = models.CharField(
+        max_length=64, unique=True, db_index=True,
+        help_text="Telegram entity ID (user, group, channel, bot)",
+    )
+    has_photo = models.BooleanField(
+        default=False,
+        help_text="Whether this entity has a profile photo",
+    )
+    photo_path = models.CharField(
+        max_length=255, blank=True, default="",
+        help_text="Relative path under MEDIA_ROOT",
+    )
+    fetched_at = models.DateTimeField(default=timezone.now)
+    file_size = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "OSINT Photo Cache"
+        verbose_name_plural = "OSINT Photo Cache"
+
+    def __str__(self):
+        status = "has_photo" if self.has_photo else "no_photo"
+        return f"photo:{self.entity_id} ({status})"
+
+    @property
+    def is_stale(self) -> bool:
+        ttl = getattr(settings, "OSINT_PHOTO_CACHE_DAYS", 7)
+        return timezone.now() - self.fetched_at > timedelta(days=ttl)
+
+    @property
+    def full_path(self) -> str:
+        """Absolute filesystem path to the cached photo."""
+        if not self.photo_path:
+            return ""
+        return str(Path(settings.MEDIA_ROOT) / self.photo_path)
+
+    @classmethod
+    def get_cached(cls, entity_id: str | int):
+        """Return cached entry if it exists and is not stale."""
+        try:
+            entry = cls.objects.get(entity_id=str(entity_id))
+            if entry.is_stale:
+                return None
+            return entry
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def set_cache(cls, entity_id: str | int, has_photo: bool,
+                  photo_path: str = "", file_size: int = 0):
+        """Create or update photo cache entry."""
+        obj, _ = cls.objects.update_or_create(
+            entity_id=str(entity_id),
+            defaults={
+                "has_photo": has_photo,
+                "photo_path": photo_path,
+                "file_size": file_size,
+                "fetched_at": timezone.now(),
+            },
+        )
+        return obj
