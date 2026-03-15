@@ -262,6 +262,15 @@ def osint_profile(request, user_id: int):
 
     basic = fetch_or_cache("stats_min", user_id, user=request.user)
 
+    # OSINT → TelegramEntity sync
+    if basic.data and not basic.error:
+        try:
+            from osint.services.osint_service import sync_entity_from_osint
+
+            sync_entity_from_osint(user_id, basic.data)
+        except Exception:
+            logger.exception("sync_entity_from_osint xatolik: %s", user_id)
+
     cached_branches = set(
         OsintCache.objects.filter(target_id=str(user_id)).values_list(
             "endpoint_type", flat=True

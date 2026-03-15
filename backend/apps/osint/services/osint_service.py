@@ -198,6 +198,52 @@ def fetch_channel_data(
     )
 
 
+# ── OSINT → TelegramEntity sync ───────────────────────────────────────────
+
+
+def sync_entity_from_osint(telegram_id: int, osint_data: dict) -> None:
+    """FunStat stats_min dan TelegramEntity + EntitySource yaratish/yangilash.
+
+    OSINT qidirilgan har bir user ni saytdagi yagona Telegram profil
+    jadvaliga saqlaydi. Agar user avval saytga kirgan bo'lsa — mavjud
+    yozuv yangilanadi (merge).
+    """
+    from telegram.models import EntitySource, TelegramEntity
+
+    if not osint_data or not telegram_id:
+        return
+
+    defaults = {
+        "entity_type": "user",
+        "first_name": (osint_data.get("first_name") or "")[:255],
+        "last_name": (osint_data.get("last_name") or "")[:255],
+        "username": (osint_data.get("username") or "")[:255],
+        "phone": (osint_data.get("phone") or "")[:30],
+        "bio": osint_data.get("about") or osint_data.get("bio") or "",
+        "is_premium": bool(osint_data.get("is_premium")),
+        "is_verified": bool(osint_data.get("is_verified")),
+        "is_scam": bool(osint_data.get("is_scam")),
+        "is_fake": bool(osint_data.get("is_fake")),
+    }
+
+    # Bot turini aniqlash
+    if osint_data.get("is_bot") or osint_data.get("bot"):
+        defaults["entity_type"] = "bot"
+
+    try:
+        entity, _ = TelegramEntity.objects.update_or_create(
+            telegram_id=telegram_id,
+            defaults=defaults,
+        )
+        EntitySource.objects.get_or_create(
+            entity=entity,
+            service="osint",
+            defaults={"role": "searched"},
+        )
+    except Exception:
+        logger.exception("sync_entity_from_osint xatolik: %s", telegram_id)
+
+
 # ── Entity Type Detection ──────────────────────────────────────────────────
 
 
@@ -262,17 +308,23 @@ def _resolve_via_telethon(username: str) -> dict | None:
 
         result = run_async(_resolve())
 
-        # DB ga saqlash — FAQAT kanal/guruh uchun
-        if result and result["entity_type"] in ("channel", "supergroup", "group"):
+        # DB ga saqlash — barcha entity type'lar uchun
+        if result:
             from telegram.models import EntitySource, TelegramEntity
+
+            defaults = {
+                "entity_type": result["entity_type"],
+                "username": result.get("username", ""),
+            }
+            if result["entity_type"] in ("channel", "supergroup", "group"):
+                defaults["title"] = result.get("title", "")
+            else:
+                defaults["first_name"] = result.get("first_name", "")
+                defaults["last_name"] = result.get("last_name", "")
 
             entity_obj, _ = TelegramEntity.objects.update_or_create(
                 telegram_id=result["id"],
-                defaults={
-                    "entity_type": result["entity_type"],
-                    "username": result.get("username", ""),
-                    "title": result.get("title", ""),
-                },
+                defaults=defaults,
             )
             EntitySource.objects.get_or_create(
                 entity=entity_obj,
@@ -298,15 +350,15 @@ def resolve_and_search(query: str, user=None) -> dict:
         entity_id = int(query)
         entity_type = _detect_entity_type(entity_id) or "user"
 
-        OsintSearchLog.objects.update_or_create(
-            query=query,
-            query_type="channel" if entity_type in ("channel", "supergroup", "group") else "id",
-            searched_by=user,
-            defaults={
-                "resolved_id": entity_id,
-                "searched_at": timezone.now(),
-            },
-        )
+        if not OsintSearchLog.objects.filter(
+            resolved_id=entity_id, searched_by=user,
+        ).exists():
+            OsintSearchLog.objects.create(
+                query=query,
+                query_type="channel" if entity_type in ("channel", "supergroup", "group") else "id",
+                searched_by=user,
+                resolved_id=entity_id,
+            )
         return {
             "user_id": entity_id,
             "entity_type": entity_type,
@@ -346,17 +398,17 @@ def resolve_and_search(query: str, user=None) -> dict:
 
         if resolved_id:
             entity_type = _detect_entity_type(resolved_id) or "user"
-            OsintSearchLog.objects.update_or_create(
-                query=query,
-                query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
-                searched_by=user,
-                defaults={
-                    "resolved_id": resolved_id,
-                    "searched_at": timezone.now(),
-                    "api_cost": tech.get("request_cost", 0),
-                    "balance_after": tech.get("current_ballance"),
-                },
-            )
+            if not OsintSearchLog.objects.filter(
+                resolved_id=resolved_id, searched_by=user,
+            ).exists():
+                OsintSearchLog.objects.create(
+                    query=query,
+                    query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
+                    searched_by=user,
+                    resolved_id=resolved_id,
+                    api_cost=tech.get("request_cost", 0),
+                    balance_after=tech.get("current_ballance"),
+                )
             return {
                 "user_id": resolved_id,
                 "entity_type": entity_type,
@@ -376,16 +428,16 @@ def resolve_and_search(query: str, user=None) -> dict:
         resolved_id = telethon_result["id"]
         entity_type = telethon_result["entity_type"]
 
-        OsintSearchLog.objects.update_or_create(
-            query=query,
-            query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
-            searched_by=user,
-            defaults={
-                "resolved_id": resolved_id,
-                "searched_at": timezone.now(),
-                "api_cost": 0,
-            },
-        )
+        if not OsintSearchLog.objects.filter(
+            resolved_id=resolved_id, searched_by=user,
+        ).exists():
+            OsintSearchLog.objects.create(
+                query=query,
+                query_type="channel" if entity_type in ("channel", "supergroup", "group") else "username",
+                searched_by=user,
+                resolved_id=resolved_id,
+                api_cost=0,
+            )
         return {
             "user_id": resolved_id,
             "entity_type": entity_type,
