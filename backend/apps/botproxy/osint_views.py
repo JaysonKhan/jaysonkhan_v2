@@ -34,6 +34,93 @@ def _ctx(request, extra: dict | None = None) -> dict:
     return ctx
 
 
+def _annotate_search_logs(logs: list) -> None:
+    """Har bir OsintSearchLog ga entity_name va has_photo qo'shish.
+
+    Ma'lumot manbalari (prioritet tartibida):
+    1. TelegramEntity (DB da mavjud bo'lsa — tez)
+    2. OsintCache stats_min / channel_profile (kesh ma'lumotlari)
+    3. So'rov matni (fallback)
+    """
+    if not logs:
+        return
+
+    resolved_ids = [s.resolved_id for s in logs if s.resolved_id]
+    if not resolved_ids:
+        for s in logs:
+            s.entity_name = s.query
+            s.has_photo = False
+        return
+
+    # 1. TelegramEntity dan nomlar
+    from telegram.models import TelegramEntity
+
+    entities = {
+        e.telegram_id: e
+        for e in TelegramEntity.objects.filter(
+            telegram_id__in=resolved_ids,
+        ).only("telegram_id", "first_name", "last_name", "title", "username", "entity_type", "has_photo")
+    }
+
+    # 2. OsintCache dan nomlar (stats_min yoki channel_profile)
+    cache_names: dict[int, str] = {}
+    cache_entries = OsintCache.objects.filter(
+        endpoint_type__in=("stats_min", "channel_profile"),
+        target_id__in=[str(rid) for rid in resolved_ids],
+        page=1,
+    ).only("target_id", "endpoint_type", "data")
+
+    for entry in cache_entries:
+        try:
+            tid = int(entry.target_id)
+        except (ValueError, TypeError):
+            continue
+        if tid in cache_names:
+            continue
+        data = entry.data or {}
+        if entry.endpoint_type == "stats_min":
+            name = data.get("name") or data.get("first_name") or ""
+            if not name and isinstance(data, dict):
+                name = data.get("username") or ""
+            if name:
+                cache_names[tid] = name
+        elif entry.endpoint_type == "channel_profile":
+            name = data.get("title") or data.get("name") or ""
+            if name:
+                cache_names[tid] = name
+
+    # 3. Annotate
+    for s in logs:
+        s.has_photo = False
+        s.entity_name = ""
+
+        if not s.resolved_id:
+            s.entity_name = s.query
+            continue
+
+        rid = s.resolved_id
+        entity = entities.get(rid)
+
+        if entity:
+            s.has_photo = entity.has_photo
+            if entity.entity_type in ("channel", "supergroup", "group"):
+                s.entity_name = entity.title or entity.username or ""
+            else:
+                parts = [entity.first_name or "", entity.last_name or ""]
+                s.entity_name = " ".join(p for p in parts if p).strip()
+                if not s.entity_name:
+                    s.entity_name = entity.username or ""
+
+        # OsintCache fallback
+        if not s.entity_name and rid in cache_names:
+            s.entity_name = cache_names[rid]
+            s.has_photo = True  # Agar stats_min bor bo'lsa, photo proxy ishlaydi
+
+        # Final fallback
+        if not s.entity_name:
+            s.entity_name = s.query
+
+
 # ── Profile tree definition ──────────────────────────────────────────────────
 
 PROFILE_TREE = [
@@ -71,10 +158,13 @@ def osint_search(request):
             )
         error = result["error"] or f"'{query}' topilmadi"
 
-    recent = (
+    recent = list(
         OsintSearchLog.objects.filter(searched_by=request.user)
         .select_related("searched_by")[:15]
     )
+
+    # Annotate with entity names & photos
+    _annotate_search_logs(recent)
 
     return TemplateResponse(
         request,
