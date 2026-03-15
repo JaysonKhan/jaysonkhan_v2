@@ -207,28 +207,48 @@ def sync_entity_from_osint(telegram_id: int, osint_data: dict) -> None:
     OSINT qidirilgan har bir user ni saytdagi yagona Telegram profil
     jadvaliga saqlaydi. Agar user avval saytga kirgan bo'lsa — mavjud
     yozuv yangilanadi (merge).
+
+    MUHIM: Faqat bo'sh bo'lmagan qiymatlar bilan yangilaydi — mavjud
+    ma'lumotlar (masalan, username) ustiga bo'sh qiymat yozilmaydi.
     """
     from telegram.models import EntitySource, TelegramEntity
 
     if not osint_data or not telegram_id:
         return
 
-    defaults = {
-        "entity_type": "user",
-        "first_name": (osint_data.get("first_name") or "")[:255],
-        "last_name": (osint_data.get("last_name") or "")[:255],
-        "username": (osint_data.get("username") or "")[:255],
-        "phone": (osint_data.get("phone") or "")[:30],
-        "bio": osint_data.get("about") or osint_data.get("bio") or "",
-        "is_premium": bool(osint_data.get("is_premium")),
-        "is_verified": bool(osint_data.get("is_verified")),
-        "is_scam": bool(osint_data.get("is_scam")),
-        "is_fake": bool(osint_data.get("is_fake")),
-    }
+    # Faqat bo'sh bo'lmagan matn maydonlarni qo'shish — mavjud datani
+    # yo'qotmaslik uchun (masalan, saytdan kirgan user da username bor,
+    # lekin FunStat da yo'q bo'lsa — ustiga yozilmasligi kerak)
+    defaults: dict = {}
 
-    # Bot turini aniqlash
+    if osint_data.get("first_name"):
+        defaults["first_name"] = osint_data["first_name"][:255]
+    if osint_data.get("last_name"):
+        defaults["last_name"] = osint_data["last_name"][:255]
+    if osint_data.get("username"):
+        defaults["username"] = osint_data["username"][:255]
+    if osint_data.get("phone"):
+        defaults["phone"] = osint_data["phone"][:30]
+
+    bio = osint_data.get("about") or osint_data.get("bio")
+    if bio:
+        defaults["bio"] = bio
+
+    # Boolean maydonlar — faqat API da aniq kelganda o'rnatish
+    if osint_data.get("is_premium"):
+        defaults["is_premium"] = True
+    if osint_data.get("is_verified"):
+        defaults["is_verified"] = True
+    if osint_data.get("is_scam"):
+        defaults["is_scam"] = True
+    if osint_data.get("is_fake"):
+        defaults["is_fake"] = True
+
+    # Entity type
     if osint_data.get("is_bot") or osint_data.get("bot"):
         defaults["entity_type"] = "bot"
+    else:
+        defaults["entity_type"] = "user"
 
     try:
         entity, _ = TelegramEntity.objects.update_or_create(
