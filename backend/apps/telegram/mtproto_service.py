@@ -15,6 +15,9 @@ Xavfsizlik:
   - Xabar limiti: har so'rovda max 50 ta
   - A'zolar ro'yxati: QILMAYDI (eng xavfli operatsiya)
 
+MUHIM: Telethon int ID ni PeerUser deb oladi. Kanal/guruh uchun
+PeerChannel/PeerChat ishlatish kerak. _resolve_entity() bu muammoni hal qiladi.
+
 Usage:
     from telegram.mtproto_service import get_entity_profile, get_channel_messages
 
@@ -42,6 +45,81 @@ class MTProtoResult:
     rate_limited: bool = False
 
 
+# ── Smart Entity Resolution ────────────────────────────────────────────────
+
+
+def _get_entity_hints(entity_id: int) -> tuple[str | None, str | None]:
+    """DB dan entity type va username ni olish (API chaqiruvsiz).
+
+    Returns (entity_type, username) — ikkalasi ham None bo'lishi mumkin.
+    """
+    try:
+        from telegram.models import TelegramEntity
+        obj = TelegramEntity.objects.filter(
+            telegram_id=entity_id,
+        ).only("entity_type", "username").first()
+        if obj:
+            return obj.entity_type, obj.username or None
+    except Exception:
+        pass
+    return None, None
+
+
+async def _resolve_entity(client, entity_id: int | str):
+    """Smart entity resolution — to'g'ri Peer turini aniqlaydi.
+
+    Telethon get_entity(int) musbat raqamni PeerUser deb oladi.
+    Bu funksiya DB hints va multiple peer types orqali to'g'ri resolve qiladi.
+
+    Tartib:
+      1. Username (eng ishonchli — hech qachon PeerUser xatosi bermaydi)
+      2. DB dan entity_type bo'yicha to'g'ri Peer → PeerChannel / PeerChat
+      3. PeerChannel (kanal/supergroup uchun — eng ko'p ishlatiladigan)
+      4. PeerChat (oddiy group uchun)
+      5. Oddiy int (user — oxirgi fallback)
+    """
+    from telethon.tl.types import PeerChannel, PeerChat
+
+    eid = int(entity_id)
+    entity_type, username = _get_entity_hints(eid)
+
+    # 1. Username orqali — eng ishonchli yo'l
+    if username:
+        try:
+            return await client.get_entity(username)
+        except Exception:
+            logger.debug("Username resolve muvaffaqiyatsiz: @%s", username)
+
+    # 2. DB dan ma'lum entity type bo'yicha
+    if entity_type in ("channel", "supergroup"):
+        try:
+            return await client.get_entity(PeerChannel(eid))
+        except Exception:
+            logger.debug("PeerChannel(%s) muvaffaqiyatsiz (DB hint)", eid)
+    elif entity_type == "group":
+        try:
+            return await client.get_entity(PeerChat(eid))
+        except Exception:
+            logger.debug("PeerChat(%s) muvaffaqiyatsiz (DB hint)", eid)
+
+    # 3. PeerChannel — eng ko'p holatda kanal/supergroup
+    if entity_type not in ("channel", "supergroup"):
+        try:
+            return await client.get_entity(PeerChannel(eid))
+        except Exception:
+            pass
+
+    # 4. PeerChat — oddiy guruh
+    if entity_type != "group":
+        try:
+            return await client.get_entity(PeerChat(eid))
+        except Exception:
+            pass
+
+    # 5. Oddiy int — user (oxirgi fallback)
+    return await client.get_entity(eid)
+
+
 # ── Entity Profile ──────────────────────────────────────────────────────────
 
 
@@ -50,6 +128,8 @@ def get_entity_profile(entity_id: int | str) -> MTProtoResult:
 
     GetFullChannelRequest (kanal/supergroup) yoki GetFullChatRequest (oddiy guruh)
     chaqiradi. Natija TelegramEntity ga saqlanadi.
+
+    Smart entity resolution: PeerChannel → PeerChat → PeerUser fallback.
 
     Rate: 1 slot from rate limiter.
 
@@ -79,7 +159,7 @@ def get_entity_profile(entity_id: int | str) -> MTProtoResult:
             from telethon.tl.functions.messages import GetFullChatRequest
             from telethon.tl.types import Channel, Chat
 
-            entity = await client.get_entity(int(entity_id))
+            entity = await _resolve_entity(client, entity_id)
 
             if isinstance(entity, Channel):
                 full = await client(GetFullChannelRequest(entity))
@@ -176,9 +256,10 @@ def get_channel_messages(
         client = get_telegram_client()
 
         async def _fetch():
+            entity = await _resolve_entity(client, entity_id)
             messages = []
             async for msg in client.iter_messages(
-                int(entity_id),
+                entity,
                 limit=limit,
                 offset_id=offset_id,
             ):
@@ -233,9 +314,10 @@ def search_channel_messages(
         client = get_telegram_client()
 
         async def _fetch():
+            entity = await _resolve_entity(client, entity_id)
             messages = []
             async for msg in client.iter_messages(
-                int(entity_id),
+                entity,
                 search=query,
                 limit=limit,
                 offset_id=offset_id,
