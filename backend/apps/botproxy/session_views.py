@@ -51,10 +51,10 @@ def telegram_session_status(request):
     try:
         status = check_session_status()
     except Exception as e:
-        # configured=True because API keys exist, but connection failed
+        logger.exception("Telegram session status check failed")
         return JsonResponse({
             "configured": True, "authorized": False,
-            "user": None, "error": str(e),
+            "user": None, "error": "Sessiya holatini tekshirishda xatolik yuz berdi",
         })
 
     return JsonResponse(status)

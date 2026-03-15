@@ -15,6 +15,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from botproxy.client import BotAPIClient, BotAPIError
 
@@ -66,6 +67,19 @@ def _rev(name: str, svc: str, **kwargs) -> str:
     """Shortcut: reverse URL with svc parameter."""
     kwargs["svc"] = svc
     return reverse(name, kwargs=kwargs)
+
+
+def _sanitize_url(url: str | None) -> str | None:
+    """Ensure URL uses http/https protocol. Block javascript: and data: URIs."""
+    if not url:
+        return None
+    url = url.strip()
+    lower = url.lower()
+    if lower.startswith(("javascript:", "data:", "vbscript:")):
+        return None
+    if not lower.startswith(("http://", "https://")):
+        url = "https://" + url
+    return url
 
 
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
@@ -244,8 +258,9 @@ def poll_create(request, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def poll_close(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:  # @require_POST ensures POST-only
         client = _client(svc)
         try:
             client.close_poll(poll_id)
@@ -256,8 +271,9 @@ def poll_close(request, poll_id: int, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def poll_delete(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         client = _client(svc)
         try:
             client.delete_poll(poll_id)
@@ -271,8 +287,9 @@ def poll_delete(request, poll_id: int, svc="rektor"):
 # ─── Publish ─────────────────────────────────────────────────────────────────────
 
 @staff_member_required
+@require_POST
 def poll_publish(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         channel = request.POST.get("channel", "").strip()
         if not channel:
             messages.error(request, "Kanal kiritilmagan")
@@ -292,8 +309,9 @@ def poll_publish(request, poll_id: int, svc="rektor"):
 # ─── Poll Channels ──────────────────────────────────────────────────────────────
 
 @staff_member_required
+@require_POST
 def poll_channel_add(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         channel = request.POST.get("channel", "").strip()
         if not channel:
             messages.error(request, "Kanal kiritilmagan")
@@ -310,8 +328,9 @@ def poll_channel_add(request, poll_id: int, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def poll_channel_remove(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         channel = request.POST.get("channel", "").strip()
         if channel:
             client = _client(svc)
@@ -326,8 +345,9 @@ def poll_channel_remove(request, poll_id: int, svc="rektor"):
 # ─── Poll Posts Refresh ─────────────────────────────────────────────────────────
 
 @staff_member_required
+@require_POST
 def poll_posts_refresh(request, poll_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         client = _client(svc)
         try:
             client.refresh_poll_posts(poll_id)
@@ -407,8 +427,9 @@ def admin_list(request, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def admin_add(request, svc="rektor"):
-    if request.method == "POST":
+    if True:
         user_id = request.POST.get("user_id", "").strip()
         role = request.POST.get("role", "admin").strip()
         if role not in ("admin", "super_admin"):
@@ -427,8 +448,9 @@ def admin_add(request, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def admin_remove(request, user_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         client = _client(svc)
         try:
             client.remove_admin(user_id)
@@ -523,7 +545,10 @@ def user_photo_proxy(request, user_id: int, svc="rektor"):
     return HttpResponse(
         photo_bytes,
         content_type="image/jpeg",
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 
@@ -637,7 +662,7 @@ def university_create(request, svc="rektor"):
             "short_name": request.POST.get("short_name", "").strip(),
             "full_name": request.POST.get("full_name", "").strip(),
             "bio": request.POST.get("bio", "").strip() or None,
-            "website": request.POST.get("website", "").strip() or None,
+            "website": _sanitize_url(request.POST.get("website", "").strip() or None),
             "region": request.POST.get("region", "").strip() or None,
         }
         est_year = request.POST.get("established_year", "").strip()
@@ -652,13 +677,16 @@ def university_create(request, svc="rektor"):
                 uni = result.get("university", {})
                 uni_id = uni.get("id")
 
-                # Upload logo if provided
+                # Upload logo if provided (max 5MB)
                 logo_file = request.FILES.get("logo")
                 if logo_file and uni_id:
-                    try:
-                        client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
-                    except BotAPIError:
-                        messages.warning(request, "Universitet yaratildi, lekin logo yuklanmadi")
+                    if logo_file.size > 5 * 1024 * 1024:
+                        messages.warning(request, "Universitet yaratildi, lekin logo 5MB dan katta")
+                    else:
+                        try:
+                            client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
+                        except BotAPIError:
+                            messages.warning(request, "Universitet yaratildi, lekin logo yuklanmadi")
 
                 messages.success(request, f"Universitet yaratildi: {uni.get('short_name', '')}")
                 return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
@@ -687,7 +715,7 @@ def university_edit(request, uni_id: int, svc="rektor"):
             "short_name": request.POST.get("short_name", "").strip(),
             "full_name": request.POST.get("full_name", "").strip(),
             "bio": request.POST.get("bio", "").strip() or None,
-            "website": request.POST.get("website", "").strip() or None,
+            "website": _sanitize_url(request.POST.get("website", "").strip() or None),
             "region": request.POST.get("region", "").strip() or None,
         }
         est_year = request.POST.get("established_year", "").strip()
@@ -699,13 +727,16 @@ def university_edit(request, uni_id: int, svc="rektor"):
         else:
             try:
                 client.update_university(uni_id, data)
-                # Upload new logo if provided
+                # Upload new logo if provided (max 5MB)
                 logo_file = request.FILES.get("logo")
                 if logo_file:
-                    try:
-                        client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
-                    except BotAPIError:
-                        messages.warning(request, "Ma'lumot yangilandi, lekin logo yuklanmadi")
+                    if logo_file.size > 5 * 1024 * 1024:
+                        messages.warning(request, "Ma'lumot yangilandi, lekin logo 5MB dan katta")
+                    else:
+                        try:
+                            client.upload_university_logo(uni_id, logo_file.read(), logo_file.name)
+                        except BotAPIError:
+                            messages.warning(request, "Ma'lumot yangilandi, lekin logo yuklanmadi")
 
                 messages.success(request, "Universitet yangilandi")
                 return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
@@ -720,8 +751,9 @@ def university_edit(request, uni_id: int, svc="rektor"):
 
 
 @staff_member_required
+@require_POST
 def university_delete(request, uni_id: int, svc="rektor"):
-    if request.method == "POST":
+    if True:
         client = _client(svc)
         try:
             client.delete_university(uni_id)
@@ -741,7 +773,10 @@ def university_logo_proxy(request, uni_id: int, svc="rektor"):
     return HttpResponse(
         logo_bytes,
         content_type="image/png",
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 

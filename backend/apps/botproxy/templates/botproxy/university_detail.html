@@ -28,7 +28,13 @@
                 <span><span class="material-symbols-outlined">calendar_month</span> {{ uni.established_year }}-yil</span>
                 {% endif %}
                 {% if uni.website %}
-                <span><span class="material-symbols-outlined">language</span> <a href="{{ uni.website }}" target="_blank" rel="noopener">{{ uni.website }}</a></span>
+                {% with website=uni.website %}
+                {% if "://" in website %}
+                <span><span class="material-symbols-outlined">language</span> <a href="{{ website }}" target="_blank" rel="noopener noreferrer">{{ website }}</a></span>
+                {% else %}
+                <span><span class="material-symbols-outlined">language</span> <a href="https://{{ website }}" target="_blank" rel="noopener noreferrer">{{ website }}</a></span>
+                {% endif %}
+                {% endwith %}
                 {% endif %}
             </div>
         </div>

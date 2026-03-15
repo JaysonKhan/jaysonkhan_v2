@@ -413,25 +413,42 @@ function clearErrors() {
     });
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(str)));
+    return div.innerHTML;
+}
+
 function renderUserInfo(containerId, user) {
-    var html = '';
+    var container = document.getElementById(containerId);
+    container.textContent = '';
+    var fields = [];
     if (user.first_name || user.last_name) {
-        html += '<div class="ts-user-row"><span class="ts-user-label">Ism</span>' +
-                '<span class="ts-user-value">' + (user.first_name || '') + ' ' + (user.last_name || '') + '</span></div>';
+        fields.push(['Ism', escapeHtml(user.first_name || '') + ' ' + escapeHtml(user.last_name || '')]);
     }
     if (user.username) {
-        html += '<div class="ts-user-row"><span class="ts-user-label">Username</span>' +
-                '<span class="ts-user-value">@' + user.username + '</span></div>';
+        fields.push(['Username', '@' + escapeHtml(user.username)]);
     }
     if (user.id) {
-        html += '<div class="ts-user-row"><span class="ts-user-label">ID</span>' +
-                '<span class="ts-user-value">' + user.id + '</span></div>';
+        fields.push(['ID', escapeHtml(user.id)]);
     }
     if (user.phone) {
-        html += '<div class="ts-user-row"><span class="ts-user-label">Telefon</span>' +
-                '<span class="ts-user-value">+' + user.phone + '</span></div>';
+        fields.push(['Telefon', '+' + escapeHtml(user.phone)]);
     }
-    document.getElementById(containerId).innerHTML = html;
+    fields.forEach(function(f) {
+        var row = document.createElement('div');
+        row.className = 'ts-user-row';
+        var label = document.createElement('span');
+        label.className = 'ts-user-label';
+        label.textContent = f[0];
+        var value = document.createElement('span');
+        value.className = 'ts-user-value';
+        value.textContent = f[1];
+        row.appendChild(label);
+        row.appendChild(value);
+        container.appendChild(row);
+    });
 }
 
 function setLoading(btnId, loading) {
