@@ -239,35 +239,31 @@ def get_entity_photo(
             logger.exception("Rasm yuklashda kutilmagan xatolik (%s)", entity_str)
         return _try_stale_cache(entity_str)
 
-    # 4. Save to cache (on TelegramEntity model)
+    # 4. Save to cache (only UPDATE existing entities — never create phantom records)
     if photo_bytes:
         _ensure_photo_dir()
         abs_path = _photo_abs_path(entity_str)
         abs_path.write_bytes(photo_bytes)
 
-        # Update or create TelegramEntity with photo cache + photo_url
         rel_path = _photo_rel_path(entity_str)
         full_url = _photo_full_url(entity_str)
-        TelegramEntity.objects.update_or_create(
-            telegram_id=entity_int,
-            defaults={
-                "photo_file": rel_path,
-                "photo_url": full_url,
-                "photo_fetched_at": timezone.now(),
-                "has_photo": True,
-            },
+        updated = TelegramEntity.objects.filter(telegram_id=entity_int).update(
+            photo_file=rel_path,
+            photo_url=full_url,
+            photo_fetched_at=timezone.now(),
+            has_photo=True,
         )
-        logger.info("Photo saved for entity %s → %s", entity_str, full_url)
+        if updated:
+            logger.info("Photo saved for entity %s → %s", entity_str, full_url)
+        else:
+            logger.debug("Photo downloaded for %s but no TelegramEntity exists — skipped DB update", entity_str)
         return photo_bytes, "image/jpeg"
 
-    # No photo — negative cache (clear photo_url if no photo)
-    TelegramEntity.objects.update_or_create(
-        telegram_id=entity_int,
-        defaults={
-            "has_photo": False,
-            "photo_url": "",
-            "photo_fetched_at": timezone.now(),
-        },
+    # No photo — negative cache (only update existing entities)
+    TelegramEntity.objects.filter(telegram_id=entity_int).update(
+        has_photo=False,
+        photo_url="",
+        photo_fetched_at=timezone.now(),
     )
     return None, None
 
