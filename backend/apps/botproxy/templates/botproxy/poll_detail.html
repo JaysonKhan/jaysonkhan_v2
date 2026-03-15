@@ -46,6 +46,23 @@
     </div>
 </div>
 
+{% if poll.status == "open" %}
+<!-- Publish to Channel -->
+<div class="rb-card" style="border-left: 3px solid var(--rb-primary);">
+    <div class="rb-card-header">
+        <h2><span class="material-symbols-outlined" style="vertical-align:middle; margin-right:0.25rem;">send</span> Kanalga joylash</h2>
+    </div>
+    <form method="post" action="{% url 'bot_poll_publish' svc=svc poll_id=poll.id %}" style="display:flex; gap:0.75rem; align-items:center; padding:1rem 1.25rem;">
+        {% csrf_token %}
+        <input type="text" name="channel" placeholder="@kanal_username" required
+               class="rb-input" style="flex:1; max-width:320px;">
+        <button type="submit" class="rb-btn rb-btn-primary rb-btn-sm" onclick="return confirm('Pollni ushbu kanalga joylashni tasdiqlaysizmi?');">
+            <span class="material-symbols-outlined">send</span> Joylash
+        </button>
+    </form>
+</div>
+{% endif %}
+
 <!-- Stats -->
 <div class="rb-stats">
     <div class="rb-stat accent-blue">

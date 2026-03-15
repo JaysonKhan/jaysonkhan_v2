@@ -12,11 +12,18 @@
     <div class="rb-card-header">
         <h2>Admin qo'shish</h2>
     </div>
-    <form method="post" action="{% url 'bot_admin_add' svc=svc %}" style="display:flex; gap:0.75rem; align-items:flex-end;">
+    <form method="post" action="{% url 'bot_admin_add' svc=svc %}" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap;">
         {% csrf_token %}
-        <div class="rb-form-group" style="margin:0; flex:1; max-width:400px;">
+        <div class="rb-form-group" style="margin:0; flex:1; min-width:200px; max-width:300px;">
             <label for="user_id">Telegram User ID</label>
             <input type="number" id="user_id" name="user_id" required placeholder="123456789">
+        </div>
+        <div class="rb-form-group" style="margin:0; min-width:160px;">
+            <label for="role">Daraja</label>
+            <select id="role" name="role" class="rb-input">
+                <option value="admin" selected>🛡 Admin</option>
+                <option value="super_admin">👑 Bosh Admin</option>
+            </select>
         </div>
         <button type="submit" class="rb-btn rb-btn-primary" style="height:40px;">
             <span class="material-symbols-outlined">person_add</span> Qo'shish
@@ -27,28 +34,40 @@
 <!-- Admin List -->
 <div class="rb-card">
     <div class="rb-card-header">
-        <h2>Joriy adminlar <span class="rb-badge rb-badge-info">{{ admin_ids|length }}</span></h2>
+        <h2>Joriy adminlar <span class="rb-badge rb-badge-info">{{ admins|length }}</span></h2>
     </div>
-    {% if admin_ids %}
+    {% if admins %}
     <div class="rb-table-wrap">
         <table class="rb-table">
             <thead>
                 <tr>
                     <th>Telegram User ID</th>
+                    <th>Daraja</th>
                     <th style="text-align:right;">Amallar</th>
                 </tr>
             </thead>
             <tbody>
-                {% for uid in admin_ids %}
+                {% for admin in admins %}
                 <tr>
-                    <td><a href="{% url 'osint_profile' user_id=uid %}" class="rb-code" title="OSINT profil">{{ uid }}</a></td>
+                    <td><a href="{% url 'osint_profile' user_id=admin.user_id %}" class="rb-code" title="OSINT profil">{{ admin.user_id }}</a></td>
+                    <td>
+                        {% if admin.role == "super_admin" %}
+                            <span class="rb-badge" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff;">👑 Bosh Admin</span>
+                        {% else %}
+                            <span class="rb-badge rb-badge-info">🛡 Admin</span>
+                        {% endif %}
+                    </td>
                     <td style="text-align:right;">
-                        <form method="post" action="{% url 'bot_admin_remove' svc=svc user_id=uid %}" style="display:inline;">
+                        {% if admin.role != "super_admin" %}
+                        <form method="post" action="{% url 'bot_admin_remove' svc=svc user_id=admin.user_id %}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm" onclick="return confirm('Bu adminni o\'chirmoqchimisiz?');">
                                 <span class="material-symbols-outlined">delete</span> O'chirish
                             </button>
                         </form>
+                        {% else %}
+                        <span style="color: var(--rb-muted); font-size: 0.85rem;">O'chirib bo'lmaydi</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

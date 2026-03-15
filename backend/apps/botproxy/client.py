@@ -96,6 +96,9 @@ class BotAPIClient:
     def delete_poll(self, poll_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/polls/{poll_id}").json()
 
+    def publish_poll(self, poll_id: int, channel: str) -> dict:
+        return self._request("POST", f"/api/v1/polls/{poll_id}/publish", json={"channel": channel}).json()
+
     def get_results(self, poll_id: int) -> dict:
         return self._request("GET", f"/api/v1/polls/{poll_id}/results").json()
 
@@ -133,8 +136,13 @@ class BotAPIClient:
     def list_admins(self) -> list[int]:
         return self._request("GET", "/api/v1/admins").json()["admin_ids"]
 
-    def add_admin(self, user_id: int, added_by: int = 0) -> dict:
-        return self._request("POST", "/api/v1/admins", json={"user_id": user_id, "added_by": added_by}).json()
+    def list_admins_full(self) -> list[dict]:
+        """Return admin list with role info: [{user_id, role, added_by, added_at}]."""
+        data = self._request("GET", "/api/v1/admins").json()
+        return data.get("admins", [])
+
+    def add_admin(self, user_id: int, added_by: int = 0, role: str = "admin") -> dict:
+        return self._request("POST", "/api/v1/admins", json={"user_id": user_id, "added_by": added_by, "role": role}).json()
 
     def remove_admin(self, user_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/admins/{user_id}").json()

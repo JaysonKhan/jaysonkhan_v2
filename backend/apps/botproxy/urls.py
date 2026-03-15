@@ -18,6 +18,7 @@ urlpatterns = [
     path("<str:svc>/polls/<int:poll_id>/", views.poll_detail, name="bot_poll_detail"),
     path("<str:svc>/polls/<int:poll_id>/close/", views.poll_close, name="bot_poll_close"),
     path("<str:svc>/polls/<int:poll_id>/delete/", views.poll_delete, name="bot_poll_delete"),
+    path("<str:svc>/polls/<int:poll_id>/publish/", views.poll_publish, name="bot_poll_publish"),
     path("<str:svc>/polls/<int:poll_id>/export/csv/", views.export_csv, name="bot_export_csv"),
     path("<str:svc>/polls/<int:poll_id>/export/pdf/", views.export_pdf, name="bot_export_pdf"),
     path("<str:svc>/polls/<int:poll_id>/export/json/", views.export_json_view, name="bot_export_json"),

@@ -259,6 +259,27 @@ def poll_delete(request, poll_id: int, svc="rektor"):
     return HttpResponseRedirect(_rev("bot_poll_list", svc))
 
 
+# ─── Publish ─────────────────────────────────────────────────────────────────────
+
+@staff_member_required
+def poll_publish(request, poll_id: int, svc="rektor"):
+    if request.method == "POST":
+        channel = request.POST.get("channel", "").strip()
+        if not channel:
+            messages.error(request, "Kanal kiritilmagan")
+            return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+        if not channel.startswith("@") and not channel.lstrip("-").isdigit():
+            messages.error(request, "Kanal formati noto'g'ri. @username yoki ID kiriting.")
+            return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+        client = _client(svc)
+        try:
+            result = client.publish_poll(poll_id, channel)
+            messages.success(request, f"Poll {channel} kanaliga muvaffaqiyatli joylandi!")
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_poll_detail", svc, poll_id=poll_id))
+
+
 # ─── Export ──────────────────────────────────────────────────────────────────────
 
 @staff_member_required
@@ -319,24 +340,28 @@ def poll_chart(request, poll_id: int, chart_type: str, svc="rektor"):
 @staff_member_required
 def admin_list(request, svc="rektor"):
     client = _client(svc)
-    admin_ids = []
+    admins = []
     try:
-        admin_ids = client.list_admins()
+        admins = client.list_admins_full()
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    return TemplateResponse(request, "botproxy/admin_list.html", _ctx(request, svc, {"admin_ids": admin_ids}))
+    return TemplateResponse(request, "botproxy/admin_list.html", _ctx(request, svc, {"admins": admins}))
 
 
 @staff_member_required
 def admin_add(request, svc="rektor"):
     if request.method == "POST":
         user_id = request.POST.get("user_id", "").strip()
+        role = request.POST.get("role", "admin").strip()
+        if role not in ("admin", "super_admin"):
+            role = "admin"
         if user_id.isdigit():
             client = _client(svc)
             try:
-                client.add_admin(int(user_id), added_by=request.user.pk)
-                messages.success(request, f"Admin qo'shildi: {user_id}")
+                client.add_admin(int(user_id), added_by=request.user.pk, role=role)
+                role_label = "Bosh Admin" if role == "super_admin" else "Admin"
+                messages.success(request, f"{role_label} qo'shildi: {user_id}")
             except BotAPIError as e:
                 _handle_api_error(request, e)
         else:
