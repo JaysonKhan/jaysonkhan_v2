@@ -64,20 +64,22 @@
 {% endif %}
 
 <!-- Channel Posts (joylashtirilgan postlar) -->
-{% if posts %}
 <div class="rb-card" style="border-left: 3px solid var(--rb-success, #22c55e);">
     <div class="rb-card-header">
         <h2><span class="material-symbols-outlined" style="vertical-align:middle; margin-right:0.25rem;">campaign</span> Joylashtirilgan postlar</h2>
         <div style="display:flex; align-items:center; gap:0.5rem;">
-            <span class="rb-badge rb-badge-open">{{ posts|length }}</span>
+            <span class="rb-badge {% if posts %}rb-badge-open{% else %}rb-badge-closed{% endif %}">{{ posts|length }}</span>
+            {% if posts %}
             <form method="post" action="{% url 'bot_poll_posts_refresh' svc=svc poll_id=poll.id %}" style="margin:0;">
                 {% csrf_token %}
                 <button type="submit" class="rb-btn rb-btn-sm rb-btn-outline" title="Barcha postlarni hozir yangilash">
                     <span class="material-symbols-outlined">refresh</span> Yangilash
                 </button>
             </form>
+            {% endif %}
         </div>
     </div>
+    {% if posts %}
     <div class="rb-table-wrap">
         <table class="rb-table">
             <thead>
@@ -85,6 +87,7 @@
                     <th>Kanal</th>
                     <th>Joylashtirilgan</th>
                     <th>Oxirgi yangilanish</th>
+                    <th>Holat</th>
                 </tr>
             </thead>
             <tbody>
@@ -113,16 +116,35 @@
                         <span class="rb-muted">—</span>
                         {% endif %}
                     </td>
+                    <td>
+                        {% if poll.status == "open" %}
+                        <span class="rb-badge rb-badge-open" style="font-size:0.7rem;">Faol</span>
+                        {% else %}
+                        <span class="rb-badge rb-badge-closed" style="font-size:0.7rem;">Yakunlangan</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     <p class="rb-muted" style="font-size:0.75rem; padding:0.5rem 1.25rem; margin:0;">
+        {% if poll.status == "open" %}
         Postlar avtomatik har 60 soniyada yangilanadi. Qo'lda yangilash uchun "Yangilash" tugmasini bosing.
+        {% else %}
+        So'rovnoma yakunlangan. Kanal postlarida g'oliblar e'lon qilingan.
+        {% endif %}
     </p>
+    {% else %}
+    <div style="padding:1.25rem; text-align:center;">
+        <span class="material-symbols-outlined rb-muted" style="font-size:2.5rem;">speaker_notes_off</span>
+        <p class="rb-muted" style="margin:0.5rem 0 0; font-size:0.875rem;">
+            Hozircha hech qaysi kanalga joylashtirilmagan.
+            {% if poll.status == "open" %}Yuqoridagi "Kanalga joylash" bo'limidan foydalaning.{% endif %}
+        </p>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 
 <!-- Stats -->
 <div class="rb-stats">
