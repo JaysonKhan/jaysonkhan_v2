@@ -51,7 +51,11 @@ def telegram_session_status(request):
     try:
         status = check_session_status()
     except Exception as e:
-        return JsonResponse({"configured": False, "authorized": False, "error": str(e)})
+        # configured=True because API keys exist, but connection failed
+        return JsonResponse({
+            "configured": True, "authorized": False,
+            "user": None, "error": str(e),
+        })
 
     return JsonResponse(status)
 

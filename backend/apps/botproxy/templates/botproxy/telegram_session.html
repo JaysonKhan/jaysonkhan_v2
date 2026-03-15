@@ -311,10 +311,14 @@ function checkStatus() {
                 goToStep('step-connected');
             } else {
                 goToStep('step-phone');
+                if (d.error) {
+                    showError('ts-phone-error', 'Xatolik: ' + d.error);
+                }
             }
         })
-        .catch(function() {
+        .catch(function(err) {
             goToStep('step-phone');
+            showError('ts-phone-error', 'Server bilan bog\'lanishda xatolik');
         });
 }
 

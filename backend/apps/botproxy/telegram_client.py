@@ -195,6 +195,9 @@ def _get_api_config() -> tuple[int, str, str]:
 def check_session_status() -> dict:
     """Check current Telegram session status.
 
+    First tries the existing singleton client (_client), then falls back to
+    creating a temporary connection. This avoids SQLite session file conflicts.
+
     Returns dict with:
         configured: bool — API keys sozlanganmi
         authorized: bool — session avtorizatsiya qilinganmi
@@ -212,6 +215,28 @@ def check_session_status() -> dict:
     async def _check():
         from telethon import TelegramClient
 
+        # 1. Try existing singleton client first
+        if _client is not None:
+            try:
+                if not _client.is_connected():
+                    await _client.connect()
+                if await _client.is_user_authorized():
+                    me = await _client.get_me()
+                    return {
+                        "configured": True,
+                        "authorized": True,
+                        "user": {
+                            "id": me.id,
+                            "first_name": me.first_name or "",
+                            "last_name": me.last_name or "",
+                            "username": me.username or "",
+                            "phone": me.phone or "",
+                        },
+                    }
+            except Exception as e:
+                logger.warning("Singleton client tekshirishda xatolik: %s", e)
+
+        # 2. Try with a fresh temporary client
         client = TelegramClient(session_path, api_id, api_hash)
         try:
             await client.connect()
@@ -233,7 +258,10 @@ def check_session_status() -> dict:
             logger.exception("Session status tekshirishda xatolik: %s", e)
             return {"configured": True, "authorized": False, "user": None, "error": str(e)}
         finally:
-            await client.disconnect()
+            try:
+                await client.disconnect()
+            except Exception:
+                pass
 
     future = asyncio.run_coroutine_threadsafe(_check(), loop)
     return future.result(timeout=30)
