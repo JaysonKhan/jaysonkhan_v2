@@ -1,4 +1,5 @@
 {% extends "botproxy/base.html" %}
+{% load telegram_tags %}
 {% block page_title %}Foydalanuvchilar — {{ service_title }}{% endblock %}
 
 {% block bot_content %}
@@ -92,12 +93,12 @@
         </div>
         <div>
             <h2 style="margin:0; max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
-            <span class="rb-badge rb-badge-info">ID: {{ user_detail.user_id }}</span>
+            <a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-badge rb-badge-info" title="OSINT profil" style="text-decoration:none;">🔍 ID: {{ user_detail.user_id }}</a>
         </div>
     </div>
     <div class="rb-table-wrap">
         <table class="rb-table">
-            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
+            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-code" title="OSINT profil">{{ user_detail.user_id }}</a></td></tr>
             <tr><td class="rb-muted"><strong>Username</strong></td><td>{{ user_detail.username|default:"-" }}</td></tr>
             <tr><td class="rb-muted"><strong>Telefon</strong></td><td>{{ user_detail.phone_number|default:"-" }}</td></tr>
             <tr><td class="rb-muted"><strong>Ro'yxatdan o'tgan</strong></td><td>{{ user_detail.registered_at }}</td></tr>
@@ -231,7 +232,7 @@
                         <div class="rb-user-row">
                             <div style="min-width:0;">
                                 <div class="rb-truncate" style="font-weight:500; max-width:100%;">{{ u.first_name }} {{ u.last_name|default:"" }}</div>
-                                <div class="rb-muted" style="font-size:0.75rem;">{{ u.user_id }}</div>
+                                <div class="rb-muted" style="font-size:0.75rem;"><a href="{% url 'osint_profile' user_id=u.user_id %}" title="OSINT profil" style="color:inherit;text-decoration:underline dotted;">{{ u.user_id }}</a></div>
                             </div>
                         </div>
                     </td>

@@ -22,11 +22,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from core.services import SiteSettingsService
 from interactions.models import (
-    TelegramProfile,
     NotificationPreference,
     UserBan,
     AdminLogMessage,
 )
+from telegram.models import TelegramEntity
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -101,8 +101,8 @@ class TelegramWebhookView(View):
 
     def _show_user_settings(self, telegram_id: int):
         try:
-            profile = TelegramProfile.objects.get(telegram_id=telegram_id)
-        except TelegramProfile.DoesNotExist:
+            profile = TelegramEntity.objects.get(telegram_id=telegram_id)
+        except TelegramEntity.DoesNotExist:
             self.api.send_message(telegram_id, (
                 'Siz hali saytga kirmagansiz. Avval jaysonkhan.com da '
                 'Telegram orqali login qiling.'
@@ -262,9 +262,9 @@ class TelegramWebhookView(View):
         msg = cq.get('message')
 
         try:
-            profile = TelegramProfile.objects.get(telegram_id=tg_id)
+            profile = TelegramEntity.objects.get(telegram_id=tg_id)
             pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
-        except TelegramProfile.DoesNotExist:
+        except TelegramEntity.DoesNotExist:
             self.api.answer_callback_query(cb_id, 'Profil topilmadi')
             return
 

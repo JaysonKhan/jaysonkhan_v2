@@ -2,35 +2,7 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-
-class TelegramProfile(models.Model):
-    """
-    Stores Telegram user data received from Login Widget.
-    Not linked to Django's User model — auth is session-based.
-    """
-    telegram_id  = models.BigIntegerField(unique=True)
-    first_name   = models.CharField(max_length=150)
-    last_name    = models.CharField(max_length=150, blank=True)
-    username     = models.CharField(max_length=150, blank=True)
-    photo_url    = models.URLField(blank=True)
-    auth_date    = models.IntegerField()          # unix timestamp from Telegram
-    created_at   = models.DateTimeField(auto_now_add=True)
-    updated_at   = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name        = 'Telegram Profile'
-        verbose_name_plural = 'Telegram Profiles'
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}".strip()
-
-    @property
-    def display_name(self):
-        return self.full_name or self.username or f"User #{self.telegram_id}"
-
-    def __str__(self):
-        return self.display_name
+from telegram.models import TelegramEntity
 
 
 class Comment(models.Model):
@@ -40,7 +12,7 @@ class Comment(models.Model):
     Admin can mark them as reviewed via the 'is_reviewed' field.
     """
     author       = models.ForeignKey(
-        TelegramProfile, on_delete=models.CASCADE, related_name='comments'
+        TelegramEntity, on_delete=models.CASCADE, related_name='comments'
     )
     # Generic relation — works with Blog Post and Project
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -51,7 +23,7 @@ class Comment(models.Model):
     # Telegram-like features
     parent       = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     image        = models.ImageField(upload_to='comments/images/', null=True, blank=True)
-    
+
     is_approved  = models.BooleanField(
         default=True,
         help_text='If False, the comment is hidden from users.'
@@ -79,7 +51,7 @@ class CommentReaction(models.Model):
     Store specific emoji reactions for individual comments.
     """
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='reactions')
-    author  = models.ForeignKey(TelegramProfile, on_delete=models.CASCADE)
+    author  = models.ForeignKey(TelegramEntity, on_delete=models.CASCADE)
     emoji   = models.CharField(max_length=20) # e.g. 👍, ❤, 🔥, 😂, 👎, 😱
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -97,7 +69,7 @@ class Like(models.Model):
     Generic like (heart) — one per Telegram user per object.
     """
     author       = models.ForeignKey(
-        TelegramProfile, on_delete=models.CASCADE, related_name='likes'
+        TelegramEntity, on_delete=models.CASCADE, related_name='likes'
     )
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id    = models.PositiveIntegerField()
@@ -125,7 +97,7 @@ class NotificationPreference(models.Model):
     Defaults to ON for all. Created lazily on first preference check.
     """
     profile = models.OneToOneField(
-        TelegramProfile, on_delete=models.CASCADE,
+        TelegramEntity, on_delete=models.CASCADE,
         related_name='notification_pref',
     )
     replies_enabled = models.BooleanField(
@@ -158,7 +130,7 @@ class UserBan(models.Model):
         (MUTE, 'Temporary Mute'),
     ]
     profile = models.ForeignKey(
-        TelegramProfile, on_delete=models.CASCADE,
+        TelegramEntity, on_delete=models.CASCADE,
         related_name='bans',
     )
     ban_type = models.CharField(max_length=10, choices=BAN_TYPE_CHOICES)
@@ -204,7 +176,7 @@ class AdminLogMessage(models.Model):
         help_text='Telegram message_id in the admin group',
     )
     profile = models.ForeignKey(
-        TelegramProfile, on_delete=models.CASCADE,
+        TelegramEntity, on_delete=models.CASCADE,
         null=True, blank=True,
         related_name='admin_log_messages',
     )

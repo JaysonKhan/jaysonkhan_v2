@@ -1,31 +1,9 @@
 from django.contrib import admin
-from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from .models import (
-    TelegramProfile, Comment, Like, CommentReaction,
+    Comment, Like, CommentReaction,
     NotificationPreference, UserBan, AdminLogMessage,
 )
-
-
-@admin.register(TelegramProfile)
-class TelegramProfileAdmin(ModelAdmin):
-    list_display  = ('user_card', 'username', 'created_at')
-    search_fields = ('first_name', 'last_name', 'username', 'telegram_id')
-    readonly_fields = ('telegram_id', 'first_name', 'last_name', 'username',
-                       'photo_url', 'auth_date', 'created_at', 'updated_at')
-
-    @admin.display(description='User')
-    def user_card(self, obj):
-        name = obj.display_name
-        if obj.photo_url:
-            return format_html(
-                '<div style="display: flex; align-items: center; gap: 10px;">'
-                '<img src="{}" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);">'
-                '<span style="font-weight: 600;">{}</span>'
-                '</div>',
-                obj.photo_url, name
-            )
-        return name
 
 
 @admin.register(Comment)

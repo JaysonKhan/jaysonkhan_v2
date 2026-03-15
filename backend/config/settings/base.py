@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'contact',
     'core',
     'interactions',
+    'telegram',
     'botproxy',
 ]
 
@@ -318,6 +319,11 @@ UNFOLD = {
                         "icon": "settings",
                         "link": f"{_A}core/sitesettings/",
                     },
+                    {
+                        "title": "Telegram Session",
+                        "icon": "key",
+                        "link": f"{_A}bot/telegram/session/",
+                    },
                 ],
             },
             {
@@ -376,9 +382,9 @@ UNFOLD = {
                         "link": f"{_A}interactions/like/",
                     },
                     {
-                        "title": "Telegram Profiles",
+                        "title": "Telegram Entities",
                         "icon": "group",
-                        "link": f"{_A}interactions/telegramprofile/",
+                        "link": f"{_A}telegram/telegramentity/",
                     },
                     {
                         "title": "Bans",
@@ -421,11 +427,6 @@ UNFOLD = {
                         "title": "OSINT",
                         "icon": "person_search",
                         "link": f"{_A}bot/osint/search/",
-                    },
-                    {
-                        "title": "Telegram Session",
-                        "icon": "key",
-                        "link": f"{_A}bot/telegram/session/",
                     },
                 ],
             },

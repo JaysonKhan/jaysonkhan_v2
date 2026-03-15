@@ -3,12 +3,13 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
 from portfolio.models import Project
-from interactions.models import TelegramProfile, Comment, CommentReaction
+from interactions.models import Comment, CommentReaction
+from telegram.models import TelegramEntity
 
 class InteractionsTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.profile = TelegramProfile.objects.create(
+        self.profile = TelegramEntity.objects.create(
             telegram_id=12345,
             first_name="Test",
             username="testuser",

@@ -195,7 +195,7 @@ def osint_photo_proxy(request, entity_id: str):
     Query: ?refresh=1 to force re-download from Telegram.
     Returns JPEG with browser caching (1 hour) or 404/503.
     """
-    from botproxy.photo_service import get_entity_photo
+    from telegram.photo_service import get_entity_photo
 
     force = request.GET.get("refresh") == "1"
 

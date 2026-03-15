@@ -19,7 +19,8 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import redirect
-from .models import TelegramProfile, Comment, Like
+from telegram.models import TelegramEntity, EntitySource
+from .models import Comment, Like
 from .notifications.ban_check import check_ban
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
 
@@ -71,13 +72,13 @@ SESSION_KEY = 'tg_profile_id'
 
 
 def get_tg_profile(request):
-    """Return the TelegramProfile for the current session, or None."""
+    """Return the TelegramEntity for the current session, or None."""
     profile_id = request.session.get(SESSION_KEY)
     if not profile_id:
         return None
     try:
-        return TelegramProfile.objects.get(pk=profile_id)
-    except TelegramProfile.DoesNotExist:
+        return TelegramEntity.objects.get(pk=profile_id)
+    except TelegramEntity.DoesNotExist:
         del request.session[SESSION_KEY]
         return None
 
@@ -89,7 +90,7 @@ class TelegramAuthView(View):
     """
     GET /auth/telegram/?id=...&first_name=...&hash=...
     Called by the Telegram Login Widget after the user authorizes.
-    Verifies data, upserts TelegramProfile, stores session, then redirects.
+    Verifies data, upserts TelegramEntity, stores session, then redirects.
     """
 
     def get(self, request):
@@ -110,17 +111,9 @@ class TelegramAuthView(View):
 
         logger.info('[TelegramAuth] verification OK for id=%s', flat.get('id'))
 
-        profile, _ = TelegramProfile.objects.update_or_create(
-            telegram_id=int(flat['id']),
-            defaults={
-                'first_name': flat.get('first_name', ''),
-                'last_name':  flat.get('last_name', ''),
-                'username':   flat.get('username', ''),
-                'photo_url':  flat.get('photo_url', ''),
-                'auth_date':  int(flat.get('auth_date', 0)),
-            }
-        )
-        request.session[SESSION_KEY] = profile.pk
+        entity = TelegramEntity.get_or_create_from_telegram(flat)
+        EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
+        request.session[SESSION_KEY] = entity.pk
         request.session.modified = True
         return redirect(next_url)
 
@@ -131,7 +124,7 @@ class TelegramLoginView(View):
     POST /auth/telegram-login/
     Body: { "telegram_payload": { "id": "123", "first_name": "Ali", "hash": "...", "auth_date": "..." } }
     Called by the Telegram Login Widget via AJAX. Verifies the payload,
-    upserts TelegramProfile, stores session, returns JSON { status: "ok" }.
+    upserts TelegramEntity, stores session, returns JSON { status: "ok" }.
     """
 
     def post(self, request):
@@ -160,29 +153,21 @@ class TelegramLoginView(View):
         logger.info('[TelegramLogin] verification OK for id=%s', flat.get('id'))
 
         try:
-            profile, created = TelegramProfile.objects.update_or_create(
-                telegram_id=int(flat['id']),
-                defaults={
-                    'first_name': flat.get('first_name', ''),
-                    'last_name':  flat.get('last_name', ''),
-                    'username':   flat.get('username', ''),
-                    'photo_url':  flat.get('photo_url', ''),
-                    'auth_date':  int(flat.get('auth_date', 0)),
-                }
-            )
+            entity = TelegramEntity.get_or_create_from_telegram(flat)
+            EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
         except Exception as exc:
             logger.error('[TelegramLogin] DB error: %s', exc)
             return JsonResponse({'error': 'Server error'}, status=500)
 
-        request.session[SESSION_KEY] = profile.pk
+        request.session[SESSION_KEY] = entity.pk
         request.session.modified = True
-        logger.info('[TelegramLogin] session set for profile pk=%s (created=%s)', profile.pk, created)
+        logger.info('[TelegramLogin] session set for entity pk=%s', entity.pk)
 
         return JsonResponse({
             'status': 'ok',
             'user': {
-                'id': profile.telegram_id,
-                'display_name': profile.display_name,
+                'id': entity.telegram_id,
+                'display_name': entity.display_name,
             }
         })
 
@@ -222,29 +207,21 @@ class TelegramWebAppLoginView(View):
         logger.info('[WebAppLogin] verification OK for id=%s', user.get('id'))
 
         try:
-            profile, created = TelegramProfile.objects.update_or_create(
-                telegram_id=int(user['id']),
-                defaults={
-                    'first_name': user.get('first_name', ''),
-                    'last_name':  user.get('last_name', ''),
-                    'username':   user.get('username', ''),
-                    'photo_url':  user.get('photo_url', ''),
-                    'auth_date':  int(user.get('auth_date', 0)),
-                }
-            )
+            entity = TelegramEntity.get_or_create_from_telegram(user)
+            EntitySource.objects.get_or_create(entity=entity, service=EntitySource.Service.SITE)
         except Exception as exc:
             logger.error('[WebAppLogin] DB error: %s', exc)
             return JsonResponse({'error': 'Server error'}, status=500)
 
-        request.session[SESSION_KEY] = profile.pk
+        request.session[SESSION_KEY] = entity.pk
         request.session.modified = True
-        logger.info('[WebAppLogin] session set for profile pk=%s (created=%s)', profile.pk, created)
+        logger.info('[WebAppLogin] session set for entity pk=%s', entity.pk)
 
         return JsonResponse({
             'status': 'ok',
             'user': {
-                'id': profile.telegram_id,
-                'display_name': profile.display_name,
+                'id': entity.telegram_id,
+                'display_name': entity.display_name,
             }
         })
 

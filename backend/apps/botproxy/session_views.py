@@ -46,7 +46,7 @@ def telegram_session_page(request):
 @staff_member_required
 def telegram_session_status(request):
     """AJAX: check current session status."""
-    from botproxy.telegram_client import check_session_status
+    from telegram.telegram_client import check_session_status
 
     try:
         status = check_session_status()
@@ -64,7 +64,7 @@ def telegram_session_status(request):
 @require_POST
 def telegram_session_send_code(request):
     """AJAX POST: send OTP code to phone number."""
-    from botproxy.telegram_client import setup_send_code
+    from telegram.telegram_client import setup_send_code
 
     try:
         body = json.loads(request.body)
@@ -83,7 +83,7 @@ def telegram_session_send_code(request):
 @require_POST
 def telegram_session_verify(request):
     """AJAX POST: verify OTP code."""
-    from botproxy.telegram_client import setup_verify_code
+    from telegram.telegram_client import setup_verify_code
 
     try:
         body = json.loads(request.body)
@@ -104,7 +104,7 @@ def telegram_session_verify(request):
 @require_POST
 def telegram_session_2fa(request):
     """AJAX POST: verify 2FA password."""
-    from botproxy.telegram_client import setup_verify_2fa
+    from telegram.telegram_client import setup_verify_2fa
 
     try:
         body = json.loads(request.body)
@@ -123,7 +123,7 @@ def telegram_session_2fa(request):
 @require_POST
 def telegram_session_disconnect(request):
     """AJAX POST: disconnect and invalidate session."""
-    from botproxy.telegram_client import disconnect_session
+    from telegram.telegram_client import disconnect_session
 
     result = disconnect_session()
     return JsonResponse(result)

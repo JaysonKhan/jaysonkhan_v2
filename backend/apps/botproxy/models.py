@@ -1,12 +1,11 @@
 """Cache models for FunStat OSINT data.
 
-First models.py for botproxy — previously modelless.
-Run: python manage.py makemigrations botproxy && python manage.py migrate
+TelegramSession and OsintPhotoCache have been moved to the ``telegram`` app.
+See ``telegram.models.TelegramEntity`` and ``telegram.models.TelegramSession``.
 """
 from __future__ import annotations
 
 from datetime import timedelta
-from pathlib import Path
 
 from django.conf import settings
 from django.db import models
@@ -140,135 +139,6 @@ class OsintSearchLog(models.Model):
         return f"{self.query_type}:{self.query} at {self.searched_at}"
 
 
-class TelegramSession(models.Model):
-    """Stores Telethon StringSession data in PostgreSQL.
 
-    SQLite file-based session Gunicorn multi-worker muhitida ishlamaydi
-    (database is locked / readonly database xatolari). Buning o'rniga
-    session string sifatida PostgreSQL da saqlanadi.
-
-    Singleton — faqat bitta yozuv (pk=1).
-    """
-
-    session_string = models.TextField(
-        help_text="Telethon StringSession.save() natijasi",
-    )
-    account_id = models.BigIntegerField(
-        null=True, blank=True,
-        help_text="Telegram account ID (me.id)",
-    )
-    account_name = models.CharField(
-        max_length=255, blank=True, default="",
-        help_text="Account display name (first_name + username)",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Telegram Session"
-        verbose_name_plural = "Telegram Sessions"
-
-    def __str__(self):
-        if self.account_name:
-            return f"Session: {self.account_name} (ID: {self.account_id})"
-        return f"Session #{self.pk}"
-
-    @classmethod
-    def get_session_string(cls) -> str | None:
-        """Get stored session string, or None if not set."""
-        try:
-            obj = cls.objects.first()
-            return obj.session_string if obj else None
-        except Exception:
-            return None
-
-    @classmethod
-    def save_session(cls, session_string: str, account_id: int | None = None,
-                     account_name: str = ""):
-        """Save or update session string (singleton — always updates first record)."""
-        obj = cls.objects.first()
-        if obj:
-            obj.session_string = session_string
-            obj.account_id = account_id
-            obj.account_name = account_name
-            obj.save()
-        else:
-            cls.objects.create(
-                session_string=session_string,
-                account_id=account_id,
-                account_name=account_name,
-            )
-
-    @classmethod
-    def clear_session(cls):
-        """Delete all session records."""
-        cls.objects.all().delete()
-
-
-class OsintPhotoCache(models.Model):
-    """Filesystem-backed cache metadata for Telegram profile photos.
-
-    Photos are stored at MEDIA_ROOT/osint/photos/{entity_id}.jpg.
-    This model tracks cache validity and negative results (entity has no photo).
-    """
-
-    entity_id = models.CharField(
-        max_length=64, unique=True, db_index=True,
-        help_text="Telegram entity ID (user, group, channel, bot)",
-    )
-    has_photo = models.BooleanField(
-        default=False,
-        help_text="Whether this entity has a profile photo",
-    )
-    photo_path = models.CharField(
-        max_length=255, blank=True, default="",
-        help_text="Relative path under MEDIA_ROOT",
-    )
-    fetched_at = models.DateTimeField(default=timezone.now)
-    file_size = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        verbose_name = "OSINT Photo Cache"
-        verbose_name_plural = "OSINT Photo Cache"
-
-    def __str__(self):
-        status = "has_photo" if self.has_photo else "no_photo"
-        return f"photo:{self.entity_id} ({status})"
-
-    @property
-    def is_stale(self) -> bool:
-        ttl = getattr(settings, "OSINT_PHOTO_CACHE_DAYS", 7)
-        return timezone.now() - self.fetched_at > timedelta(days=ttl)
-
-    @property
-    def full_path(self) -> str:
-        """Absolute filesystem path to the cached photo."""
-        if not self.photo_path:
-            return ""
-        return str(Path(settings.MEDIA_ROOT) / self.photo_path)
-
-    @classmethod
-    def get_cached(cls, entity_id: str | int):
-        """Return cached entry if it exists and is not stale."""
-        try:
-            entry = cls.objects.get(entity_id=str(entity_id))
-            if entry.is_stale:
-                return None
-            return entry
-        except cls.DoesNotExist:
-            return None
-
-    @classmethod
-    def set_cache(cls, entity_id: str | int, has_photo: bool,
-                  photo_path: str = "", file_size: int = 0):
-        """Create or update photo cache entry."""
-        obj, _ = cls.objects.update_or_create(
-            entity_id=str(entity_id),
-            defaults={
-                "has_photo": has_photo,
-                "photo_path": photo_path,
-                "file_size": file_size,
-                "fetched_at": timezone.now(),
-            },
-        )
-        return obj
+# TelegramSession → telegram.models.TelegramSession
+# OsintPhotoCache → telegram.models.TelegramEntity (photo fields)

@@ -12,7 +12,8 @@ from typing import Optional
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from interactions.models import Comment, CommentReaction, Like, TelegramProfile
+from interactions.models import Comment, CommentReaction, Like
+from telegram.models import TelegramEntity
 from .service import NotificationService, fire_and_forget
 
 logger = logging.getLogger('interactions.notifications')
@@ -79,7 +80,7 @@ def on_like_deleted(sender, instance, **kwargs):
 
 # ── New user signal ──────────────────────────────────────────────────────────
 
-@receiver(post_save, sender=TelegramProfile)
+@receiver(post_save, sender=TelegramEntity)
 def on_profile_created(sender, instance, created, **kwargs):
     if not created:
         return

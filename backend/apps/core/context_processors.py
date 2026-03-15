@@ -15,8 +15,8 @@ def site_settings(request):
     profile_id = request.session.get('tg_profile_id')
     if profile_id:
         try:
-            from interactions.models import TelegramProfile
-            tg_profile = TelegramProfile.objects.get(pk=profile_id)
+            from telegram.models import TelegramEntity
+            tg_profile = TelegramEntity.objects.get(pk=profile_id)
         except Exception:
             request.session.pop('tg_profile_id', None)
 
