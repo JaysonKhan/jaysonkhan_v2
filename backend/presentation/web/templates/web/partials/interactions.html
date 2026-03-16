@@ -810,7 +810,7 @@
                         ${authorLabel}
                     </div>
                     ${imgHtml}
-                    <div class="tg-bubble-text text-white/95">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${comment.created_at}</span></div>
+                    <div class="tg-bubble-text text-white/95">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${timeAgo(comment.created_at)}</span></div>
                 </div>
 
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">
@@ -1072,6 +1072,29 @@
         document.getElementById('active-sort').textContent = label;
         document.getElementById('sort-dropdown').classList.add('hidden');
         resetAndFetchComments();
+    }
+
+    // ── Relative Time ──
+    function timeAgo(isoString) {
+        const now = Date.now();
+        const then = new Date(isoString).getTime();
+        const diff = Math.max(0, now - then);
+        const sec = Math.floor(diff / 1000);
+        if (sec < 60)   return 'just now';
+        const min = Math.floor(sec / 60);
+        if (min < 60)   return `${min}m ago`;
+        const hr = Math.floor(min / 60);
+        if (hr < 24)    return `${hr}h ago`;
+        const day = Math.floor(hr / 24);
+        if (day === 1)   return 'yesterday';
+        if (day < 7)    return `${day}d ago`;
+        const wk = Math.floor(day / 7);
+        if (wk < 5)     return `${wk}w ago`;
+        const d = new Date(isoString);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const thisYear = new Date().getFullYear();
+        if (d.getFullYear() === thisYear) return `${months[d.getMonth()]} ${d.getDate()}`;
+        return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     }
 
     // ── Util ──

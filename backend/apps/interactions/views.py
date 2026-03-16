@@ -500,7 +500,7 @@ def serialize_comment(comment, tg_profile_id=None):
         },
         "text": comment.text,
         "image_url": comment.image.url if getattr(comment, 'image', None) and hasattr(comment.image, 'url') else None,
-        "created_at": timezone.localtime(comment.created_at).strftime('%H:%M'),
+        "created_at": comment.created_at.isoformat(),
         "is_reviewed": comment.is_reviewed,
         "is_own": tg_profile_id == comment.author.id,
         "reaction_counts": reaction_counts,
