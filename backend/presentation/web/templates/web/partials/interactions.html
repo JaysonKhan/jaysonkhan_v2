@@ -715,52 +715,66 @@
 
     async function fetchComments() {
         if (isFetching || !hasNext) return;
+        if (!panel) { console.error(‘[Comments] panel element not found’); return; }
         isFetching = true;
-        document.getElementById('loading-spinner').classList.remove('hidden');
+        document.getElementById(‘loading-spinner’).classList.remove(‘hidden’);
 
         try {
             const qs = new URLSearchParams({
                 app_label: panel.dataset.app,
                 model: panel.dataset.model,
                 object_id: panel.dataset.oid,
-                sort: document.getElementById('sort-selector').value,
+                sort: document.getElementById(‘sort-selector’).value,
                 page: currentPage
             });
             const req = await fetch(`/interactions/comments/?${qs.toString()}`);
+            if (!req.ok) {
+                console.error(‘[Comments] HTTP error:’, req.status, req.statusText);
+                return;
+            }
             const res = await req.json();
 
-            document.getElementById('comments-counter').textContent = res.total_count || 0;
+            document.getElementById(‘comments-counter’).textContent = res.total_count || 0;
             const comments = Array.isArray(res.comments) ? res.comments : [];
 
             if (currentPage === 1 && comments.length === 0) {
-                const canCompose = !!document.getElementById('submit-comment');
+                const canCompose = !!document.getElementById(‘submit-comment’);
                 chatContainer.innerHTML = canCompose
-                    ? '<div id="comments-empty">Hozircha komment yo‘q. Birinchi bo‘lib fikr qoldiring.</div>'
-                    : '';
+                    ? ‘<div id="comments-empty">Hozircha komment yo\u2018q. Birinchi bo\u2018lib fikr qoldiring.</div>’
+                    : ‘’;
                 hasNext = false;
                 return;
             }
 
-            const emptyState = document.getElementById('comments-empty');
+            const emptyState = document.getElementById(‘comments-empty’);
             if (emptyState) emptyState.remove();
 
             comments.forEach(c => chatContainer.appendChild(createCommentDOM(c)));
 
             hasNext = res.has_next;
-            chatContainer.querySelectorAll('.fetch-sentinel').forEach((el) => {
+            chatContainer.querySelectorAll(‘.fetch-sentinel’).forEach((el) => {
                 observer.unobserve(el);
                 el.remove();
             });
             if (hasNext) {
                 currentPage++;
-                const sentinel = document.createElement('div');
-                sentinel.className = 'fetch-sentinel';
+                const sentinel = document.createElement(‘div’);
+                sentinel.className = ‘fetch-sentinel’;
                 chatContainer.appendChild(sentinel);
                 observer.observe(sentinel);
             }
+        } catch (err) {
+            console.error(‘[Comments] fetchComments error:’, err);
+            if (currentPage === 1 && chatContainer) {
+                chatContainer.innerHTML =
+                    ‘<div class="text-center text-slate-500 py-8 text-sm">’ +
+                    ‘<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> ‘ +
+                    ‘Kommentlarni yuklashda xatolik. <button onclick="resetAndFetchComments()" ‘ +
+                    ‘class="text-indigo-400 hover:underline ml-1">Qayta urinish</button></div>’;
+            }
         } finally {
             isFetching = false;
-            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById(‘loading-spinner’).classList.add(‘hidden’);
         }
     }
 
