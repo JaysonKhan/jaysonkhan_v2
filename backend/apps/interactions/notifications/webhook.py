@@ -201,7 +201,7 @@ class TelegramWebhookView(View):
                 expires_at=expires,
                 is_active=True,
             )
-            until = expires.strftime('%Y-%m-%d %H:%M UTC')
+            until = timezone.localtime(expires).strftime('%Y-%m-%d %H:%M')
             self.api.send_message(
                 chat_id,
                 f'🔇 <b>{profile.display_name}</b> {MUTE_DAYS} kunga mute qilindi ({until} gacha).',

@@ -36,7 +36,7 @@ class BanCheckResult:
         if self.expires_at:
             return (
                 f'You are muted until '
-                f'{self.expires_at.strftime("%Y-%m-%d %H:%M UTC")}.'
+                f'{timezone.localtime(self.expires_at).strftime("%Y-%m-%d %H:%M")} (Tashkent).'
             )
         return 'You are currently banned from commenting.'
 
