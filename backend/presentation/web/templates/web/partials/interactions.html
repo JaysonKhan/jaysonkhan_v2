@@ -110,8 +110,8 @@
         transition: box-shadow 0.2s ease;
     }
 
-    /* Compact: qisqa xabar — timestamp inline, minimal joy */
-    .tg-bubble.is-compact { padding: 8px 14px 8px; }
+    /* Compact: qisqa xabar — timestamp bottom-right */
+    .tg-bubble.is-compact { padding: 10px 14px 22px; }
 
     /* Rasmli bubble: kenglik rasmga qarab */
     .tg-bubble.has-image  { padding: 6px 6px 18px; max-width: min(82vw, 420px); }
@@ -175,10 +175,7 @@
         user-select: none; line-height: 1; letter-spacing: 0.01em;
     }
     .message--own .tg-meta-inline { color: var(--time-out); }
-    .tg-bubble.is-compact .tg-meta-inline {
-        position: static; margin-left: 6px; font-size: 0.64rem; vertical-align: baseline;
-    }
-    .tg-bubble.is-compact .tg-bubble-text { display: inline; }
+    /* Compact bubbles: timestamp always stays at bottom-right (absolute) */
     .tg-meta-inline .fa-check-double { font-size: 0.58rem; }
 
     /* ── Image in Bubble ── */
@@ -435,7 +432,7 @@
         .message-content-wrapper.has-image-wrapper { max-width: 82vw; }
         .tg-bubble          { padding: 10px 12px 18px; }
         .tg-reaction-bar    { max-width: 85vw; gap: 4px; margin-top: 6px; }
-        .tg-bubble.is-compact { padding: 7px 12px 7px; }
+        .tg-bubble.is-compact { padding: 8px 12px 20px; }
         .message-avatar     { width:24px; height:24px; }
         .tg-meta-inline     { right:8px; bottom:4px; font-size:0.59rem; }
         .tg-bubble-text     { font-size:0.875rem; }
