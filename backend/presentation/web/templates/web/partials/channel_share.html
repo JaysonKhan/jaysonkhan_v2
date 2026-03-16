@@ -29,7 +29,7 @@
     {% else %}
     {# ── Ready to share state ── #}
     <button id="btn-share-channel"
-        onclick="shareToChannel('{{ content_type }}', '{{ slug }}')"
+        onclick="shareToChannel('{{ content_type|escapejs }}', '{{ slug|escapejs }}')"
         class="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer"
         style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); color:#a5b4fc;"
         onmouseover="this.style.background='rgba(99,102,241,0.18)';this.style.borderColor='rgba(99,102,241,0.45)';this.style.color='#e0e7ff';"
@@ -44,16 +44,16 @@
 
 <script>
 function shareToChannel(contentType, slug) {
-    const btn = document.getElementById('btn-share-channel');
+    var btn = document.getElementById('btn-share-channel');
     if (!btn || btn.disabled) return;
 
     // CSRF token from hidden input (CSRF_COOKIE_HTTPONLY=True)
-    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
-    const csrfToken = csrfInput ? csrfInput.value : '';
+    var csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    var csrfToken = csrfInput ? csrfInput.value : '';
 
     // Disable + loading state
     btn.disabled = true;
-    const originalHTML = btn.innerHTML;
+    var originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Yuborilmoqda...';
     btn.style.opacity = '0.6';
 
@@ -67,9 +67,9 @@ function shareToChannel(contentType, slug) {
         body: JSON.stringify({ content_type: contentType, slug: slug }),
     })
     .then(function(resp) {
-        return resp.json().then(function(data) {
-            return { ok: resp.ok, data: data };
-        });
+        return resp.json()
+            .then(function(data) { return { ok: resp.ok, data: data }; })
+            .catch(function() { return { ok: false, data: { error: 'Server xatosi (javob noto\u2018g\u2018ri formatda)' } }; });
     })
     .then(function(result) {
         if (result.ok && result.data.status === 'ok') {
@@ -86,14 +86,17 @@ function shareToChannel(contentType, slug) {
                 '</svg> Kanalga yuborildi!';
         } else {
             // Error — show message, then restore
+            var errorMsg = (result.data && result.data.error) || 'Xatolik yuz berdi';
             btn.style.opacity = '1';
-            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i> ' +
-                (result.data.error || 'Xatolik yuz berdi');
+            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i> ' + errorMsg;
             btn.style.color = '#f87171';
             setTimeout(function() {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
+                btn.style.background = 'rgba(99,102,241,0.08)';
+                btn.style.borderColor = 'rgba(99,102,241,0.25)';
                 btn.style.color = '#a5b4fc';
+                btn.style.opacity = '1';
             }, 3000);
         }
     })
@@ -104,7 +107,10 @@ function shareToChannel(contentType, slug) {
         setTimeout(function() {
             btn.disabled = false;
             btn.innerHTML = originalHTML;
+            btn.style.background = 'rgba(99,102,241,0.08)';
+            btn.style.borderColor = 'rgba(99,102,241,0.25)';
             btn.style.color = '#a5b4fc';
+            btn.style.opacity = '1';
         }, 3000);
     });
 }

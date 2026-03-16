@@ -8,7 +8,6 @@ allows re-sharing.
 """
 from __future__ import annotations
 
-import json
 import logging
 from html import escape
 from typing import Optional, Tuple
@@ -61,15 +60,18 @@ class ChannelShareService:
         if not channel_id:
             return False, 'Telegram kanal ID sozlanmagan.'
 
-        if self._is_shared(post, channel_id):
-            return False, 'Bu post allaqachon ushbu kanalga yuborilgan.'
-
         if not post.featured_image:
             return False, 'Postda rasm (featured_image) yo\'q.'
 
+        # ── Optimistic lock: insert DB record FIRST to prevent duplicates ──
+        ct = ContentType.objects.get_for_model(post)
+        share_record = self._claim_share(ct, post.pk, channel_id, user)
+        if share_record is None:
+            return False, 'Bu post allaqachon ushbu kanalga yuborilgan.'
+
         caption = self._build_post_caption(post)
         keyboard = self._build_post_keyboard(post)
-        reply_markup = json.dumps({'inline_keyboard': keyboard})
+        reply_markup = {'inline_keyboard': keyboard}
 
         photo_url = f'{self._domain}{post.featured_image.url}'
         result = self.api.send_photo(
@@ -88,11 +90,17 @@ class ChannelShareService:
             )
 
         if not result or not result.get('ok'):
+            # Telegram failed — remove the optimistic DB record
+            share_record.delete()
             error = result.get('description', 'Unknown error') if result else 'No response'
             return False, f'Telegram API xatosi: {error}'
 
+        # Update record with Telegram message_id
         msg_id = result.get('result', {}).get('message_id')
-        self._record_share(post, channel_id, msg_id, user)
+        if msg_id:
+            share_record.telegram_message_id = msg_id
+            share_record.save(update_fields=['telegram_message_id'])
+
         return True, 'Post kanalga muvaffaqiyatli yuborildi!'
 
     def share_project(self, project, user=None) -> Tuple[bool, str]:
@@ -101,12 +109,15 @@ class ChannelShareService:
         if not channel_id:
             return False, 'Telegram kanal ID sozlanmagan.'
 
-        if self._is_shared(project, channel_id):
+        # ── Optimistic lock: insert DB record FIRST to prevent duplicates ──
+        ct = ContentType.objects.get_for_model(project)
+        share_record = self._claim_share(ct, project.pk, channel_id, user)
+        if share_record is None:
             return False, 'Bu project allaqachon ushbu kanalga yuborilgan.'
 
         caption = self._build_project_caption(project)
         keyboard = self._build_project_keyboard(project)
-        reply_markup = json.dumps({'inline_keyboard': keyboard})
+        reply_markup = {'inline_keyboard': keyboard}
 
         # Try photo first
         result = None
@@ -128,11 +139,17 @@ class ChannelShareService:
             )
 
         if not result or not result.get('ok'):
+            # Telegram failed — remove the optimistic DB record
+            share_record.delete()
             error = result.get('description', 'Unknown error') if result else 'No response'
             return False, f'Telegram API xatosi: {error}'
 
+        # Update record with Telegram message_id
         msg_id = result.get('result', {}).get('message_id')
-        self._record_share(project, channel_id, msg_id, user)
+        if msg_id:
+            share_record.telegram_message_id = msg_id
+            share_record.save(update_fields=['telegram_message_id'])
+
         return True, 'Project kanalga muvaffaqiyatli yuborildi!'
 
     # ── Caption builders ──────────────────────────────────────────────────────
@@ -163,22 +180,25 @@ class ChannelShareService:
 
         # Telegram caption limit = 1024 chars
         if len(caption) > 1024:
-            # Truncate excerpt to fit
-            overhead = len(caption) - len(excerpt)
-            max_excerpt = 1024 - overhead - 3  # for "..."
-            caption = '\n'.join([
-                f'📝 <b>{title}</b>',
-                '',
-                excerpt[:max_excerpt] + '...',
-                *([f'\n{tags}'] if tags else []),
-            ])
+            # Calculate safe excerpt length
+            title_line = f'📝 <b>{title}</b>'
+            overhead = len(title_line) + 2  # +2 for two newlines
+            if tags:
+                overhead += len(tags) + 2  # +2 for two newlines before tags
+            overhead += 3  # for "..."
+            max_excerpt = max(1024 - overhead, 0)
+            parts = [title_line, '', excerpt[:max_excerpt] + '...']
+            if tags:
+                parts.extend(['', tags])
+            caption = '\n'.join(parts)
 
         return caption[:1024]
 
     def _build_project_caption(self, project) -> str:
         """Build HTML caption for a project (max 1024 chars)."""
         title = escape(project.title)
-        desc = escape(project.short_description or project.get_card_description()[:200])
+        raw_desc = project.short_description or project.get_card_description()[:200]
+        desc = escape(raw_desc) if raw_desc else ''
 
         # Tech stack
         techs = ''
@@ -189,15 +209,28 @@ class ChannelShareService:
         except Exception:
             pass
 
-        lines = [
-            f'📱 <b>{title}</b>',
-            '',
-            desc,
-        ]
+        lines = [f'📱 <b>{title}</b>']
+        if desc:
+            lines.extend(['', desc])
         if techs:
             lines.extend(['', techs])
 
         caption = '\n'.join(lines)
+
+        # Truncation: trim desc to fit within 1024 chars
+        if len(caption) > 1024 and desc:
+            title_line = f'📱 <b>{title}</b>'
+            overhead = len(title_line) + 2  # +2 for newlines before desc
+            if techs:
+                overhead += len(techs) + 2
+            overhead += 3  # for "..."
+            max_desc = max(1024 - overhead, 0)
+            desc_truncated = escape(raw_desc[:max_desc]) + '...'
+            parts = [title_line, '', desc_truncated]
+            if techs:
+                parts.extend(['', techs])
+            caption = '\n'.join(parts)
+
         return caption[:1024]
 
     # ── Keyboard builders ─────────────────────────────────────────────────────
@@ -219,13 +252,11 @@ class ChannelShareService:
             store_row.append({
                 'text': '▶️ Google Play',
                 'url': project.play_store_url,
-                'style': 'success',
             })
         if project.app_store_url:
             store_row.append({
                 'text': '🍎 App Store',
                 'url': project.app_store_url,
-                'style': 'primary',
             })
         if store_row:
             rows.append(store_row)
@@ -237,10 +268,9 @@ class ChannelShareService:
                 'text': '🌐 Web',
                 'url': project.web_page_url,
             })
-        if project.is_bot and project.web_page_url:
-            # If is_bot, web_page_url is likely the bot link
-            pass
-        elif project.is_bot:
+        # Bot projects: web_page_url is likely the bot link itself,
+        # so only add a generic bot link if there is no web_page_url
+        if project.is_bot and not project.web_page_url:
             bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
             if bot_username:
                 extra_row.append({
@@ -298,32 +328,30 @@ class ChannelShareService:
         site = SiteSettingsService.get()
         return getattr(site, 'telegram_channel_id', None)
 
-    @staticmethod
-    def _is_shared(obj, channel_id: int) -> bool:
-        from interactions.models import ChannelShare
-        ct = ContentType.objects.get_for_model(obj)
-        return ChannelShare.objects.filter(
-            content_type=ct, object_id=obj.pk, channel_id=channel_id,
-        ).exists()
-
     @property
     def _domain(self) -> str:
-        return getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', DEFAULT_DOMAIN)
+        domain = getattr(settings, 'TELEGRAM_WEBHOOK_DOMAIN', DEFAULT_DOMAIN)
+        return domain.rstrip('/')
 
     @staticmethod
-    def _record_share(obj, channel_id: int, message_id, user):
+    def _claim_share(ct, object_id: int, channel_id: int, user):
+        """Attempt to claim a share slot (optimistic lock).
+
+        Creates the ChannelShare record BEFORE calling the Telegram API.
+        Returns the record on success, None if already shared (IntegrityError).
+        The caller must delete the record if the Telegram call fails.
+        """
         from interactions.models import ChannelShare
-        ct = ContentType.objects.get_for_model(obj)
         try:
-            ChannelShare.objects.create(
+            return ChannelShare.objects.create(
                 content_type=ct,
-                object_id=obj.pk,
+                object_id=object_id,
                 channel_id=channel_id,
-                telegram_message_id=message_id,
                 shared_by=user,
             )
         except IntegrityError:
             logger.warning(
                 'Duplicate share attempt: %s #%s → channel %s',
-                ct, obj.pk, channel_id,
+                ct, object_id, channel_id,
             )
+            return None
