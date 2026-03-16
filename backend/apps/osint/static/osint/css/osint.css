@@ -856,9 +856,41 @@ html.dark .umsg-private { background: rgba(129,140,248,0.15); color: #a5b4fc; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* Dark mode: Confirmation Dialog */
+/* Dark mode: Confirmation Dialog
+   Note: dialog uses position:fixed so it renders OUTSIDE .rb container,
+   meaning CSS variables scoped to .rb are NOT inherited. We must use
+   explicit colors here. */
 html.dark .rb-confirm-overlay { background: rgba(0,0,0,0.6); }
-html.dark .rb-confirm-dialog { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--rb-border); }
+html.dark .rb-confirm-dialog {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px #374151;
+}
+html.dark .rb-confirm-icon .material-symbols-outlined { color: #fbbf24; }
+html.dark .rb-confirm-title { color: #f3f4f6; }
+html.dark .rb-confirm-message { color: #9ca3af; }
+html.dark .rb-confirm-balance {
+    background: #111827;
+    color: #9ca3af;
+}
+html.dark .rb-confirm-balance strong { color: #f87171; }
+html.dark .rb-confirm-actions .rb-btn-primary {
+    background: #a78bfa;
+    color: #fff;
+}
+html.dark .rb-confirm-actions .rb-btn-primary:hover {
+    background: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(167,139,250,0.3);
+}
+html.dark .rb-confirm-actions .rb-btn-outline {
+    border-color: #374151;
+    background: #1f2937;
+    color: #9ca3af;
+}
+html.dark .rb-confirm-actions .rb-btn-outline:hover {
+    background: #374151;
+    color: #f3f4f6;
+}
 
 
 /* ── 20. Error Cards ─────────────────────────────────────────────────────── */
