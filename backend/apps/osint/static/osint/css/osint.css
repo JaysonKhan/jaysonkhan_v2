@@ -16,6 +16,8 @@
     --rb-border-light: #f0f0f0;
     --rb-primary: #7c3aed;
     --rb-primary-muted: rgba(124,58,237,0.1);
+    --rb-warning: #f59e0b;
+    --rb-danger: #ef4444;
     --rb-shadow: rgba(0,0,0,0.04);
 }
 html.dark .rb {
@@ -28,6 +30,8 @@ html.dark .rb {
     --rb-border-light: #1f2937;
     --rb-primary: #a78bfa;
     --rb-primary-muted: rgba(167,139,250,0.15);
+    --rb-warning: #fbbf24;
+    --rb-danger: #f87171;
     --rb-shadow: rgba(0,0,0,0.2);
 }
 
@@ -817,7 +821,7 @@ html.dark .umsg-private { background: rgba(129,140,248,0.15); color: #a5b4fc; }
     animation: scaleIn 0.2s ease;
 }
 .rb-confirm-icon { margin-bottom: 0.75rem; }
-.rb-confirm-icon .material-symbols-outlined { font-size: 48px; color: #f59e0b; }
+.rb-confirm-icon .material-symbols-outlined { font-size: 48px; color: var(--rb-warning); }
 .rb-confirm-title {
     margin: 0 0 0.5rem;
     font-size: 1.125rem;
@@ -841,7 +845,7 @@ html.dark .umsg-private { background: rgba(129,140,248,0.15); color: #a5b4fc; }
     color: var(--rb-fg-muted);
     margin-bottom: 1.25rem;
 }
-.rb-confirm-balance strong { color: #ef4444; font-size: 1rem; }
+.rb-confirm-balance strong { color: var(--rb-danger); font-size: 1rem; }
 .rb-confirm-actions {
     display: flex;
     gap: 0.75rem;
@@ -851,6 +855,10 @@ html.dark .umsg-private { background: rgba(129,140,248,0.15); color: #a5b4fc; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* Dark mode: Confirmation Dialog */
+html.dark .rb-confirm-overlay { background: rgba(0,0,0,0.6); }
+html.dark .rb-confirm-dialog { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--rb-border); }
 
 
 /* ── 20. Error Cards ─────────────────────────────────────────────────────── */

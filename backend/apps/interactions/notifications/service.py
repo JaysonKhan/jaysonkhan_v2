@@ -193,13 +193,43 @@ class NotificationService:
         }
         emoji, type_label = type_map.get(profile.entity_type, ('👤', 'Noma\'lum'))
 
+        # ── Servis manbalarini erta so'rash (yangi vs qaytgan user uchun) ──
+        svc_labels = {
+            'site': '🌐 Sayt (Login)',
+            'osint': '🔍 OSINT',
+            'rektor': '🎓 Rektor Bot',
+            'ovoz': '🗳 Ovoz Bot',
+        }
+        svc_action_labels = {
+            'site': '🌐 Saytga kirdi',
+            'osint': '🔍 OSINT qidirildi',
+            'rektor': '🎓 Rektor botga qo\'shildi',
+            'ovoz': '🗳 Ovoz botga qo\'shildi',
+        }
+        try:
+            from telegram.models import EntitySource
+            sources = list(
+                EntitySource.objects.filter(entity=profile)
+                .values_list('service', flat=True)
+            )
+        except Exception:
+            sources = []
+        is_returning = len(sources) > 1
+
         # Ism — FunStat dan yangilangan bo'lishi mumkin
         fs_name = ''
         if funstat:
             parts = [funstat.get('first_name', ''), funstat.get('last_name', '')]
             fs_name = ' '.join(p for p in parts if p).strip()
         name = escape(fs_name or profile.display_name)
-        lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
+
+        if is_returning:
+            # Qaytgan user — yangi servisdan kirdi
+            new_service = sources[0] if sources else ''  # ordering = ["-updated_at"]
+            action = svc_action_labels.get(new_service, f'{new_service} dan topildi')
+            lines = [f'🔄 <b>{name}</b> — {action}']
+        else:
+            lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
 
         # ── Asosiy ma'lumotlar ────────────────────────────────────────────
         username = funstat.get('username') or profile.username
@@ -212,24 +242,10 @@ class NotificationService:
         if phone:
             lines.append(f'📱 <code>{escape(phone)}</code>')
 
-        # ── Qaysi servis orqali? ──────────────────────────────────────────
-        try:
-            from telegram.models import EntitySource
-            sources = list(
-                EntitySource.objects.filter(entity=profile)
-                .values_list('service', flat=True)
-            )
-            if sources:
-                svc_labels = {
-                    'site': '🌐 Sayt (Login)',
-                    'osint': '🔍 OSINT',
-                    'rektor': '🎓 Rektor Bot',
-                    'ovoz': '🗳 Ovoz Bot',
-                }
-                src_str = ', '.join(svc_labels.get(s, s) for s in sources)
-                lines.append(f'📡 {src_str}')
-        except Exception:
-            pass
+        # ── Qaysi servislar orqali topilgan ──────────────────────────────
+        if sources:
+            src_str = ', '.join(svc_labels.get(s, s) for s in sources)
+            lines.append(f'📡 {src_str}')
 
         # ── Badgelar ──────────────────────────────────────────────────────
         badges = []
@@ -403,12 +419,16 @@ class NotificationService:
         if not group_id:
             return None
 
+        result = None
         if photo_url:
             result = self.api.send_photo(
                 group_id, photo_url,
                 caption=text, reply_markup=reply_markup,
             )
-        else:
+        if not result or not result.get('ok'):
+            # Fallback to plain text (handles expired photo URLs, caption > 1024 chars, etc.)
+            if photo_url:
+                logger.info('send_photo failed, falling back to send_message')
             result = self.api.send_message(group_id, text, reply_markup=reply_markup)
 
         msg_data = result.get('result') if result else None

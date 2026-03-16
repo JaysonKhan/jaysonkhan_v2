@@ -14,10 +14,11 @@ from __future__ import annotations
 import json
 import logging
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.views.decorators.http import require_POST
+
+from core.decorators import admin_permission_required
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def _ctx(request, extra: dict | None = None) -> dict:
     return ctx
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 def telegram_session_page(request):
     """Main session management page."""
     return TemplateResponse(
@@ -43,7 +44,7 @@ def telegram_session_page(request):
     )
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 def telegram_session_status(request):
     """AJAX: check current session status."""
     from telegram.telegram_client import check_session_status
@@ -60,7 +61,7 @@ def telegram_session_status(request):
     return JsonResponse(status)
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 @require_POST
 def telegram_session_send_code(request):
     """AJAX POST: send OTP code to phone number."""
@@ -79,7 +80,7 @@ def telegram_session_send_code(request):
     return JsonResponse(result)
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 @require_POST
 def telegram_session_verify(request):
     """AJAX POST: verify OTP code."""
@@ -100,7 +101,7 @@ def telegram_session_verify(request):
     return JsonResponse(result)
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 @require_POST
 def telegram_session_2fa(request):
     """AJAX POST: verify 2FA password."""
@@ -119,7 +120,7 @@ def telegram_session_2fa(request):
     return JsonResponse(result)
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 @require_POST
 def telegram_session_disconnect(request):
     """AJAX POST: disconnect and invalidate session."""
@@ -129,7 +130,7 @@ def telegram_session_disconnect(request):
     return JsonResponse(result)
 
 
-@staff_member_required
+@admin_permission_required('botproxy.manage_telegram_session')
 @require_POST
 def telegram_session_save_config(request):
     """AJAX POST: save API ID and API Hash.

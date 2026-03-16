@@ -6,13 +6,13 @@ import logging
 import time
 
 from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
+from core.decorators import admin_permission_required
 from osint.exceptions import FunStatAPIError
 from osint.models import OsintAuditLog, OsintCache, OsintSearchLog
 from osint.services.funstat_client import FunStatClient
@@ -212,7 +212,7 @@ PROFILE_TREE = [
 
 # ─── Search Page ──────────────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_search(request):
     """Search by Telegram ID or @username — routes to user or entity profile."""
     query = request.GET.get("q", "").strip()
@@ -246,7 +246,7 @@ def osint_search(request):
 
 # ─── Profile Page ─────────────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_profile(request, user_id: int):
     """User profile page with lazy-loading tree."""
     # Faqat yangi qidiruv bo'lsa log yozish (mavjud resolved_id bilan dublikat yaratmaslik)
@@ -302,7 +302,7 @@ def osint_profile(request, user_id: int):
 
 # ─── AJAX: Fetch Branch ──────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_fetch_branch(request, user_id: int, branch: str):
     """AJAX: fetch a specific tree branch. ?refresh=1 to force re-fetch."""
     if branch not in ENDPOINT_REGISTRY:
@@ -365,7 +365,7 @@ def osint_fetch_branch(request, user_id: int, branch: str):
 
 # ─── AJAX: Text Search ───────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_text_search(request):
     """AJAX: text search across messages."""
     query = request.GET.get("q", "").strip()
@@ -435,7 +435,7 @@ def osint_text_search(request):
 
 # ─── Entity Profile (Channel/Group) ──────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_entity_profile(request, entity_id: str):
     """Kanal/guruh profil sahifasi."""
     eid = _normalize_entity_id(entity_id)
@@ -500,7 +500,7 @@ def osint_entity_profile(request, entity_id: str):
     )
 
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_channel_messages(request, entity_id: str):
     """AJAX: kanal/guruh xabarlari (offset_id cursor pagination)."""
     eid = _normalize_entity_id(entity_id)
@@ -532,7 +532,7 @@ def osint_channel_messages(request, entity_id: str):
     })
 
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_channel_search(request, entity_id: str):
     """AJAX: kanal ichida xabar qidirish."""
     eid = _normalize_entity_id(entity_id)
@@ -568,7 +568,7 @@ def osint_channel_search(request, entity_id: str):
 
 # ─── Message Photo Proxy ──────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_message_photo(request, entity_id: str, msg_id: int):
     """Serve photo from a channel/group message."""
     from telegram.mtproto_service import get_message_photo
@@ -591,7 +591,7 @@ def osint_message_photo(request, entity_id: str, msg_id: int):
 
 # ─── Photo Proxy ─────────────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_photo_proxy(request, entity_id: str):
     """Serve cached Telegram profile photo for any entity."""
     from pathlib import Path
@@ -709,7 +709,7 @@ def osint_photo_proxy(request, entity_id: str):
 
 # ─── AJAX: Balance ───────────────────────────────────────────────────────────
 
-@staff_member_required
+@admin_permission_required('osint.use_osint')
 def osint_balance(request):
     """AJAX: return last known FunStat balance."""
     balance = _get_last_known_balance()

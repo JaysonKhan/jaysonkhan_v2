@@ -189,3 +189,14 @@ class OsintAuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action}:{self.target_id} at {self.performed_at}"
+
+
+class OsintPermissions(models.Model):
+    """Proxy model for OSINT RBAC permissions (no DB table)."""
+
+    class Meta:
+        managed = False
+        default_permissions = ()
+        permissions = [
+            ("use_osint", "Full OSINT access (search, profiles, intelligence)"),
+        ]
