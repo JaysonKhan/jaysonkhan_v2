@@ -133,6 +133,7 @@
                 <span class="cl-txt">Copy Link</span>
             </button>
         </div>
+        {% include 'web/partials/channel_share.html' with content_type='post' slug=post.slug %}
     </div>
 
     {% if post.tags.all %}

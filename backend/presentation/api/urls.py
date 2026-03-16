@@ -4,6 +4,7 @@ from .views import (
     UserViewSet, SkillViewSet, ProjectViewSet,
     ExperienceViewSet, CategoryViewSet, TagViewSet,
     PostViewSet, ContactMessageViewSet, SiteSettingsView,
+    ShareToChannelView,
 )
 
 router = DefaultRouter()
@@ -19,4 +20,5 @@ router.register(r'contact', ContactMessageViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('site-settings/', SiteSettingsView.as_view(), name='site-settings'),
+    path('share-to-channel/', ShareToChannelView.as_view(), name='share-to-channel'),
 ]

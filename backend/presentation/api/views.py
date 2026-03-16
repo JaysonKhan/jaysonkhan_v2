@@ -1,4 +1,7 @@
-from rest_framework import viewsets, permissions
+import json
+
+from rest_framework import viewsets, permissions, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import (
@@ -130,3 +133,66 @@ class SiteSettingsView(APIView):
         site_settings = SiteSettingsService.get()
         serializer = SiteSettingsSerializer(site_settings, context={"request": request})
         return Response(serializer.data)
+
+
+class ShareToChannelView(APIView):
+    """
+    POST /api/share-to-channel/
+    Body: {"content_type": "post"|"project", "slug": "the-slug"}
+
+    Shares a blog post or project to the configured Telegram channel.
+    Admin-only, session-authenticated (called from SSR detail pages).
+    """
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request):
+        content_type = request.data.get('content_type')
+        slug = request.data.get('slug')
+
+        if not content_type or not slug:
+            return Response(
+                {'status': 'error', 'error': 'content_type va slug talab qilinadi.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from interactions.notifications.channel_share import ChannelShareService
+        service = ChannelShareService()
+
+        if content_type == 'post':
+            try:
+                obj = Post.objects.get(slug=slug, is_published=True)
+            except Post.DoesNotExist:
+                return Response(
+                    {'status': 'error', 'error': 'Post topilmadi.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            success, message = service.share_post(obj, user=request.user)
+
+        elif content_type == 'project':
+            try:
+                obj = Project.objects.get(slug=slug, is_visible=True)
+            except Project.DoesNotExist:
+                return Response(
+                    {'status': 'error', 'error': 'Project topilmadi.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            success, message = service.share_project(obj, user=request.user)
+
+        else:
+            return Response(
+                {'status': 'error', 'error': 'content_type "post" yoki "project" bo\'lishi kerak.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if success:
+            info = service.get_share_info(obj)
+            return Response({
+                'status': 'ok',
+                'message': message,
+                'shared_at': info['shared_at'].isoformat() if info and info['shared_at'] else None,
+            })
+        return Response(
+            {'status': 'error', 'error': message},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

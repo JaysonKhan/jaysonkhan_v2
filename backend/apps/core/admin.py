@@ -246,6 +246,7 @@ class SiteSettingsAdmin(ModelAdmin):
                     f for f in (
                         'telegram_owner_id',
                         'telegram_admin_group_id',
+                        'telegram_channel_id',
                         'admin_notify_new_users',
                         'admin_notify_comments',
                         'admin_notify_replies',

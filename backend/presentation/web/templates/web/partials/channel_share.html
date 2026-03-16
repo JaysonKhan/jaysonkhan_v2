@@ -1,0 +1,112 @@
+{% comment %}
+    Channel Share Button — admin-only partial.
+    Include in blog_detail / project_detail:
+      {% include 'web/partials/channel_share.html' with content_type='post' slug=post.slug %}
+      {% include 'web/partials/channel_share.html' with content_type='project' slug=project.slug %}
+{% endcomment %}
+
+{% if request.user.is_staff and channel_share_info %}
+<div class="channel-share-block mt-6 pt-5" style="border-top:1px solid rgba(255,255,255,0.06);">
+    <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color:#64748b;">
+        <i class="fa-solid fa-lock text-[0.6rem] mr-1 opacity-50"></i>
+        Admin: Telegram Channel
+    </p>
+
+    {% csrf_token %}
+
+    {% if channel_share_info.shared %}
+    {# ── Already shared state ── #}
+    <button disabled
+        class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold cursor-not-allowed transition-all"
+        style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); color:#4ade80;">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        Kanalga yuborilgan
+        <span class="text-xs opacity-60 ml-1">{{ channel_share_info.shared_at|timesince }} oldin</span>
+    </button>
+
+    {% else %}
+    {# ── Ready to share state ── #}
+    <button id="btn-share-channel"
+        onclick="shareToChannel('{{ content_type }}', '{{ slug }}')"
+        class="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 cursor-pointer"
+        style="background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); color:#a5b4fc;"
+        onmouseover="this.style.background='rgba(99,102,241,0.18)';this.style.borderColor='rgba(99,102,241,0.45)';this.style.color='#e0e7ff';"
+        onmouseout="this.style.background='rgba(99,102,241,0.08)';this.style.borderColor='rgba(99,102,241,0.25)';this.style.color='#a5b4fc';">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        </svg>
+        Kanalga yuborish
+    </button>
+    {% endif %}
+</div>
+
+<script>
+function shareToChannel(contentType, slug) {
+    const btn = document.getElementById('btn-share-channel');
+    if (!btn || btn.disabled) return;
+
+    // CSRF token from hidden input (CSRF_COOKIE_HTTPONLY=True)
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    // Disable + loading state
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Yuborilmoqda...';
+    btn.style.opacity = '0.6';
+
+    fetch('/api/share-to-channel/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({ content_type: contentType, slug: slug }),
+    })
+    .then(function(resp) {
+        return resp.json().then(function(data) {
+            return { ok: resp.ok, data: data };
+        });
+    })
+    .then(function(result) {
+        if (result.ok && result.data.status === 'ok') {
+            // Success — green "shared" state
+            btn.style.background = 'rgba(34,197,94,0.08)';
+            btn.style.borderColor = 'rgba(34,197,94,0.25)';
+            btn.style.color = '#4ade80';
+            btn.style.opacity = '1';
+            btn.onmouseover = null;
+            btn.onmouseout = null;
+            btn.innerHTML =
+                '<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">' +
+                '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' +
+                '</svg> Kanalga yuborildi!';
+        } else {
+            // Error — show message, then restore
+            btn.style.opacity = '1';
+            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i> ' +
+                (result.data.error || 'Xatolik yuz berdi');
+            btn.style.color = '#f87171';
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                btn.style.color = '#a5b4fc';
+            }, 3000);
+        }
+    })
+    .catch(function() {
+        btn.style.opacity = '1';
+        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-sm"></i> Tarmoq xatosi';
+        btn.style.color = '#f87171';
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            btn.style.color = '#a5b4fc';
+        }, 3000);
+    });
+}
+</script>
+{% endif %}

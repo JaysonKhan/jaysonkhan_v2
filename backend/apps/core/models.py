@@ -297,6 +297,14 @@ class SiteSettings(models.Model):
         null=True, blank=True,
         help_text="Telegram group/supergroup chat ID for admin notifications."
     )
+    telegram_channel_id = models.BigIntegerField(
+        null=True, blank=True,
+        help_text=(
+            "Telegram channel chat ID for publishing blog posts and projects. "
+            "Numeric ID (e.g. -1001234567890). "
+            "Changing this allows re-sharing content to the new channel."
+        ),
+    )
     admin_notify_new_users = models.BooleanField(
         default=True, help_text="Log new user registrations to admin group"
     )

@@ -3,6 +3,7 @@ from unfold.admin import ModelAdmin
 from .models import (
     Comment, Like, CommentReaction,
     NotificationPreference, UserBan, AdminLogMessage,
+    ChannelShare,
 )
 
 
@@ -76,3 +77,18 @@ class AdminLogMessageAdmin(ModelAdmin):
     search_fields = ('profile__first_name', 'profile__username', 'message_id')
     readonly_fields = ('message_id', 'profile', 'event_type', 'created_at')
     ordering = ('-created_at',)
+
+
+@admin.register(ChannelShare)
+class ChannelShareAdmin(ModelAdmin):
+    list_display = ('content_type', 'object_id', 'channel_id', 'shared_by', 'shared_at')
+    list_filter = ('content_type', 'shared_at')
+    search_fields = ('channel_id',)
+    readonly_fields = (
+        'content_type', 'object_id', 'channel_id',
+        'telegram_message_id', 'shared_by', 'shared_at',
+    )
+    ordering = ('-shared_at',)
+
+    def has_add_permission(self, request):
+        return False

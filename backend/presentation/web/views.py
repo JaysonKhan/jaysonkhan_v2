@@ -230,6 +230,10 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_interactions_context(self.request, self.object))
+        # Channel share info (admin only)
+        if self.request.user.is_staff:
+            from interactions.notifications.channel_share import ChannelShareService
+            context['channel_share_info'] = ChannelShareService().get_share_info(self.object)
         return context
 
 class BlogListView(ListView):
@@ -260,6 +264,10 @@ class BlogDetailView(DetailView):
         # Related posts by shared tags
         blog_service = BlogService(BlogRepository())
         context['related_posts'] = blog_service.get_related_posts(self.object)
+        # Channel share info (admin only)
+        if self.request.user.is_staff:
+            from interactions.notifications.channel_share import ChannelShareService
+            context['channel_share_info'] = ChannelShareService().get_share_info(self.object)
         return context
 
 
