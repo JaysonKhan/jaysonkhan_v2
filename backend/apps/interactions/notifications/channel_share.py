@@ -203,8 +203,8 @@ class ChannelShareService:
     # ── Keyboard builders ─────────────────────────────────────────────────────
 
     def _build_post_keyboard(self, post) -> list:
-        """Build inline keyboard for a blog post."""
-        detail_url = f'{self._domain}{post.get_absolute_url()}'
+        """Build inline keyboard for a blog post (Mini App deep link)."""
+        detail_url = self._detail_deep_link(post)
         return [
             [{'text': '📖 Batafsil', 'url': detail_url}],
         ]
@@ -250,11 +250,46 @@ class ChannelShareService:
         if extra_row:
             rows.append(extra_row)
 
-        # Detail button (always present)
-        detail_url = f'{self._domain}{project.get_absolute_url()}'
+        # Detail button (always present — Mini App deep link)
+        detail_url = self._detail_deep_link(project)
         rows.append([{'text': '📖 Batafsil', 'url': detail_url}])
 
         return rows
+
+    # ── Deep link helpers ─────────────────────────────────────────────────────
+
+    def _detail_deep_link(self, obj) -> str:
+        """Build Mini App deep link for a content object.
+
+        Format: https://t.me/{bot}/{app}?startapp={post-slug|proj-slug}
+        Falls back to regular website URL if bot/app settings are missing.
+        """
+        startapp = self._content_startapp(obj)
+        deep_url = self._tg_deep_link(startapp) if startapp else ''
+        if deep_url:
+            return deep_url
+        # Fallback to regular website URL
+        return f'{self._domain}{obj.get_absolute_url()}'
+
+    @staticmethod
+    def _tg_deep_link(startapp: str) -> str:
+        """Build t.me Mini App deep link URL."""
+        bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
+        app_name = getattr(settings, 'TELEGRAM_WEBAPP_SHORT_NAME', '')
+        if bot_username and app_name:
+            return f'https://t.me/{bot_username}/{app_name}?startapp={startapp}'
+        return ''
+
+    @staticmethod
+    def _content_startapp(obj) -> str:
+        """Build startapp parameter for a content object (Post/Project)."""
+        model = obj.__class__.__name__.lower()
+        slug = getattr(obj, 'slug', '')
+        if model == 'post' and slug:
+            return f'post-{slug}'
+        if model == 'project' and slug:
+            return f'proj-{slug}'
+        return ''
 
     # ── Private helpers ────────────────────────────────────────────────────────
 
