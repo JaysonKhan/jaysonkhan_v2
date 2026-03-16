@@ -355,6 +355,9 @@ class AddCommentView(View):
                 parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id)
             except (ValueError, Comment.DoesNotExist):
                 return JsonResponse({'error': 'Invalid parent comment'}, status=400)
+            # Enforce max 2-level nesting: only top-level comments can have replies
+            if parent.parent_id is not None:
+                return JsonResponse({'error': 'Replies to replies are not allowed'}, status=400)
 
         # ── Save comment ──
         Comment.objects.create(
