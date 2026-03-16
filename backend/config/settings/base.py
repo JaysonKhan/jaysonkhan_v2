@@ -69,7 +69,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.security_middleware.AdminIPRestrictionMiddleware',  # Admin IP whitelist
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # XFrameOptionsMiddleware removed: CSP frame-ancestors in Nginx handles
+    # clickjacking protection and allows Telegram Mini App iframes.
 ]
 
 ROOT_URLCONF = 'config.urls'
