@@ -279,21 +279,31 @@
         background: var(--action-color);
     }
 
-    /* ── Nested reply rows: smaller avatar, compact layout ── */
+    /* ── Nested reply rows: uniform with parent ── */
     .tg-replies-container .message-row { gap: 0; }
     .tg-replies-container .message-avatar {
-        width: 22px; height: 22px;
+        width: 26px; height: 26px;
     }
     .tg-replies-container .message-content-wrapper {
         max-width: 100%;
     }
     .tg-replies-container .tg-bubble {
         max-width: 100%;
-        padding: 10px 14px 18px;
+        padding: 12px 16px 22px;
     }
-    .tg-replies-container .tg-bubble-text { font-size: 0.85rem; }
-    .tg-replies-container .tg-author-name { font-size: 0.68rem; }
-    .tg-replies-container .bubble-header { gap: 6px; margin-bottom: 4px; }
+    .tg-replies-container .tg-bubble.is-compact { padding: 10px 14px 22px; }
+    .tg-replies-container .tg-bubble-text { font-size: 0.9rem; }
+    .tg-replies-container .tg-author-name { font-size: 0.72rem; }
+    .tg-replies-container .bubble-header { gap: 7px; margin-bottom: 5px; }
+    /* Reply images: same size as parent */
+    .tg-replies-container .tg-comment-image {
+        max-height: min(42vh, 300px);
+        max-width: 100%;
+    }
+    .tg-replies-container .tg-bubble.has-image {
+        padding: 6px 6px 18px;
+        max-width: min(82vw, 420px);
+    }
 
     /* ── Deeper nesting (depth ≥ 2): hide avatar, tighter ── */
     .tg-replies-container .tg-replies-container .message-avatar { display: none; }
@@ -439,10 +449,12 @@
         .tg-author-name     { font-size:0.67rem; }
         .tg-emoji-menu      { right:0; left:auto; }
         .bubble-header      { gap: 6px; margin-bottom: 5px; }
-        /* Reply tweaks */
-        .tg-replies-container .message-avatar { width:20px; height:20px; }
+        /* Reply tweaks — uniform with parent */
+        .tg-replies-container .message-avatar { width:22px; height:22px; }
         .tg-replies-container { padding-left: 14px; gap: 8px; margin-top: 10px; }
-        .tg-replies-container .tg-bubble { padding: 8px 12px 16px; }
+        .tg-replies-container .tg-bubble { padding: 10px 12px 18px; }
+        .tg-replies-container .tg-bubble.is-compact { padding: 8px 12px 18px; }
+        .tg-replies-container .tg-bubble-text { font-size: 0.875rem; }
     }
 </style>
 
