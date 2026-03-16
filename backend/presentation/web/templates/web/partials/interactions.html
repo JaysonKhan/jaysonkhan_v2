@@ -9,9 +9,9 @@
         /* Design tokens aligned with site primary colours */
         --bubble-in-bg:      rgba(30, 41, 59, 0.85);     /* slate-800 glass */
         --bubble-in-border:  rgba(99, 102, 241, 0.14);
-        --bubble-out-from:   #059669;                     /* emerald-600 */
-        --bubble-out-to:     #10b981;                     /* emerald-500 */
-        --bubble-out-border: rgba(16, 185, 129, 0.28);
+        --bubble-out-from:   #5a5fd1;                     /* indigo-600 */
+        --bubble-out-to:     #7c5cbf;                     /* purple-500 */
+        --bubble-out-border: rgba(139, 92, 246, 0.28);
         --name-color:        #a5b4fc;                     /* indigo-300 */
         --time-in:           rgba(203, 213, 225, 0.5);
         --time-out:          rgba(224, 231, 255, 0.6);
@@ -51,26 +51,33 @@
     .message-row {
         display: flex;
         width: 100%;
-        gap: 8px;
-        align-items: flex-end;
+        gap: 0;
+        align-items: flex-start;
     }
     .message--other { justify-content: flex-start; }
     .message--own   { justify-content: flex-end; }
 
-    /* ── Avatar ── */
+    /* ── Avatar (inside bubble header) ── */
     .message-avatar {
-        width: 32px; height: 32px;
+        width: 28px; height: 28px;
         flex-shrink: 0;
         border-radius: 50%;
         overflow: hidden;
         border: 1.5px solid rgba(99,102,241,0.25);
-        margin-bottom: 2px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
     }
     .message--own .message-avatar {
-        border-color: rgba(16,185,129,0.4);
+        border-color: rgba(139,92,246,0.35);
     }
     .message-avatar img { width:100%; height:100%; object-fit:cover; }
+
+    /* ── Bubble Header (avatar + name inline) ── */
+    .bubble-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
 
     /* ── Content Wrapper ── */
     .message-content-wrapper {
@@ -78,9 +85,9 @@
         flex-direction: column;
         max-width: 100%;
     }
-    .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; }
-    .message--other .message-content-wrapper { align-items: flex-start; }
-    .message-content-wrapper.has-image-wrapper { max-width: 100%; }
+    .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; max-width: min(72vw, 460px); }
+    .message--other .message-content-wrapper { align-items: flex-start; max-width: min(72vw, 460px); }
+    .message-content-wrapper.has-image-wrapper { max-width: min(82vw, 420px); }
 
     /* When wrapper contains replies, expand so reply thread has room */
     .message-content-wrapper:has(> .tg-replies-container) {
@@ -91,22 +98,20 @@
     /* ── Bubble Base ── */
     .tg-bubble {
         display: block;
-        width: fit-content;
-        max-width: min(72vw, 460px);
+        width: 100%;
+        max-width: 100%;
         min-width: 0;
-        padding: 8px 12px 18px;
+        padding: 10px 14px 20px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
         line-height: 1.45;
         isolation: isolate;
         transition: box-shadow 0.2s ease;
-        align-self: flex-start;
     }
-    .message--own .tg-bubble { align-self: flex-end; }
 
     /* Compact: qisqa xabar — timestamp inline, minimal joy */
-    .tg-bubble.is-compact { padding: 6px 10px 6px; }
+    .tg-bubble.is-compact { padding: 8px 12px 8px; }
 
     /* Rasmli bubble: kenglik rasmga qarab */
     .tg-bubble.has-image  { padding: 6px 6px 18px; max-width: min(82vw, 420px); }
@@ -131,23 +136,23 @@
         border: 1px solid var(--bubble-out-border);
         border-radius: 18px;
         color: #fff;
-        box-shadow: 0 3px 14px rgba(16,185,129,0.25), 0 1px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 3px 14px rgba(99,102,241,0.25), 0 1px 4px rgba(0,0,0,0.3);
     }
     .message--own .tg-bubble:hover {
-        box-shadow: 0 5px 22px rgba(16,185,129,0.35), 0 2px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 5px 22px rgba(99,102,241,0.35), 0 2px 8px rgba(0,0,0,0.3);
     }
 
-    /* ── Author Name ── */
+    /* ── Author Name (inline with avatar) ── */
     .tg-author-name {
-        display: block;
-        font-size: 0.7rem;
+        display: inline;
+        font-size: 0.75rem;
         font-weight: 700;
         color: var(--name-color);
-        margin-bottom: 2px;
         letter-spacing: 0.02em;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1;
     }
 
     /* ── Bubble Text ── */
@@ -256,39 +261,46 @@
     }
     .tg-emoji-item:hover { background: rgba(99,102,241,0.18); transform: scale(1.18); }
 
-    /* ── Reply Thread Lines ── */
+    /* ── Reply Thread Lines (Slack-style bordered) ── */
     .tg-replies-container {
-        margin-top: 6px;
+        margin-top: 8px;
         width: 100%;
         display: flex;
         flex-direction: column;
         gap: 4px;
-    }
-    .message--other .tg-replies-container {
-        margin-left: 0; padding-left: 16px;
+        padding-left: 20px;
         border-left: 2px solid var(--reply-line);
-        align-items: flex-start;
+        position: relative;
     }
-    .message--own .tg-replies-container {
-        margin-right: 0; padding-right: 16px;
-        border-right: 2px solid rgba(16,185,129,0.22);
-        align-items: flex-end;
+    /* Decorative dot at the top of the thread line */
+    .tg-replies-container::before {
+        content: '';
+        position: absolute;
+        left: -4px; top: 0;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--action-color);
     }
 
     /* ── Nested reply rows: smaller avatar, compact layout ── */
-    .tg-replies-container .message-row { gap: 6px; }
+    .tg-replies-container .message-row { gap: 0; }
     .tg-replies-container .message-avatar {
-        width: 24px; height: 24px;
+        width: 22px; height: 22px;
+    }
+    .tg-replies-container .message-content-wrapper {
+        max-width: 100%;
     }
     .tg-replies-container .tg-bubble {
-        max-width: min(65vw, 380px);
+        max-width: 100%;
+        padding: 8px 12px 16px;
     }
     .tg-replies-container .tg-bubble-text { font-size: 0.85rem; }
     .tg-replies-container .tg-author-name { font-size: 0.65rem; }
+    .tg-replies-container .bubble-header { gap: 6px; margin-bottom: 3px; }
 
     /* ── Deeper nesting (depth ≥ 2): hide avatar, tighter ── */
     .tg-replies-container .tg-replies-container .message-avatar { display: none; }
-    .tg-replies-container .tg-replies-container { padding-left: 10px; padding-right: 10px; }
+    .tg-replies-container .tg-replies-container { padding-left: 12px; }
 
     .tg-view-replies {
         display: inline-flex; align-items: center; gap: 6px;
@@ -362,13 +374,13 @@
     .tg-compose-send {
         width: 36px; height: 36px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
         color: #fff;
-        box-shadow: 0 3px 12px rgba(16,185,129,0.4);
+        box-shadow: 0 3px 12px rgba(99,102,241,0.4);
         transition: all 0.2s ease;
     }
     .tg-compose-send:hover {
-        box-shadow: 0 5px 18px rgba(16,185,129,0.55);
+        box-shadow: 0 5px 18px rgba(99,102,241,0.55);
         transform: scale(1.05);
     }
     .tg-compose-send:active { transform: scale(0.96); }
@@ -417,22 +429,22 @@
     @media (max-width: 640px) {
         .interactions-panel { padding-left:10px !important; padding-right:10px !important; }
         #tg-chat-container  { gap: 3px; }
-        .message-row        { gap: 6px; }
-        .message-content-wrapper { max-width: 100%; width: auto; }
-        .message-content-wrapper.has-image-wrapper { max-width: 100%; }
-        .tg-bubble          { max-width: 80vw; padding: 6px 10px 16px; }
-        .tg-bubble.has-image { max-width: 78vw; }
-        .tg-reaction-bar    { max-width: 80vw; }
-        .tg-bubble.is-compact { padding: 5px 9px 5px; }
-        .message-avatar     { width:28px; height:28px; }
+        .message-row        { gap: 0; }
+        .message--own .message-content-wrapper,
+        .message--other .message-content-wrapper { max-width: 85vw; }
+        .message-content-wrapper.has-image-wrapper { max-width: 82vw; }
+        .tg-bubble          { padding: 8px 10px 16px; }
+        .tg-reaction-bar    { max-width: 85vw; }
+        .tg-bubble.is-compact { padding: 6px 10px 6px; }
+        .message-avatar     { width:24px; height:24px; }
         .tg-meta-inline     { right:6px; font-size:0.59rem; }
         .tg-bubble-text     { font-size:0.875rem; }
         .tg-author-name     { font-size:0.67rem; }
         .tg-emoji-menu      { right:0; left:auto; }
+        .bubble-header      { gap: 6px; }
         /* Reply tweaks */
-        .tg-replies-container .message-avatar { width:22px; height:22px; }
-        .tg-replies-container .tg-bubble { max-width: 72vw; }
-        .tg-replies-container { padding-left: 12px; padding-right: 12px; }
+        .tg-replies-container .message-avatar { width:20px; height:20px; }
+        .tg-replies-container { padding-left: 14px; }
     }
 </style>
 
@@ -755,7 +767,6 @@
     }
 
     // Generates DOM dynamically keeping template purity
-    // Generates DOM dynamically keeping template purity
     function createCommentDOM(comment, depth = 0) {
         const row = document.createElement('div');
         row.className = `message-row comment-wrapper group ${comment.is_own ? 'message--own' : 'message--other'}`;
@@ -765,15 +776,12 @@
         const compactLen = commentText.replace(/\s+/g, ' ').trim().length;
         const isCompactBubble = !comment.image_url && !/[\r\n]/.test(commentText) && compactLen > 0 && compactLen <= 30;
 
-        const avatarHtml = `
-            <div class="message-avatar">
-                ${comment.author.photo_url 
-                    ? `<img src="${comment.author.photo_url}" alt="">`
-                    : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-indigo-300 bg-indigo-900/60">${comment.author.initial}</div>`}
-            </div>`;
+        const avatarInner = comment.author.photo_url
+            ? `<img src="${comment.author.photo_url}" alt="">`
+            : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-indigo-300 bg-indigo-900/60">${comment.author.initial}</div>`;
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
-        
+
         const repliesLabel = comment.reply_count === 1 ? 'reply' : 'replies';
         const repliesHtml = comment.reply_count > 0 ? `
             <div class="tg-replies-container" id="replies-${comment.id}">
@@ -790,14 +798,21 @@
         const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
         const commentSnippetSafe = commentText.slice(0, 50).replace(/'/g, "\\'");
 
-        const content = `
+        const authorLabel = comment.is_own
+            ? `<span class="tg-author-name" style="color:#6ee7b7;">me</span>`
+            : `<span class="tg-author-name">${comment.author.display_name}</span>`;
+
+        row.innerHTML = `
             <div class="message-content-wrapper min-w-0 ${comment.image_url ? 'has-image-wrapper' : ''}">
                 <div class="tg-bubble ${comment.image_url ? 'has-image' : ''} ${isCompactBubble ? 'is-compact' : ''}">
-                    ${comment.is_own ? `<span class="tg-author-name" style="color:#6ee7b7;">me</span>` : `<span class="tg-author-name">${comment.author.display_name}</span>`}
+                    <div class="bubble-header">
+                        <div class="message-avatar">${avatarInner}</div>
+                        ${authorLabel}
+                    </div>
                     ${imgHtml}
                     <div class="tg-bubble-text text-white/95">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${comment.created_at}</span></div>
                 </div>
-                
+
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">
                     ${emojisHtml}
                     ${document.getElementById('submit-comment') ? `
@@ -813,12 +828,6 @@
                 ${repliesHtml}
             </div>
         `;
-
-        if (comment.is_own) {
-            row.innerHTML = content + avatarHtml;
-        } else {
-            row.innerHTML = avatarHtml + content;
-        }
         return row;
     }
 
