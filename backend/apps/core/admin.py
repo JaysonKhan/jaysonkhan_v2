@@ -253,6 +253,12 @@ class SiteSettingsAdmin(ModelAdmin):
                         'admin_notify_reactions',
                         'admin_notify_likes',
                         'admin_notify_contacts',
+                        'tg_emoji_read_more',
+                        'tg_emoji_google_play',
+                        'tg_emoji_app_store',
+                        'tg_emoji_web',
+                        'tg_emoji_bot',
+                        'tg_emoji_comment',
                     ) if f in columns
                 ),
             })] if 'telegram_owner_id' in columns else []),

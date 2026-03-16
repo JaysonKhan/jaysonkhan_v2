@@ -473,10 +473,18 @@ class NotificationService:
         If deep link settings (bot username / app name) are configured,
         the button opens the page inside Telegram's Mini App browser.
         Otherwise falls back to a regular URL button.
+
+        Supports Bot API 9.4 icon_custom_emoji_id for animated emoji.
         """
         deep_url = self._tg_deep_link(startapp) if startapp else ''
         url = deep_url or fallback_url or self._domain
-        return {'inline_keyboard': [[{'text': label, 'url': url}]]}
+        btn = {'text': label, 'url': url}
+        # Add custom emoji for comment buttons (💬)
+        site = SiteSettingsService.get()
+        emoji_id = getattr(site, 'tg_emoji_comment', '') or ''
+        if emoji_id and label.startswith('💬'):
+            btn['icon_custom_emoji_id'] = emoji_id
+        return {'inline_keyboard': [[btn]]}
 
     @staticmethod
     def _content_startapp(obj) -> str:

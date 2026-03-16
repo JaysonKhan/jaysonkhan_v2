@@ -237,52 +237,69 @@ class ChannelShareService:
 
     def _build_post_keyboard(self, post) -> list:
         """Build inline keyboard for a blog post (Mini App deep link)."""
+        emojis = self._emoji_ids()
         detail_url = self._detail_deep_link(post)
-        return [
-            [{'text': '📖 Batafsil', 'url': detail_url}],
-        ]
+        btn = {'text': '📖 Batafsil', 'url': detail_url, 'style': 'primary'}
+        if emojis['read_more']:
+            btn['icon_custom_emoji_id'] = emojis['read_more']
+        return [[btn]]
 
     def _build_project_keyboard(self, project) -> list:
         """Build inline keyboard for a project with store links."""
+        emojis = self._emoji_ids()
         rows = []
 
         # Store buttons (same row if both exist)
         store_row = []
         if project.play_store_url:
-            store_row.append({
+            btn = {
                 'text': '▶️ Google Play',
                 'url': project.play_store_url,
-            })
+                'style': 'success',
+            }
+            if emojis['google_play']:
+                btn['icon_custom_emoji_id'] = emojis['google_play']
+            store_row.append(btn)
         if project.app_store_url:
-            store_row.append({
+            btn = {
                 'text': '🍎 App Store',
                 'url': project.app_store_url,
-            })
+                'style': 'primary',
+            }
+            if emojis['app_store']:
+                btn['icon_custom_emoji_id'] = emojis['app_store']
+            store_row.append(btn)
         if store_row:
             rows.append(store_row)
 
         # Additional links row
         extra_row = []
         if project.web_page_url:
-            extra_row.append({
-                'text': '🌐 Web',
-                'url': project.web_page_url,
-            })
+            btn = {'text': '🌐 Web', 'url': project.web_page_url}
+            if emojis['web']:
+                btn['icon_custom_emoji_id'] = emojis['web']
+            extra_row.append(btn)
         # Bot projects: web_page_url is likely the bot link itself,
         # so only add a generic bot link if there is no web_page_url
         if project.is_bot and not project.web_page_url:
             bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
             if bot_username:
-                extra_row.append({
+                btn = {
                     'text': '🤖 Telegram Bot',
                     'url': f'https://t.me/{bot_username}',
-                })
+                }
+                if emojis['bot']:
+                    btn['icon_custom_emoji_id'] = emojis['bot']
+                extra_row.append(btn)
         if extra_row:
             rows.append(extra_row)
 
         # Detail button (always present — Mini App deep link)
         detail_url = self._detail_deep_link(project)
-        rows.append([{'text': '📖 Batafsil', 'url': detail_url}])
+        btn = {'text': '📖 Batafsil', 'url': detail_url, 'style': 'primary'}
+        if emojis['read_more']:
+            btn['icon_custom_emoji_id'] = emojis['read_more']
+        rows.append([btn])
 
         return rows
 
@@ -322,6 +339,18 @@ class ChannelShareService:
         return ''
 
     # ── Private helpers ────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _emoji_ids() -> dict:
+        """Load custom emoji IDs from SiteSettings (Bot API 9.4)."""
+        site = SiteSettingsService.get()
+        return {
+            'read_more': getattr(site, 'tg_emoji_read_more', '') or '',
+            'google_play': getattr(site, 'tg_emoji_google_play', '') or '',
+            'app_store': getattr(site, 'tg_emoji_app_store', '') or '',
+            'web': getattr(site, 'tg_emoji_web', '') or '',
+            'bot': getattr(site, 'tg_emoji_bot', '') or '',
+        }
 
     @staticmethod
     def _get_channel_id() -> Optional[int]:

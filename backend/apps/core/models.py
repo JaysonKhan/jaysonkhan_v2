@@ -324,6 +324,32 @@ class SiteSettings(models.Model):
         default=True, help_text="Log contact form submissions to admin group"
     )
 
+    # ── Telegram Button Custom Emoji (Bot API 9.4) ────────────────────────────
+    tg_emoji_read_more = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 📖 Batafsil button (e.g. 5368324170671202286)"
+    )
+    tg_emoji_google_play = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for ▶️ Google Play button"
+    )
+    tg_emoji_app_store = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🍎 App Store button"
+    )
+    tg_emoji_web = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🌐 Web button"
+    )
+    tg_emoji_bot = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🤖 Telegram Bot button"
+    )
+    tg_emoji_comment = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 💬 Comment/reply buttons"
+    )
+
     # ── Footer ────────────────────────────────────────────────────────────────
     footer_description = models.TextField(
         max_length=500, blank=True, default="",
