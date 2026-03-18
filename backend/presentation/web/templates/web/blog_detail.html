@@ -70,7 +70,7 @@
     {% if post.featured_image %}
     <div class="overflow-hidden mb-12 reveal" style="border-radius:var(--radius-card)">
         <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
-            class="w-full h-[380px] object-cover border border-white/10">
+            class="w-full max-h-[380px] object-contain border border-white/10">
     </div>
     {% endif %}
 
