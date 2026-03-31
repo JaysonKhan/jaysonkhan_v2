@@ -39,7 +39,7 @@
             style="border-radius:var(--radius-card); max-width:420px; justify-self:center;">
             <a href="{% url 'blog_detail' post.slug %}" class="block overflow-hidden relative">
                 {% if post.featured_image %}
-                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}"
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy"
                     class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">
                 {% else %}
                 <div class="w-full h-52 bg-white/5 flex items-center justify-center text-slate-600">

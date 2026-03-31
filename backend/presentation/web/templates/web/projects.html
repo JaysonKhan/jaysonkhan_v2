@@ -35,7 +35,7 @@
 
             {% if project.image %}
             <div class="relative overflow-hidden">
-                <img src="{{ project.image.url }}" alt="{{ project.title }}"
+                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy"
                     class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
             </div>
             {% else %}
