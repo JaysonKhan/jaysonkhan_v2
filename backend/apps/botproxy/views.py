@@ -800,6 +800,25 @@ def university_faculties_api(request, uni_id: int, svc="rektor"):
     return JsonResponse({"faculties": faculties})
 
 
+@admin_permission_required('botproxy.manage_universities')
+@require_POST
+def faculty_edit(request, fac_id: int, svc="rektor"):
+    """AJAX endpoint: update faculty code/name."""
+    import json as json_mod
+    client = _client(svc)
+    try:
+        data = json_mod.loads(request.body)
+        client.update_university_faculty(
+            fac_id,
+            code=data.get("code"),
+            name=data.get("name"),
+            sort_order=data.get("sort_order"),
+        )
+        return JsonResponse({"status": "ok"})
+    except BotAPIError as e:
+        return JsonResponse({"error": e.detail}, status=e.status or 400)
+
+
 def _build_page_range(current: int, total: int) -> list:
     """Build a compact page range with ellipsis markers."""
     if total <= 7:

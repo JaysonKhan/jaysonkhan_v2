@@ -255,6 +255,17 @@ class BotAPIClient:
             json={"code": code, "name": name, "sort_order": sort_order},
         ).json()
 
+    def update_university_faculty(self, fac_id: int, code: str | None = None,
+                                   name: str | None = None, sort_order: int | None = None) -> dict:
+        data = {}
+        if code is not None:
+            data["code"] = code
+        if name is not None:
+            data["name"] = name
+        if sort_order is not None:
+            data["sort_order"] = sort_order
+        return self._request("PATCH", f"/api/v1/universities/faculties/{fac_id}", json=data).json()
+
     def remove_university_faculty(self, fac_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/universities/faculties/{fac_id}").json()
 

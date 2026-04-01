@@ -71,10 +71,20 @@
             <thead><tr><th>#</th><th>Kod</th><th>Nomi</th><th></th></tr></thead>
             <tbody>
             {% for f in faculties %}
-            <tr>
+            <tr data-fac-id="{{ f.id }}">
                 <td class="rb-muted">{{ forloop.counter }}</td>
-                <td><span class="rb-code">{{ f.code }}</span></td>
-                <td>{{ f.name }}</td>
+                <td>
+                    <input type="text" class="fac-code" value="{{ f.code }}"
+                           style="width:80px;padding:0.25rem 0.5rem;border:1px solid transparent;border-radius:6px;font-size:0.8125rem;font-family:monospace;background:transparent;color:var(--rb-fg);"
+                           onfocus="this.style.borderColor='var(--rb-border)';this.style.background='var(--rb-bg)'"
+                           onblur="this.style.borderColor='transparent';this.style.background='transparent';saveFaculty(this.closest('tr'))">
+                </td>
+                <td>
+                    <input type="text" class="fac-name" value="{{ f.name }}"
+                           style="width:100%;padding:0.25rem 0.5rem;border:1px solid transparent;border-radius:6px;font-size:0.8125rem;background:transparent;color:var(--rb-fg);"
+                           onfocus="this.style.borderColor='var(--rb-border)';this.style.background='var(--rb-bg)'"
+                           onblur="this.style.borderColor='transparent';this.style.background='transparent';saveFaculty(this.closest('tr'))">
+                </td>
                 <td style="text-align:right;">
                     <form method="post" style="display:inline;" onsubmit="return confirm('Fakultetni o\'chirishni tasdiqlaysizmi?');">
                         {% csrf_token %}
@@ -145,4 +155,38 @@
     <p class="rb-muted" style="font-size:0.8125rem;">Bu universitetga tegishli so'rovnomalar yo'q</p>
     {% endif %}
 </div>
+
+<script>
+var _facOriginal = {};
+document.querySelectorAll('tr[data-fac-id]').forEach(function(tr) {
+    var id = tr.dataset.facId;
+    _facOriginal[id] = {
+        code: tr.querySelector('.fac-code').value,
+        name: tr.querySelector('.fac-name').value
+    };
+});
+
+function saveFaculty(tr) {
+    var id = tr.dataset.facId;
+    var code = tr.querySelector('.fac-code').value.trim();
+    var name = tr.querySelector('.fac-name').value.trim();
+    if (!code || !name) return;
+    if (_facOriginal[id] && _facOriginal[id].code === code && _facOriginal[id].name === name) return;
+
+    fetch("{% url 'bot_faculty_edit' svc=svc fac_id=0 %}".replace('/0/', '/' + id + '/'), {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+        body: JSON.stringify({code: code, name: name})
+    }).then(function(r) {
+        if (r.ok) {
+            _facOriginal[id] = {code: code, name: name};
+            tr.style.outline = '2px solid #22c55e';
+            setTimeout(function() { tr.style.outline = ''; }, 800);
+        } else {
+            tr.style.outline = '2px solid #ef4444';
+            setTimeout(function() { tr.style.outline = ''; }, 1500);
+        }
+    });
+}
+</script>
 {% endblock %}

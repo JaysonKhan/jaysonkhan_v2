@@ -41,4 +41,5 @@ urlpatterns = [
     path("<str:svc>/universities/<int:uni_id>/delete/", views.university_delete, name="bot_university_delete"),
     path("<str:svc>/universities/<int:uni_id>/logo/", views.university_logo_proxy, name="bot_university_logo"),
     path("<str:svc>/universities/<int:uni_id>/faculties/", views.university_faculties_api, name="bot_university_faculties"),
+    path("<str:svc>/faculties/<int:fac_id>/edit/", views.faculty_edit, name="bot_faculty_edit"),
 ]
