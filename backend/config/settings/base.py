@@ -433,9 +433,9 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {
-                        "title": "Rektor Bot",
+                        "title": "TalabaOvozi",
                         "icon": "smart_toy",
-                        "link": f"{_A}bot/rektor/dashboard/",
+                        "link": f"{_A}bot/talabaovozi/dashboard/",
                         "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
                     },
 {
@@ -456,8 +456,8 @@ BOT_API_SECRET_KEY = env('BOT_API_SECRET_KEY', default='')
 BOT_API_TIMEOUT = env.int('BOT_API_TIMEOUT', default=30)
 
 BOT_SERVICES = {
-    "rektor": {
-        "title": "Rektor Bot",
+    "talabaovozi": {
+        "title": "TalabaOvozi",
         "icon": "smart_toy",
         "base_url": env("BOT_API_BASE_URL", default="http://161.97.177.218:8433"),
         "secret": env("BOT_API_SECRET_KEY", default=""),

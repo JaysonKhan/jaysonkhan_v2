@@ -135,7 +135,7 @@ class TelegramEntityAdmin(ModelAdmin):
         colors = {
             "site": "#3b82f6",
             "osint": "#f59e0b",
-            "rektor": "#10b981",
+            "talabaovozi": "#10b981",
         }
         for src in sources:
             color = colors.get(src.service, "#6b7280")

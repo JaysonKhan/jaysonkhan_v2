@@ -1,6 +1,6 @@
 """Django admin views for bot management (polls, analytics, admins, users, universities).
 
-All views accept a `svc` parameter from the URL (e.g. 'rektor', 'ovoz') which
+All views accept a `svc` parameter from the URL (e.g. 'talabaovozi') which
 selects which bot API to connect to via BOT_SERVICES settings.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 PER_PAGE = 25
 
 
-def _ctx(request, svc: str = "rektor", extra: dict | None = None) -> dict:
+def _ctx(request, svc: str = "talabaovozi", extra: dict | None = None) -> dict:
     """Base context with admin site vars and service info."""
     _validate_svc(svc)
     from django.contrib import admin
@@ -44,7 +44,7 @@ def _validate_svc(svc: str) -> None:
         raise Http404(f"Unknown bot service: {svc}")
 
 
-def _client(svc: str = "rektor") -> BotAPIClient:
+def _client(svc: str = "talabaovozi") -> BotAPIClient:
     _validate_svc(svc)
     return BotAPIClient(service=svc)
 
@@ -87,7 +87,7 @@ def _sanitize_url(url: str | None) -> str | None:
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def bot_dashboard(request, svc="rektor"):
+def bot_dashboard(request, svc="talabaovozi"):
     client = _client(svc)
     ctx = {"api_ok": False, "polls": [], "user_count": 0, "admin_ids": [], "university_count": 0}
     try:
@@ -107,7 +107,7 @@ def bot_dashboard(request, svc="rektor"):
 # ─── Polls ───────────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def poll_list(request, svc="rektor"):
+def poll_list(request, svc="talabaovozi"):
     client = _client(svc)
     polls = []
     try:
@@ -132,7 +132,7 @@ def poll_list(request, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def poll_detail(request, poll_id: int, svc="rektor"):
+def poll_detail(request, poll_id: int, svc="talabaovozi"):
     client = _client(svc)
     # Primary data — redirect if poll itself can't be fetched
     try:
@@ -176,7 +176,7 @@ def poll_detail(request, poll_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.manage_polls')
-def poll_create(request, svc="rektor"):
+def poll_create(request, svc="talabaovozi"):
     client = _client(svc)
 
     if request.method == "POST":
@@ -261,7 +261,7 @@ def poll_create(request, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_close(request, poll_id: int, svc="rektor"):
+def poll_close(request, poll_id: int, svc="talabaovozi"):
     if True:  # @require_POST ensures POST-only
         client = _client(svc)
         try:
@@ -274,7 +274,7 @@ def poll_close(request, poll_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_delete(request, poll_id: int, svc="rektor"):
+def poll_delete(request, poll_id: int, svc="talabaovozi"):
     if True:
         client = _client(svc)
         try:
@@ -290,7 +290,7 @@ def poll_delete(request, poll_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_publish(request, poll_id: int, svc="rektor"):
+def poll_publish(request, poll_id: int, svc="talabaovozi"):
     if True:
         channel = request.POST.get("channel", "").strip()
         if not channel:
@@ -312,7 +312,7 @@ def poll_publish(request, poll_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_channel_add(request, poll_id: int, svc="rektor"):
+def poll_channel_add(request, poll_id: int, svc="talabaovozi"):
     if True:
         channel = request.POST.get("channel", "").strip()
         if not channel:
@@ -331,7 +331,7 @@ def poll_channel_add(request, poll_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_channel_remove(request, poll_id: int, svc="rektor"):
+def poll_channel_remove(request, poll_id: int, svc="talabaovozi"):
     if True:
         channel = request.POST.get("channel", "").strip()
         if channel:
@@ -348,7 +348,7 @@ def poll_channel_remove(request, poll_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_polls')
 @require_POST
-def poll_posts_refresh(request, poll_id: int, svc="rektor"):
+def poll_posts_refresh(request, poll_id: int, svc="talabaovozi"):
     if True:
         client = _client(svc)
         try:
@@ -362,7 +362,7 @@ def poll_posts_refresh(request, poll_id: int, svc="rektor"):
 # ─── Export ──────────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.export_data')
-def export_csv(request, poll_id: int, svc="rektor"):
+def export_csv(request, poll_id: int, svc="talabaovozi"):
     client = _client(svc)
     try:
         data = client.export_csv(poll_id)
@@ -374,7 +374,7 @@ def export_csv(request, poll_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.export_data')
-def export_pdf(request, poll_id: int, svc="rektor"):
+def export_pdf(request, poll_id: int, svc="talabaovozi"):
     client = _client(svc)
     try:
         data = client.export_pdf(poll_id)
@@ -386,7 +386,7 @@ def export_pdf(request, poll_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.export_data')
-def export_json_view(request, poll_id: int, svc="rektor"):
+def export_json_view(request, poll_id: int, svc="talabaovozi"):
     client = _client(svc)
     try:
         data = client.export_json(poll_id)
@@ -402,7 +402,7 @@ ALLOWED_THEMES = {"", "light", "dark"}
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def poll_chart(request, poll_id: int, chart_type: str, svc="rektor"):
+def poll_chart(request, poll_id: int, chart_type: str, svc="talabaovozi"):
     if chart_type not in ALLOWED_CHART_TYPES:
         return HttpResponse(status=400, content=b"Invalid chart type")
     theme = request.GET.get("theme", "")
@@ -420,7 +420,7 @@ def poll_chart(request, poll_id: int, chart_type: str, svc="rektor"):
 # ─── Admins ──────────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def admin_list(request, svc="rektor"):
+def admin_list(request, svc="talabaovozi"):
     client = _client(svc)
     admins = []
     try:
@@ -433,7 +433,7 @@ def admin_list(request, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_bot_admins')
 @require_POST
-def admin_add(request, svc="rektor"):
+def admin_add(request, svc="talabaovozi"):
     if True:
         user_id = request.POST.get("user_id", "").strip()
         role = request.POST.get("role", "admin").strip()
@@ -454,7 +454,7 @@ def admin_add(request, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_bot_admins')
 @require_POST
-def admin_remove(request, user_id: int, svc="rektor"):
+def admin_remove(request, user_id: int, svc="talabaovozi"):
     if True:
         client = _client(svc)
         try:
@@ -471,7 +471,7 @@ ALLOWED_SORT_FIELDS = {"name", "registered_at", "total_votes"}
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def user_stats(request, svc="rektor"):
+def user_stats(request, svc="talabaovozi"):
     """Users list with pagination, search, sort, and enhanced stats."""
     client = _client(svc)
     page = _parse_page(request)
@@ -541,7 +541,7 @@ def user_stats(request, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def user_photo_proxy(request, user_id: int, svc="rektor"):
+def user_photo_proxy(request, user_id: int, svc="talabaovozi"):
     """Proxy user profile photo from bot API."""
     client = _client(svc)
     photo_bytes = client.get_user_photo(user_id)
@@ -558,7 +558,7 @@ def user_photo_proxy(request, user_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def user_growth_chart(request, svc="rektor"):
+def user_growth_chart(request, svc="talabaovozi"):
     """Proxy user growth chart PNG from bot API."""
     theme = request.GET.get("theme", "")
     if theme not in ALLOWED_THEMES:
@@ -573,7 +573,7 @@ def user_growth_chart(request, svc="rektor"):
 
 
 @admin_permission_required('botproxy.export_data')
-def export_users_csv(request, svc="rektor"):
+def export_users_csv(request, svc="talabaovozi"):
     """Download all users as CSV."""
     client = _client(svc)
     try:
@@ -595,7 +595,7 @@ REGIONS = [
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def university_list(request, svc="rektor"):
+def university_list(request, svc="talabaovozi"):
     client = _client(svc)
     region_filter = request.GET.get("region", "").strip()
     universities = []
@@ -612,7 +612,7 @@ def university_list(request, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def university_detail(request, uni_id: int, svc="rektor"):
+def university_detail(request, uni_id: int, svc="talabaovozi"):
     client = _client(svc)
     try:
         data = client.get_university(uni_id)
@@ -663,7 +663,7 @@ def university_detail(request, uni_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.manage_universities')
-def university_create(request, svc="rektor"):
+def university_create(request, svc="talabaovozi"):
     client = _client(svc)
     if request.method == "POST":
         data = {
@@ -709,7 +709,7 @@ def university_create(request, svc="rektor"):
 
 
 @admin_permission_required('botproxy.manage_universities')
-def university_edit(request, uni_id: int, svc="rektor"):
+def university_edit(request, uni_id: int, svc="talabaovozi"):
     client = _client(svc)
     try:
         uni_data = client.get_university(uni_id)
@@ -761,7 +761,7 @@ def university_edit(request, uni_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_universities')
 @require_POST
-def university_delete(request, uni_id: int, svc="rektor"):
+def university_delete(request, uni_id: int, svc="talabaovozi"):
     if True:
         client = _client(svc)
         try:
@@ -773,7 +773,7 @@ def university_delete(request, uni_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def university_logo_proxy(request, uni_id: int, svc="rektor"):
+def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
     """Proxy university logo from bot API."""
     client = _client(svc)
     logo_bytes = client.get_university_logo(uni_id)
@@ -790,7 +790,7 @@ def university_logo_proxy(request, uni_id: int, svc="rektor"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def university_faculties_api(request, uni_id: int, svc="rektor"):
+def university_faculties_api(request, uni_id: int, svc="talabaovozi"):
     """AJAX endpoint: return university faculties as JSON for poll form auto-fill."""
     client = _client(svc)
     try:
@@ -802,7 +802,7 @@ def university_faculties_api(request, uni_id: int, svc="rektor"):
 
 @admin_permission_required('botproxy.manage_universities')
 @require_POST
-def faculty_edit(request, fac_id: int, svc="rektor"):
+def faculty_edit(request, fac_id: int, svc="talabaovozi"):
     """AJAX endpoint: update faculty code/name."""
     import json as json_mod
     client = _client(svc)

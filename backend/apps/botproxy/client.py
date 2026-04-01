@@ -58,7 +58,7 @@ atexit.register(_cleanup_pools)
 class BotAPIClient:
     """Synchronous HTTP client for bot API with HMAC authentication."""
 
-    def __init__(self, service: str = "rektor"):
+    def __init__(self, service: str = "talabaovozi"):
         cfg = settings.BOT_SERVICES[service]
         self._base_url = cfg["base_url"].rstrip("/")
         self._secret = cfg["secret"]

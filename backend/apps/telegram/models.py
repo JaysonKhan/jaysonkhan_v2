@@ -1,7 +1,7 @@
 """Unified Telegram entity models.
 
 Barcha Telegram foydalanuvchilari, guruhlar, kanallar va botlar uchun
-yagona model. Har bir entity qaysi servisdan (site, OSINT, rektor, ovoz)
+yagona model. Har bir entity qaysi servisdan (site, OSINT, talabaovozi)
 topilganligini EntitySource orqali kuzatadi.
 
 TelegramSession — Telethon StringSession ni PostgreSQL da saqlaydi
@@ -23,7 +23,7 @@ from django.utils import timezone
 class TelegramEntity(models.Model):
     """Universal Telegram entity: user, bot, group, supergroup, channel.
 
-    Barcha servislar (site login, OSINT, rektor bot, ovoz bot) shu model
+    Barcha servislar (site login, OSINT, talabaovozi bot) shu model
     orqali ishlaydi. Har bir entity ning qaysi servisdan topilganligini
     EntitySource modeli kuzatadi.
 
@@ -214,8 +214,7 @@ class EntitySource(models.Model):
     class Service(models.TextChoices):
         SITE = "site", "Website (jaysonkhan.com)"
         OSINT = "osint", "OSINT"
-        REKTOR = "rektor", "Rektor Bot"
-        OVOZ = "ovoz", "Ovoz Bot"
+        TALABAOVOZI = "talabaovozi", "TalabaOvozi"
 
     entity = models.ForeignKey(
         TelegramEntity,
