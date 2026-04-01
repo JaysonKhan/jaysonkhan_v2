@@ -198,13 +198,11 @@ class NotificationService:
             'site': '🌐 Sayt (Login)',
             'osint': '🔍 OSINT',
             'rektor': '🎓 Rektor Bot',
-            'ovoz': '🗳 Ovoz Bot',
         }
         svc_action_labels = {
             'site': '🌐 Saytga kirdi',
             'osint': '🔍 OSINT qidirildi',
             'rektor': '🎓 Rektor botga qo\'shildi',
-            'ovoz': '🗳 Ovoz botga qo\'shildi',
         }
         try:
             from telegram.models import EntitySource

@@ -438,13 +438,7 @@ UNFOLD = {
                         "link": f"{_A}bot/rektor/dashboard/",
                         "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
                     },
-                    {
-                        "title": "Ovozim Bot",
-                        "icon": "record_voice_over",
-                        "link": f"{_A}bot/ovoz/dashboard/",
-                        "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
-                    },
-                    {
+{
                         "title": "OSINT",
                         "icon": "person_search",
                         "link": f"{_A}osint/search/",
@@ -468,13 +462,6 @@ BOT_SERVICES = {
         "base_url": env("BOT_API_BASE_URL", default="http://161.97.177.218:8433"),
         "secret": env("BOT_API_SECRET_KEY", default=""),
         "timeout": env.int("BOT_API_TIMEOUT", default=30),
-    },
-    "ovoz": {
-        "title": "Ovozim Bot",
-        "icon": "record_voice_over",
-        "base_url": env("OVOZ_API_BASE_URL", default="http://161.97.177.218:8434"),
-        "secret": env("OVOZ_API_SECRET_KEY", default=""),
-        "timeout": env.int("OVOZ_API_TIMEOUT", default=30),
     },
 }
 
