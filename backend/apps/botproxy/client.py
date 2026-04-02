@@ -293,6 +293,17 @@ class BotAPIClient:
     def get_user_history(self, user_id: int) -> dict:
         return self._request("GET", f"/api/v1/users/{user_id}/history").json()
 
+    def get_audience_segments(self) -> list[dict]:
+        """Get user counts per university for audience segmentation."""
+        try:
+            return self._request("GET", "/api/v1/audience/segments").json().get("segments", [])
+        except BotAPIError:
+            return []
+
+    def get_university_audience(self, uni_id: int) -> dict:
+        """Get users affiliated with a university."""
+        return self._request("GET", f"/api/v1/audience/university/{uni_id}").json()
+
     def get_user_photo(self, user_id: int) -> bytes | None:
         """Fetch user profile photo as bytes. Returns None if not found."""
         try:

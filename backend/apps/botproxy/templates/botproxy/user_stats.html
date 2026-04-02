@@ -107,6 +107,27 @@
         </table>
     </div>
 
+    {% if user_detail.profiles %}
+    <hr class="rb-divider">
+    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">
+        <span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">school</span>
+        Universitet bog'lanishlari
+    </h3>
+    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+        {% for p in user_detail.profiles %}
+        <div class="rb-badge rb-badge-info" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem;">
+            <strong>{{ p.university_name|default:p.university_code }}</strong>
+            {% if p.faculty_name %}
+                <span style="opacity:0.7;">·</span> {{ p.faculty_name }}
+            {% elif p.faculty_code %}
+                <span style="opacity:0.7;">·</span> {{ p.faculty_code }}
+            {% endif %}
+            <span class="rb-code" style="font-size:0.7rem; margin-left:0.25rem;">{{ p.vote_count }}x</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% if user_detail.participated_polls %}
     <hr class="rb-divider">
     <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Ishtirok etgan so'rovnomalar</h3>
@@ -128,6 +149,7 @@
                 <tr>
                     <th>So'rovnoma</th>
                     <th>Nomzod</th>
+                    <th>Universitet</th>
                     <th>Fakultet</th>
                     <th>Sana</th>
                     <th>Holat</th>
@@ -138,7 +160,14 @@
                 <tr>
                     <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a></td>
                     <td>{{ v.candidate_name }}</td>
-                    <td><span class="rb-code">{{ v.faculty_code|default:"-" }}</span></td>
+                    <td>{{ v.university_name|default:"-" }}</td>
+                    <td>
+                        {% if v.faculty_name %}
+                            <span title="{{ v.faculty_name }}">{{ v.faculty_code }}</span>
+                        {% else %}
+                            <span class="rb-code">{{ v.faculty_code|default:"-" }}</span>
+                        {% endif %}
+                    </td>
                     <td class="rb-muted">{{ v.voted_at|truncatechars:16 }}</td>
                     <td>
                         {% if v.poll_status == "open" %}
