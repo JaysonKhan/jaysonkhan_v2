@@ -98,12 +98,25 @@
     </div>
     <div class="rb-table-wrap">
         <table class="rb-table">
-            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-code" title="OSINT profil">{{ user_detail.user_id }}</a></td></tr>
-            <tr><td class="rb-muted"><strong>Username</strong></td><td>{{ user_detail.username|default:"-" }}</td></tr>
-            <tr><td class="rb-muted"><strong>Telefon</strong></td><td>{{ user_detail.phone_number|default:"-" }}</td></tr>
+            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-code" title="OSINT profil">{{ user_detail.user_id }}</a>{% if user_detail.is_premium %} <span title="Telegram Premium">⭐</span>{% endif %}{% if user_detail.is_deleted %} <span class="rb-badge rb-badge-closed" style="font-size:0.65rem;">O'chirilgan</span>{% endif %}{% if user_detail.is_bot %} <span class="rb-badge" style="font-size:0.65rem; background:var(--rb-info);">Bot</span>{% endif %}</td></tr>
+            <tr><td class="rb-muted"><strong>Username</strong></td><td>
+                {{ user_detail.username|default:"-" }}
+                {% if user_detail.usernames %}
+                    {% for un in user_detail.usernames %}
+                        {% if un != user_detail.username %}<span class="rb-code" style="margin-left:4px; font-size:0.75rem;">@{{ un }}</span>{% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td></tr>
+            <tr><td class="rb-muted"><strong>Telefon</strong></td><td>{{ user_detail.phone_number|default:"-" }}{% if user_detail.phone2 and user_detail.phone2 != user_detail.phone_number %} <span class="rb-code" style="margin-left:4px;">{{ user_detail.phone2 }}</span>{% endif %}</td></tr>
             <tr><td class="rb-muted"><strong>Ro'yxatdan o'tgan</strong></td><td>{{ user_detail.registered_at }}</td></tr>
             <tr><td class="rb-muted"><strong>Oxirgi faollik</strong></td><td>{{ user_detail.last_active_at|default:"Ma'lumot yo'q" }}</td></tr>
+            {% if user_detail.last_online_at %}<tr><td class="rb-muted"><strong>Oxirgi online</strong></td><td>{{ user_detail.last_online_at }}</td></tr>{% endif %}
             <tr><td class="rb-muted"><strong>Jami ovozlar</strong></td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
+            {% if user_detail.bio %}<tr><td class="rb-muted"><strong>Bio</strong></td><td style="white-space:pre-wrap; max-width:400px;">{{ user_detail.bio }}</td></tr>{% endif %}
+            {% if user_detail.language_code %}<tr><td class="rb-muted"><strong>Til</strong></td><td><span class="rb-code">{{ user_detail.language_code }}</span></td></tr>{% endif %}
+            {% if user_detail.dc_id %}<tr><td class="rb-muted"><strong>DC</strong></td><td>DC-{{ user_detail.dc_id }}</td></tr>{% endif %}
+            {% if user_detail.common_chats_count %}<tr><td class="rb-muted"><strong>Umumiy chatlar</strong></td><td>{{ user_detail.common_chats_count }}</td></tr>{% endif %}
+            {% if user_detail.enriched_at %}<tr><td class="rb-muted"><strong>Boyitilgan</strong></td><td class="rb-muted" style="font-size:0.75rem;">{{ user_detail.enriched_at|truncatechars:16 }} ({{ user_detail.enrichment_source }})</td></tr>{% endif %}
         </table>
     </div>
 
