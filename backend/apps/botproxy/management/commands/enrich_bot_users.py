@@ -217,9 +217,20 @@ class Command(BaseCommand):
                     time.sleep(0.5)
                     continue
 
-                # Send to bot API
-                try:
-                    bot_client._request("PATCH", f"/api/v1/users/{user_id}/enrich", json=data)
+                # Send to bot API (with retry for 429)
+                saved = False
+                for attempt in range(3):
+                    try:
+                        bot_client._request("PATCH", f"/api/v1/users/{user_id}/enrich", json=data)
+                        saved = True
+                        break
+                    except BotAPIError as e:
+                        if e.status == 429 and attempt < 2:
+                            time.sleep(3 * (attempt + 1))  # 3s, 6s
+                            continue
+                        raise
+
+                if saved:
                     enriched += 1
 
                     # Format status line
@@ -238,12 +249,6 @@ class Command(BaseCommand):
 
                     # Adaptive delay: decrease on success (min 1.5s)
                     current_delay = max(1.5, current_delay * 0.95)
-
-                except BotAPIError as e:
-                    self.stdout.write(self.style.WARNING(
-                        f"  {progress} {user_id}: ⚠️ API save xatolik: {e}"
-                    ))
-                    errors += 1
 
             except FloodWaitError as e:
                 flood_waits += 1
@@ -299,24 +304,27 @@ class Command(BaseCommand):
 
         cached = {}
 
-        # Get required channels from bot API
+        # Get channels from polls (each poll has associated channels)
+        channel_usernames = set()
         try:
-            resp = bot_client._request("GET", "/api/v1/channels")
-            channels = resp.json().get("channels", [])
+            resp = bot_client._request("GET", "/api/v1/polls")
+            polls = resp.json().get("polls", [])
+            for poll in polls:
+                for ch in poll.get("channels", []):
+                    if isinstance(ch, str) and ch.strip():
+                        channel_usernames.add(ch.strip().lstrip("@"))
+                    elif isinstance(ch, dict):
+                        un = ch.get("channel_username", "").strip().lstrip("@")
+                        if un:
+                            channel_usernames.add(un)
         except BotAPIError:
-            self.stdout.write(self.style.WARNING("  ⚠️ Kanallar ro'yxati olinmadi"))
-            return cached
+            self.stdout.write(self.style.WARNING("  ⚠️ Polllar ro'yxati olinmadi"))
 
-        if not channels:
+        if not channel_usernames:
             self.stdout.write("  ⚠️ Majburiy kanallar yo'q")
             return cached
 
-        for ch in channels:
-            ch_username = ch.get("channel_username", "")
-            if not ch_username:
-                continue
-
-            clean_username = ch_username.lstrip("@")
+        for clean_username in channel_usernames:
             self.stdout.write(f"  📡 @{clean_username} a'zolari olinmoqda...")
 
             try:
@@ -446,31 +454,38 @@ class Command(BaseCommand):
                 except Exception:
                     pass
 
-            # Try InputPeerUser with access_hash=0 (works if user has interacted with session account)
+            # Try InputPeerUser with access_hash=0 (rarely works, but worth trying)
             if entity is None:
                 try:
-                    entity = InputPeerUser(user_id, access_hash=0)
+                    from telethon.tl.types import InputPeerUser as IPU
+                    entity = IPU(user_id, access_hash=0)
                     # Test if it actually works
-                    await client(GetFullUserRequest(entity))
+                    test_result = await client(GetFullUserRequest(entity))
                     resolve_method = "zero_hash"
+                    # Cache the result so we don't double-fetch below
+                    _cached_result = test_result
                 except Exception as e:
                     err_str = str(e).lower()
-                    if "could not find" in err_str or "input entity" in err_str:
+                    err_type = type(e).__name__.lower()
+                    if any(x in err_str or x in err_type for x in (
+                        "could not find", "input entity", "user_id_invalid",
+                        "peer_id_invalid", "useridinvalid",
+                    )):
                         return "NOT_RESOLVED"
-                    if "user_id_invalid" in err_str or "peer_id_invalid" in err_str:
-                        return None
                     raise
 
             # Step 2: GetFullUser
             try:
-                if resolve_method != "zero_hash":  # Already fetched for zero_hash test
-                    full_result = await client(GetFullUserRequest(entity))
+                if resolve_method == "zero_hash":
+                    full_result = _cached_result  # Already fetched during test
                 else:
                     full_result = await client(GetFullUserRequest(entity))
             except Exception as e:
                 err_str = str(e).lower()
-                if any(x in err_str for x in (
-                    "user_id_invalid", "peer_id_invalid", "input_user_deactivated"
+                err_type = type(e).__name__.lower()
+                if any(x in err_str or x in err_type for x in (
+                    "user_id_invalid", "peer_id_invalid", "input_user_deactivated",
+                    "useridinvalid",
                 )):
                     return None
                 raise
