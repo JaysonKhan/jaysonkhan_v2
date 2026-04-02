@@ -213,8 +213,16 @@ class Command(BaseCommand):
 
                 if data == "NOT_RESOLVED":
                     not_resolved += 1
-                    self.stdout.write(f"  {progress} {user_id}: 🔒 resolve imkonsiz (access_hash yo'q)")
-                    time.sleep(0.5)
+                    # Mark as attempted so we don't retry every run
+                    try:
+                        bot_client._request("PATCH", f"/api/v1/users/{user_id}/enrich", json={
+                            "enrichment_source": "no_access_hash",
+                        })
+                    except BotAPIError:
+                        pass
+                    if not_resolved % 50 == 0 or not_resolved <= 5:
+                        self.stdout.write(f"  {progress} {user_id}: 🔒 resolve imkonsiz ({not_resolved} ta)")
+                    time.sleep(0.3)
                     continue
 
                 # Send to bot API (with retry for 429)
