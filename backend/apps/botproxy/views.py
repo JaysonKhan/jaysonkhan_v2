@@ -558,17 +558,30 @@ def user_detail(request, user_id: int, svc="talabaovozi"):
         pass
 
     # OSINT data (optional — only if user has osint permission)
+    # NOTE: We only load cached data here. Fresh data is loaded via AJAX
+    # when the OSINT tab is clicked (to avoid gunicorn timeout).
     osint_basic = None
     osint_tree = []
     has_osint = False
     try:
         from osint.models import OsintCache
-        from osint.services.osint_service import fetch_or_cache
         from osint.views import PROFILE_TREE
 
         if request.user.has_perm('osint.use_osint'):
             has_osint = True
-            osint_basic = fetch_or_cache("stats_min", user_id, user=request.user)
+
+            # Only use CACHED stats_min (no API call)
+            cached_entry = OsintCache.get_cached("stats_min", str(user_id))
+            if cached_entry:
+                import json as _json
+                try:
+                    osint_basic = type('CachedResult', (), {
+                        'data': _json.loads(cached_entry.data) if isinstance(cached_entry.data, str) else cached_entry.data,
+                        'error': None,
+                        'cached': True,
+                    })()
+                except Exception:
+                    osint_basic = None
 
             cached_branches = set(
                 OsintCache.objects.filter(target_id=str(user_id)).values_list(
