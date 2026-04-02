@@ -49,8 +49,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--delay", type=float, default=3.5,
-            help="So'rovlar orasidagi kutish (default: 3.5s)",
+            "--delay", type=float, default=5.0,
+            help="So'rovlar orasidagi kutish (default: 5.0s)",
         )
         parser.add_argument(
             "--resume", action="store_true",
@@ -60,10 +60,28 @@ class Command(BaseCommand):
             "--stale-days", type=int, default=STALE_DAYS,
             help=f"Qayta boyitish kunlari (default: {STALE_DAYS})",
         )
+        parser.add_argument(
+            "--reset-failed", action="store_true",
+            help="no_access_hash bilan belgilangan userlarni qayta qatorga qo'yish",
+        )
+        parser.add_argument(
+            "--wait-for-flood", action="store_true",
+            help="FloodWait tugaguncha kutib, keyin boshlash",
+        )
+        parser.add_argument(
+            "--resolve-pause", type=int, default=300,
+            help="Har 30 ta username resolve dan keyin kutish (sekundlarda, default: 300s = 5 min)",
+        )
+        parser.add_argument(
+            "--resolve-batch", type=int, default=30,
+            help="Bir batchda nechta username resolve qilish (default: 30)",
+        )
 
     def handle(self, *args, **options):
         base_delay = options["delay"]
         stale_days = options["stale_days"]
+        resolve_pause = options["resolve_pause"]
+        resolve_batch = options["resolve_batch"]
         start_time = time.monotonic()
         started_at = datetime.now()
 
@@ -95,6 +113,23 @@ class Command(BaseCommand):
             self._error(f"Telethon client xatolik: {e}")
             return
 
+        # 2a. Reset failed users if requested
+        if options["reset_failed"]:
+            self._reset_failed_users(bot_client)
+
+        # 2b. Wait for FloodWait if requested
+        if options["wait_for_flood"]:
+            self._wait_for_flood(tg_client, run_async)
+
+        # 2c. Check for existing FloodWait
+        flood_seconds = self._check_flood_wait(tg_client, run_async)
+        if flood_seconds > 0:
+            self._log(f"FloodWait mavjud: {flood_seconds}s ({flood_seconds/3600:.1f} soat)")
+            self._log(f"Ban tugash vaqti: {(datetime.now() + timedelta(seconds=flood_seconds)).strftime('%Y-%m-%d %H:%M')}")
+            if not options["wait_for_flood"]:
+                self._log("--wait-for-flood flag bilan qayta ishga tushiring yoki kutib turing.")
+                return
+
         # 3. Get total count
         try:
             resp = bot_client._request("GET", "/api/v1/users/count")
@@ -104,20 +139,23 @@ class Command(BaseCommand):
 
         self._log(f"Jami foydalanuvchilar: {total_users}")
 
-        # Calculate ETA (rough estimate: 60% resolvable at 4.5s, 40% skip at 0.5s)
-        resolvable = int(total_users * 0.6)
-        non_resolvable = total_users - resolvable
-        est_seconds = (resolvable * 4.5) + (non_resolvable * 0.5) + ((total_users // 500) * INTER_BATCH_PAUSE)
+        # Calculate ETA
+        est_seconds = total_users * (base_delay + 1.5)
         est_hours = est_seconds / 3600
         eta = started_at + timedelta(seconds=est_seconds)
         self._log(f"Taxminiy vaqt: {est_hours:.1f} soat")
         self._log(f"Taxminiy tugash: {eta.strftime('%Y-%m-%d %H:%M:%S')}")
+        self._log(f"Delay: {base_delay}s, Resolve batch: {resolve_batch}, Resolve pause: {resolve_pause}s")
         self._log("")
 
         # 4. Get all usernames in one shot
         self._log("Bot API dan barcha username lar olinmoqda...")
         usernames_map = self._get_all_usernames(bot_client)
         self._log(f"Username topildi: {len(usernames_map)}/{total_users}")
+
+        # Store resolve settings for _process_batch
+        self._resolve_pause = resolve_pause
+        self._resolve_batch = resolve_batch
 
         # 5. Process in batches
         grand_enriched = 0
@@ -202,6 +240,9 @@ class Command(BaseCommand):
         flood_waits = 0
         current_delay = base_delay
         total = len(user_ids)
+        resolve_count = 0  # Track username resolutions for rate limiting
+        resolve_batch = getattr(self, "_resolve_batch", 30)
+        resolve_pause = getattr(self, "_resolve_pause", 300)
 
         for idx, user_id in enumerate(user_ids, 1):
             # Micro-batch pause every 50
@@ -209,8 +250,16 @@ class Command(BaseCommand):
                 self._log(f"    ⏸ 60s micro-pause ({idx-1}/{total})")
                 time.sleep(60)
 
+            # Check if this user will need username resolution
+            username = usernames_map.get(user_id)
+            if username:
+                resolve_count += 1
+                # Pause after every N username resolutions to avoid FloodWait
+                if resolve_count > 1 and (resolve_count - 1) % resolve_batch == 0:
+                    self._log(f"    ⏸ {resolve_pause}s resolve-pause ({resolve_count} resolves)")
+                    time.sleep(resolve_pause)
+
             try:
-                username = usernames_map.get(user_id)
                 data = self._fetch_user_data(tg_client, user_id, username)
 
                 if data is None:
@@ -261,6 +310,11 @@ class Command(BaseCommand):
                 wait = e.seconds + random.randint(10, 30)
                 current_delay = min(current_delay * 2, 30)
                 self._log(f"    [{idx}/{total}] 🚫 FloodWait {e.seconds}s! Kutish: {wait}s")
+                if e.seconds > 3600:
+                    self._log(f"    ⛔ FloodWait juda katta ({e.seconds}s = {e.seconds/3600:.1f} soat)!")
+                    self._log(f"    Jarayon to'xtatilmoqda. {e.seconds}s dan keyin qayta ishga tushiring.")
+                    self._log(f"    Qayta ishga tushirish vaqti: {(datetime.now() + timedelta(seconds=e.seconds)).strftime('%Y-%m-%d %H:%M')}")
+                    return enriched, not_resolved, skipped, errors, flood_waits
                 time.sleep(wait)
                 continue
 
@@ -284,6 +338,8 @@ class Command(BaseCommand):
         result = {}
         page = 1
         per_page = 100
+        retries = 0
+        max_retries = 5
         while True:
             try:
                 resp = bot_client._request("GET", f"/api/v1/users?page={page}&per_page={per_page}")
@@ -300,15 +356,21 @@ class Command(BaseCommand):
                 if page >= total_pages:
                     break
                 page += 1
-                if page % 50 == 0:
-                    time.sleep(1)  # Don't flood bot API
+                retries = 0  # Reset retries on success
+                # Rate limit: ~200 req/min max (0.3s between requests)
+                time.sleep(0.3)
+                if page % 100 == 0:
+                    self._log(f"  Username progress: page {page}/{total_pages}, {len(result)} found")
+                    time.sleep(2)  # Extra pause every 100 pages
             except BotAPIError as e:
-                self._log(f"  ⚠️ Username page {page} xatolik: {e}")
-                time.sleep(5)
-                if page > 1:
-                    page += 1  # Try to skip problematic page
-                else:
+                retries += 1
+                self._log(f"  ⚠️ Username page {page} xatolik (retry {retries}): {e}")
+                if retries >= max_retries:
+                    self._log(f"  ⛔ {max_retries} retry dan keyin to'xtatildi, {len(result)} username bilan davom etamiz")
                     break
+                wait = min(5 * retries, 30)  # Exponential backoff: 5, 10, 15, 20, 25s
+                time.sleep(wait)
+                # Don't skip page — retry same page
         return result
 
     def _fetch_user_data(self, client, user_id, username=None):
@@ -329,10 +391,16 @@ class Command(BaseCommand):
             entity = None
             resolve_method = "unknown"
 
+            # IMPORTANT: FloodWaitError must NOT be silently caught!
+            # It must propagate up so the caller can pause appropriately.
+            from telethon.errors import FloodWaitError as _FWE
+
             if username:
                 try:
                     entity = await client.get_input_entity(f"@{username}")
                     resolve_method = "username"
+                except _FWE:
+                    raise  # Always propagate FloodWait
                 except Exception:
                     pass
 
@@ -340,6 +408,8 @@ class Command(BaseCommand):
                 try:
                     entity = await client.get_input_entity(user_id)
                     resolve_method = "cache"
+                except _FWE:
+                    raise
                 except Exception:
                     pass
 
@@ -348,6 +418,8 @@ class Command(BaseCommand):
                     entity = InputPeerUser(user_id, access_hash=0)
                     await client(GetFullUserRequest(entity))
                     resolve_method = "zero_hash"
+                except _FWE:
+                    raise
                 except Exception as e:
                     err_str = str(e).lower()
                     err_type = type(e).__name__.lower()
@@ -360,6 +432,8 @@ class Command(BaseCommand):
 
             try:
                 full_result = await client(GetFullUserRequest(entity))
+            except _FWE:
+                raise
             except Exception as e:
                 err_str = str(e).lower()
                 err_type = type(e).__name__.lower()
@@ -432,6 +506,49 @@ class Command(BaseCommand):
             return data
 
         return run_async(_get_full_user())
+
+    def _check_flood_wait(self, tg_client, run_async):
+        """Check if there's an active FloodWait ban."""
+        async def _check():
+            try:
+                await tg_client.get_input_entity("@telegram")
+                return 0
+            except Exception as e:
+                if "FloodWait" in type(e).__name__:
+                    return getattr(e, "seconds", 0)
+                return 0
+        try:
+            return run_async(_check())
+        except Exception:
+            return 0
+
+    def _wait_for_flood(self, tg_client, run_async):
+        """Wait until FloodWait ban expires."""
+        seconds = self._check_flood_wait(tg_client, run_async)
+        if seconds <= 0:
+            self._log("FloodWait yo'q, davom etamiz.")
+            return
+        wait = seconds + 60  # Extra 1 min buffer
+        self._log(f"FloodWait: {seconds}s ({seconds/3600:.1f} soat) qoldi")
+        self._log(f"Kutish boshlanmoqda... Tugash: {(datetime.now() + timedelta(seconds=wait)).strftime('%Y-%m-%d %H:%M')}")
+        time.sleep(wait)
+        self._log("FloodWait tugadi! Davom etamiz...")
+
+    def _reset_failed_users(self, bot_client):
+        """Reset users marked as no_access_hash to re-queue them."""
+        from botproxy.client import BotAPIError
+        self._log("no_access_hash bilan belgilangan userlar qayta qatorga qo'yilmoqda...")
+        # We need to use a special endpoint or reset enriched_at
+        # For now, we'll use a PATCH with enriched_at=null
+        # But the bot API might not support this. Let's check.
+        try:
+            resp = bot_client._request("POST", "/api/v1/users/reset-enrichment",
+                                       json={"source": "no_access_hash"})
+            data = resp.json()
+            self._log(f"Reset: {data}")
+        except BotAPIError as e:
+            self._log(f"Reset endpoint mavjud emas ({e}), manual reset kerak.")
+            self._log("Bot API da /api/v1/users/reset-enrichment endpoint qo'shing.")
 
     def _log(self, msg):
         self.stdout.write(msg)
