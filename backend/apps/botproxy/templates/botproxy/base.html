@@ -203,8 +203,8 @@
     @media (max-width: 768px) { .rb-card-grid { grid-template-columns: 1fr; } }
     .rb-uni-card { display: flex; gap: 1rem; }
     .rb-uni-logo {
-        width: 64px; height: 64px; border-radius: 12px; object-fit: cover;
-        border: 1px solid var(--rb-border); flex-shrink: 0; background: var(--rb-bg-muted);
+        width: 64px; height: 64px; border-radius: 14px; object-fit: contain;
+        flex-shrink: 0; padding: 4px; background: transparent;
     }
     .rb-uni-logo-placeholder {
         width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0;
@@ -227,7 +227,7 @@
 
     /* ── Detail Header ───────────────────────────────────────────────────── */
     .rb-detail-header { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
-    .rb-detail-logo { width: 96px; height: 96px; border-radius: 16px; object-fit: cover; border: 1px solid var(--rb-border); }
+    .rb-detail-logo { width: 96px; height: 96px; border-radius: 18px; object-fit: contain; padding: 6px; background: transparent; }
     .rb-detail-logo-placeholder { width: 96px; height: 96px; border-radius: 16px; background: var(--rb-primary-muted); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: var(--rb-primary); }
     .rb-detail-info { flex: 1; min-width: 200px; }
     .rb-detail-info h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }

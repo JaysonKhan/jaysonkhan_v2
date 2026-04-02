@@ -779,9 +779,17 @@ def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
     logo_bytes = client.get_university_logo(uni_id)
     if not logo_bytes:
         return HttpResponse(status=404)
+    # Detect content type from bytes
+    content_type = "image/png"
+    if logo_bytes[:5] == b"<?xml" or logo_bytes[:4] == b"<svg" or b"<svg" in logo_bytes[:256]:
+        content_type = "image/svg+xml"
+    elif logo_bytes[:3] == b"\xff\xd8\xff":
+        content_type = "image/jpeg"
+    elif logo_bytes[:4] == b"RIFF" and logo_bytes[8:12] == b"WEBP":
+        content_type = "image/webp"
     return HttpResponse(
         logo_bytes,
-        content_type="image/png",
+        content_type=content_type,
         headers={
             "Cache-Control": "public, max-age=3600",
             "X-Content-Type-Options": "nosniff",
