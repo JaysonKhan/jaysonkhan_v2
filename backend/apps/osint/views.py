@@ -248,8 +248,11 @@ def osint_search(request):
 
 @admin_permission_required('osint.use_osint')
 def osint_profile(request, user_id: int):
-    """User profile page with lazy-loading tree."""
-    # Faqat yangi qidiruv bo'lsa log yozish (mavjud resolved_id bilan dublikat yaratmaslik)
+    """Redirect to unified user detail page (botproxy).
+
+    The unified page at /<svc>/users/<user_id>/ combines bot data + OSINT.
+    """
+    # Log the search if needed
     if not OsintSearchLog.objects.filter(
         resolved_id=user_id, searched_by=request.user,
     ).exists():
@@ -260,13 +263,19 @@ def osint_profile(request, user_id: int):
             resolved_id=user_id,
         )
 
+    # Redirect to unified detail page
+    try:
+        url = reverse("bot_user_detail", kwargs={"svc": "talabaovozi", "user_id": user_id})
+        return redirect(url)
+    except Exception:
+        logger.warning("bot_user_detail URL not found, falling back to OSINT profile")
+
+    # Fallback: render old OSINT profile if unified page not available
     basic = fetch_or_cache("stats_min", user_id, user=request.user)
 
-    # OSINT → TelegramEntity sync
     if basic.data and not basic.error:
         try:
             from osint.services.osint_service import sync_entity_from_osint
-
             sync_entity_from_osint(user_id, basic.data)
         except Exception:
             logger.exception("sync_entity_from_osint xatolik: %s", user_id)

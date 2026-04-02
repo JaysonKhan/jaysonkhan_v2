@@ -1,0 +1,360 @@
+{% extends "botproxy/base.html" %}
+{% load static telegram_tags %}
+{% block page_title %}{{ user_detail.first_name|default:"User" }} — {{ service_title }}{% endblock %}
+
+{% block bot_content %}
+<style>
+.rb-avatar {
+    width: 36px; height: 36px; border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 0.875rem; color: #fff; flex-shrink: 0;
+}
+.rb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rb-avatar.no-photo::after { content: attr(data-initials); }
+.rb-avatar.no-photo img { display: none; }
+.rb-avatar-xl { width: 80px; height: 80px; font-size: 2rem; }
+.ud-header { display: flex; align-items: flex-start; gap: 1.25rem; }
+.ud-info { flex: 1; min-width: 200px; }
+.ud-name { margin: 0; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.ud-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; font-size: 0.8125rem; color: var(--rb-fg-muted); }
+.ud-meta span { display: inline-flex; align-items: center; gap: 0.25rem; }
+.ud-meta .material-symbols-outlined { font-size: 16px; }
+.ud-tabs { display: flex; gap: 0.25rem; margin-bottom: 1.25rem; background: var(--rb-bg-muted); border-radius: 10px; padding: 0.25rem; }
+.ud-tab {
+    padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8125rem; font-weight: 500;
+    color: var(--rb-fg-muted); cursor: pointer; border: none; background: none;
+    transition: all 0.15s; display: flex; align-items: center; gap: 0.375rem;
+}
+.ud-tab:hover { color: var(--rb-fg); background: var(--rb-bg-elevated); }
+.ud-tab.active { background: var(--rb-bg-elevated); color: var(--rb-primary); font-weight: 600; box-shadow: 0 1px 3px var(--rb-shadow); }
+.ud-tab .material-symbols-outlined { font-size: 18px; }
+.ud-panel { display: none; }
+.ud-panel.active { display: block; }
+.ud-kv td:first-child { width: 170px; font-weight: 600; color: var(--rb-fg-muted); font-size: 0.8125rem; }
+
+/* OSINT Tree (inline) */
+.rb-tree { list-style: none; padding: 0; margin: 0; }
+.rb-tree-node { border: 1px solid var(--rb-border); border-radius: 10px; margin-bottom: 0.5rem; overflow: hidden; }
+.rb-tree-header {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+    cursor: pointer; user-select: none; transition: background 0.15s;
+}
+.rb-tree-header:hover { background: var(--rb-bg-muted); }
+.rb-tree-header .chevron { font-size: 20px; color: var(--rb-fg-muted); transition: transform 0.2s; }
+.rb-tree-node.open .chevron { transform: rotate(90deg); }
+.rb-tree-label { font-weight: 600; font-size: 0.875rem; flex: 1; }
+.rb-tree-body { display: none; padding: 0 1rem 1rem; }
+.rb-tree-node.open .rb-tree-body { display: block; }
+.rb-cost-tag { font-size: 0.6875rem; padding: 0.125rem 0.5rem; border-radius: 999px; background: var(--rb-bg-muted); color: var(--rb-fg-muted); font-weight: 500; }
+.rb-cost-tag.free { background: #dcfce7; color: #166534; }
+html.dark .rb-cost-tag.free { background: rgba(34,197,94,0.15); color: #4ade80; }
+.rb-cache-badge { font-size: 0.6875rem; display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; border-radius: 999px; }
+.rb-cache-badge.fresh { background: #dbeafe; color: #1e40af; }
+.rb-cache-badge.stale { background: #fef3c7; color: #92400e; }
+html.dark .rb-cache-badge.fresh { background: rgba(59,130,246,0.15); color: #93c5fd; }
+html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.rb-tree-body .loading { text-align: center; padding: 1rem; color: var(--rb-fg-muted); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+</style>
+
+<!-- Breadcrumb -->
+<div class="rb-breadcrumb">
+    <a href="{% url 'bot_user_stats' svc=svc %}">Foydalanuvchilar</a>
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+    <span>{{ user_detail.first_name|default:"User" }} {{ user_detail.last_name|default:"" }}</span>
+</div>
+
+{% if user_detail %}
+<!-- Profile Header -->
+<div class="rb-card">
+    <div class="ud-header">
+        <div class="rb-avatar rb-avatar-xl" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
+            <img src="{% url 'bot_user_photo' svc=svc user_id=user_detail.user_id %}"
+                 onerror="this.parentElement.classList.add('no-photo'); this.remove();" alt="">
+        </div>
+        <div class="ud-info">
+            <h1 class="ud-name">
+                {{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}
+                {% if user_detail.is_premium %}<span title="Telegram Premium" style="font-size:1.25rem;">⭐</span>{% endif %}
+                {% if user_detail.is_deleted %}<span class="rb-badge rb-badge-closed">O'chirilgan</span>{% endif %}
+                {% if user_detail.is_bot %}<span class="rb-badge rb-badge-info">Bot</span>{% endif %}
+            </h1>
+            <div class="ud-meta">
+                <span><span class="material-symbols-outlined">tag</span> <span class="rb-code">{{ user_detail.user_id }}</span></span>
+                {% if user_detail.username %}<span><span class="material-symbols-outlined">alternate_email</span> {{ user_detail.username }}</span>{% endif %}
+                {% if user_detail.phone_number %}<span><span class="material-symbols-outlined">phone</span> {{ user_detail.phone_number }}</span>{% endif %}
+                {% if user_detail.language_code %}<span><span class="material-symbols-outlined">language</span> {{ user_detail.language_code }}</span>{% endif %}
+                {% if user_detail.dc_id %}<span>DC-{{ user_detail.dc_id }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="ud-tabs">
+    <button class="ud-tab active" data-tab="overview">
+        <span class="material-symbols-outlined">info</span> Umumiy
+    </button>
+    <button class="ud-tab" data-tab="votes">
+        <span class="material-symbols-outlined">how_to_vote</span> Ovozlar
+        {% if user_detail.total_votes %}<span class="rb-badge rb-badge-info" style="font-size:0.625rem; padding:0.0625rem 0.375rem;">{{ user_detail.total_votes }}</span>{% endif %}
+    </button>
+    {% if has_osint %}
+    <button class="ud-tab" data-tab="osint">
+        <span class="material-symbols-outlined">person_search</span> OSINT
+    </button>
+    {% endif %}
+</div>
+
+<!-- TAB: Overview -->
+<div class="ud-panel active" id="tab-overview">
+    <div class="rb-card">
+        <div class="rb-card-header">
+            <h2>Shaxsiy ma'lumotlar</h2>
+        </div>
+        <div class="rb-table-wrap">
+            <table class="rb-table ud-kv">
+                <tr><td>User ID</td><td><span class="rb-code">{{ user_detail.user_id }}</span></td></tr>
+                <tr><td>Username</td><td>
+                    {{ user_detail.username|default:"-" }}
+                    {% if user_detail.usernames %}
+                        {% for un in user_detail.usernames %}
+                            {% if un != user_detail.username %}<span class="rb-code" style="margin-left:4px; font-size:0.75rem;">@{{ un }}</span>{% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td></tr>
+                <tr><td>Telefon</td><td>{{ user_detail.phone_number|default:"-" }}{% if user_detail.phone2 and user_detail.phone2 != user_detail.phone_number %} <span class="rb-code" style="margin-left:4px;">{{ user_detail.phone2 }}</span>{% endif %}</td></tr>
+                <tr><td>Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
+                <tr><td>Oxirgi faollik</td><td>{{ user_detail.last_active_at|default:"Ma'lumot yo'q" }}</td></tr>
+                {% if user_detail.last_online_at %}<tr><td>Oxirgi online</td><td>{{ user_detail.last_online_at }}</td></tr>{% endif %}
+                {% if user_detail.bio %}<tr><td>Bio</td><td style="white-space:pre-wrap; max-width:400px;">{{ user_detail.bio }}</td></tr>{% endif %}
+                {% if user_detail.common_chats_count %}<tr><td>Umumiy chatlar</td><td>{{ user_detail.common_chats_count }}</td></tr>{% endif %}
+                {% if user_detail.enriched_at %}<tr><td>Boyitilgan</td><td class="rb-muted" style="font-size:0.75rem;">{{ user_detail.enriched_at|truncatechars:16 }} ({{ user_detail.enrichment_source }})</td></tr>{% endif %}
+            </table>
+        </div>
+    </div>
+
+    {% if user_detail.profiles %}
+    <div class="rb-card">
+        <div class="rb-card-header">
+            <h2><span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">school</span> Universitet bog'lanishlari</h2>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            {% for p in user_detail.profiles %}
+            <div class="rb-badge rb-badge-info" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem;">
+                <strong>{{ p.university_name|default:p.university_code }}</strong>
+                {% if p.faculty_name %}<span style="opacity:0.7;">·</span> {{ p.faculty_name }}
+                {% elif p.faculty_code %}<span style="opacity:0.7;">·</span> {{ p.faculty_code }}{% endif %}
+                <span class="rb-code" style="font-size:0.7rem; margin-left:0.25rem;">{{ p.vote_count }}x</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- TAB: Votes -->
+<div class="ud-panel" id="tab-votes">
+    {% if user_detail.participated_polls %}
+    <div class="rb-card">
+        <div class="rb-card-header">
+            <h2>Ishtirok etgan so'rovnomalar</h2>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            {% for poll in user_detail.participated_polls %}
+            <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-badge rb-badge-info" style="text-decoration:none;">
+                {{ poll.title }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user_detail.votes %}
+    <div class="rb-card">
+        <div class="rb-card-header">
+            <h2>Ovoz berish tarixi</h2>
+        </div>
+        <div class="rb-table-wrap">
+            <table class="rb-table">
+                <thead>
+                    <tr>
+                        <th>So'rovnoma</th>
+                        <th>Nomzod</th>
+                        <th>Universitet</th>
+                        <th>Fakultet</th>
+                        <th>Sana</th>
+                        <th>Holat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in user_detail.votes %}
+                    <tr>
+                        <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a></td>
+                        <td>{{ v.candidate_name }}</td>
+                        <td>{{ v.university_name|default:"-" }}</td>
+                        <td>{% if v.faculty_name %}<span title="{{ v.faculty_name }}">{{ v.faculty_code }}</span>{% else %}<span class="rb-code">{{ v.faculty_code|default:"-" }}</span>{% endif %}</td>
+                        <td class="rb-muted">{{ v.voted_at|truncatechars:16 }}</td>
+                        <td>{% if v.poll_status == "open" %}<span class="rb-badge rb-badge-open">Faol</span>{% else %}<span class="rb-badge rb-badge-closed">Yopilgan</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="rb-card">
+        <div class="rb-empty">
+            <span class="material-symbols-outlined">how_to_vote</span>
+            <p>Bu foydalanuvchi hali ovoz bermagan</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- TAB: OSINT -->
+{% if has_osint %}
+<div class="ud-panel" id="tab-osint">
+    {% if osint_basic.data %}
+    <!-- OSINT Quick Stats -->
+    <div class="rb-stats" style="margin-bottom:1.25rem;">
+        <div class="rb-stat accent-blue" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ osint_basic.data.total_msg_count|default_if_none:"?" }}</div>
+            <div class="label">Jami xabarlar</div>
+        </div>
+        <div class="rb-stat accent-green" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ osint_basic.data.total_groups|default_if_none:"?" }}</div>
+            <div class="label">Guruhlar</div>
+        </div>
+        <div class="rb-stat accent-amber" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ osint_basic.data.usernames_count|default_if_none:"?" }}</div>
+            <div class="label">Usernamelar</div>
+        </div>
+        <div class="rb-stat accent-red" style="padding:0.75rem;">
+            <div class="value" style="font-size:1.25rem;">{{ osint_basic.data.names_count|default_if_none:"?" }}</div>
+            <div class="label">Ism o'zgarishlar</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- OSINT Data Tree -->
+    <div class="rb-card">
+        <div class="rb-card-header">
+            <h2>
+                <span class="material-symbols-outlined" style="vertical-align:middle;">account_tree</span>
+                Ma'lumotlar daraxti
+            </h2>
+            <span class="rb-muted" style="font-size:0.75rem;">Bo'limni bosib oching. FunStat API orqali yuklanadi.</span>
+        </div>
+
+        <ul class="rb-tree" role="tree">
+            {% for node in osint_tree %}
+            <li class="rb-tree-node {% if node.auto_load and node.has_cache %}open{% endif %}" data-branch="{{ node.id }}" data-user="{{ user_detail.user_id }}"
+                {% if node.paginated %}data-paginated="1"{% endif %} role="treeitem">
+                <div class="rb-tree-header" onclick="toggleBranch(this)" tabindex="0" role="button"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBranch(this);}">
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
+                    <span class="material-symbols-outlined" style="font-size:20px; color:var(--rb-primary);">{{ node.icon }}</span>
+                    <span class="rb-tree-label">{{ node.label }}</span>
+                    <span class="rb-cost-tag {% if node.cost == 'Bepul' %}free{% endif %}">{{ node.cost }}</span>
+                    {% if node.has_cache %}
+                    <span class="rb-cache-badge {% if node.is_stale %}stale{% else %}fresh{% endif %}">
+                        <span class="material-symbols-outlined" style="font-size:12px;">cached</span>
+                        {% if node.is_stale %}Eskirgan{% else %}Keshda{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="rb-tree-body">
+                    <div class="loading">
+                        <span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span>
+                        <p>Ma'lumot yuklanmoqda...</p>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<!-- User not found -->
+<div class="rb-card">
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">person_off</span>
+        <p>User {{ user_id }} topilmadi</p>
+    </div>
+</div>
+{% endif %}
+
+<script>
+/* Avatar colors */
+document.querySelectorAll('.rb-avatar').forEach(el => {
+    const uid = parseInt(el.dataset.uid) || 0;
+    el.style.backgroundColor = `hsl(${uid % 360}, 45%, 55%)`;
+});
+
+/* Tabs */
+document.querySelectorAll('.ud-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.ud-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.ud-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+});
+
+{% if has_osint %}
+/* OSINT Tree toggle + AJAX fetch */
+var BRANCH_URLS = {};
+{% for node in osint_tree %}
+BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_detail.user_id branch=node.id %}";
+{% endfor %}
+var PROFILE_URL_TPL = "{% url 'bot_user_detail' svc=svc user_id=99999 %}";
+var PHOTO_URL_TPL = "{% url 'osint_photo' entity_id='__EID__' %}";
+var ENTITY_URL_TPL = "{% url 'osint_entity_profile' entity_id=77777 %}";
+
+function toggleBranch(header) {
+    var node = header.parentElement;
+    var isOpen = node.classList.contains('open');
+    if (isOpen) {
+        node.classList.remove('open');
+        return;
+    }
+    node.classList.add('open');
+    var body = node.querySelector('.rb-tree-body');
+    if (body.dataset.loaded) return;
+
+    var branch = node.dataset.branch;
+    var url = BRANCH_URLS[branch];
+    if (!url) return;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            body.dataset.loaded = '1';
+            if (data.error) {
+                body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Xatolik: ' + data.error + '</div>';
+                return;
+            }
+            if (data.html) {
+                body.innerHTML = data.html;
+            } else if (data.data) {
+                body.innerHTML = '<pre style="font-size:0.75rem; overflow-x:auto; background:var(--rb-bg-muted); padding:0.75rem; border-radius:8px;">' + JSON.stringify(data.data, null, 2) + '</pre>';
+            } else {
+                body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Ma\'lumot yo\'q</div>';
+            }
+        })
+        .catch(err => {
+            body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Xatolik: ' + err.message + '</div>';
+        });
+}
+{% endif %}
+</script>
+
+{% if has_osint %}
+<script src="{% static 'osint/js/osint-core.js' %}"></script>
+<script src="{% static 'osint/js/osint-photos.js' %}"></script>
+{% endif %}
+{% endblock %}

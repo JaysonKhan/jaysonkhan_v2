@@ -32,6 +32,7 @@ urlpatterns = [
     path("<str:svc>/users/", views.user_stats, name="bot_user_stats"),
     path("<str:svc>/users/chart/growth/", views.user_growth_chart, name="bot_user_growth_chart"),
     path("<str:svc>/users/export/csv/", views.export_users_csv, name="bot_export_users_csv"),
+    path("<str:svc>/users/<int:user_id>/", views.user_detail, name="bot_user_detail"),
     path("<str:svc>/users/<int:user_id>/photo/", views.user_photo_proxy, name="bot_user_photo"),
     # Universities
     path("<str:svc>/universities/", views.university_list, name="bot_university_list"),

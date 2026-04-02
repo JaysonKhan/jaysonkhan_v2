@@ -514,12 +514,17 @@ def user_stats(request, svc="talabaovozi"):
     except BotAPIError as e:
         logger.warning("list_users failed: %s", e)
 
-    # ── User detail search by ID ─────────────────────────────────────
+    # ── User detail search by ID → redirect to detail page ─────────
     if search_id and search_id.isdigit():
         try:
             user_detail = client.get_user_history(int(search_id))
         except BotAPIError:
             messages.warning(request, f"User {search_id} topilmadi")
+        # If only user_id is searched (no text query), redirect directly
+        if user_detail and not search:
+            return HttpResponseRedirect(
+                reverse("bot_user_detail", kwargs={"svc": svc, "user_id": int(search_id)})
+            )
 
     page_range = _build_page_range(page, total_pages)
 
@@ -537,6 +542,57 @@ def user_stats(request, svc="talabaovozi"):
         "page_range": page_range,
         "has_prev": page > 1,
         "has_next": page < total_pages,
+    }))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def user_detail(request, user_id: int, svc="talabaovozi"):
+    """Unified user detail page — bot data + OSINT in one view."""
+    client = _client(svc)
+
+    # Bot data
+    user_data = None
+    try:
+        user_data = client.get_user_history(user_id)
+    except BotAPIError:
+        pass
+
+    # OSINT data (optional — only if user has osint permission)
+    osint_basic = None
+    osint_tree = []
+    has_osint = False
+    try:
+        from osint.models import OsintCache
+        from osint.services.osint_service import fetch_or_cache
+        from osint.views import PROFILE_TREE
+
+        if request.user.has_perm('osint.use_osint'):
+            has_osint = True
+            osint_basic = fetch_or_cache("stats_min", user_id, user=request.user)
+
+            cached_branches = set(
+                OsintCache.objects.filter(target_id=str(user_id)).values_list(
+                    "endpoint_type", flat=True
+                )
+            )
+            for node in PROFILE_TREE:
+                n = dict(node)
+                n["has_cache"] = node["id"] in cached_branches
+                if n["has_cache"]:
+                    entry = OsintCache.get_cached(node["id"], str(user_id))
+                    if entry:
+                        n["cached_at"] = entry.fetched_at
+                        n["is_stale"] = entry.is_stale
+                osint_tree.append(n)
+    except Exception:
+        logger.debug("OSINT data unavailable for user %s", user_id, exc_info=True)
+
+    return TemplateResponse(request, "botproxy/user_detail.html", _ctx(request, svc, {
+        "user_detail": user_data,
+        "user_id": user_id,
+        "has_osint": has_osint,
+        "osint_basic": osint_basic,
+        "osint_tree": osint_tree,
     }))
 
 

@@ -82,133 +82,21 @@
     </form>
 </div>
 
-<!-- User Detail (from search) -->
-{% if user_detail %}
-<div class="rb-card">
-    <div class="rb-user-header">
-        <div class="rb-avatar rb-avatar-lg" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
-            <img src="{% url 'bot_user_photo' svc=svc user_id=user_detail.user_id %}"
-                 onerror="this.parentElement.classList.add('no-photo'); this.remove();"
-                 alt="">
-        </div>
-        <div>
-            <h2 style="margin:0; max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</h2>
-            <a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-badge rb-badge-info" title="OSINT profil" style="text-decoration:none;">🔍 ID: {{ user_detail.user_id }}</a>
-        </div>
+<!-- Search Result: redirect to detail page -->
+{% if search_id and user_detail %}
+<div class="rb-card" style="display:flex; align-items:center; gap:1rem; padding:1rem 1.5rem;">
+    <div class="rb-avatar" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
+        <img src="{% url 'bot_user_photo' svc=svc user_id=user_detail.user_id %}"
+             onerror="this.parentElement.classList.add('no-photo'); this.remove();" alt="">
     </div>
-    <div class="rb-table-wrap">
-        <table class="rb-table">
-            <tr><td style="width:180px;" class="rb-muted"><strong>User ID</strong></td><td><a href="{% url 'osint_profile' user_id=user_detail.user_id %}" class="rb-code" title="OSINT profil">{{ user_detail.user_id }}</a>{% if user_detail.is_premium %} <span title="Telegram Premium">⭐</span>{% endif %}{% if user_detail.is_deleted %} <span class="rb-badge rb-badge-closed" style="font-size:0.65rem;">O'chirilgan</span>{% endif %}{% if user_detail.is_bot %} <span class="rb-badge" style="font-size:0.65rem; background:var(--rb-info);">Bot</span>{% endif %}</td></tr>
-            <tr><td class="rb-muted"><strong>Username</strong></td><td>
-                {{ user_detail.username|default:"-" }}
-                {% if user_detail.usernames %}
-                    {% for un in user_detail.usernames %}
-                        {% if un != user_detail.username %}<span class="rb-code" style="margin-left:4px; font-size:0.75rem;">@{{ un }}</span>{% endif %}
-                    {% endfor %}
-                {% endif %}
-            </td></tr>
-            <tr><td class="rb-muted"><strong>Telefon</strong></td><td>{{ user_detail.phone_number|default:"-" }}{% if user_detail.phone2 and user_detail.phone2 != user_detail.phone_number %} <span class="rb-code" style="margin-left:4px;">{{ user_detail.phone2 }}</span>{% endif %}</td></tr>
-            <tr><td class="rb-muted"><strong>Ro'yxatdan o'tgan</strong></td><td>{{ user_detail.registered_at }}</td></tr>
-            <tr><td class="rb-muted"><strong>Oxirgi faollik</strong></td><td>{{ user_detail.last_active_at|default:"Ma'lumot yo'q" }}</td></tr>
-            {% if user_detail.last_online_at %}<tr><td class="rb-muted"><strong>Oxirgi online</strong></td><td>{{ user_detail.last_online_at }}</td></tr>{% endif %}
-            <tr><td class="rb-muted"><strong>Jami ovozlar</strong></td><td><strong>{{ user_detail.total_votes }}</strong></td></tr>
-            {% if user_detail.bio %}<tr><td class="rb-muted"><strong>Bio</strong></td><td style="white-space:pre-wrap; max-width:400px;">{{ user_detail.bio }}</td></tr>{% endif %}
-            {% if user_detail.language_code %}<tr><td class="rb-muted"><strong>Til</strong></td><td><span class="rb-code">{{ user_detail.language_code }}</span></td></tr>{% endif %}
-            {% if user_detail.dc_id %}<tr><td class="rb-muted"><strong>DC</strong></td><td>DC-{{ user_detail.dc_id }}</td></tr>{% endif %}
-            {% if user_detail.common_chats_count %}<tr><td class="rb-muted"><strong>Umumiy chatlar</strong></td><td>{{ user_detail.common_chats_count }}</td></tr>{% endif %}
-            {% if user_detail.enriched_at %}<tr><td class="rb-muted"><strong>Boyitilgan</strong></td><td class="rb-muted" style="font-size:0.75rem;">{{ user_detail.enriched_at|truncatechars:16 }} ({{ user_detail.enrichment_source }})</td></tr>{% endif %}
-        </table>
+    <div style="flex:1; min-width:0;">
+        <strong style="font-size:0.9375rem;">{{ user_detail.first_name }} {{ user_detail.last_name|default:"" }}</strong>
+        {% if user_detail.is_premium %} ⭐{% endif %}
+        <div class="rb-muted" style="font-size:0.8125rem;">ID: {{ user_detail.user_id }} · {{ user_detail.username|default:"username yo'q" }}</div>
     </div>
-
-    {% if user_detail.profiles %}
-    <hr class="rb-divider">
-    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">
-        <span class="material-symbols-outlined" style="font-size:1rem; vertical-align:middle;">school</span>
-        Universitet bog'lanishlari
-    </h3>
-    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-        {% for p in user_detail.profiles %}
-        <div class="rb-badge rb-badge-info" style="display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.75rem;">
-            <strong>{{ p.university_name|default:p.university_code }}</strong>
-            {% if p.faculty_name %}
-                <span style="opacity:0.7;">·</span> {{ p.faculty_name }}
-            {% elif p.faculty_code %}
-                <span style="opacity:0.7;">·</span> {{ p.faculty_code }}
-            {% endif %}
-            <span class="rb-code" style="font-size:0.7rem; margin-left:0.25rem;">{{ p.vote_count }}x</span>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if user_detail.participated_polls %}
-    <hr class="rb-divider">
-    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Ishtirok etgan so'rovnomalar</h3>
-    <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-        {% for poll in user_detail.participated_polls %}
-        <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-badge rb-badge-info" style="text-decoration:none;">
-            {{ poll.title }}
-        </a>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if user_detail.votes %}
-    <hr class="rb-divider">
-    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Ovoz berish tarixi</h3>
-    <div class="rb-table-wrap">
-        <table class="rb-table">
-            <thead>
-                <tr>
-                    <th>So'rovnoma</th>
-                    <th>Nomzod</th>
-                    <th>Universitet</th>
-                    <th>Fakultet</th>
-                    <th>Sana</th>
-                    <th>Holat</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for v in user_detail.votes %}
-                <tr>
-                    <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a></td>
-                    <td>{{ v.candidate_name }}</td>
-                    <td>{{ v.university_name|default:"-" }}</td>
-                    <td>
-                        {% if v.faculty_name %}
-                            <span title="{{ v.faculty_name }}">{{ v.faculty_code }}</span>
-                        {% else %}
-                            <span class="rb-code">{{ v.faculty_code|default:"-" }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="rb-muted">{{ v.voted_at|truncatechars:16 }}</td>
-                    <td>
-                        {% if v.poll_status == "open" %}
-                            <span class="rb-badge rb-badge-open">Faol</span>
-                        {% else %}
-                            <span class="rb-badge rb-badge-closed">Yopilgan</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
-
-    <hr class="rb-divider">
-    <h3 style="font-size:0.875rem; font-weight:600; margin:0 0 0.75rem;">Boshqarish</h3>
-    <div class="rb-actions">
-        <button class="rb-btn rb-btn-outline rb-btn-sm" disabled title="Tez kunda">
-            <span class="material-symbols-outlined">block</span> Bloklash
-        </button>
-        <button class="rb-btn rb-btn-outline rb-btn-sm" disabled title="Tez kunda">
-            <span class="material-symbols-outlined">volume_off</span> Ovozini o'chirish
-        </button>
-        <button class="rb-btn rb-btn-outline rb-btn-sm" disabled title="Tez kunda">
-            <span class="material-symbols-outlined">notifications_off</span> Bildirishnomalarni o'chirish
-        </button>
-    </div>
+    <a href="{% url 'bot_user_detail' svc=svc user_id=user_detail.user_id %}" class="rb-btn rb-btn-primary rb-btn-sm">
+        <span class="material-symbols-outlined">open_in_new</span> Batafsil
+    </a>
 </div>
 {% elif search_id %}
 <div class="rb-card">
@@ -274,7 +162,7 @@
                         <div class="rb-user-row">
                             <div style="min-width:0;">
                                 <div class="rb-truncate" style="font-weight:500; max-width:100%;">{{ u.first_name }} {{ u.last_name|default:"" }}</div>
-                                <div class="rb-muted" style="font-size:0.75rem;"><a href="{% url 'osint_profile' user_id=u.user_id %}" title="OSINT profil" style="color:inherit;text-decoration:underline dotted;">{{ u.user_id }}</a></div>
+                                <div class="rb-muted" style="font-size:0.75rem;"><a href="{% url 'bot_user_detail' svc=svc user_id=u.user_id %}" title="Profil" style="color:inherit;text-decoration:underline dotted;">{{ u.user_id }}</a></div>
                             </div>
                         </div>
                     </td>
@@ -283,7 +171,7 @@
                     <td class="rb-muted">{{ u.registered_at|truncatechars:16 }}</td>
                     <td><strong>{{ u.total_votes|default:"0" }}</strong></td>
                     <td style="text-align:right;">
-                        <a href="{% url 'bot_user_stats' svc=svc %}?user_id={{ u.user_id }}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
+                        <a href="{% url 'bot_user_detail' svc=svc user_id=u.user_id %}" class="rb-btn rb-btn-outline rb-btn-sm">Batafsil</a>
                     </td>
                 </tr>
                 {% endfor %}
