@@ -70,7 +70,7 @@ html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbb
 <div class="rb-card">
     <div class="ud-header">
         <div class="rb-avatar rb-avatar-xl" data-uid="{{ user_detail.user_id }}" data-initials="{{ user_detail.first_name|first|upper|default:'?' }}">
-            <img src="{% url 'bot_user_photo' svc=svc user_id=user_detail.user_id %}"
+            <img src="{% url 'bot_user_photo' svc=svc user_id=user_id %}"
                  onerror="this.parentElement.classList.add('no-photo'); this.remove();" alt="">
         </div>
         <div class="ud-info">
@@ -250,7 +250,7 @@ html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbb
 
         <ul class="rb-tree" role="tree">
             {% for node in osint_tree %}
-            <li class="rb-tree-node {% if node.auto_load and node.has_cache %}open{% endif %}" data-branch="{{ node.id }}" data-user="{{ user_detail.user_id }}"
+            <li class="rb-tree-node {% if node.auto_load and node.has_cache %}open{% endif %}" data-branch="{{ node.id }}" data-user="{{ user_id }}"
                 {% if node.paginated %}data-paginated="1"{% endif %} role="treeitem">
                 <div class="rb-tree-header" onclick="toggleBranch(this)" tabindex="0" role="button"
                      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBranch(this);}">
@@ -309,7 +309,7 @@ document.querySelectorAll('.ud-tab').forEach(tab => {
 /* OSINT Tree toggle + AJAX fetch */
 var BRANCH_URLS = {};
 {% for node in osint_tree %}
-BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_detail.user_id branch=node.id %}";
+BRANCH_URLS['{{ node.id }}'] = "{% url 'osint_fetch_branch' user_id=user_id branch=node.id %}";
 {% endfor %}
 var PROFILE_URL_TPL = "{% url 'bot_user_detail' svc=svc user_id=99999 %}";
 var PHOTO_URL_TPL = "{% url 'osint_photo' entity_id='__EID__' %}";
