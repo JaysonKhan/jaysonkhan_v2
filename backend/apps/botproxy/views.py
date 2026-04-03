@@ -598,7 +598,7 @@ def user_detail(request, user_id: int, svc="talabaovozi"):
                         n["is_stale"] = entry.is_stale
                 osint_tree.append(n)
     except Exception:
-        logger.debug("OSINT data unavailable for user %s", user_id, exc_info=True)
+        logger.warning("OSINT data unavailable for user %s", user_id, exc_info=True)
 
     return TemplateResponse(request, "botproxy/user_detail.html", _ctx(request, svc, {
         "user_detail": user_data,
@@ -613,7 +613,11 @@ def user_detail(request, user_id: int, svc="talabaovozi"):
 def user_photo_proxy(request, user_id: int, svc="talabaovozi"):
     """Proxy user profile photo from bot API."""
     client = _client(svc)
-    photo_bytes = client.get_user_photo(user_id)
+    try:
+        photo_bytes = client.get_user_photo(user_id)
+    except Exception:
+        logger.warning("user_photo_proxy xatolik (user_id=%s)", user_id, exc_info=True)
+        return HttpResponse(status=502)
     if not photo_bytes:
         return HttpResponse(status=404)
     return HttpResponse(
@@ -767,7 +771,9 @@ def university_create(request, svc="talabaovozi"):
                             messages.warning(request, "Universitet yaratildi, lekin logo yuklanmadi")
 
                 messages.success(request, f"Universitet yaratildi: {uni.get('short_name', '')}")
-                return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
+                if uni_id:
+                    return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
+                return HttpResponseRedirect(_rev("bot_university_list", svc))
             except BotAPIError as e:
                 _handle_api_error(request, e)
 
@@ -845,7 +851,11 @@ def university_delete(request, uni_id: int, svc="talabaovozi"):
 def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
     """Proxy university logo from bot API."""
     client = _client(svc)
-    logo_bytes = client.get_university_logo(uni_id)
+    try:
+        logo_bytes = client.get_university_logo(uni_id)
+    except Exception:
+        logger.warning("university_logo_proxy xatolik (uni_id=%s)", uni_id, exc_info=True)
+        return HttpResponse(status=502)
     if not logo_bytes:
         return HttpResponse(status=404)
     # Detect content type from bytes
@@ -881,10 +891,12 @@ def university_faculties_api(request, uni_id: int, svc="talabaovozi"):
 @require_POST
 def faculty_edit(request, fac_id: int, svc="talabaovozi"):
     """AJAX endpoint: update faculty code/name."""
-    import json as json_mod
     client = _client(svc)
     try:
-        data = json_mod.loads(request.body)
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"error": "Noto'g'ri JSON format"}, status=400)
+    try:
         client.update_university_faculty(
             fac_id,
             code=data.get("code"),
