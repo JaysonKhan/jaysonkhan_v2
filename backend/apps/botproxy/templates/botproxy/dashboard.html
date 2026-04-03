@@ -195,7 +195,7 @@
 </div><!-- /dashboard-container -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script>
 (function() {
     // ── Theme detection ──────────────────────────────────────────
@@ -371,16 +371,18 @@
         document.getElementById('poll-charts-subtitle').textContent = 'Oxirgi 30 kun';
         pollChartsCard.style.display = '';
 
-        // Vote trend
+        // Vote trend — API: {data: [{date, votes}]}
         destroyChart('trend');
-        var byDate = data.by_date || [];
+        var byDateRaw = data.by_date || {};
+        var byDate = byDateRaw.data || byDateRaw || [];
+        if (!Array.isArray(byDate)) byDate = [];
         pollCharts.trend = new Chart(document.getElementById('voteTrendChart'), {
             type: 'line',
             data: {
-                labels: byDate.map(function(d) { var p = (d[0]||'').split('-'); return p[2]+'.'+p[1]; }),
+                labels: byDate.map(function(d) { var p = (d.date||'').split('-'); return p[2]+'.'+p[1]; }),
                 datasets: [{
                     label: 'Ovozlar',
-                    data: byDate.map(function(d) { return d[1]; }),
+                    data: byDate.map(function(d) { return d.votes || 0; }),
                     borderColor: COLORS[1],
                     backgroundColor: isDark ? 'rgba(96,165,250,0.15)' : 'rgba(59,130,246,0.1)',
                     fill: true, tension: 0.3, borderWidth: 2, pointRadius: 2
@@ -389,18 +391,18 @@
             options: chartOpts(false)
         });
 
-        // Top candidates
+        // Top candidates — API: {top: [{candidate_name, votes, ...}]}
         destroyChart('top');
         var topData = data.top || {};
-        var topList = topData.top || topData || [];
+        var topList = topData.top || [];
         if (!Array.isArray(topList)) topList = [];
         pollCharts.top = new Chart(document.getElementById('topCandidatesChart'), {
             type: 'bar',
             data: {
-                labels: topList.slice(0,8).map(function(c) { return c.full_name || c.candidate_name || ''; }),
+                labels: topList.slice(0,8).map(function(c) { return c.candidate_name || c.full_name || ''; }),
                 datasets: [{
                     label: 'Ovozlar',
-                    data: topList.slice(0,8).map(function(c) { return c.votes || c.vote_count || 0; }),
+                    data: topList.slice(0,8).map(function(c) { return c.votes || 0; }),
                     backgroundColor: COLORS.slice(0,8),
                     borderRadius: 4, borderSkipped: false
                 }]
@@ -408,15 +410,17 @@
             options: chartOpts(true)
         });
 
-        // Faculty
+        // Faculty — API: {data: [{faculty, votes}]}
         destroyChart('faculty');
-        var byFac = data.by_faculty || [];
+        var byFacRaw = data.by_faculty || {};
+        var byFac = byFacRaw.data || byFacRaw || [];
+        if (!Array.isArray(byFac)) byFac = [];
         pollCharts.faculty = new Chart(document.getElementById('facultyChart'), {
             type: 'doughnut',
             data: {
-                labels: byFac.map(function(f) { return f[0] || 'Boshqa'; }),
+                labels: byFac.map(function(f) { return f.faculty || 'Boshqa'; }),
                 datasets: [{
-                    data: byFac.map(function(f) { return f[1]; }),
+                    data: byFac.map(function(f) { return f.votes || 0; }),
                     backgroundColor: COLORS,
                     borderWidth: 0
                 }]
@@ -427,14 +431,16 @@
             }
         });
 
-        // Hourly
+        // Hourly — API: {data: [{hour, votes}]}
         destroyChart('hourly');
-        var byHour = data.by_hour || [];
+        var byHourRaw = data.by_hour || {};
+        var byHour = byHourRaw.data || byHourRaw || [];
+        if (!Array.isArray(byHour)) byHour = [];
         var hourLabels = [], hourData = [];
         for (var h = 0; h < 24; h++) {
             hourLabels.push(h + ':00');
-            var found = byHour.find(function(x) { return x[0] === h; });
-            hourData.push(found ? found[1] : 0);
+            var found = byHour.find(function(x) { return x.hour === h; });
+            hourData.push(found ? found.votes : 0);
         }
         pollCharts.hourly = new Chart(document.getElementById('hourlyChart'), {
             type: 'bar',
@@ -471,15 +477,13 @@
         btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Yuklanmoqda...';
         btn.disabled = true;
 
-        html2canvas(document.getElementById('dashboard-container'), {
+        htmlToImage.toPng(document.getElementById('dashboard-container'), {
             backgroundColor: isDark ? '#111827' : '#ffffff',
-            scale: 2,
-            useCORS: true,
-            logging: false
-        }).then(function(canvas) {
+            pixelRatio: 2
+        }).then(function(dataUrl) {
             var link = document.createElement('a');
             link.download = 'dashboard-' + new Date().toISOString().slice(0, 10) + '.png';
-            link.href = canvas.toDataURL('image/png');
+            link.href = dataUrl;
             link.click();
         }).catch(function(err) {
             console.error('Screenshot error:', err);
