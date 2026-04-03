@@ -1,7 +1,7 @@
 """HTTP client for the FunStat OSINT API with Bearer JWT authentication.
 
 Connection pooling: thread-safe singleton httpx.Client — TCP handshake overhead yo'q.
-Retry logic: 3 marta urinish, 429/502/503/504 uchun exponential backoff.
+Retry logic: 2 marta urinish, 429/502/503/504 uchun exponential backoff.
 """
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import atexit
 import logging
 import threading
 import time
+from typing import Any
 
 import httpx
 from django.conf import settings
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 _shared_client: httpx.Client | None = None
 _client_lock = threading.Lock()
 
-MAX_RETRIES = 3
-RETRY_BASE_DELAY = 1.0  # sekund
+MAX_RETRIES = 2
+RETRY_BASE_DELAY = 0.5  # sekund (gunicorn worker ni bloklash kamaytirildi)
 RETRYABLE_STATUS_CODES = {429, 502, 503, 504}
 
 
@@ -122,7 +123,17 @@ class FunStatClient:
                 raise FunStatAPIError(resp.status_code, detail)
 
             # Success
-            data = resp.json()
+            try:
+                data = resp.json()
+            except Exception:
+                logger.warning(
+                    "FunStat %s %s → %d non-JSON response",
+                    method, path, resp.status_code,
+                )
+                raise FunStatAPIError(
+                    resp.status_code,
+                    "API javobini o'qib bo'lmadi (non-JSON)",
+                )
             if isinstance(data, dict) and data.get("success") is False:
                 raise FunStatAPIError(
                     resp.status_code,
@@ -141,12 +152,13 @@ class FunStatClient:
 
     def get_user_reputation(self, user_id: int) -> dict:
         """User reputation (FREE)."""
-        return self._request("GET", f"/api/v1/users/reputation?id={user_id}")
+        return self._request("GET", "/api/v1/users/reputation", params={"id": user_id})
 
     def get_user_groups_count(self, user_id: int, only_msg: bool = True) -> dict:
         """Total groups count (FREE)."""
         return self._request(
-            "GET", f"/api/v1/users/{user_id}/groups_count?onlyMsg={str(only_msg).lower()}"
+            "GET", f"/api/v1/users/{user_id}/groups_count",
+            params={"onlyMsg": str(only_msg).lower()},
         )
 
     def get_user_messages_count(self, user_id: int) -> dict:
@@ -178,8 +190,8 @@ class FunStatClient:
     def get_user_gifts(self, user_id: int, page: int = 1, page_size: int = 25) -> dict:
         """Gift relations — from whom / to whom (cost: 5, paginated)."""
         return self._request(
-            "GET",
-            f"/api/v1/users/{user_id}/gifts_relation?page={page}&pageSize={page_size}",
+            "GET", f"/api/v1/users/{user_id}/gifts_relation",
+            params={"page": page, "pageSize": page_size},
         )
 
     def get_user_common_groups(self, user_id: int) -> dict:
@@ -195,39 +207,36 @@ class FunStatClient:
         text_contains: str | None = None,
     ) -> dict:
         """User messages (cost: 10, paginated)."""
-        params = f"?page={page}&pageSize={page_size}"
+        params: dict[str, Any] = {"page": page, "pageSize": page_size}
         if group_id:
-            params += f"&group_id={group_id}"
+            params["group_id"] = group_id
         if text_contains:
-            params += f"&text_contains={text_contains}"
-        return self._request("GET", f"/api/v1/users/{user_id}/messages{params}")
+            params["text_contains"] = text_contains
+        return self._request("GET", f"/api/v1/users/{user_id}/messages", params=params)
 
     # ─── Search / resolve ─────────────────────────────────────────────────────
 
     def resolve_username(self, username: str) -> dict:
         """Resolve @username to user info (cost: 0.10)."""
         name = username.lstrip("@")
-        return self._request("GET", f"/api/v1/users/resolve_username?name={name}")
+        return self._request("GET", "/api/v1/users/resolve_username", params={"name": name})
 
     def get_username_usage(self, username: str) -> dict:
         """Username usage — who used, where mentioned (cost: 0.1)."""
         name = username.lstrip("@")
-        return self._request("GET", f"/api/v1/users/username_usage?username={name}")
+        return self._request("GET", "/api/v1/users/username_usage", params={"username": name})
 
     def get_basic_info(self, ids: list[int]) -> dict:
         """Basic info by multiple Telegram IDs (cost: 0.10 per found)."""
-        id_params = "&".join(f"id={i}" for i in ids)
-        return self._request("GET", f"/api/v1/users/basic_info_by_id?{id_params}")
+        return self._request("GET", "/api/v1/users/basic_info_by_id", params=[("id", i) for i in ids])
 
     # ─── Text search ──────────────────────────────────────────────────────────
 
     def text_search(self, query: str, page: int = 1, page_size: int = 25) -> dict:
         """Search who/when/where wrote text (cost: 0.1, paginated)."""
-        from urllib.parse import quote
-
         return self._request(
-            "GET",
-            f"/api/v1/text/search?input={quote(query)}&page={page}&pageSize={page_size}",
+            "GET", "/api/v1/text/search",
+            params={"input": query, "page": page, "pageSize": page_size},
         )
 
     # ─── Groups ───────────────────────────────────────────────────────────────
@@ -242,5 +251,4 @@ class FunStatClient:
 
     def get_common_groups(self, ids: list[int]) -> dict:
         """Common groups for multiple users (cost: 0.5)."""
-        id_params = "&".join(f"id={i}" for i in ids)
-        return self._request("GET", f"/api/v1/groups/common_groups?{id_params}")
+        return self._request("GET", "/api/v1/groups/common_groups", params=[("id", i) for i in ids])

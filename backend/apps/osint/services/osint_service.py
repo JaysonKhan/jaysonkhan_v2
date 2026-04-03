@@ -82,13 +82,22 @@ def fetch_or_cache(
 
     method_name, _cost_label, is_paginated = reg
     client = FunStatClient()
-    method = getattr(client, method_name)
+    method = getattr(client, method_name, None)
+    if method is None:
+        logger.error("FunStatClient da '%s' metodi topilmadi", method_name)
+        return OsintResult(error=f"Ichki xatolik: '{method_name}' metodi mavjud emas")
+
+    # target_id ni int ga aylantirish — noto'g'ri qiymat uchun himoya
+    try:
+        numeric_id = int(target_id)
+    except (ValueError, TypeError):
+        return OsintResult(error=f"Noto'g'ri ID: {target_id}")
 
     try:
         if is_paginated:
-            response = method(int(target_id), page=page)
+            response = method(numeric_id, page=page)
         else:
-            response = method(int(target_id))
+            response = method(numeric_id)
     except FunStatAPIError as e:
         return OsintResult(error=str(e))
     except Exception as e:
@@ -161,14 +170,18 @@ def fetch_channel_data(
         search_channel_messages,
     )
 
-    if operation == "channel_profile":
-        result = get_entity_profile(entity_id)
-    elif operation == "channel_messages":
-        result = get_channel_messages(entity_id, limit=limit, offset_id=offset_id)
-    elif operation == "channel_search":
-        result = search_channel_messages(entity_id, query=query, limit=limit, offset_id=offset_id)
-    else:
-        return OsintResult(error=f"Noma'lum operatsiya: {operation}")
+    try:
+        if operation == "channel_profile":
+            result = get_entity_profile(entity_id)
+        elif operation == "channel_messages":
+            result = get_channel_messages(entity_id, limit=limit, offset_id=offset_id)
+        elif operation == "channel_search":
+            result = search_channel_messages(entity_id, query=query, limit=limit, offset_id=offset_id)
+        else:
+            return OsintResult(error=f"Noma'lum operatsiya: {operation}")
+    except Exception as e:
+        logger.exception("Telethon MTProto xatolik (%s, %s): %s", operation, entity_id, e)
+        return OsintResult(error=f"Telegram xatoligi: {e}")
 
     if result.error:
         return OsintResult(error=result.error)

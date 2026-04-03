@@ -686,7 +686,7 @@ def osint_photo_proxy(request, entity_id: str):
                 if entity_obj.photo_url:
                     return redirect(entity_obj.photo_url)
         except Exception:
-            pass
+            logger.warning("osint_photo_proxy DB xatolik (ID=%s): %s", clean_id, "entity lookup failed", exc_info=True)
 
     # 3. Full photo service (Bot API + Telethon)
     try:
