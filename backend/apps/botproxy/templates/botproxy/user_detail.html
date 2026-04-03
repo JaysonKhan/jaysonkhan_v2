@@ -125,12 +125,12 @@ html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbb
                     {% endif %}
                 </td></tr>
                 <tr><td>Telefon</td><td>{{ user_detail.phone_number|default:"-" }}{% if user_detail.phone2 and user_detail.phone2 != user_detail.phone_number %} <span class="rb-code" style="margin-left:4px;">{{ user_detail.phone2 }}</span>{% endif %}</td></tr>
-                <tr><td>Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at }}</td></tr>
+                <tr><td>Ro'yxatdan o'tgan</td><td>{{ user_detail.registered_at|default:"—" }}</td></tr>
                 <tr><td>Oxirgi faollik</td><td>{{ user_detail.last_active_at|default:"Ma'lumot yo'q" }}</td></tr>
                 {% if user_detail.last_online_at %}<tr><td>Oxirgi online</td><td>{{ user_detail.last_online_at }}</td></tr>{% endif %}
                 {% if user_detail.bio %}<tr><td>Bio</td><td style="white-space:pre-wrap; max-width:400px;">{{ user_detail.bio }}</td></tr>{% endif %}
                 {% if user_detail.common_chats_count %}<tr><td>Umumiy chatlar</td><td>{{ user_detail.common_chats_count }}</td></tr>{% endif %}
-                {% if user_detail.enriched_at %}<tr><td>Boyitilgan</td><td class="rb-muted" style="font-size:0.75rem;">{{ user_detail.enriched_at|truncatechars:16 }} ({{ user_detail.enrichment_source }})</td></tr>{% endif %}
+                {% if user_detail.enriched_at %}<tr><td>Boyitilgan</td><td class="rb-muted" style="font-size:0.75rem;">{{ user_detail.enriched_at|truncatechars:16 }} ({{ user_detail.enrichment_source|default:"" }})</td></tr>{% endif %}
             </table>
         </div>
     </div>
@@ -162,10 +162,10 @@ html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbb
             <h2>Ishtirok etgan so'rovnomalar</h2>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-            {% for poll in user_detail.participated_polls %}
+            {% for poll in user_detail.participated_polls %}{% if poll.id %}
             <a href="{% url 'bot_poll_detail' svc=svc poll_id=poll.id %}" class="rb-badge rb-badge-info" style="text-decoration:none;">
                 {{ poll.title }}
-            </a>
+            </a>{% endif %}
             {% endfor %}
         </div>
     </div>
@@ -191,7 +191,7 @@ html.dark .rb-cache-badge.stale { background: rgba(245,158,11,0.15); color: #fbb
                 <tbody>
                     {% for v in user_detail.votes %}
                     <tr>
-                        <td><a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a></td>
+                        <td>{% if v.poll_id %}<a href="{% url 'bot_poll_detail' svc=svc poll_id=v.poll_id %}">{{ v.poll_title }}</a>{% else %}{{ v.poll_title }}{% endif %}</td>
                         <td>{{ v.candidate_name }}</td>
                         <td>{{ v.university_name|default:"-" }}</td>
                         <td>{% if v.faculty_name %}<span title="{{ v.faculty_name }}">{{ v.faculty_code }}</span>{% else %}<span class="rb-code">{{ v.faculty_code|default:"-" }}</span>{% endif %}</td>
@@ -335,19 +335,33 @@ function toggleBranch(header) {
         .then(data => {
             body.dataset.loaded = '1';
             if (data.error) {
-                body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Xatolik: ' + data.error + '</div>';
+                var errDiv = document.createElement('div');
+                errDiv.className = 'rb-muted';
+                errDiv.style.cssText = 'padding:0.5rem;';
+                errDiv.textContent = 'Xatolik: ' + data.error;
+                body.innerHTML = '';
+                body.appendChild(errDiv);
                 return;
             }
             if (data.html) {
                 body.innerHTML = data.html;
             } else if (data.data) {
-                body.innerHTML = '<pre style="font-size:0.75rem; overflow-x:auto; background:var(--rb-bg-muted); padding:0.75rem; border-radius:8px;">' + JSON.stringify(data.data, null, 2) + '</pre>';
+                var pre = document.createElement('pre');
+                pre.style.cssText = 'font-size:0.75rem; overflow-x:auto; background:var(--rb-bg-muted); padding:0.75rem; border-radius:8px;';
+                pre.textContent = JSON.stringify(data.data, null, 2);
+                body.innerHTML = '';
+                body.appendChild(pre);
             } else {
                 body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Ma\'lumot yo\'q</div>';
             }
         })
         .catch(err => {
-            body.innerHTML = '<div class="rb-muted" style="padding:0.5rem;">Xatolik: ' + err.message + '</div>';
+            var errDiv = document.createElement('div');
+            errDiv.className = 'rb-muted';
+            errDiv.style.cssText = 'padding:0.5rem;';
+            errDiv.textContent = 'Xatolik: ' + err.message;
+            body.innerHTML = '';
+            body.appendChild(errDiv);
         });
 }
 {% endif %}
