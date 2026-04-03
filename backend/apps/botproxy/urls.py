@@ -13,6 +13,8 @@ urlpatterns = [
     path("telegram/session/config/", session_views.telegram_session_save_config, name="telegram_session_config"),
     # ── Bot management ────────────────────────────────────────────────────────
     path("<str:svc>/dashboard/", views.bot_dashboard, name="bot_dashboard"),
+    path("<str:svc>/api/growth-data/", views.growth_data_api, name="bot_growth_data_api"),
+    path("<str:svc>/api/polls/<int:poll_id>/analytics/", views.poll_analytics_api, name="bot_poll_analytics_api"),
     path("<str:svc>/polls/", views.poll_list, name="bot_poll_list"),
     path("<str:svc>/polls/create/", views.poll_create, name="bot_poll_create"),
     path("<str:svc>/polls/<int:poll_id>/", views.poll_detail, name="bot_poll_detail"),

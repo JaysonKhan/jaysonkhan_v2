@@ -88,20 +88,94 @@ def _sanitize_url(url: str | None) -> str | None:
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def bot_dashboard(request, svc="talabaovozi"):
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     client = _client(svc)
-    ctx = {"api_ok": False, "polls": [], "user_count": 0, "admin_ids": [], "university_count": 0}
-    try:
-        health = client.health()
-        ctx["api_ok"] = health.get("status") == "ok"
-        ctx["active_polls"] = health.get("active_polls", 0)
-        ctx["polls"] = client.list_polls()
-        ctx["user_count"] = client.get_user_count()
-        ctx["admin_ids"] = client.list_admins()
-        ctx["university_count"] = client.get_university_count()
-    except BotAPIError as e:
-        _handle_api_error(request, e)
+    ctx = {
+        "api_ok": False, "polls": [], "user_count": 0, "admin_ids": [],
+        "university_count": 0, "user_stats": {}, "growth_data": {},
+        "audience_segments": [],
+    }
+
+    def _fetch(name, fn):
+        try:
+            return name, fn()
+        except BotAPIError:
+            return name, None
+
+    tasks = {
+        "health": lambda: client.health(),
+        "polls": lambda: client.list_polls(),
+        "user_count": lambda: client.get_user_count(),
+        "admin_ids": lambda: client.list_admins(),
+        "university_count": lambda: client.get_university_count(),
+        "user_stats": lambda: client.get_user_stats(),
+        "growth_data": lambda: client.get_user_growth_data(days=30),
+        "audience_segments": lambda: client.get_audience_segments(),
+    }
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
+        for f in as_completed(futures):
+            name, result = f.result()
+            if result is not None:
+                if name == "health":
+                    ctx["api_ok"] = result.get("status") == "ok"
+                    ctx["active_polls"] = result.get("active_polls", 0)
+                else:
+                    ctx[name] = result
+
+    ctx["active_polls_list"] = [p for p in ctx["polls"] if p.get("status") == "open"]
+    ctx["growth_data_json"] = json.dumps(ctx.get("growth_data", {}))
+    ctx["audience_segments_json"] = json.dumps(ctx.get("audience_segments", []))
+    ctx["user_stats_json"] = json.dumps(ctx.get("user_stats", {}))
 
     return TemplateResponse(request, "botproxy/dashboard.html", _ctx(request, svc, ctx))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def growth_data_api(request, svc="talabaovozi"):
+    """AJAX: user growth data for period selector."""
+    days = int(request.GET.get("days", "30"))
+    if days not in (7, 14, 30, 90):
+        days = 30
+    client = _client(svc)
+    try:
+        data = client.get_user_growth_data(days=days)
+    except BotAPIError:
+        data = {"dates": [], "counts": [], "days": days}
+    return JsonResponse(data)
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def poll_analytics_api(request, poll_id: int, svc="talabaovozi"):
+    """AJAX: all analytics for a single poll."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    client = _client(svc)
+    data = {}
+
+    def _fetch(name, fn):
+        try:
+            return name, fn()
+        except BotAPIError:
+            return name, None
+
+    tasks = {
+        "by_date": lambda: client.get_votes_by_date(poll_id, days=30),
+        "by_hour": lambda: client.get_votes_by_hour(poll_id),
+        "by_faculty": lambda: client.get_votes_by_faculty(poll_id),
+        "top": lambda: client.get_top(poll_id, limit=10),
+        "results": lambda: client.get_results(poll_id),
+    }
+
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
+        for f in as_completed(futures):
+            name, result = f.result()
+            data[name] = result
+
+    return JsonResponse(data)
 
 
 # ─── Polls ───────────────────────────────────────────────────────────────────────

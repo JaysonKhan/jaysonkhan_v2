@@ -311,6 +311,10 @@ class BotAPIClient:
         except BotAPIError:
             return None
 
+    def get_user_growth_data(self, days: int = 30) -> dict:
+        """User registration trend as JSON: {dates: [...], counts: [...], days: N}."""
+        return self._request("GET", f"/api/v1/users/growth-data?days={days}").json()
+
     def get_user_growth_chart(self, days: int = 30, theme: str = "") -> bytes:
         """User registration trend chart as PNG."""
         qs = {"days": days}
