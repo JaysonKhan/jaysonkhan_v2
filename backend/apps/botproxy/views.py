@@ -744,6 +744,8 @@ REGIONS = [
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def university_list(request, svc="talabaovozi"):
+    from concurrent.futures import ThreadPoolExecutor
+
     client = _client(svc)
     region_filter = request.GET.get("region", "").strip()
     universities = []
@@ -751,6 +753,31 @@ def university_list(request, svc="talabaovozi"):
         universities = client.list_universities(region=region_filter or None)
     except BotAPIError as e:
         _handle_api_error(request, e)
+
+    # Prefetch logos into cache so individual logo proxy requests hit cache
+    unis_with_logo = [u for u in universities if u.get("logo_path")]
+    def _prefetch_logo(uni_id):
+        cache_key = f"uni_logo:{svc}:{uni_id}"
+        if cache.get(cache_key) is not None:
+            return
+        try:
+            logo_bytes = client.get_university_logo(uni_id)
+        except Exception:
+            return
+        if not logo_bytes:
+            cache.set(cache_key, b"", 600)
+            return
+        content_type = "image/png"
+        if logo_bytes[:5] == b"<?xml" or logo_bytes[:4] == b"<svg" or b"<svg" in logo_bytes[:256]:
+            content_type = "image/svg+xml"
+        elif logo_bytes[:3] == b"\xff\xd8\xff":
+            content_type = "image/jpeg"
+        elif logo_bytes[:4] == b"RIFF" and logo_bytes[8:12] == b"WEBP":
+            content_type = "image/webp"
+        cache.set(cache_key, (logo_bytes, content_type), 3600)
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        pool.map(_prefetch_logo, [u["id"] for u in unis_with_logo])
 
     return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, svc, {
         "universities": universities,
