@@ -73,16 +73,39 @@ def _rev(name: str, svc: str, **kwargs) -> str:
 
 
 def _sanitize_url(url: str | None) -> str | None:
-    """Ensure URL uses http/https protocol. Block javascript: and data: URIs."""
+    """Ensure URL uses http/https protocol. Block javascript:, data: URIs and internal hosts."""
     if not url:
         return None
     url = url.strip()
     lower = url.lower()
-    if lower.startswith(("javascript:", "data:", "vbscript:")):
+    if lower.startswith(("javascript:", "data:", "vbscript:", "file:")):
         return None
     if not lower.startswith(("http://", "https://")):
         url = "https://" + url
+    # Block SSRF: reject localhost / internal IPs
+    from urllib.parse import urlparse
+    try:
+        host = urlparse(url).hostname or ""
+    except ValueError:
+        return None
+    if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "") or host.endswith(".local"):
+        return None
+    if host.startswith(("10.", "192.168.", "169.254.")):
+        return None
+    if host.startswith("172.") and 16 <= int(host.split(".")[1]) <= 31:
+        return None
     return url
+
+
+def _detect_image_content_type(data: bytes) -> str:
+    """Detect image content type from magic bytes."""
+    if data[:5] == b"<?xml" or data[:4] == b"<svg" or b"<svg" in data[:256]:
+        return "image/svg+xml"
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return "image/png"
 
 
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
@@ -742,21 +765,12 @@ REGIONS = [
 ]
 
 
-@admin_permission_required('botproxy.view_bot_dashboard')
-def university_list(request, svc="talabaovozi"):
+def _warmup_logo_cache(svc: str, uni_ids: list[int]) -> None:
+    """Background task: prefetch university logos into cache (non-blocking)."""
     from concurrent.futures import ThreadPoolExecutor
-
     client = _client(svc)
-    region_filter = request.GET.get("region", "").strip()
-    universities = []
-    try:
-        universities = client.list_universities(region=region_filter or None)
-    except BotAPIError as e:
-        _handle_api_error(request, e)
 
-    # Prefetch logos into cache so individual logo proxy requests hit cache
-    unis_with_logo = [u for u in universities if u.get("logo_path")]
-    def _prefetch_logo(uni_id):
+    def _fetch_one(uni_id: int) -> None:
         cache_key = f"uni_logo:{svc}:{uni_id}"
         if cache.get(cache_key) is not None:
             return
@@ -766,18 +780,30 @@ def university_list(request, svc="talabaovozi"):
             return
         if not logo_bytes:
             cache.set(cache_key, b"", 600)
-            return
-        content_type = "image/png"
-        if logo_bytes[:5] == b"<?xml" or logo_bytes[:4] == b"<svg" or b"<svg" in logo_bytes[:256]:
-            content_type = "image/svg+xml"
-        elif logo_bytes[:3] == b"\xff\xd8\xff":
-            content_type = "image/jpeg"
-        elif logo_bytes[:4] == b"RIFF" and logo_bytes[8:12] == b"WEBP":
-            content_type = "image/webp"
-        cache.set(cache_key, (logo_bytes, content_type), 3600)
+        else:
+            cache.set(cache_key, (logo_bytes, _detect_image_content_type(logo_bytes)), 3600)
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        pool.map(_prefetch_logo, [u["id"] for u in unis_with_logo])
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        pool.map(_fetch_one, uni_ids)
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def university_list(request, svc="talabaovozi"):
+    import threading
+
+    client = _client(svc)
+    region_filter = request.GET.get("region", "").strip()
+    universities = []
+    try:
+        universities = client.list_universities(region=region_filter or None)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+
+    # Non-blocking: warm logo cache in background thread
+    uni_ids = [u["id"] for u in universities if u.get("logo_path")]
+    if uni_ids:
+        t = threading.Thread(target=_warmup_logo_cache, args=(svc, uni_ids), daemon=True)
+        t.start()
 
     return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, svc, {
         "universities": universities,
@@ -951,47 +977,36 @@ def university_delete(request, uni_id: int, svc="talabaovozi"):
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
-    """Proxy university logo from bot API with in-memory caching."""
+    """Proxy university logo from bot API with file-based caching."""
+    _LOGO_HEADERS = {
+        "Cache-Control": "public, max-age=3600",
+        "X-Content-Type-Options": "nosniff",
+    }
     cache_key = f"uni_logo:{svc}:{uni_id}"
     cached = cache.get(cache_key)
     if cached is not None:
         if cached == b"":
             return HttpResponse(status=404)
         logo_bytes, content_type = cached
-        return HttpResponse(
-            logo_bytes,
-            content_type=content_type,
-            headers={
-                "Cache-Control": "public, max-age=3600",
-                "X-Content-Type-Options": "nosniff",
-            },
-        )
+        return HttpResponse(logo_bytes, content_type=content_type, headers=_LOGO_HEADERS)
+
     client = _client(svc)
     try:
         logo_bytes = client.get_university_logo(uni_id)
-    except Exception:
-        logger.warning("university_logo_proxy xatolik (uni_id=%s)", uni_id, exc_info=True)
+    except BotAPIError:
+        logger.warning("Logo proxy: bot API error for uni_id=%s", uni_id, exc_info=True)
         return HttpResponse(status=502)
+    except Exception:
+        logger.exception("Logo proxy: unexpected error for uni_id=%s", uni_id)
+        return HttpResponse(status=500)
+
     if not logo_bytes:
         cache.set(cache_key, b"", 600)
         return HttpResponse(status=404)
-    # Detect content type from bytes
-    content_type = "image/png"
-    if logo_bytes[:5] == b"<?xml" or logo_bytes[:4] == b"<svg" or b"<svg" in logo_bytes[:256]:
-        content_type = "image/svg+xml"
-    elif logo_bytes[:3] == b"\xff\xd8\xff":
-        content_type = "image/jpeg"
-    elif logo_bytes[:4] == b"RIFF" and logo_bytes[8:12] == b"WEBP":
-        content_type = "image/webp"
+
+    content_type = _detect_image_content_type(logo_bytes)
     cache.set(cache_key, (logo_bytes, content_type), 3600)
-    return HttpResponse(
-        logo_bytes,
-        content_type=content_type,
-        headers={
-            "Cache-Control": "public, max-age=3600",
-            "X-Content-Type-Options": "nosniff",
-        },
-    )
+    return HttpResponse(logo_bytes, content_type=content_type, headers=_LOGO_HEADERS)
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
