@@ -10,6 +10,7 @@ import logging
 import math
 
 from django.conf import settings as djsettings
+from django.core.cache import cache
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import PermissionDenied
@@ -923,7 +924,21 @@ def university_delete(request, uni_id: int, svc="talabaovozi"):
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
-    """Proxy university logo from bot API."""
+    """Proxy university logo from bot API with in-memory caching."""
+    cache_key = f"uni_logo:{svc}:{uni_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        if cached == b"":
+            return HttpResponse(status=404)
+        logo_bytes, content_type = cached
+        return HttpResponse(
+            logo_bytes,
+            content_type=content_type,
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
     client = _client(svc)
     try:
         logo_bytes = client.get_university_logo(uni_id)
@@ -931,6 +946,7 @@ def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
         logger.warning("university_logo_proxy xatolik (uni_id=%s)", uni_id, exc_info=True)
         return HttpResponse(status=502)
     if not logo_bytes:
+        cache.set(cache_key, b"", 600)
         return HttpResponse(status=404)
     # Detect content type from bytes
     content_type = "image/png"
@@ -940,6 +956,7 @@ def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
         content_type = "image/jpeg"
     elif logo_bytes[:4] == b"RIFF" and logo_bytes[8:12] == b"WEBP":
         content_type = "image/webp"
+    cache.set(cache_key, (logo_bytes, content_type), 3600)
     return HttpResponse(
         logo_bytes,
         content_type=content_type,
