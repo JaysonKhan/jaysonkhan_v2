@@ -1153,7 +1153,11 @@ def staff_create(request, svc="talabaovozi"):
             staff_id = result.get("id")
             photo = request.FILES.get("photo")
             if photo and staff_id:
-                client.upload_staff_photo(staff_id, photo.read(), photo.name)
+                try:
+                    client.upload_staff_photo(staff_id, photo.read(), photo.name)
+                except BotAPIError:
+                    messages.warning(request, f"Xodim qo'shildi, lekin rasm yuklanmadi")
+                    return HttpResponseRedirect(_rev("bot_staff_list", svc))
             messages.success(request, f"Xodim qo'shildi: {data['full_name']}")
             return HttpResponseRedirect(_rev("bot_staff_list", svc))
         except BotAPIError as e:
@@ -1221,7 +1225,11 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
             client.update_staff(staff_id, data)
             photo = request.FILES.get("photo")
             if photo:
-                client.upload_staff_photo(staff_id, photo.read(), photo.name)
+                try:
+                    client.upload_staff_photo(staff_id, photo.read(), photo.name)
+                except BotAPIError:
+                    messages.warning(request, "Xodim yangilandi, lekin rasm yuklanmadi")
+                    return HttpResponseRedirect(_rev("bot_staff_detail", svc, staff_id=staff_id))
             messages.success(request, "Xodim yangilandi")
             return HttpResponseRedirect(_rev("bot_staff_detail", svc, staff_id=staff_id))
         except BotAPIError as e:
