@@ -832,11 +832,11 @@ def university_list(request, svc="talabaovozi"):
         if uni.get("logo_path"):
             disk = _logo_disk_path(svc, uni["id"])
             if disk:
-                uni["_logo_url"] = f"{media_url}uni_logos/{svc}/{disk.name}"
+                uni["logo_url"] = f"{media_url}uni_logos/{svc}/{disk.name}"
             else:
-                uni["_logo_url"] = None  # will use proxy fallback
+                uni["logo_url"] = None  # will use proxy fallback
         else:
-            uni["_logo_url"] = None
+            uni["logo_url"] = None
 
     # Non-blocking: download missing logos to disk in background
     missing = [u["id"] for u in universities if u.get("logo_path") and not u.get("_logo_url")]
