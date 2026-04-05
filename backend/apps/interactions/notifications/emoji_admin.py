@@ -156,7 +156,8 @@ def handle_emoji_callback(data: str, cq: dict, api: TelegramBotAPI) -> bool:
         _pending[tg_id] = {'field': f'extra:{extra_name}', 'msg_id': msg_id, 'ts': time.time(), 'step': 'id'}
         api.send_message(tg_id, (
             f'✏️ <b>{extra_name}</b> uchun yangi emoji ID yuboring:\n\n'
-            '💡 Raqam, premium stiker, yoki custom emoji yuborishingiz mumkin.'
+            '💡 Xabarga premium emoji qo\'ying yoki ID raqam yuboring.\n'
+            '⚠️ Oddiy stiker emas, xabardagi custom emoji kerak!'
         ))
         api.answer_callback_query(cb_id)
 
@@ -169,7 +170,8 @@ def handle_emoji_callback(data: str, cq: dict, api: TelegramBotAPI) -> bool:
         _pending[tg_id] = {'field': key, 'msg_id': msg_id, 'ts': time.time(), 'step': 'id'}
         api.send_message(tg_id, (
             f'✏️ <b>{fallback} {label}</b> uchun yangi emoji ID yuboring:\n\n'
-            '💡 Raqam, premium stiker, yoki custom emoji yuborishingiz mumkin.\n'
+            '💡 Xabarga premium emoji qo\'ying yoki ID raqam yuboring.\n'
+            '⚠️ Oddiy stiker emas, xabardagi custom emoji kerak!\n'
             'Bekor qilish: /cancel'
         ))
         api.answer_callback_query(cb_id)
@@ -234,11 +236,16 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
 
     # Step: waiting for emoji ID
     if state['step'] == 'id':
-        emoji_id = _extract_emoji_id(message)
+        emoji_id, error = _extract_emoji_id(message)
+        if error:
+            api.send_message(tg_id, error)
+            return True
         if not emoji_id:
             api.send_message(tg_id, (
                 '⚠️ Emoji ID topilmadi.\n\n'
-                '💡 Premium stiker yuboring, yoki raqam (masalan: <code>5310157785063778846</code>)\n'
+                '💡 Quyidagi usullardan biri bilan yuboring:\n'
+                '1. Xabarga custom emoji qo\'ying (premium emojilar)\n'
+                '2. Raqam yozing: <code>5310157785063778846</code>\n\n'
                 'Bekor qilish: /cancel'
             ))
             return True
@@ -269,29 +276,44 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
 
 # ── Emoji ID extraction ──────────────────────────────────────────────────────
 
-def _extract_emoji_id(message: dict) -> str:
-    """Extract custom emoji ID from message (sticker, entity, or plain number)."""
-    # 1. Premium sticker with custom_emoji_id
+def _extract_emoji_id(message: dict) -> tuple[str, str]:
+    """
+    Extract custom emoji ID from message.
+    Returns (emoji_id, error_message). error_message is empty on success.
+    """
+    # 1. Sticker — must be custom_emoji type, not regular/animated
     sticker = message.get('sticker')
     if sticker:
+        sticker_type = sticker.get('type', 'regular')
         eid = sticker.get('custom_emoji_id')
-        if eid:
-            return str(eid)
+        if sticker_type == 'custom_emoji' and eid:
+            return str(eid), ''
+        # Regular/animated sticker — user sent wrong type
+        set_name = sticker.get('set_name', '')
+        return '', (
+            '⚠️ Bu oddiy stiker — custom emoji emas!\n\n'
+            '💡 <b>Custom emoji</b> ni qanday yuborish:\n'
+            '1. Xabar yozing va emoji tugmasini bosing\n'
+            '2. Premium emojilardan birini tanlang\n'
+            '3. Shu xabarni yuboring\n\n'
+            '📝 Yoki ID raqamini to\'g\'ridan-to\'g\'ri yozing\n'
+            'Bekor qilish: /cancel'
+        )
 
-    # 2. Custom emoji entity in message text
+    # 2. Custom emoji entity in message text (inline premium emoji)
     entities = message.get('entities', [])
     for ent in entities:
         if ent.get('type') == 'custom_emoji':
             eid = ent.get('custom_emoji_id')
             if eid:
-                return str(eid)
+                return str(eid), ''
 
     # 3. Plain numeric ID
     text = message.get('text', '').strip()
     if text.isdigit() and len(text) > 10:
-        return text
+        return text, ''
 
-    return ''
+    return '', ''
 
 
 # ── Save helpers ─────────────────────────────────────────────────────────────
