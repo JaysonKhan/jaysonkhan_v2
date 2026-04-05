@@ -1139,11 +1139,11 @@ def staff_create(request, svc="talabaovozi"):
             "email": request.POST.get("email", "").strip() or None,
             "bio": request.POST.get("bio", "").strip() or None,
             "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+            "faculty_id": int(request.POST["faculty_id"]) if request.POST.get("faculty_id") else None,
         }
         try:
             result = client.create_staff(data)
             staff_id = result.get("id")
-            # Upload photo if provided
             photo = request.FILES.get("photo")
             if photo and staff_id:
                 client.upload_staff_photo(staff_id, photo.read(), photo.name)
@@ -1153,13 +1153,20 @@ def staff_create(request, svc="talabaovozi"):
             _handle_api_error(request, e)
 
     universities = []
+    all_faculties = {}
     try:
         universities = client.list_universities()
+        for uni in universities:
+            try:
+                all_faculties[uni["id"]] = client.list_university_faculties(uni["id"])
+            except BotAPIError:
+                all_faculties[uni["id"]] = []
     except BotAPIError:
         pass
 
     return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
         "universities": universities,
+        "all_faculties_json": json.dumps(all_faculties),
         "form_title": "Yangi xodim qo'shish",
         "submit_text": "Qo'shish",
     }))
@@ -1196,6 +1203,7 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
             "email": request.POST.get("email", "").strip() or None,
             "bio": request.POST.get("bio", "").strip() or None,
             "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+            "faculty_id": int(request.POST["faculty_id"]) if request.POST.get("faculty_id") else None,
         }
         try:
             client.update_staff(staff_id, data)
@@ -1210,6 +1218,12 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
     try:
         staff = client.get_staff(staff_id)
         universities = client.list_universities()
+        all_faculties = {}
+        for uni in universities:
+            try:
+                all_faculties[uni["id"]] = client.list_university_faculties(uni["id"])
+            except BotAPIError:
+                all_faculties[uni["id"]] = []
     except BotAPIError as e:
         _handle_api_error(request, e)
         return HttpResponseRedirect(_rev("bot_staff_list", svc))
@@ -1217,6 +1231,7 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
     return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
         "staff": staff,
         "universities": universities,
+        "all_faculties_json": json.dumps(all_faculties),
         "form_title": f"Tahrirlash: {staff.get('full_name', '')}",
         "submit_text": "Saqlash",
         "edit_mode": True,

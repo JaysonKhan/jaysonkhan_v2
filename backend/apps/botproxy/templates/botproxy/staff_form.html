@@ -38,9 +38,20 @@
                 <input type="text" name="position" value="{{ staff.position|default:'' }}" required placeholder="Rektor, Dekan, Professor...">
             </div>
             <div class="rb-form-group">
+                <label>Fakultet</label>
+                <select name="faculty_id" id="faculty-select">
+                    <option value="">Umumiy (fakultetsiz)</option>
+                </select>
+                <div class="help">Universitet tanlangandan keyin fakultetlar yuklanadi</div>
+            </div>
+        </div>
+
+        <div class="rb-form-row rb-form-row-2">
+            <div class="rb-form-group">
                 <label>Bo'lim</label>
                 <input type="text" name="department" value="{{ staff.department|default:'' }}" placeholder="Rektorat, Informatika kafedrasi...">
             </div>
+            <div class="rb-form-group"></div>
         </div>
 
         <div class="rb-form-row rb-form-row-2">
@@ -82,4 +93,30 @@
         </div>
     </form>
 </div>
+
+<script>
+(function() {
+    const allFaculties = {{ all_faculties_json|default:"{}" }};
+    const uniSelect = document.querySelector('select[name="university_id"]');
+    const facSelect = document.getElementById('faculty-select');
+    const currentFacultyId = {{ staff.faculty_id|default:"null" }};
+
+    function updateFaculties() {
+        const uniId = uniSelect.value;
+        facSelect.innerHTML = '<option value="">Umumiy (fakultetsiz)</option>';
+        if (uniId && allFaculties[uniId]) {
+            allFaculties[uniId].forEach(function(f) {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                opt.textContent = f.code + ' — ' + f.name;
+                if (currentFacultyId && f.id === currentFacultyId) opt.selected = true;
+                facSelect.appendChild(opt);
+            });
+        }
+    }
+
+    uniSelect.addEventListener('change', updateFaculties);
+    updateFaculties();
+})();
+</script>
 {% endblock %}
