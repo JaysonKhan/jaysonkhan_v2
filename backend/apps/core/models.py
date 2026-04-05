@@ -386,10 +386,7 @@ class FooterMixin(models.Model):
         max_length=500, blank=True, default="",
         help_text="Footer description text (leave blank to use site_tagline)"
     )
-    footer_email = models.EmailField(
-        blank=True, default="",
-        help_text="Footer contact email (leave blank to use main email)"
-    )
+    # footer_email removed — always uses main email field
     footer_social_github = models.URLField(
         blank=True, default="",
         help_text="Footer GitHub URL (leave blank to inherit from main socials)"
@@ -487,8 +484,8 @@ class SiteSettings(
 
     @property
     def footer_display_email(self):
-        """Footer email with fallback to main email."""
-        return self.footer_email or self.email
+        """Always uses main email."""
+        return self.email
 
     @property
     def footer_display_github(self):

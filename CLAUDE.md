@@ -91,6 +91,24 @@ apps/botproxy/
 - **Logos**: Saved to `/var/www/jaysonkhan/media/uni_logos/talabaovozi/`, served by nginx `/media/`. View annotates `logo_url` for direct media path (avoids Django proxy → 503 issue with sync workers).
 - **Dashboard charts**: Chart.js 4.x (CDN), AJAX lazy-load for poll analytics
 
+## Botproxy Staff & Feedback (added 2026-04-05)
+
+- Staff CRUD views: staff_list, staff_create, staff_detail, staff_edit, staff_delete, staff_photo_proxy
+- Staff form: position/department selects (from API), faculty dropdown (JS-filtered by university), time picker, phone format
+- Staff list filters: university, position_code, name search
+- Feedback dashboard: per-poll sentiment summary
+- Staff photo disk cache: /media/staff_photos/{svc}/{id}.jpg — avoids repeated API proxy calls
+- University detail page includes staff list section
+- SiteSettings uses abstract mixins (BrandingMixin, SEOMixin, etc.) — NOT separate models. No migration needed.
+
+## Gotchas
+
+- NEVER use async views with Gunicorn sync workers + @staff_member_required — causes "coroutine was never awaited" 500 error
+- Use ThreadPoolExecutor for parallel bot API calls (not asyncio.gather) under WSGI/Gunicorn sync
+- Staff photo proxy: always disk-cache to /media/staff_photos/ — 260 staff × parallel img loads kills Gunicorn workers
+- Deploy --bot uses `deploy` user git (not sudo) — GitHub SSH key is on deploy user only
+- Bot API at 127.0.0.1:8433 — never exposed externally. Django connects via httpx with HMAC-SHA256 auth
+
 ## Production
 
 - **Server**: Ubuntu 24.04 at 144.91.69.225, SSH alias `jaysonkhan`
