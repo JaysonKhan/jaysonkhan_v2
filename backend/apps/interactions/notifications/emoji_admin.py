@@ -148,7 +148,12 @@ def handle_emoji_callback(data: str, cq: dict, api: TelegramBotAPI) -> bool:
 
     elif action == 'add':
         _pending[tg_id] = {'field': '_new_name', 'msg_id': msg_id, 'ts': time.time(), 'step': 'name'}
-        api.send_message(tg_id, '📝 Yangi emoji uchun <b>nom</b> yuboring (masalan: <code>fire</code>):')
+        api.send_message(tg_id, (
+            '📝 Yangi emoji qo\'shish:\n\n'
+            '1️⃣ Custom emoji/stiker yuboring — nom avtomatik yaratiladi\n'
+            '2️⃣ Yoki avval nom yozing (masalan: <code>fire</code>), keyin emoji\n\n'
+            'Bekor qilish: /cancel'
+        ))
         api.answer_callback_query(cb_id)
 
     elif action.startswith('edit_x:'):
@@ -225,15 +230,38 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
 
     # Step: waiting for name (new extra emoji)
     if state['step'] == 'name':
+        # If user sent a sticker/emoji instead of text name — auto-generate name and save
+        emoji_id, error = _extract_emoji_id(message)
+        if emoji_id:
+            auto_name = _auto_emoji_name(message, emoji_id)
+            msg_id = state.get('msg_id')
+            del _pending[tg_id]
+            _save_extra(auto_name, emoji_id)
+            api.send_message(tg_id, (
+                f'✅ Saqlandi!\n'
+                f'📝 Nom: <b>{auto_name}</b>\n'
+                f'🆔 ID: <code>{emoji_id}</code>'
+            ))
+            if msg_id:
+                _refresh_list(tg_id, msg_id, api)
+            return True
+        if error:
+            api.send_message(tg_id, error)
+            return True
+        # Text name input
         if not text or not text.replace('_', '').replace('-', '').isalnum():
-            api.send_message(tg_id, '⚠️ Nom faqat harf, raqam va _ bo\'lishi kerak. Qayta yuboring:')
+            api.send_message(tg_id, (
+                '⚠️ Nom yuboring yoki to\'g\'ridan-to\'g\'ri custom emoji/stiker yuboring.\n'
+                'Nom: faqat harf, raqam, _ (masalan: <code>fire</code>)\n'
+                'Bekor qilish: /cancel'
+            ))
             return True
         state['field'] = f'extra:{text}'
         state['step'] = 'id'
         state['ts'] = time.time()
         api.send_message(tg_id, (
             f'✅ Nom: <b>{text}</b>\n\n'
-            '📝 Endi emoji ID yuboring (raqam, premium stiker, yoki custom emoji):'
+            '📝 Endi emoji ID yuboring (custom emoji yoki raqam):'
         ))
         return True
 
@@ -275,6 +303,29 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
         return True
 
     return False
+
+
+# ── Auto name generation ─────────────────────────────────────────────────────
+
+
+def _auto_emoji_name(message: dict, emoji_id: str) -> str:
+    """Generate a name for an emoji from sticker set_name or emoji_id suffix."""
+    sticker = message.get('sticker')
+    if sticker:
+        set_name = sticker.get('set_name', '')
+        emoji_char = sticker.get('emoji', '')
+        if set_name:
+            # Clean set name: "AnimatedEmoji" → "animated_emoji"
+            import re
+            clean = re.sub(r'([A-Z])', r'_\1', set_name).strip('_').lower()
+            clean = re.sub(r'[^a-z0-9_]', '_', clean)
+            clean = re.sub(r'_+', '_', clean).strip('_')
+            if len(clean) > 20:
+                clean = clean[:20].rstrip('_')
+            return clean or f'emoji_{emoji_id[-6:]}'
+        if emoji_char:
+            return f'sticker_{emoji_id[-6:]}'
+    return f'emoji_{emoji_id[-6:]}'
 
 
 # ── Emoji ID extraction ──────────────────────────────────────────────────────
