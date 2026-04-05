@@ -13,7 +13,7 @@
 
 {% if universities %}
 <div class="rb-filter-bar">
-    <select onchange="window.location='?university_id='+this.value">
+    <select onchange="window.location=this.value ? '?university_id='+this.value : location.pathname">
         <option value="">Barcha universitetlar</option>
         {% for uni in universities %}
         <option value="{{ uni.id }}" {% if selected_university == uni.id %}selected{% endif %}>{{ uni.short_name }}</option>

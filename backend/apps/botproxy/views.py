@@ -1101,13 +1101,12 @@ def _build_page_range(current: int, total: int) -> list:
 @admin_permission_required('botproxy.view_bot_dashboard')
 def staff_list(request, svc="talabaovozi"):
     client = _client(svc)
-    university_id = request.GET.get("university_id")
+    raw_uni_id = request.GET.get("university_id", "").strip()
+    university_id = int(raw_uni_id) if raw_uni_id.isdigit() else None
     staff = []
     universities = []
     try:
-        staff = client.list_staff(
-            university_id=int(university_id) if university_id else None
-        )
+        staff = client.list_staff(university_id=university_id)
         universities = client.list_universities()
     except BotAPIError as e:
         _handle_api_error(request, e)
