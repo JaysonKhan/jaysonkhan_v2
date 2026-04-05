@@ -74,6 +74,12 @@ class TelegramWebhookView(View):
     # ── Message routing ──────────────────────────────────────────────────────
 
     def _handle_message(self, message):
+        try:
+            self._route_message(message)
+        except Exception as exc:
+            logger.error('Unhandled webhook error: %s', exc, exc_info=True)
+
+    def _route_message(self, message):
         text = message.get('text', '')
         chat = message.get('chat', {})
         chat_type = chat.get('type', '')

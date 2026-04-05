@@ -55,10 +55,15 @@ def _load_emojis() -> dict:
         }
         # Merge dynamic extras from JSONField
         extras = getattr(site, 'tg_emoji_extra', None) or {}
-        for key, eid in extras.items():
-            if eid:
-                _emoji_cache[key] = eid
+        if isinstance(extras, dict):
+            for key, eid in extras.items():
+                if eid and isinstance(eid, str):
+                    _emoji_cache[key] = eid
     except Exception:
+        import logging
+        logging.getLogger('servermonitor').error(
+            'Failed to load emoji cache', exc_info=True,
+        )
         _emoji_cache = {}
     return _emoji_cache
 
