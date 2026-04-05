@@ -159,14 +159,13 @@ if $DEPLOY_BOT; then
     echo -e "${CYAN}${BOLD}── talabaovozi (Bot) ──${RESET}"
 
     info "  Server git pull..."
-    # Ensure GitHub host key is known for both deploy user and root
-    remote "ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null; \
-        sudo bash -c 'mkdir -p /root/.ssh && ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 2>/dev/null' || true"
-    REMOTE_BEFORE=$(remote "sudo git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
-    remote "sudo git -C $BOT_DIR fetch origin $BOT_BRANCH && \
-        sudo git -C $BOT_DIR checkout $BOT_BRANCH 2>/dev/null; \
-        sudo git -C $BOT_DIR reset --hard origin/$BOT_BRANCH"
-    remote "sudo find $BOT_DIR -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true"
+    # Use deploy user (not sudo/root) for git operations — deploy key is on deploy user
+    remote "ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true"
+    REMOTE_BEFORE=$(remote "git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
+    remote "git -C $BOT_DIR fetch origin $BOT_BRANCH && \
+        git -C $BOT_DIR checkout $BOT_BRANCH 2>/dev/null; \
+        git -C $BOT_DIR reset --hard origin/$BOT_BRANCH"
+    remote "find $BOT_DIR -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true"
     REMOTE_AFTER=$(remote "sudo git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
     ok "  Code updated: ${DIM}$REMOTE_BEFORE → $REMOTE_AFTER${RESET}"
 
