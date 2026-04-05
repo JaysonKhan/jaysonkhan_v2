@@ -839,7 +839,7 @@ def university_list(request, svc="talabaovozi"):
             uni["logo_url"] = None
 
     # Non-blocking: download missing logos to disk in background
-    missing = [u["id"] for u in universities if u.get("logo_path") and not u.get("_logo_url")]
+    missing = [u["id"] for u in universities if u.get("logo_path") and not u.get("logo_url")]
     if missing:
         t = threading.Thread(target=_warmup_logos_to_disk, args=(svc, missing), daemon=True)
         t.start()
@@ -1024,8 +1024,9 @@ def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
     # 1. Check disk first (fastest, no gunicorn blocking)
     disk = _logo_disk_path(svc, uni_id)
     if disk:
-        ct = _detect_image_content_type(disk.read_bytes()[:16])
-        return HttpResponse(disk.read_bytes(), content_type=ct, headers=_LOGO_HEADERS)
+        data = disk.read_bytes()
+        ct = _detect_image_content_type(data[:16])
+        return HttpResponse(data, content_type=ct, headers=_LOGO_HEADERS)
 
     # 2. Fetch from bot API
     client = _client(svc)
