@@ -26,6 +26,7 @@ from interactions.models import (
     UserBan,
     AdminLogMessage,
 )
+from servermonitor.handlers import handle_server_callback, handle_server_command
 from telegram.models import TelegramEntity
 from .telegram_api import TelegramBotAPI
 
@@ -89,6 +90,10 @@ class TelegramWebhookView(View):
 
     def _private_command(self, command, message):
         tg_id = message['from']['id']
+
+        # Server monitor commands (owner-only)
+        if handle_server_command(command, message, self.api):
+            return
 
         if command == '/start':
             self.api.send_message(tg_id, (
@@ -250,6 +255,9 @@ class TelegramWebhookView(View):
 
     def _handle_callback(self, callback_query):
         data = callback_query.get('data', '')
+        # Server monitor callbacks (service restart, refresh)
+        if handle_server_callback(data, callback_query, self.api):
+            return
         if data.startswith('toggle_'):
             self._toggle_user_pref(callback_query)
         elif data.startswith('cfg_'):

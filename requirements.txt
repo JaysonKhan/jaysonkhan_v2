@@ -37,6 +37,9 @@ telethon==1.42.0
 # Cache
 redis>=5.0
 
+# Server monitoring
+psutil>=5.9
+
 # Timezone
 tzdata==2025.3
 typing_extensions==4.15.0

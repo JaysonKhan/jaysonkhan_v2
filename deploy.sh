@@ -149,6 +149,35 @@ if $DEPLOY_JK; then
         sudo systemctl restart $JK_SERVICE && \
         sudo systemctl reload nginx"
     ok "  $JK_SERVICE restarted"
+
+    # ── Server Monitor setup ─────────────────────────────────────────────────
+    info "  Server Monitor: register bot commands..."
+    remote "source $JK_VENV && \
+        DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE register_bot_commands 2>/dev/null" \
+        && ok "  Bot commands registered" \
+        || warn "  Bot commands registration skipped"
+
+    info "  Server Monitor: systemd timer..."
+    remote "
+        # Copy timer files if they don't exist or are outdated
+        sudo cp $JK_BACKEND/apps/servermonitor/systemd/server-health-report.service /etc/systemd/system/ 2>/dev/null && \
+        sudo cp $JK_BACKEND/apps/servermonitor/systemd/server-health-report.timer /etc/systemd/system/ 2>/dev/null && \
+        sudo systemctl daemon-reload && \
+        sudo systemctl enable server-health-report.timer 2>/dev/null && \
+        sudo systemctl start server-health-report.timer 2>/dev/null && \
+        echo 'TIMER_OK' || echo 'TIMER_SKIP'
+    " | grep -q 'TIMER_OK' \
+        && ok "  Daily health report timer enabled (09:00)" \
+        || warn "  Timer setup skipped (may already be active)"
+
+    info "  Server Monitor: CPU alert cron..."
+    remote "
+        CRON_LINE='*/10 * * * * source $JK_VENV && DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE check_cpu_alert 2>/dev/null'
+        (crontab -l 2>/dev/null | grep -v 'check_cpu_alert'; echo \"\$CRON_LINE\") | crontab -
+        echo 'CRON_OK'
+    " | grep -q 'CRON_OK' \
+        && ok "  CPU alert cron installed (every 10 min)" \
+        || warn "  CPU alert cron setup skipped"
     echo
 fi
 
@@ -203,6 +232,14 @@ if $DEPLOY_JK; then
             ok "  Health endpoint: OK"
         else
             warn "  Health endpoint: $HEALTH_CODE"
+        fi
+        # Server monitor timer check
+        TIMER_STATUS=$(remote "sudo systemctl is-active server-health-report.timer 2>/dev/null" || echo "unknown")
+        if [[ "$TIMER_STATUS" == "active" ]]; then
+            NEXT_RUN=$(remote "sudo systemctl show server-health-report.timer --property=NextElapseUSecRealtime --value 2>/dev/null" || echo "")
+            ok "  Health report timer: active ${DIM}(next: $NEXT_RUN)${RESET}"
+        else
+            warn "  Health report timer: $TIMER_STATUS"
         fi
     else
         echo -e "${RED}${BOLD}✖${RESET}  jaysonkhan: $JK_STATUS"

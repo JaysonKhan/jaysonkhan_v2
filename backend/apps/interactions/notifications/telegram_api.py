@@ -88,6 +88,25 @@ class TelegramBotAPI:
             'reply_markup': reply_markup,
         })
 
+    def edit_message_text(
+        self,
+        chat_id: int,
+        message_id: int,
+        text: str,
+        *,
+        parse_mode: str = 'HTML',
+        reply_markup: Optional[dict] = None,
+    ) -> Optional[dict]:
+        payload: dict = {
+            'chat_id': chat_id,
+            'message_id': message_id,
+            'text': text,
+            'parse_mode': parse_mode,
+        }
+        if reply_markup:
+            payload['reply_markup'] = reply_markup
+        return self._post('editMessageText', payload)
+
     def set_webhook(self, url: str, *, secret_token: Optional[str] = None) -> Optional[dict]:
         payload: dict = {'url': url}
         if secret_token:

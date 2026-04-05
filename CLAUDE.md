@@ -122,6 +122,29 @@ apps/botproxy/
 - **Static/Media**: Nginx serves from `/var/www/jaysonkhan/static` and `/var/www/jaysonkhan/media`
 - **Architecture doc**: See `~/JaysonServer/SERVER_ARCHITECTURE.md` for full server layout
 
+## Server Monitor (servermonitor app)
+
+Telegram bot commands for server health monitoring. All commands are owner-only (checked via `SiteSettings.telegram_owner_id`).
+
+```
+apps/servermonitor/
+├── metrics.py       # psutil-based server metrics collection (CPU, RAM, disk, services)
+├── formatters.py    # Kreativ emoji dizayn: progress bars, color badges, box drawing
+├── contabo.py       # Contabo VPS tariff advisor (usage vs plan limits)
+├── handlers.py      # Telegram command handlers (/status, /services, /disk, /tariff, /logs, /backup)
+├── apps.py
+└── management/commands/
+    ├── server_health_report.py  # Daily health report (use with systemd timer)
+    ├── check_cpu_alert.py       # CPU threshold alert (run every 5-15 min)
+    └── register_bot_commands.py # Register commands with Telegram menu
+```
+
+**Bot Commands**: `/status`, `/services`, `/disk`, `/tariff`, `/logs [service] [lines]`, `/backup`
+**Management Commands**: `server_health_report [--quick] [--tariff] [--alert-only]`, `check_cpu_alert [--threshold N]`
+**Systemd files**: `servermonitor/systemd/server-health-report.{service,timer}` (daily at 09:00)
+**Alert threshold**: CPU cores at 75% trigger upgrade warning
+**Dependency**: `psutil>=5.9` (in requirements.txt)
+
 ## Environment Variables
 
 Core: `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `ADMIN_URL`, `ADMIN_ALLOWED_IPS`
