@@ -2,10 +2,12 @@
 Kreativ emoji dizayn for server health reports.
 
 Visual elements:
+- Custom premium emoji from SiteSettings (with Unicode fallback)
 - Color badges: 🟢 OK, 🟡 Warning, 🔴 Critical
 - Progress bars: ▓▓▓▓▓░░░░░ 50%
 - Box drawing for structure
 - Medal emojis for top processes
+- Telegram custom emoji: <tg-emoji emoji-id="ID">fallback</tg-emoji>
 """
 from __future__ import annotations
 
@@ -26,15 +28,60 @@ from .metrics import (
 WARN_THRESHOLD = 75
 CRIT_THRESHOLD = 90
 
+# ── Emoji Registry (loaded from SiteSettings) ───────────────────────────────
+
+_emoji_cache: dict | None = None
+
+
+def _load_emojis() -> dict:
+    """Load custom emoji IDs from SiteSettings, cache in module."""
+    global _emoji_cache
+    if _emoji_cache is not None:
+        return _emoji_cache
+    try:
+        from core.services import SiteSettingsService
+        site = SiteSettingsService.get()
+        _emoji_cache = {
+            'server': getattr(site, 'tg_emoji_server', '') or '',
+            'cpu': getattr(site, 'tg_emoji_cpu', '') or '',
+            'ram': getattr(site, 'tg_emoji_ram', '') or '',
+            'disk': getattr(site, 'tg_emoji_disk', '') or '',
+            'ok': getattr(site, 'tg_emoji_ok', '') or '',
+            'warn': getattr(site, 'tg_emoji_warn', '') or '',
+            'critical': getattr(site, 'tg_emoji_critical', '') or '',
+            'chart': getattr(site, 'tg_emoji_chart', '') or '',
+            'alert': getattr(site, 'tg_emoji_alert', '') or '',
+            'money': getattr(site, 'tg_emoji_money', '') or '',
+        }
+    except Exception:
+        _emoji_cache = {}
+    return _emoji_cache
+
+
+def reset_emoji_cache():
+    """Reset cache (call after SiteSettings change)."""
+    global _emoji_cache
+    _emoji_cache = None
+
+
+def _ce(emoji_key: str, fallback: str) -> str:
+    """Custom Emoji — returns <tg-emoji> tag if ID exists, else fallback Unicode."""
+    emojis = _load_emojis()
+    eid = emojis.get(emoji_key, '')
+    if eid:
+        return f'<tg-emoji emoji-id="{eid}">{fallback}</tg-emoji>'
+    return fallback
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
 def _badge(percent: float) -> str:
     if percent >= CRIT_THRESHOLD:
-        return '🔴'
+        return _ce('critical', '🔴')
     if percent >= WARN_THRESHOLD:
-        return '🟡'
-    return '🟢'
+        return _ce('warn', '🟡')
+    return _ce('ok', '🟢')
 
 
 def _progress_bar(percent: float, width: int = 10) -> str:
@@ -70,9 +117,9 @@ def _service_icon(svc_name: str) -> str:
 
 def _service_badge(status: ServiceStatus) -> str:
     if status.active:
-        return '🟢'
+        return _ce('ok', '🟢')
     if status.status in ('inactive', 'dead'):
-        return '🔴'
+        return _ce('critical', '🔴')
     return '⚪'
 
 
@@ -83,10 +130,12 @@ MEDAL_EMOJIS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
 
 
 def format_header(snapshot: ServerSnapshot) -> str:
+    chart = _ce('chart', '📊')
+    server = _ce('server', '🖥')
     return (
-        f'📊 <b>Server Health Report</b>\n'
+        f'{chart} <b>Server Health Report</b>\n'
         f'┌─────────────────────────\n'
-        f'│ 🖥 <b>{snapshot.hostname}</b>\n'
+        f'│ {server} <b>{snapshot.hostname}</b>\n'
         f'│ 🕐 {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
         f'│ ⏱ Uptime: <b>{_format_uptime(snapshot.uptime)}</b>\n'
         f'└─────────────────────────'
@@ -94,11 +143,11 @@ def format_header(snapshot: ServerSnapshot) -> str:
 
 
 def format_cpu(cpu: CpuMetrics) -> str:
+    cpu_icon = _ce('cpu', '🧠')
     lines = [
-        f'\n🧠 <b>CPU</b> ({cpu.core_count} cores)',
+        f'\n{cpu_icon} <b>CPU</b> ({cpu.core_count} cores)',
         f'  {_badge(cpu.total_percent)} Total: {_progress_bar(cpu.total_percent)} <b>{cpu.total_percent}%</b>',
     ]
-    # Per-core breakdown
     for c in cpu.cores:
         lines.append(
             f'  {_badge(c.percent)} Core {c.core}: {_progress_bar(c.percent, 8)} {c.percent}%'
@@ -110,17 +159,18 @@ def format_cpu(cpu: CpuMetrics) -> str:
 
 
 def format_cpu_compact(cpu: CpuMetrics) -> str:
-    """Short CPU summary without per-core detail."""
+    cpu_icon = _ce('cpu', '🧠')
     return (
-        f'\n🧠 <b>CPU</b> ({cpu.core_count} cores)\n'
+        f'\n{cpu_icon} <b>CPU</b> ({cpu.core_count} cores)\n'
         f'  {_badge(cpu.total_percent)} {_progress_bar(cpu.total_percent)} <b>{cpu.total_percent}%</b>\n'
         f'  📈 Load: {cpu.load_avg_1} / {cpu.load_avg_5} / {cpu.load_avg_15}'
     )
 
 
 def format_memory(mem: MemoryMetrics) -> str:
+    ram_icon = _ce('ram', '💾')
     return (
-        f'\n💾 <b>RAM</b>\n'
+        f'\n{ram_icon} <b>RAM</b>\n'
         f'  {_badge(mem.percent)} {_progress_bar(mem.percent)} <b>{mem.percent}%</b>\n'
         f'  {mem.used_gb}GB / {mem.total_gb}GB (free: {mem.available_gb}GB)'
     )
@@ -137,15 +187,17 @@ def format_swap(swap: SwapMetrics) -> str:
 
 
 def format_disk(disk: DiskMetrics) -> str:
+    disk_icon = _ce('disk', '💿')
     return (
-        f'\n💿 <b>Disk</b> ({disk.mountpoint})\n'
+        f'\n{disk_icon} <b>Disk</b> ({disk.mountpoint})\n'
         f'  {_badge(disk.percent)} {_progress_bar(disk.percent)} <b>{disk.percent}%</b>\n'
         f'  {disk.used_gb}GB / {disk.total_gb}GB (free: {disk.free_gb}GB)'
     )
 
 
 def format_disk_detailed(partitions: list[DiskPartitionInfo]) -> str:
-    lines = ['\n💿 <b>Disk Usage (all partitions)</b>']
+    disk_icon = _ce('disk', '💿')
+    lines = [f'\n{disk_icon} <b>Disk Usage (all partitions)</b>']
     for p in partitions:
         lines.append(
             f'  {_badge(p.percent)} <code>{p.mountpoint}</code> '
@@ -184,8 +236,9 @@ def format_cpu_alert(cpu: CpuMetrics, threshold: float = 75.0) -> str | None:
     if not hot_cores:
         return None
 
+    alert_icon = _ce('alert', '🚨')
     lines = [
-        f'🚨 <b>CPU Alert!</b> {len(hot_cores)}/{cpu.core_count} cores above {threshold}%\n',
+        f'{alert_icon} <b>CPU Alert!</b> {len(hot_cores)}/{cpu.core_count} cores above {threshold}%\n',
         '┌─────────────────────────',
     ]
     for c in hot_cores:

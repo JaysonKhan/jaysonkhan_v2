@@ -107,6 +107,13 @@ class TelegramBotAPI:
             payload['reply_markup'] = reply_markup
         return self._post('editMessageText', payload)
 
+    def send_chat_action(self, chat_id: int, action: str = 'typing') -> Optional[dict]:
+        """POST /sendChatAction. Shows typing/uploading indicator."""
+        return self._post('sendChatAction', {
+            'chat_id': chat_id,
+            'action': action,
+        })
+
     def set_webhook(self, url: str, *, secret_token: Optional[str] = None) -> Optional[dict]:
         payload: dict = {'url': url}
         if secret_token:

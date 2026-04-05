@@ -76,7 +76,7 @@ def handle_server_command(command: str, message: dict, api: TelegramBotAPI) -> b
 
 def _handle_status(tg_id: int, api: TelegramBotAPI) -> None:
     """Quick server health snapshot."""
-    api.send_message(tg_id, '⏳ Ma\'lumotlar yig\'ilmoqda...')
+    api.send_chat_action(tg_id, 'typing')
     try:
         snapshot = collect_full_snapshot()
         text = format_status_report(snapshot)
@@ -94,6 +94,7 @@ def _handle_status(tg_id: int, api: TelegramBotAPI) -> None:
 
 def _handle_services(tg_id: int, api: TelegramBotAPI) -> None:
     """Systemd services status."""
+    api.send_chat_action(tg_id, 'typing')
     try:
         services = [collect_service_status(s) for s in MONITORED_SERVICES]
         text = format_services(services)
@@ -123,6 +124,7 @@ def _build_services_keyboard(services: list) -> dict:
 
 def _handle_disk(tg_id: int, api: TelegramBotAPI) -> None:
     """Detailed disk usage breakdown."""
+    api.send_chat_action(tg_id, 'typing')
     try:
         partitions = collect_partitions()
         text = format_disk_detailed(partitions)
@@ -134,6 +136,7 @@ def _handle_disk(tg_id: int, api: TelegramBotAPI) -> None:
 
 def _handle_tariff(tg_id: int, api: TelegramBotAPI) -> None:
     """Contabo tariff advisor."""
+    api.send_chat_action(tg_id, 'typing')
     try:
         cpu = collect_cpu()
         mem = collect_memory()

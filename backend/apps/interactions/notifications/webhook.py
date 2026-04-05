@@ -97,28 +97,35 @@ class TelegramWebhookView(View):
 
         if command == '/start':
             from servermonitor.handlers import is_owner
+            from servermonitor.formatters import _ce
             if is_owner(tg_id):
+                self.api.send_chat_action(tg_id, 'typing')
+                chart = _ce('chart', '📊')
+                server = _ce('server', '🖥')
+                disk = _ce('disk', '💿')
+                money = _ce('money', '💰')
+                alert = _ce('alert', '🚨')
                 self.api.send_message(tg_id, (
-                    '👋 <b>Salom, Admin!</b>\n\n'
-                    '🔧 <b>Server Monitor</b>\n'
-                    '┌─────────────────────────\n'
-                    '│ /status  — 📊 Server holati (CPU, RAM, disk)\n'
-                    '│ /services — 🔧 Systemd servislar holati\n'
-                    '│ /disk — 💿 Disk ishlatilishi (batafsil)\n'
-                    '│ /tariff — 💰 Contabo tarif tavsiyasi\n'
-                    '│ /logs — 📋 Servis loglari (/logs nginx 30)\n'
-                    '│ /backup — 💾 PostgreSQL backup yaratish\n'
-                    '└─────────────────────────\n\n'
-                    '🔔 <b>Bildirishnomalar</b>\n'
-                    '┌─────────────────────────\n'
-                    '│ /notifications — sozlamalar\n'
-                    '│ /config — admin guruh sozlamalari\n'
-                    '└─────────────────────────\n\n'
-                    '⏰ <b>Avtomatik</b>\n'
-                    '┌─────────────────────────\n'
-                    '│ 📊 Kunlik hisobot — har kuni 09:00\n'
-                    '│ 🚨 CPU alert — har 10 daqiqada (>75%)\n'
-                    '└─────────────────────────'
+                    f'👋 <b>Salom, Admin!</b>\n\n'
+                    f'{server} <b>Server Monitor</b>\n'
+                    f'┌─────────────────────────\n'
+                    f'│ /status  — {chart} Server holati (CPU, RAM, disk)\n'
+                    f'│ /services — 🔧 Systemd servislar holati\n'
+                    f'│ /disk — {disk} Disk ishlatilishi (batafsil)\n'
+                    f'│ /tariff — {money} Contabo tarif tavsiyasi\n'
+                    f'│ /logs — 📋 Servis loglari (/logs nginx 30)\n'
+                    f'│ /backup — 💾 PostgreSQL backup yaratish\n'
+                    f'└─────────────────────────\n\n'
+                    f'🔔 <b>Bildirishnomalar</b>\n'
+                    f'┌─────────────────────────\n'
+                    f'│ /notifications — sozlamalar\n'
+                    f'│ /config — admin guruh sozlamalari\n'
+                    f'└─────────────────────────\n\n'
+                    f'⏰ <b>Avtomatik</b>\n'
+                    f'┌─────────────────────────\n'
+                    f'│ {chart} Kunlik hisobot — har kuni 09:00\n'
+                    f'│ {alert} CPU alert — har 10 daqiqada (>75%)\n'
+                    f'└─────────────────────────'
                 ))
             else:
                 self.api.send_message(tg_id, (

@@ -375,6 +375,48 @@ class TelegramMixin(models.Model):
         help_text="Custom emoji ID for 💬 Comment/reply buttons"
     )
 
+    # ── Server Monitor Custom Emoji (premium stickers) ──
+    tg_emoji_server = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🖥 Server/status headers"
+    )
+    tg_emoji_cpu = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🧠 CPU section"
+    )
+    tg_emoji_ram = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 💾 RAM section"
+    )
+    tg_emoji_disk = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 💿 Disk section"
+    )
+    tg_emoji_ok = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🟢 OK/active status"
+    )
+    tg_emoji_warn = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🟡 Warning status"
+    )
+    tg_emoji_critical = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🔴 Critical/down status"
+    )
+    tg_emoji_chart = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 📊 Reports/charts"
+    )
+    tg_emoji_alert = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🚨 Alert notifications"
+    )
+    tg_emoji_money = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 💰 Tariff/pricing"
+    )
+
     class Meta:
         abstract = True
 

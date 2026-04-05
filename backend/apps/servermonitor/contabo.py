@@ -135,6 +135,8 @@ def _find_downgrade(current: dict) -> dict | None:
 
 def format_tariff_advice(advice: TariffAdvice) -> str:
     """Format tariff advice as a Telegram-ready message."""
+    from .formatters import _ce
+
     rec_emoji = {
         'upgrade': '⬆️',
         'downgrade': '⬇️',
@@ -142,8 +144,9 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
     }
     emoji = rec_emoji.get(advice.recommendation, '📋')
 
+    money = _ce('money', '💰')
     lines = [
-        f'💰 <b>Contabo Tariff Advisor</b>\n',
+        f'{money} <b>Contabo Tariff Advisor</b>\n',
         f'┌─────────────────────────',
         f'│ 📦 Current: <b>{advice.current_plan["name"]}</b>',
         f'│    {advice.current_plan["cpu_cores"]} CPU / {advice.current_plan["ram_gb"]}GB RAM / {advice.current_plan["disk_gb"]}GB Disk',
