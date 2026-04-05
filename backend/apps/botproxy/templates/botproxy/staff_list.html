@@ -60,7 +60,8 @@
     <div class="rb-card">
         <div class="rb-uni-card">
             {% if s.photo_path %}
-            <img src="{% url 'bot_staff_photo' svc=svc staff_id=s.id %}" class="rb-uni-logo" alt="{{ s.full_name }}">
+            <img src="{% url 'bot_staff_photo' svc=svc staff_id=s.id %}" class="rb-uni-logo" alt="{{ s.full_name }}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="rb-uni-logo-placeholder" style="display:none;">{{ s.full_name|first }}</div>
             {% else %}
             <div class="rb-uni-logo-placeholder">{{ s.full_name|first }}</div>
             {% endif %}

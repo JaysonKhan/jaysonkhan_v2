@@ -1355,12 +1355,29 @@ def staff_delete(request, staff_id: int, svc="talabaovozi"):
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def staff_photo_proxy(request, staff_id: int, svc="talabaovozi"):
-    """Serve staff photo from bot API."""
+    """Serve staff photo — disk-cached to avoid repeated API calls."""
+    import os
+    cache_dir = os.path.join(djsettings.MEDIA_ROOT, "staff_photos", svc)
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Check disk cache first
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        cached = os.path.join(cache_dir, f"{staff_id}.{ext}")
+        if os.path.exists(cached):
+            content_type = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}.get(ext, "image/jpeg")
+            with open(cached, "rb") as f:
+                return HttpResponse(f.read(), content_type=content_type)
+
+    # Fetch from bot API and cache to disk
     client = _client(svc)
     data = client.get_staff_photo(staff_id)
     if not data:
         raise Http404("No photo")
     content_type = _detect_image_content_type(data)
+    ext = "png" if "png" in content_type else "jpg"
+    cached = os.path.join(cache_dir, f"{staff_id}.{ext}")
+    with open(cached, "wb") as f:
+        f.write(data)
     return HttpResponse(data, content_type=content_type)
 
 
