@@ -895,10 +895,18 @@ def university_detail(request, uni_id: int, svc="talabaovozi"):
                     _handle_api_error(request, e)
             return HttpResponseRedirect(_rev("bot_university_detail", svc, uni_id=uni_id))
 
+    # Get staff for this university
+    staff = []
+    try:
+        staff = client.list_staff(university_id=uni_id)
+    except BotAPIError:
+        pass
+
     return TemplateResponse(request, "botproxy/university_detail.html", _ctx(request, svc, {
         "uni": data.get("university", {}),
         "faculties": data.get("faculties", []),
         "polls": polls,
+        "staff": staff,
     }))
 
 
@@ -1163,11 +1171,16 @@ def staff_create(request, svc="talabaovozi"):
     except BotAPIError:
         pass
 
+    # Pre-select university if passed via query string (from university detail page)
+    preselect_uni = request.GET.get("university_id", "")
+    preselect_uni_id = int(preselect_uni) if preselect_uni.isdigit() else None
+
     return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
         "universities": universities,
         "all_faculties_json": json.dumps(all_faculties),
         "form_title": "Yangi xodim qo'shish",
         "submit_text": "Qo'shish",
+        "staff": {"university_id": preselect_uni_id} if preselect_uni_id else {},
     }))
 
 
