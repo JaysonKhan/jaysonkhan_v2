@@ -6,14 +6,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0016_add_tg_emoji_fields'),
+        ('core', '0017_remove_sitesettings_footer_email'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='sitesettings',
-            name='footer_email',
-        ),
         migrations.AddField(
             model_name='sitesettings',
             name='tg_emoji_alert',
