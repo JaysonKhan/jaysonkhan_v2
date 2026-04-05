@@ -20,7 +20,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from botproxy.client import AsyncBotAPIClient, BotAPIClient, BotAPIError
+from botproxy.client import BotAPIClient, BotAPIError
 from core.decorators import admin_permission_required
 
 logger = logging.getLogger(__name__)
@@ -49,11 +49,6 @@ def _validate_svc(svc: str) -> None:
 def _client(svc: str = "talabaovozi") -> BotAPIClient:
     _validate_svc(svc)
     return BotAPIClient(service=svc)
-
-
-def _async_client(svc: str = "talabaovozi") -> AsyncBotAPIClient:
-    _validate_svc(svc)
-    return AsyncBotAPIClient(service=svc)
 
 
 def _handle_api_error(request, e: BotAPIError) -> None:
@@ -117,40 +112,43 @@ def _detect_image_content_type(data: bytes) -> str:
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-async def bot_dashboard(request, svc="talabaovozi"):
-    import asyncio
+def bot_dashboard(request, svc="talabaovozi"):
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    client = _async_client(svc)
+    client = _client(svc)
     ctx = {
         "api_ok": False, "polls": [], "user_count": 0, "admin_ids": [],
         "university_count": 0, "user_stats": {}, "growth_data": {},
         "audience_segments": [],
     }
 
-    async def _safe(name, coro):
+    def _fetch(name, fn):
         try:
-            return name, await coro
+            return name, fn()
         except BotAPIError:
             return name, None
 
-    results = await asyncio.gather(
-        _safe("health", client.health()),
-        _safe("polls", client.list_polls()),
-        _safe("user_count", client.get_user_count()),
-        _safe("admin_ids", client.list_admins()),
-        _safe("university_count", client.get_university_count()),
-        _safe("user_stats", client.get_user_stats()),
-        _safe("growth_data", client.get_user_growth_data(days=30)),
-        _safe("audience_segments", client.get_audience_segments()),
-    )
+    tasks = {
+        "health": lambda: client.health(),
+        "polls": lambda: client.list_polls(),
+        "user_count": lambda: client.get_user_count(),
+        "admin_ids": lambda: client.list_admins(),
+        "university_count": lambda: client.get_university_count(),
+        "user_stats": lambda: client.get_user_stats(),
+        "growth_data": lambda: client.get_user_growth_data(days=30),
+        "audience_segments": lambda: client.get_audience_segments(),
+    }
 
-    for name, result in results:
-        if result is not None:
-            if name == "health":
-                ctx["api_ok"] = result.get("status") == "ok"
-                ctx["active_polls"] = result.get("active_polls", 0)
-            else:
-                ctx[name] = result
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
+        for f in as_completed(futures):
+            name, result = f.result()
+            if result is not None:
+                if name == "health":
+                    ctx["api_ok"] = result.get("status") == "ok"
+                    ctx["active_polls"] = result.get("active_polls", 0)
+                else:
+                    ctx[name] = result
 
     ctx["active_polls_list"] = [p for p in ctx["polls"] if p.get("status") == "open"]
     ctx["growth_data_json"] = json.dumps(ctx.get("growth_data", {}))
@@ -161,43 +159,46 @@ async def bot_dashboard(request, svc="talabaovozi"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-async def growth_data_api(request, svc="talabaovozi"):
+def growth_data_api(request, svc="talabaovozi"):
     """AJAX: user growth data for period selector."""
     days = int(request.GET.get("days", "30"))
     if days not in (7, 14, 30, 90):
         days = 30
-    client = _async_client(svc)
+    client = _client(svc)
     try:
-        data = await client.get_user_growth_data(days=days)
+        data = client.get_user_growth_data(days=days)
     except BotAPIError:
         data = {"dates": [], "counts": [], "days": days}
     return JsonResponse(data)
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-async def poll_analytics_api(request, poll_id: int, svc="talabaovozi"):
+def poll_analytics_api(request, poll_id: int, svc="talabaovozi"):
     """AJAX: all analytics for a single poll."""
-    import asyncio
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-    client = _async_client(svc)
+    client = _client(svc)
     data = {}
 
-    async def _safe(name, coro):
+    def _fetch(name, fn):
         try:
-            return name, await coro
+            return name, fn()
         except BotAPIError:
             return name, None
 
-    results = await asyncio.gather(
-        _safe("by_date", client.get_votes_by_date(poll_id, days=30)),
-        _safe("by_hour", client.get_votes_by_hour(poll_id)),
-        _safe("by_faculty", client.get_votes_by_faculty(poll_id)),
-        _safe("top", client.get_top(poll_id, limit=10)),
-        _safe("results", client.get_results(poll_id)),
-    )
+    tasks = {
+        "by_date": lambda: client.get_votes_by_date(poll_id, days=30),
+        "by_hour": lambda: client.get_votes_by_hour(poll_id),
+        "by_faculty": lambda: client.get_votes_by_faculty(poll_id),
+        "top": lambda: client.get_top(poll_id, limit=10),
+        "results": lambda: client.get_results(poll_id),
+    }
 
-    for name, result in results:
-        data[name] = result
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
+        for f in as_completed(futures):
+            name, result = f.result()
+            data[name] = result
 
     return JsonResponse(data)
 
