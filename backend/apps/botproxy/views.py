@@ -1131,13 +1131,26 @@ def staff_list(request, svc="talabaovozi"):
     client = _client(svc)
     raw_uni_id = request.GET.get("university_id", "").strip()
     university_id = int(raw_uni_id) if raw_uni_id.isdigit() else None
+    position_filter = request.GET.get("position", "").strip()
+    search_query = request.GET.get("q", "").strip()
     staff = []
     universities = []
+    positions = []
     try:
         staff = client.list_staff(university_id=university_id)
         universities = client.list_universities()
+        positions = client.get_staff_positions()
     except BotAPIError as e:
         _handle_api_error(request, e)
+
+    # Filter by position_code
+    if position_filter:
+        staff = [s for s in staff if s.get("position_code") == position_filter]
+
+    # Search by name
+    if search_query:
+        q_lower = search_query.lower()
+        staff = [s for s in staff if q_lower in s.get("full_name", "").lower() or q_lower in (s.get("position") or "").lower()]
 
     # Annotate with university name
     uni_map = {u["id"]: u["short_name"] for u in universities}
@@ -1147,7 +1160,10 @@ def staff_list(request, svc="talabaovozi"):
     ctx = {
         "staff": staff,
         "universities": universities,
-        "selected_university": int(university_id) if university_id else None,
+        "positions": positions,
+        "selected_university": university_id,
+        "selected_position": position_filter,
+        "search_query": search_query,
     }
     return TemplateResponse(request, "botproxy/staff_list.html", _ctx(request, svc, ctx))
 

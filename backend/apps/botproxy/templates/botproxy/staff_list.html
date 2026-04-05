@@ -11,16 +11,48 @@
     </div>
 </div>
 
-{% if universities %}
+<!-- Filters -->
 <div class="rb-filter-bar">
-    <select onchange="window.location=this.value ? '?university_id='+this.value : location.pathname">
+    <select id="uni-filter">
         <option value="">Barcha universitetlar</option>
         {% for uni in universities %}
         <option value="{{ uni.id }}" {% if selected_university == uni.id %}selected{% endif %}>{{ uni.short_name }}</option>
         {% endfor %}
     </select>
+
+    <select id="pos-filter">
+        <option value="">Barcha lavozimlar</option>
+        {% for p in positions %}
+        <option value="{{ p.code }}" {% if selected_position == p.code %}selected{% endif %}>{{ p.name_uz }}</option>
+        {% endfor %}
+    </select>
+
+    <div style="flex:1;min-width:200px;">
+        <input type="text" id="search-input" value="{{ search_query|default:'' }}" placeholder="Ism bo'yicha qidirish..." style="padding:0.4375rem 0.75rem;border:1px solid var(--rb-border);border-radius:8px;font-size:0.8125rem;background:var(--rb-bg);color:var(--rb-fg);width:100%;">
+    </div>
 </div>
-{% endif %}
+
+<script>
+(function(){
+    function applyFilters() {
+        var uni = document.getElementById('uni-filter').value;
+        var pos = document.getElementById('pos-filter').value;
+        var q = document.getElementById('search-input').value.trim();
+        var params = [];
+        if (uni) params.push('university_id=' + uni);
+        if (pos) params.push('position=' + pos);
+        if (q) params.push('q=' + encodeURIComponent(q));
+        window.location = params.length ? '?' + params.join('&') : location.pathname;
+    }
+    document.getElementById('uni-filter').onchange = applyFilters;
+    document.getElementById('pos-filter').onchange = applyFilters;
+    var searchTimer;
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilters, 500);
+    });
+})();
+</script>
 
 {% if staff %}
 <div class="rb-card-grid">
@@ -37,9 +69,11 @@
                 <p class="rb-uni-full">{{ s.position }}</p>
                 <div class="rb-uni-meta">
                     <span><span class="material-symbols-outlined">school</span> {{ s.university_name }}</span>
+                    {% if s.position_code %}
+                    <span class="rb-badge rb-badge-info">{{ s.position_code }}</span>
+                    {% endif %}
                     {% if s.feedback_count > 0 %}
-                    <span><span class="material-symbols-outlined">star</span> {{ s.rating_percent }}% ijobiy</span>
-                    <span><span class="material-symbols-outlined">rate_review</span> {{ s.feedback_count }} baho</span>
+                    <span><span class="material-symbols-outlined">star</span> {{ s.rating_percent }}%</span>
                     {% endif %}
                     {% if s.phone %}
                     <span><span class="material-symbols-outlined">phone</span> {{ s.phone }}</span>
@@ -54,7 +88,7 @@
 <div class="rb-card">
     <div class="rb-empty">
         <span class="material-symbols-outlined">person_off</span>
-        <p>Hali xodim qo'shilmagan</p>
+        <p>{% if search_query or selected_position %}Hech narsa topilmadi{% else %}Hali xodim qo'shilmagan{% endif %}</p>
     </div>
 </div>
 {% endif %}
