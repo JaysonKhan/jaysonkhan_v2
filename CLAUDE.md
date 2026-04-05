@@ -102,7 +102,7 @@ apps/botproxy/
   - `./deploy.sh --bot` — Bot only (push hokimiyatbot → pull on server → restart talabaovozi)
   - `./deploy.sh --all` — Both services
 - **Static/Media**: Nginx serves from `/var/www/jaysonkhan/static` and `/var/www/jaysonkhan/media`
-- **Architecture doc**: See `~/GravityProjects/SERVER_ARCHITECTURE.md` for full server layout
+- **Architecture doc**: See `~/JaysonServer/SERVER_ARCHITECTURE.md` for full server layout
 
 ## Environment Variables
 
