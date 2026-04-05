@@ -322,6 +322,12 @@ class BotAPIClient:
         except BotAPIError:
             return None
 
+    def get_staff_positions(self) -> list[dict]:
+        return self._request("GET", "/api/v1/staff/positions").json()["positions"]
+
+    def get_staff_departments(self) -> list[dict]:
+        return self._request("GET", "/api/v1/staff/departments").json()["departments"]
+
     def get_staff_top_rated(self, university_id: int | None = None, limit: int = 10) -> list[dict]:
         path = f"/api/v1/staff/top?limit={limit}"
         if university_id:

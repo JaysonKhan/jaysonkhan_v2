@@ -1088,6 +1088,26 @@ def faculty_edit(request, fac_id: int, svc="talabaovozi"):
         return JsonResponse({"error": e.detail}, status=e.status or 400)
 
 
+import re as _re
+
+def _normalize_phone(raw: str) -> str | None:
+    """Normalize phone to +998XXXXXXXXX format."""
+    digits = _re.sub(r'\D', '', raw)
+    if digits.startswith('998') and len(digits) == 12:
+        return f"+{digits}"
+    if len(digits) == 9 and digits[0] in '3456789':
+        return f"+998{digits}"
+    if digits.startswith('0') and len(digits) == 10:
+        return f"+998{digits[1:]}"
+    return raw  # Return as-is if can't normalize
+
+
+WEEKDAYS = [
+    ("mon", "Du"), ("tue", "Se"), ("wed", "Cho"),
+    ("thu", "Pa"), ("fri", "Ju"), ("sat", "Sha"),
+]
+
+
 def _build_page_range(current: int, total: int) -> list:
     """Build a compact page range with ellipsis markers."""
     if total <= 7:
@@ -1137,16 +1157,35 @@ def staff_create(request, svc="talabaovozi"):
     client = _client(svc)
 
     if request.method == "POST":
+        # Build reception_hours from time pickers
+        r_start = request.POST.get("reception_start", "").strip()
+        r_end = request.POST.get("reception_end", "").strip()
+        r_days = request.POST.getlist("reception_days")
+        reception_hours = None
+        if r_start and r_end:
+            days_str = ",".join(r_days) if r_days else ""
+            reception_hours = f"{days_str} {r_start}-{r_end}".strip()
+
+        # Normalize phone
+        raw_phone = request.POST.get("phone", "").strip()
+        phone_normalized = _normalize_phone(raw_phone) if raw_phone else None
+
         data = {
             "university_id": int(request.POST["university_id"]),
             "full_name": request.POST["full_name"],
             "position": request.POST["position"],
             "department": request.POST.get("department", "").strip() or None,
-            "phone": request.POST.get("phone", "").strip() or None,
+            "phone": raw_phone or None,
+            "phone_normalized": phone_normalized,
             "email": request.POST.get("email", "").strip() or None,
             "bio": request.POST.get("bio", "").strip() or None,
-            "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+            "reception_hours": reception_hours,
+            "reception_start": r_start or None,
+            "reception_end": r_end or None,
+            "reception_days": ",".join(r_days) if r_days else None,
             "faculty_id": int(request.POST["faculty_id"]) if request.POST.get("faculty_id") else None,
+            "position_code": request.POST.get("position_code", "").strip() or None,
+            "department_code": request.POST.get("department_code", "").strip() or None,
         }
         try:
             result = client.create_staff(data)
@@ -1156,7 +1195,7 @@ def staff_create(request, svc="talabaovozi"):
                 try:
                     client.upload_staff_photo(staff_id, photo.read(), photo.name)
                 except BotAPIError:
-                    messages.warning(request, f"Xodim qo'shildi, lekin rasm yuklanmadi")
+                    messages.warning(request, "Xodim qo'shildi, lekin rasm yuklanmadi")
                     return HttpResponseRedirect(_rev("bot_staff_list", svc))
             messages.success(request, f"Xodim qo'shildi: {data['full_name']}")
             return HttpResponseRedirect(_rev("bot_staff_list", svc))
@@ -1165,8 +1204,12 @@ def staff_create(request, svc="talabaovozi"):
 
     universities = []
     all_faculties = {}
+    positions = []
+    departments = []
     try:
         universities = client.list_universities()
+        positions = client.get_staff_positions()
+        departments = client.get_staff_departments()
         for uni in universities:
             try:
                 all_faculties[uni["id"]] = client.list_university_faculties(uni["id"])
@@ -1175,13 +1218,15 @@ def staff_create(request, svc="talabaovozi"):
     except BotAPIError:
         pass
 
-    # Pre-select university if passed via query string (from university detail page)
     preselect_uni = request.GET.get("university_id", "")
     preselect_uni_id = int(preselect_uni) if preselect_uni.isdigit() else None
 
     return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
         "universities": universities,
         "all_faculties_json": json.dumps(all_faculties),
+        "positions": positions,
+        "departments": departments,
+        "weekdays": WEEKDAYS,
         "form_title": "Yangi xodim qo'shish",
         "submit_text": "Qo'shish",
         "staff": {"university_id": preselect_uni_id} if preselect_uni_id else {},
@@ -1211,15 +1256,32 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
     client = _client(svc)
 
     if request.method == "POST":
+        r_start = request.POST.get("reception_start", "").strip()
+        r_end = request.POST.get("reception_end", "").strip()
+        r_days = request.POST.getlist("reception_days")
+        reception_hours = None
+        if r_start and r_end:
+            days_str = ",".join(r_days) if r_days else ""
+            reception_hours = f"{days_str} {r_start}-{r_end}".strip()
+
+        raw_phone = request.POST.get("phone", "").strip()
+        phone_normalized = _normalize_phone(raw_phone) if raw_phone else None
+
         data = {
             "full_name": request.POST["full_name"],
             "position": request.POST["position"],
             "department": request.POST.get("department", "").strip() or None,
-            "phone": request.POST.get("phone", "").strip() or None,
+            "phone": raw_phone or None,
+            "phone_normalized": phone_normalized,
             "email": request.POST.get("email", "").strip() or None,
             "bio": request.POST.get("bio", "").strip() or None,
-            "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+            "reception_hours": reception_hours,
+            "reception_start": r_start or None,
+            "reception_end": r_end or None,
+            "reception_days": ",".join(r_days) if r_days else None,
             "faculty_id": int(request.POST["faculty_id"]) if request.POST.get("faculty_id") else None,
+            "position_code": request.POST.get("position_code", "").strip() or None,
+            "department_code": request.POST.get("department_code", "").strip() or None,
         }
         try:
             client.update_staff(staff_id, data)
@@ -1238,6 +1300,8 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
     try:
         staff = client.get_staff(staff_id)
         universities = client.list_universities()
+        positions = client.get_staff_positions()
+        departments = client.get_staff_departments()
         all_faculties = {}
         for uni in universities:
             try:
@@ -1251,7 +1315,10 @@ def staff_edit(request, staff_id: int, svc="talabaovozi"):
     return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
         "staff": staff,
         "universities": universities,
+        "positions": positions,
+        "departments": departments,
         "all_faculties_json": json.dumps(all_faculties),
+        "weekdays": WEEKDAYS,
         "form_title": f"Tahrirlash: {staff.get('full_name', '')}",
         "submit_text": "Saqlash",
         "edit_mode": True,
