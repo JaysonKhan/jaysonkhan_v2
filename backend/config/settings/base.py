@@ -451,7 +451,7 @@ UNFOLD = {
 }
 
 # ── Bot API (hokimiyatbot integration) ───────────────────────────────────────
-BOT_API_BASE_URL = env('BOT_API_BASE_URL', default='http://161.97.177.218:8433')
+BOT_API_BASE_URL = env('BOT_API_BASE_URL', default='http://127.0.0.1:8433')
 BOT_API_SECRET_KEY = env('BOT_API_SECRET_KEY', default='')
 BOT_API_TIMEOUT = env.int('BOT_API_TIMEOUT', default=30)
 
@@ -459,7 +459,7 @@ BOT_SERVICES = {
     "talabaovozi": {
         "title": "TalabaOvozi",
         "icon": "smart_toy",
-        "base_url": env("BOT_API_BASE_URL", default="http://161.97.177.218:8433"),
+        "base_url": env("BOT_API_BASE_URL", default="http://127.0.0.1:8433"),
         "secret": env("BOT_API_SECRET_KEY", default=""),
         "timeout": env.int("BOT_API_TIMEOUT", default=30),
     },
