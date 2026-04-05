@@ -159,6 +159,9 @@ if $DEPLOY_BOT; then
     echo -e "${CYAN}${BOLD}── talabaovozi (Bot) ──${RESET}"
 
     info "  Server git pull..."
+    # Ensure GitHub host key is known for both deploy user and root
+    remote "ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null; \
+        sudo bash -c 'mkdir -p /root/.ssh && ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 2>/dev/null' || true"
     REMOTE_BEFORE=$(remote "sudo git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
     remote "sudo git -C $BOT_DIR fetch origin $BOT_BRANCH && \
         sudo git -C $BOT_DIR checkout $BOT_BRANCH 2>/dev/null; \
