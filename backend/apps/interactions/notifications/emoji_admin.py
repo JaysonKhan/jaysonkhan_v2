@@ -214,15 +214,18 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
     state = _pending[tg_id]
     text = message.get('text', '').strip()
 
-    # Cancel
-    if text == '/cancel':
+    # Any command cancels pending state
+    if text.startswith('/'):
         del _pending[tg_id]
-        api.send_message(tg_id, '❌ Bekor qilindi.')
-        return True
+        if text == '/cancel':
+            api.send_message(tg_id, '❌ Bekor qilindi.')
+            return True
+        # Let other commands pass through (e.g. /status, /emoji)
+        return False
 
     # Step: waiting for name (new extra emoji)
     if state['step'] == 'name':
-        if not text or not text.replace('_', '').isalnum():
+        if not text or not text.replace('_', '').replace('-', '').isalnum():
             api.send_message(tg_id, '⚠️ Nom faqat harf, raqam va _ bo\'lishi kerak. Qayta yuboring:')
             return True
         state['field'] = f'extra:{text}'
@@ -281,18 +284,16 @@ def _extract_emoji_id(message: dict) -> tuple[str, str]:
     Extract custom emoji ID from message.
     Returns (emoji_id, error_message). error_message is empty on success.
     """
-    # 1. Sticker — must be custom_emoji type, not regular/animated
+    # 1. Sticker with custom_emoji_id (premium custom emoji stickers)
     sticker = message.get('sticker')
     if sticker:
-        sticker_type = sticker.get('type', 'regular')
         eid = sticker.get('custom_emoji_id')
-        if sticker_type == 'custom_emoji' and eid:
+        if eid:
             return str(eid), ''
-        # Regular/animated sticker — user sent wrong type
-        set_name = sticker.get('set_name', '')
+        # Regular/animated sticker — no custom_emoji_id
         return '', (
             '⚠️ Bu oddiy stiker — custom emoji emas!\n\n'
-            '💡 <b>Custom emoji</b> ni qanday yuborish:\n'
+            '💡 <b>Custom emoji yuborish:</b>\n'
             '1. Xabar yozing va emoji tugmasini bosing\n'
             '2. Premium emojilardan birini tanlang\n'
             '3. Shu xabarni yuboring\n\n'
