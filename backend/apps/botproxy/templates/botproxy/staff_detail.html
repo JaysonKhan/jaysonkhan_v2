@@ -1,0 +1,114 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}{{ staff.full_name }}{% endblock %}
+
+{% block bot_content %}
+<div class="rb-breadcrumb">
+    <a href="{% url 'bot_staff_list' svc=svc %}">Xodimlar</a>
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+    {{ staff.full_name }}
+</div>
+
+<!-- Staff Card -->
+<div class="rb-card">
+    <div class="rb-detail-header">
+        {% if staff.photo_path %}
+        <img src="{% url 'bot_staff_photo' svc=svc staff_id=staff.id %}" class="rb-detail-logo" alt="{{ staff.full_name }}">
+        {% else %}
+        <div class="rb-detail-logo-placeholder">{{ staff.full_name|first }}</div>
+        {% endif %}
+        <div class="rb-detail-info">
+            <h1>{{ staff.full_name }}</h1>
+            <p class="rb-detail-full">{{ staff.position }}{% if staff.department %} — {{ staff.department }}{% endif %}</p>
+            <div class="rb-detail-meta">
+                {% if staff.phone %}
+                <span><span class="material-symbols-outlined">phone</span> {{ staff.phone }}</span>
+                {% endif %}
+                {% if staff.email %}
+                <span><span class="material-symbols-outlined">email</span> <a href="mailto:{{ staff.email }}">{{ staff.email }}</a></span>
+                {% endif %}
+                {% if staff.reception_hours %}
+                <span><span class="material-symbols-outlined">schedule</span> Qabul: {{ staff.reception_hours }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if staff.bio %}
+    <hr class="rb-divider">
+    <p>{{ staff.bio }}</p>
+    {% endif %}
+    <hr class="rb-divider">
+    <div class="rb-actions">
+        <a href="{% url 'bot_staff_edit' svc=svc staff_id=staff.id %}" class="rb-btn rb-btn-outline">
+            <span class="material-symbols-outlined">edit</span> Tahrirlash
+        </a>
+        <form method="post" action="{% url 'bot_staff_delete' svc=svc staff_id=staff.id %}" style="display:inline" onsubmit="return confirm('Rostdan o\'chirmoqchimisiz?')">
+            {% csrf_token %}
+            <button type="submit" class="rb-btn rb-btn-danger rb-btn-sm">
+                <span class="material-symbols-outlined">delete</span> O'chirish
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Rating Summary -->
+<div class="rb-stats">
+    <div class="rb-stat accent-green">
+        <div class="value">{{ summary.positive|default:0 }}</div>
+        <div class="label">Ijobiy</div>
+    </div>
+    <div class="rb-stat accent-red">
+        <div class="value">{{ summary.negative|default:0 }}</div>
+        <div class="label">Salbiy</div>
+    </div>
+    <div class="rb-stat accent-blue">
+        <div class="value">{{ summary.total|default:0 }}</div>
+        <div class="label">Jami baho</div>
+    </div>
+    <div class="rb-stat">
+        <div class="value">{% if staff.feedback_count > 0 %}{{ staff.rating_percent }}%{% else %}—{% endif %}</div>
+        <div class="label">Reyting</div>
+    </div>
+</div>
+
+<!-- Feedback List -->
+<div class="rb-card">
+    <div class="rb-card-header">
+        <h2>Fikrlar ({{ feedback_list|length }})</h2>
+    </div>
+    {% if feedback_list %}
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>Baho</th>
+                    <th>Izoh</th>
+                    <th>Foydalanuvchi</th>
+                    <th>Sana</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fb in feedback_list %}
+                <tr>
+                    <td>
+                        {% if fb.sentiment == "positive" %}
+                        <span class="rb-badge rb-badge-open">&#128077; Ijobiy</span>
+                        {% else %}
+                        <span class="rb-badge rb-badge-closed">&#128078; Salbiy</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ fb.comment|default:"—" }}</td>
+                    <td class="rb-code">{{ fb.user_id }}</td>
+                    <td class="rb-muted">{{ fb.created_at|truncatechars:16 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">chat_bubble_outline</span>
+        <p>Hali fikr bildirilmagan</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

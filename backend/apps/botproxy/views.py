@@ -20,7 +20,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from botproxy.client import BotAPIClient, BotAPIError
+from botproxy.client import AsyncBotAPIClient, BotAPIClient, BotAPIError
 from core.decorators import admin_permission_required
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,11 @@ def _validate_svc(svc: str) -> None:
 def _client(svc: str = "talabaovozi") -> BotAPIClient:
     _validate_svc(svc)
     return BotAPIClient(service=svc)
+
+
+def _async_client(svc: str = "talabaovozi") -> AsyncBotAPIClient:
+    _validate_svc(svc)
+    return AsyncBotAPIClient(service=svc)
 
 
 def _handle_api_error(request, e: BotAPIError) -> None:
@@ -112,43 +117,40 @@ def _detect_image_content_type(data: bytes) -> str:
 # ─── Dashboard ───────────────────────────────────────────────────────────────────
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def bot_dashboard(request, svc="talabaovozi"):
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+async def bot_dashboard(request, svc="talabaovozi"):
+    import asyncio
 
-    client = _client(svc)
+    client = _async_client(svc)
     ctx = {
         "api_ok": False, "polls": [], "user_count": 0, "admin_ids": [],
         "university_count": 0, "user_stats": {}, "growth_data": {},
         "audience_segments": [],
     }
 
-    def _fetch(name, fn):
+    async def _safe(name, coro):
         try:
-            return name, fn()
+            return name, await coro
         except BotAPIError:
             return name, None
 
-    tasks = {
-        "health": lambda: client.health(),
-        "polls": lambda: client.list_polls(),
-        "user_count": lambda: client.get_user_count(),
-        "admin_ids": lambda: client.list_admins(),
-        "university_count": lambda: client.get_university_count(),
-        "user_stats": lambda: client.get_user_stats(),
-        "growth_data": lambda: client.get_user_growth_data(days=30),
-        "audience_segments": lambda: client.get_audience_segments(),
-    }
+    results = await asyncio.gather(
+        _safe("health", client.health()),
+        _safe("polls", client.list_polls()),
+        _safe("user_count", client.get_user_count()),
+        _safe("admin_ids", client.list_admins()),
+        _safe("university_count", client.get_university_count()),
+        _safe("user_stats", client.get_user_stats()),
+        _safe("growth_data", client.get_user_growth_data(days=30)),
+        _safe("audience_segments", client.get_audience_segments()),
+    )
 
-    with ThreadPoolExecutor(max_workers=8) as pool:
-        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
-        for f in as_completed(futures):
-            name, result = f.result()
-            if result is not None:
-                if name == "health":
-                    ctx["api_ok"] = result.get("status") == "ok"
-                    ctx["active_polls"] = result.get("active_polls", 0)
-                else:
-                    ctx[name] = result
+    for name, result in results:
+        if result is not None:
+            if name == "health":
+                ctx["api_ok"] = result.get("status") == "ok"
+                ctx["active_polls"] = result.get("active_polls", 0)
+            else:
+                ctx[name] = result
 
     ctx["active_polls_list"] = [p for p in ctx["polls"] if p.get("status") == "open"]
     ctx["growth_data_json"] = json.dumps(ctx.get("growth_data", {}))
@@ -159,46 +161,43 @@ def bot_dashboard(request, svc="talabaovozi"):
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def growth_data_api(request, svc="talabaovozi"):
+async def growth_data_api(request, svc="talabaovozi"):
     """AJAX: user growth data for period selector."""
     days = int(request.GET.get("days", "30"))
     if days not in (7, 14, 30, 90):
         days = 30
-    client = _client(svc)
+    client = _async_client(svc)
     try:
-        data = client.get_user_growth_data(days=days)
+        data = await client.get_user_growth_data(days=days)
     except BotAPIError:
         data = {"dates": [], "counts": [], "days": days}
     return JsonResponse(data)
 
 
 @admin_permission_required('botproxy.view_bot_dashboard')
-def poll_analytics_api(request, poll_id: int, svc="talabaovozi"):
+async def poll_analytics_api(request, poll_id: int, svc="talabaovozi"):
     """AJAX: all analytics for a single poll."""
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+    import asyncio
 
-    client = _client(svc)
+    client = _async_client(svc)
     data = {}
 
-    def _fetch(name, fn):
+    async def _safe(name, coro):
         try:
-            return name, fn()
+            return name, await coro
         except BotAPIError:
             return name, None
 
-    tasks = {
-        "by_date": lambda: client.get_votes_by_date(poll_id, days=30),
-        "by_hour": lambda: client.get_votes_by_hour(poll_id),
-        "by_faculty": lambda: client.get_votes_by_faculty(poll_id),
-        "top": lambda: client.get_top(poll_id, limit=10),
-        "results": lambda: client.get_results(poll_id),
-    }
+    results = await asyncio.gather(
+        _safe("by_date", client.get_votes_by_date(poll_id, days=30)),
+        _safe("by_hour", client.get_votes_by_hour(poll_id)),
+        _safe("by_faculty", client.get_votes_by_faculty(poll_id)),
+        _safe("top", client.get_top(poll_id, limit=10)),
+        _safe("results", client.get_results(poll_id)),
+    )
 
-    with ThreadPoolExecutor(max_workers=5) as pool:
-        futures = {pool.submit(_fetch, k, v): k for k, v in tasks.items()}
-        for f in as_completed(futures):
-            name, result = f.result()
-            data[name] = result
+    for name, result in results:
+        data[name] = result
 
     return JsonResponse(data)
 
@@ -1093,3 +1092,178 @@ def _build_page_range(current: int, total: int) -> list:
     else:
         pages = [1, None, current - 1, current, current + 1, None, total]
     return pages
+
+
+# ─── Staff Management ──────────────────────────────────────────────────────────
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def staff_list(request, svc="talabaovozi"):
+    client = _client(svc)
+    university_id = request.GET.get("university_id")
+    staff = []
+    universities = []
+    try:
+        staff = client.list_staff(
+            university_id=int(university_id) if university_id else None
+        )
+        universities = client.list_universities()
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+
+    # Annotate with university name
+    uni_map = {u["id"]: u["short_name"] for u in universities}
+    for s in staff:
+        s["university_name"] = uni_map.get(s.get("university_id"), "—")
+
+    ctx = {
+        "staff": staff,
+        "universities": universities,
+        "selected_university": int(university_id) if university_id else None,
+    }
+    return TemplateResponse(request, "botproxy/staff_list.html", _ctx(request, svc, ctx))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def staff_create(request, svc="talabaovozi"):
+    client = _client(svc)
+
+    if request.method == "POST":
+        data = {
+            "university_id": int(request.POST["university_id"]),
+            "full_name": request.POST["full_name"],
+            "position": request.POST["position"],
+            "department": request.POST.get("department", "").strip() or None,
+            "phone": request.POST.get("phone", "").strip() or None,
+            "email": request.POST.get("email", "").strip() or None,
+            "bio": request.POST.get("bio", "").strip() or None,
+            "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+        }
+        try:
+            result = client.create_staff(data)
+            staff_id = result.get("id")
+            # Upload photo if provided
+            photo = request.FILES.get("photo")
+            if photo and staff_id:
+                client.upload_staff_photo(staff_id, photo.read(), photo.name)
+            messages.success(request, f"Xodim qo'shildi: {data['full_name']}")
+            return HttpResponseRedirect(_rev("bot_staff_list", svc))
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+
+    universities = []
+    try:
+        universities = client.list_universities()
+    except BotAPIError:
+        pass
+
+    return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
+        "universities": universities,
+        "form_title": "Yangi xodim qo'shish",
+        "submit_text": "Qo'shish",
+    }))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def staff_detail(request, staff_id: int, svc="talabaovozi"):
+    client = _client(svc)
+    try:
+        staff = client.get_staff(staff_id)
+        feedback = client.list_feedback_by_staff(staff_id)
+        summary = client.get_staff_feedback_summary(staff_id)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(_rev("bot_staff_list", svc))
+
+    return TemplateResponse(request, "botproxy/staff_detail.html", _ctx(request, svc, {
+        "staff": staff,
+        "feedback_list": feedback,
+        "summary": summary,
+    }))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def staff_edit(request, staff_id: int, svc="talabaovozi"):
+    client = _client(svc)
+
+    if request.method == "POST":
+        data = {
+            "full_name": request.POST["full_name"],
+            "position": request.POST["position"],
+            "department": request.POST.get("department", "").strip() or None,
+            "phone": request.POST.get("phone", "").strip() or None,
+            "email": request.POST.get("email", "").strip() or None,
+            "bio": request.POST.get("bio", "").strip() or None,
+            "reception_hours": request.POST.get("reception_hours", "").strip() or None,
+        }
+        try:
+            client.update_staff(staff_id, data)
+            photo = request.FILES.get("photo")
+            if photo:
+                client.upload_staff_photo(staff_id, photo.read(), photo.name)
+            messages.success(request, "Xodim yangilandi")
+            return HttpResponseRedirect(_rev("bot_staff_detail", svc, staff_id=staff_id))
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+
+    try:
+        staff = client.get_staff(staff_id)
+        universities = client.list_universities()
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(_rev("bot_staff_list", svc))
+
+    return TemplateResponse(request, "botproxy/staff_form.html", _ctx(request, svc, {
+        "staff": staff,
+        "universities": universities,
+        "form_title": f"Tahrirlash: {staff.get('full_name', '')}",
+        "submit_text": "Saqlash",
+        "edit_mode": True,
+    }))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+@require_POST
+def staff_delete(request, staff_id: int, svc="talabaovozi"):
+    client = _client(svc)
+    try:
+        client.delete_staff(staff_id)
+        messages.success(request, "Xodim o'chirildi")
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_staff_list", svc))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def staff_photo_proxy(request, staff_id: int, svc="talabaovozi"):
+    """Serve staff photo from bot API."""
+    client = _client(svc)
+    data = client.get_staff_photo(staff_id)
+    if not data:
+        raise Http404("No photo")
+    content_type = _detect_image_content_type(data)
+    return HttpResponse(data, content_type=content_type)
+
+
+# ─── Feedback Dashboard ──────────────────────────────────────────────────────
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def feedback_dashboard(request, svc="talabaovozi"):
+    client = _client(svc)
+    polls = []
+    summaries = {}
+    try:
+        polls = client.list_polls()
+        for poll in polls:
+            try:
+                summaries[poll["id"]] = client.get_feedback_summary(poll["id"])
+            except BotAPIError:
+                summaries[poll["id"]] = {"total": 0, "positive": 0, "negative": 0}
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+
+    return TemplateResponse(request, "botproxy/feedback_dashboard.html", _ctx(request, svc, {
+        "polls": polls,
+        "summaries": summaries,
+    }))

@@ -45,4 +45,13 @@ urlpatterns = [
     path("<str:svc>/universities/<int:uni_id>/logo/", views.university_logo_proxy, name="bot_university_logo"),
     path("<str:svc>/universities/<int:uni_id>/faculties/", views.university_faculties_api, name="bot_university_faculties"),
     path("<str:svc>/faculties/<int:fac_id>/edit/", views.faculty_edit, name="bot_faculty_edit"),
+    # Staff
+    path("<str:svc>/staff/", views.staff_list, name="bot_staff_list"),
+    path("<str:svc>/staff/create/", views.staff_create, name="bot_staff_create"),
+    path("<str:svc>/staff/<int:staff_id>/", views.staff_detail, name="bot_staff_detail"),
+    path("<str:svc>/staff/<int:staff_id>/edit/", views.staff_edit, name="bot_staff_edit"),
+    path("<str:svc>/staff/<int:staff_id>/delete/", views.staff_delete, name="bot_staff_delete"),
+    path("<str:svc>/staff/<int:staff_id>/photo/", views.staff_photo_proxy, name="bot_staff_photo"),
+    # Feedback
+    path("<str:svc>/feedback/", views.feedback_dashboard, name="bot_feedback_dashboard"),
 ]

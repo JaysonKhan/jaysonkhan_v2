@@ -5,14 +5,14 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
-class SiteSettings(models.Model):
-    """
-    Singleton model — all dynamic site configuration lives here.
-    One instance, managed via Django admin. Access via SiteSettings.load().
-    Cache invalidation handled by SiteSettingsService.
-    """
+# ── Abstract Mixins ──────────────────────────────────────────────────────────────
+# Each mixin groups related fields. They are abstract, so Django stores
+# everything in a single `core_sitesettings` table — no migrations needed.
 
-    # ── Branding ──────────────────────────────────────────────────────────────
+
+class BrandingMixin(models.Model):
+    """Site identity — title, author, favicon, logo."""
+
     site_title = models.CharField(
         max_length=255, default="Jahongir Kuziboev | Flutter Mobile Engineer",
         help_text="Full site name — used in the page title tag and nav logo"
@@ -39,7 +39,13 @@ class SiteSettings(models.Model):
         help_text="Site logo — future navbar use"
     )
 
-    # ── SEO / Meta ────────────────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class SEOMixin(models.Model):
+    """Search engine optimization and social sharing metadata."""
+
     meta_description = models.TextField(
         max_length=160,
         default="Flutter Mobile Engineer with 2+ years of experience developing "
@@ -64,7 +70,13 @@ class SiteSettings(models.Model):
         help_text="Twitter/X handle without @ — for twitter:site tag"
     )
 
-    # ── Navigation / Header ──────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class NavigationMixin(models.Model):
+    """Header navigation and CTA configuration."""
+
     logo_text = models.CharField(
         max_length=100, blank=True, default="",
         help_text="Text next to logo (leave blank to use site_author)"
@@ -82,7 +94,13 @@ class SiteSettings(models.Model):
         help_text='Extra nav links as JSON list, e.g. [{"label":"Resume","url":"/resume/"}]. Leave empty for default nav.'
     )
 
-    # ── Hero Section ──────────────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class HeroMixin(models.Model):
+    """Hero section — headline, subtitle, CTAs, typing animation."""
+
     hero_availability_badge = models.CharField(
         max_length=100, default="Available for work",
         help_text="Small badge text above the hero headline"
@@ -127,7 +145,14 @@ class SiteSettings(models.Model):
         )
     )
 
-    # ── About Section ─────────────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class ContentSectionsMixin(models.Model):
+    """Section headings, visibility flags, and page-level titles."""
+
+    # ── About Section
     about_title = models.CharField(
         max_length=255, default="About",
         help_text="About section heading (template appends 'Me' with gradient)"
@@ -146,7 +171,7 @@ class SiteSettings(models.Model):
         help_text="About section portrait/image"
     )
 
-    # ── Stats Bar ─────────────────────────────────────────────────────────────
+    # ── Stats Bar
     stat_1_count = models.IntegerField(
         default=3,
         help_text="Stat 1 — numeric value for animated counter (e.g. 3)"
@@ -169,13 +194,11 @@ class SiteSettings(models.Model):
     stat_4_suffix = models.CharField(max_length=10, default="%")
     stat_4_label = models.CharField(max_length=60, default="Clean Architecture")
 
-    # ── Skills Section ────────────────────────────────────────────────────────
+    # ── Section Headings
     skills_section_title = models.CharField(
         max_length=100, default="Tech Stack",
         help_text="Skills section heading"
     )
-
-    # ── Featured Projects Section ─────────────────────────────────────────────
     featured_projects_title = models.CharField(
         max_length=100, default="Featured Apps",
         help_text="Featured projects section heading"
@@ -184,20 +207,16 @@ class SiteSettings(models.Model):
         max_length=255, default="Apps I've built and shipped to production.",
         help_text="Featured projects section sub-heading"
     )
-
-    # ── Experience Section ────────────────────────────────────────────────────
     experience_section_title = models.CharField(
         max_length=100, default="Experience",
         help_text="Experience section heading on homepage"
     )
-
-    # ── Latest Blog Section ───────────────────────────────────────────────────
     latest_blog_title = models.CharField(
         max_length=100, default="Latest from the Blog",
         help_text="Latest blog section heading on homepage"
     )
 
-    # ── Visibility Flags ──────────────────────────────────────────────────────
+    # ── Visibility
     apps_section_visible = models.BooleanField(
         default=True,
         help_text=(
@@ -207,7 +226,7 @@ class SiteSettings(models.Model):
         )
     )
 
-    # ── Projects Page ─────────────────────────────────────────────────────────
+    # ── Page Titles
     projects_page_title = models.CharField(
         max_length=100, default="App Portfolio",
         help_text="Projects page <h1> heading"
@@ -217,8 +236,6 @@ class SiteSettings(models.Model):
         default="A showcase of the mobile applications I've designed, developed, and shipped.",
         help_text="Projects page sub-heading"
     )
-
-    # ── Blog Page ─────────────────────────────────────────────────────────────
     blog_page_title = models.CharField(
         max_length=100, default="The Blog",
         help_text="Blog list page <h1> heading"
@@ -228,8 +245,6 @@ class SiteSettings(models.Model):
         default="Insights on mobile development, Flutter, and building production-ready apps.",
         help_text="Blog list page sub-heading"
     )
-
-    # ── Contact Page ──────────────────────────────────────────────────────────
     contact_page_title = models.CharField(
         max_length=100, default="Get in touch",
         help_text="Contact page <h1> heading"
@@ -247,8 +262,6 @@ class SiteSettings(models.Model):
         max_length=50, default="LinkedIn",
         help_text="Label for LinkedIn contact block"
     )
-
-    # ── Resume / CV ───────────────────────────────────────────────────────────
     resume_file = models.FileField(
         upload_to='cv/', blank=True, null=True,
         help_text="CV / Resume PDF for download"
@@ -258,7 +271,13 @@ class SiteSettings(models.Model):
         help_text="Resume download button label"
     )
 
-    # ── Contact Info & Socials ────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class ContactSocialsMixin(models.Model):
+    """Contact info, social media links, and API keys."""
+
     email = models.EmailField(
         default="bettaxacker@gmail.com",
         help_text="Primary contact email — shown in footer and contact page"
@@ -288,7 +307,13 @@ class SiteSettings(models.Model):
         help_text="WakaTime API key (from wakatime.com/settings/api-key). Used server-side only."
     )
 
-    # ── Telegram Bot / Notifications ──────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class TelegramMixin(models.Model):
+    """Telegram bot integration — notifications, channel, custom emoji."""
+
     telegram_owner_id = models.BigIntegerField(
         null=True, blank=True,
         help_text="Telegram user ID of the site owner. Always receives notifications."
@@ -324,7 +349,7 @@ class SiteSettings(models.Model):
         default=True, help_text="Log contact form submissions to admin group"
     )
 
-    # ── Telegram Button Custom Emoji (Bot API 9.4) ────────────────────────────
+    # ── Custom Emoji IDs (Bot API 9.4+)
     tg_emoji_read_more = models.CharField(
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 📖 Batafsil button (e.g. 5368324170671202286)"
@@ -350,7 +375,13 @@ class SiteSettings(models.Model):
         help_text="Custom emoji ID for 💬 Comment/reply buttons"
     )
 
-    # ── Footer ────────────────────────────────────────────────────────────────
+    class Meta:
+        abstract = True
+
+
+class FooterMixin(models.Model):
+    """Footer text, social overrides, and copyright."""
+
     footer_description = models.TextField(
         max_length=500, blank=True, default="",
         help_text="Footer description text (leave blank to use site_tagline)"
@@ -379,6 +410,34 @@ class SiteSettings(models.Model):
         max_length=255, default="© 2026 Jahongir Kuziboev. All rights reserved.",
         help_text="Footer copyright line"
     )
+
+    class Meta:
+        abstract = True
+
+
+# ── Concrete Model ───────────────────────────────────────────────────────────────
+
+
+class SiteSettings(
+    BrandingMixin,
+    SEOMixin,
+    NavigationMixin,
+    HeroMixin,
+    ContentSectionsMixin,
+    ContactSocialsMixin,
+    TelegramMixin,
+    FooterMixin,
+    models.Model,
+):
+    """
+    Singleton model — all dynamic site configuration lives here.
+    One instance, managed via Django admin. Access via SiteSettings.load().
+    Cache invalidation handled by SiteSettingsService.
+
+    Fields are organized into abstract mixins for readability:
+    BrandingMixin, SEOMixin, NavigationMixin, HeroMixin,
+    ContentSectionsMixin, ContactSocialsMixin, TelegramMixin, FooterMixin.
+    """
 
     # ── Timestamps ────────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)

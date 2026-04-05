@@ -55,6 +55,16 @@ def _cleanup_pools() -> None:
 atexit.register(_cleanup_pools)
 
 
+class _HMACMixin:
+    """Shared HMAC signing logic for sync and async clients."""
+
+    def _init_config(self, service: str = "talabaovozi"):
+        cfg = settings.BOT_SERVICES[service]
+        self._base_url = cfg["base_url"].rstrip("/")
+        self._secret = cfg["secret"]
+        self._timeout = cfg.get("timeout", 30)
+
+
 class BotAPIClient:
     """Synchronous HTTP client for bot API with HMAC authentication."""
 
@@ -269,6 +279,69 @@ class BotAPIClient:
     def remove_university_faculty(self, fac_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/universities/faculties/{fac_id}").json()
 
+    # ─── Staff ──────────────────────────────────────────────────────────────
+
+    def list_staff(self, university_id: int | None = None) -> list[dict]:
+        path = "/api/v1/staff"
+        if university_id:
+            path += f"?university_id={university_id}"
+        return self._request("GET", path).json()["staff"]
+
+    def get_staff(self, staff_id: int) -> dict:
+        return self._request("GET", f"/api/v1/staff/{staff_id}").json()
+
+    def create_staff(self, data: dict) -> dict:
+        return self._request("POST", "/api/v1/staff", json=data).json()
+
+    def update_staff(self, staff_id: int, data: dict) -> dict:
+        return self._request("PATCH", f"/api/v1/staff/{staff_id}", json=data).json()
+
+    def delete_staff(self, staff_id: int) -> dict:
+        return self._request("DELETE", f"/api/v1/staff/{staff_id}").json()
+
+    def upload_staff_photo(self, staff_id: int, file_bytes: bytes, filename: str = "photo.jpg") -> dict:
+        import io
+        sign_path = f"/api/v1/staff/{staff_id}/photo"
+        headers = self._headers("POST", sign_path, "")
+        headers.pop("Content-Type", None)
+        pool = _get_pool(self._base_url, self._timeout)
+        try:
+            resp = pool.post(
+                sign_path, headers=headers,
+                files={"photo": (filename, io.BytesIO(file_bytes), "image/jpeg")},
+            )
+        except (httpx.ConnectError, httpx.TimeoutException) as e:
+            raise BotAPIError(0, str(e))
+        if resp.status_code >= 400:
+            raise BotAPIError(resp.status_code, resp.text)
+        return resp.json()
+
+    def get_staff_photo(self, staff_id: int) -> bytes | None:
+        try:
+            return self._request("GET", f"/api/v1/staff/{staff_id}/photo").content
+        except BotAPIError:
+            return None
+
+    def get_staff_top_rated(self, university_id: int | None = None, limit: int = 10) -> list[dict]:
+        path = f"/api/v1/staff/top?limit={limit}"
+        if university_id:
+            path += f"&university_id={university_id}"
+        return self._request("GET", path).json()["staff"]
+
+    # ─── Feedback ───────────────────────────────────────────────────────────
+
+    def list_feedback_by_poll(self, poll_id: int) -> list[dict]:
+        return self._request("GET", f"/api/v1/feedback/poll/{poll_id}").json()["feedback"]
+
+    def list_feedback_by_staff(self, staff_id: int) -> list[dict]:
+        return self._request("GET", f"/api/v1/feedback/staff/{staff_id}").json()["feedback"]
+
+    def get_feedback_summary(self, poll_id: int) -> dict:
+        return self._request("GET", f"/api/v1/feedback/poll/{poll_id}/summary").json()
+
+    def get_staff_feedback_summary(self, staff_id: int) -> dict:
+        return self._request("GET", f"/api/v1/feedback/staff/{staff_id}/summary").json()
+
     # ─── Users ───────────────────────────────────────────────────────────────
 
     def get_user_count(self) -> int:
@@ -326,3 +399,142 @@ class BotAPIClient:
     def export_users_csv(self) -> bytes:
         """Download all users as CSV."""
         return self._request("GET", "/api/v1/users/export/csv").content
+
+
+# ─── Async Client ───────────────────────────────────────────────────────────────
+
+_async_pools: dict[str, httpx.AsyncClient] = {}
+_async_pools_lock = threading.Lock()
+
+
+def _get_async_pool(base_url: str, timeout: int = 30) -> httpx.AsyncClient:
+    """Get or create a persistent httpx.AsyncClient for the given base URL."""
+    with _async_pools_lock:
+        if base_url not in _async_pools or _async_pools[base_url].is_closed:
+            _async_pools[base_url] = httpx.AsyncClient(
+                base_url=base_url,
+                timeout=timeout,
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            )
+        return _async_pools[base_url]
+
+
+class AsyncBotAPIClient:
+    """Async HTTP client for bot API with HMAC authentication.
+
+    Use in async Django views with asyncio.gather() for parallel API calls.
+    """
+
+    def __init__(self, service: str = "talabaovozi"):
+        cfg = settings.BOT_SERVICES[service]
+        self._base_url = cfg["base_url"].rstrip("/")
+        self._secret = cfg["secret"]
+        self._timeout = cfg.get("timeout", 30)
+
+    def _headers(self, method: str, path: str, body: str = "") -> dict:
+        timestamp = str(int(time.time()))
+        message = f"{timestamp}{method}{path}{body}"
+        signature = hmac.new(
+            self._secret.encode(), message.encode(), hashlib.sha256
+        ).hexdigest()
+        return {
+            "X-Timestamp": timestamp,
+            "X-Signature": signature,
+            "Content-Type": "application/json",
+        }
+
+    async def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
+        body = kwargs.pop("content", "") or ""
+        if "json" in kwargs:
+            body = json_mod.dumps(kwargs.pop("json"))
+            kwargs["content"] = body
+
+        sign_path = path.split("?", 1)[0]
+        headers = self._headers(method, sign_path, body)
+        headers.update(kwargs.pop("headers", {}))
+
+        pool = _get_async_pool(self._base_url, self._timeout)
+        try:
+            resp = await pool.request(method, path, headers=headers, **kwargs)
+        except httpx.ConnectError:
+            raise BotAPIError(0, "Cannot connect to bot API server")
+        except httpx.TimeoutException:
+            raise BotAPIError(0, "Bot API request timed out")
+
+        if resp.status_code >= 400:
+            try:
+                detail = resp.json().get("error", resp.text)
+            except Exception:
+                detail = resp.text
+            raise BotAPIError(resp.status_code, detail)
+
+        return resp
+
+    # ─── API methods (async versions of BotAPIClient) ────────────────────────
+
+    async def health(self) -> dict:
+        return (await self._request("GET", "/api/v1/health")).json()
+
+    async def list_polls(self, status: str | None = None) -> list[dict]:
+        path = "/api/v1/polls"
+        if status:
+            path += f"?status={quote(status)}"
+        return (await self._request("GET", path)).json()["polls"]
+
+    async def get_poll(self, poll_id: int) -> dict:
+        return (await self._request("GET", f"/api/v1/polls/{poll_id}")).json()
+
+    async def get_results(self, poll_id: int) -> dict:
+        return (await self._request("GET", f"/api/v1/polls/{poll_id}/results")).json()
+
+    async def get_top(self, poll_id: int, limit: int = 10) -> dict:
+        return (await self._request("GET", f"/api/v1/analytics/{poll_id}/top?limit={limit}")).json()
+
+    async def get_votes_by_date(self, poll_id: int, days: int = 7) -> dict:
+        return (await self._request("GET", f"/api/v1/analytics/{poll_id}/by-date?days={days}")).json()
+
+    async def get_votes_by_hour(self, poll_id: int) -> dict:
+        return (await self._request("GET", f"/api/v1/analytics/{poll_id}/by-hour")).json()
+
+    async def get_votes_by_faculty(self, poll_id: int) -> dict:
+        return (await self._request("GET", f"/api/v1/analytics/{poll_id}/by-faculty")).json()
+
+    async def list_admins(self) -> list[int]:
+        return (await self._request("GET", "/api/v1/admins")).json()["admin_ids"]
+
+    async def get_user_count(self) -> int:
+        return (await self._request("GET", "/api/v1/users/count")).json()["count"]
+
+    async def get_user_stats(self) -> dict:
+        return (await self._request("GET", "/api/v1/users/stats")).json()
+
+    async def get_user_growth_data(self, days: int = 30) -> dict:
+        return (await self._request("GET", f"/api/v1/users/growth-data?days={days}")).json()
+
+    async def get_university_count(self) -> int:
+        return (await self._request("GET", "/api/v1/universities/count")).json()["count"]
+
+    async def get_audience_segments(self) -> list[dict]:
+        try:
+            return (await self._request("GET", "/api/v1/audience/segments")).json().get("segments", [])
+        except BotAPIError:
+            return []
+
+    # ─── Staff (async) ──────────────────────────────────────────────────────
+
+    async def list_staff(self, university_id: int | None = None) -> list[dict]:
+        path = "/api/v1/staff"
+        if university_id:
+            path += f"?university_id={university_id}"
+        return (await self._request("GET", path)).json()["staff"]
+
+    async def get_staff_top_rated(self, university_id: int | None = None, limit: int = 10) -> list[dict]:
+        path = f"/api/v1/staff/top?limit={limit}"
+        if university_id:
+            path += f"&university_id={university_id}"
+        return (await self._request("GET", path)).json()["staff"]
+
+    # ─── Feedback (async) ───────────────────────────────────────────────────
+
+    async def get_feedback_summary(self, poll_id: int) -> dict:
+        return (await self._request("GET", f"/api/v1/feedback/poll/{poll_id}/summary")).json()

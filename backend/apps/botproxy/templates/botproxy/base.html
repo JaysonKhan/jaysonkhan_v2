@@ -316,6 +316,12 @@
         <a href="{% url 'bot_university_list' svc=svc %}" class="{% if 'university' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">school</span> Universitetlar
         </a>
+        <a href="{% url 'bot_staff_list' svc=svc %}" class="{% if 'staff' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="material-symbols-outlined">badge</span> Xodimlar
+        </a>
+        <a href="{% url 'bot_feedback_dashboard' svc=svc %}" class="{% if 'feedback' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="material-symbols-outlined">reviews</span> Feedback
+        </a>
     </nav>
     {% endblock %}
 

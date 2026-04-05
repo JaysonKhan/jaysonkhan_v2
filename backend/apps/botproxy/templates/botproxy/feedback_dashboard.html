@@ -1,0 +1,67 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Feedback{% endblock %}
+
+{% block bot_content %}
+<div class="rb-header">
+    <h1>Feedback <span class="rb-subtitle">So'rovnomalar bo'yicha fikrlar statistikasi</span></h1>
+</div>
+
+{% if polls %}
+<div class="rb-card">
+    <div class="rb-table-wrap">
+        <table class="rb-table">
+            <thead>
+                <tr>
+                    <th>So'rovnoma</th>
+                    <th>Holat</th>
+                    <th>Ijobiy</th>
+                    <th>Salbiy</th>
+                    <th>Jami</th>
+                    <th>Reyting</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for poll in polls %}
+                {% with s=summaries|default_if_none:"{}"%}
+                <tr>
+                    <td><strong>{{ poll.title }}</strong></td>
+                    <td>
+                        {% if poll.status == "open" %}
+                        <span class="rb-badge rb-badge-open">Faol</span>
+                        {% else %}
+                        <span class="rb-badge rb-badge-closed">Yopiq</span>
+                        {% endif %}
+                    </td>
+                    {% with sm=summaries %}
+                    <td style="color:#22c55e;font-weight:600">{{ sm|default_if_none:"{}"|dictsort:"total" }}{% for pid, data in sm.items %}{% if pid == poll.id %}{{ data.positive|default:0 }}{% endif %}{% endfor %}</td>
+                    <td style="color:#ef4444;font-weight:600">{% for pid, data in sm.items %}{% if pid == poll.id %}{{ data.negative|default:0 }}{% endif %}{% endfor %}</td>
+                    <td>{% for pid, data in sm.items %}{% if pid == poll.id %}{{ data.total|default:0 }}{% endif %}{% endfor %}</td>
+                    <td>
+                        {% for pid, data in sm.items %}{% if pid == poll.id %}
+                        {% if data.total > 0 %}
+                        <div class="rb-progress">
+                            <div class="rb-progress-bar"><div class="rb-progress-fill" style="width:{% widthratio data.positive data.total 100 %}%"></div></div>
+                            <span class="rb-progress-text">{% widthratio data.positive data.total 100 %}%</span>
+                        </div>
+                        {% else %}
+                        <span class="rb-muted">—</span>
+                        {% endif %}
+                        {% endif %}{% endfor %}
+                    </td>
+                    {% endwith %}
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="rb-card">
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">analytics</span>
+        <p>Hali so'rovnoma yaratilmagan</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

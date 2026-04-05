@@ -1,0 +1,61 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Xodimlar{% endblock %}
+
+{% block bot_content %}
+<div class="rb-header">
+    <h1>Xodimlar <span class="rb-subtitle">{{ staff|length }} ta xodim</span></h1>
+    <div class="rb-actions">
+        <a href="{% url 'bot_staff_create' svc=svc %}" class="rb-btn rb-btn-primary">
+            <span class="material-symbols-outlined">person_add</span> Yangi xodim
+        </a>
+    </div>
+</div>
+
+{% if universities %}
+<div class="rb-filter-bar">
+    <select onchange="window.location='?university_id='+this.value">
+        <option value="">Barcha universitetlar</option>
+        {% for uni in universities %}
+        <option value="{{ uni.id }}" {% if selected_university == uni.id %}selected{% endif %}>{{ uni.short_name }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
+
+{% if staff %}
+<div class="rb-card-grid">
+    {% for s in staff %}
+    <div class="rb-card">
+        <div class="rb-uni-card">
+            {% if s.photo_path %}
+            <img src="{% url 'bot_staff_photo' svc=svc staff_id=s.id %}" class="rb-uni-logo" alt="{{ s.full_name }}">
+            {% else %}
+            <div class="rb-uni-logo-placeholder">{{ s.full_name|first }}</div>
+            {% endif %}
+            <div class="rb-uni-info">
+                <h3><a href="{% url 'bot_staff_detail' svc=svc staff_id=s.id %}">{{ s.full_name }}</a></h3>
+                <p class="rb-uni-full">{{ s.position }}</p>
+                <div class="rb-uni-meta">
+                    <span><span class="material-symbols-outlined">school</span> {{ s.university_name }}</span>
+                    {% if s.feedback_count > 0 %}
+                    <span><span class="material-symbols-outlined">star</span> {{ s.rating_percent }}% ijobiy</span>
+                    <span><span class="material-symbols-outlined">rate_review</span> {{ s.feedback_count }} baho</span>
+                    {% endif %}
+                    {% if s.phone %}
+                    <span><span class="material-symbols-outlined">phone</span> {{ s.phone }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="rb-card">
+    <div class="rb-empty">
+        <span class="material-symbols-outlined">person_off</span>
+        <p>Hali xodim qo'shilmagan</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

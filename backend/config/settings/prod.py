@@ -152,17 +152,33 @@ LOGGING = {
     },
 }
 
-# ── Cache: FileBasedCache — shared across gunicorn workers ───────────────────
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/var/www/jaysonkhan/cache',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 5000,
-        },
+# ── Cache ─────────────────────────────────────────────────────────────────────
+# Use Redis if REDIS_URL is set, otherwise fall back to FileBasedCache.
+# Install Redis on server: sudo apt install redis-server
+_REDIS_URL = env('REDIS_URL', default='')
+
+if _REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _REDIS_URL,
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'db': 0,
+            },
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': '/var/www/jaysonkhan/cache',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 5000,
+            },
+        }
+    }
 
 # ── Admin customization ─────────────────────────────────────────────────────
 # Ensure admin URL is not 'admin/' — must be customized via ADMIN_URL env var

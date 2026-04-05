@@ -1,0 +1,85 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}{{ form_title }}{% endblock %}
+
+{% block bot_content %}
+<div class="rb-breadcrumb">
+    <a href="{% url 'bot_staff_list' svc=svc %}">Xodimlar</a>
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"/></svg>
+    {{ form_title }}
+</div>
+
+<div class="rb-header">
+    <h1>{{ form_title }}</h1>
+</div>
+
+<div class="rb-card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="rb-form-row rb-form-row-2">
+            <div class="rb-form-group">
+                <label>Universitet <span class="req">*</span></label>
+                <select name="university_id" required>
+                    <option value="">Tanlang...</option>
+                    {% for uni in universities %}
+                    <option value="{{ uni.id }}" {% if staff.university_id == uni.id %}selected{% endif %}>{{ uni.short_name }} — {{ uni.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="rb-form-group">
+                <label>F.I.O. <span class="req">*</span></label>
+                <input type="text" name="full_name" value="{{ staff.full_name|default:'' }}" required placeholder="Maxkamov Baxtiyor Shuxratovich">
+            </div>
+        </div>
+
+        <div class="rb-form-row rb-form-row-2">
+            <div class="rb-form-group">
+                <label>Lavozim <span class="req">*</span></label>
+                <input type="text" name="position" value="{{ staff.position|default:'' }}" required placeholder="Rektor, Dekan, Professor...">
+            </div>
+            <div class="rb-form-group">
+                <label>Bo'lim</label>
+                <input type="text" name="department" value="{{ staff.department|default:'' }}" placeholder="Rektorat, Informatika kafedrasi...">
+            </div>
+        </div>
+
+        <div class="rb-form-row rb-form-row-2">
+            <div class="rb-form-group">
+                <label>Telefon</label>
+                <input type="text" name="phone" value="{{ staff.phone|default:'' }}" placeholder="(+99871) 238-64-15">
+            </div>
+            <div class="rb-form-group">
+                <label>E-mail</label>
+                <input type="email" name="email" value="{{ staff.email|default:'' }}" placeholder="b.maxkamov@tuit.uz">
+            </div>
+        </div>
+
+        <div class="rb-form-group">
+            <label>Qabul vaqti</label>
+            <input type="text" name="reception_hours" value="{{ staff.reception_hours|default:'' }}" placeholder="Payshanba: 16:00-18:00">
+        </div>
+
+        <div class="rb-form-group">
+            <label>Bio / Ilmiy daraja</label>
+            <textarea name="bio" rows="3" placeholder="Iqtisodiyot fanlari doktori, Professor">{{ staff.bio|default:'' }}</textarea>
+        </div>
+
+        <div class="rb-form-group">
+            <label>Rasm</label>
+            <input type="file" name="photo" accept="image/*">
+            {% if staff.photo_path %}
+            <div class="help">Hozirgi rasm mavjud. Yangi rasm yuklasangiz eski almashinadi.</div>
+            {% endif %}
+        </div>
+
+        <hr class="rb-divider">
+
+        <div class="rb-actions">
+            <button type="submit" class="rb-btn rb-btn-primary">
+                <span class="material-symbols-outlined">save</span> {{ submit_text }}
+            </button>
+            <a href="{% url 'bot_staff_list' svc=svc %}" class="rb-btn rb-btn-outline">Bekor qilish</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
