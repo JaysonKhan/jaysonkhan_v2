@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+from pathlib import Path
 
 from django.conf import settings as djsettings
 from django.core.cache import cache
@@ -765,23 +766,49 @@ REGIONS = [
 ]
 
 
-def _warmup_logo_cache(svc: str, uni_ids: list[int]) -> None:
-    """Background task: prefetch university logos into cache (non-blocking)."""
+def _logo_dir(svc: str) -> Path:
+    """Return the directory for cached university logo files."""
+    d = Path(djsettings.MEDIA_ROOT) / "uni_logos" / svc
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _logo_disk_path(svc: str, uni_id: int) -> Path | None:
+    """Return the on-disk path of a cached logo, or None if not yet downloaded."""
+    d = _logo_dir(svc)
+    for ext in ("png", "jpg", "svg", "webp"):
+        p = d / f"{uni_id}.{ext}"
+        if p.exists() and p.stat().st_size > 0:
+            return p
+    return None
+
+
+_EXT_MAP = {"image/png": "png", "image/jpeg": "jpg", "image/svg+xml": "svg", "image/webp": "webp"}
+
+
+def _save_logo_to_disk(svc: str, uni_id: int, logo_bytes: bytes) -> Path:
+    """Save logo bytes to disk and return the file path."""
+    content_type = _detect_image_content_type(logo_bytes)
+    ext = _EXT_MAP.get(content_type, "png")
+    path = _logo_dir(svc) / f"{uni_id}.{ext}"
+    path.write_bytes(logo_bytes)
+    return path
+
+
+def _warmup_logos_to_disk(svc: str, uni_ids: list[int]) -> None:
+    """Background task: download missing logos to disk (non-blocking)."""
     from concurrent.futures import ThreadPoolExecutor
     client = _client(svc)
 
     def _fetch_one(uni_id: int) -> None:
-        cache_key = f"uni_logo:{svc}:{uni_id}"
-        if cache.get(cache_key) is not None:
-            return
+        if _logo_disk_path(svc, uni_id):
+            return  # already on disk
         try:
             logo_bytes = client.get_university_logo(uni_id)
         except Exception:
             return
-        if not logo_bytes:
-            cache.set(cache_key, b"", 600)
-        else:
-            cache.set(cache_key, (logo_bytes, _detect_image_content_type(logo_bytes)), 3600)
+        if logo_bytes:
+            _save_logo_to_disk(svc, uni_id, logo_bytes)
 
     with ThreadPoolExecutor(max_workers=3) as pool:
         pool.map(_fetch_one, uni_ids)
@@ -799,10 +826,22 @@ def university_list(request, svc="talabaovozi"):
     except BotAPIError as e:
         _handle_api_error(request, e)
 
-    # Non-blocking: warm logo cache in background thread
-    uni_ids = [u["id"] for u in universities if u.get("logo_path")]
-    if uni_ids:
-        t = threading.Thread(target=_warmup_logo_cache, args=(svc, uni_ids), daemon=True)
+    # Annotate each university with a direct media URL if logo exists on disk
+    media_url = djsettings.MEDIA_URL  # e.g. /media/
+    for uni in universities:
+        if uni.get("logo_path"):
+            disk = _logo_disk_path(svc, uni["id"])
+            if disk:
+                uni["_logo_url"] = f"{media_url}uni_logos/{svc}/{disk.name}"
+            else:
+                uni["_logo_url"] = None  # will use proxy fallback
+        else:
+            uni["_logo_url"] = None
+
+    # Non-blocking: download missing logos to disk in background
+    missing = [u["id"] for u in universities if u.get("logo_path") and not u.get("_logo_url")]
+    if missing:
+        t = threading.Thread(target=_warmup_logos_to_disk, args=(svc, missing), daemon=True)
         t.start()
 
     return TemplateResponse(request, "botproxy/university_list.html", _ctx(request, svc, {
@@ -977,19 +1016,18 @@ def university_delete(request, uni_id: int, svc="talabaovozi"):
 
 @admin_permission_required('botproxy.view_bot_dashboard')
 def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
-    """Proxy university logo from bot API with file-based caching."""
+    """Proxy university logo: serve from disk if cached, otherwise fetch + save."""
     _LOGO_HEADERS = {
         "Cache-Control": "public, max-age=3600",
         "X-Content-Type-Options": "nosniff",
     }
-    cache_key = f"uni_logo:{svc}:{uni_id}"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        if cached == b"":
-            return HttpResponse(status=404)
-        logo_bytes, content_type = cached
-        return HttpResponse(logo_bytes, content_type=content_type, headers=_LOGO_HEADERS)
+    # 1. Check disk first (fastest, no gunicorn blocking)
+    disk = _logo_disk_path(svc, uni_id)
+    if disk:
+        ct = _detect_image_content_type(disk.read_bytes()[:16])
+        return HttpResponse(disk.read_bytes(), content_type=ct, headers=_LOGO_HEADERS)
 
+    # 2. Fetch from bot API
     client = _client(svc)
     try:
         logo_bytes = client.get_university_logo(uni_id)
@@ -1001,11 +1039,11 @@ def university_logo_proxy(request, uni_id: int, svc="talabaovozi"):
         return HttpResponse(status=500)
 
     if not logo_bytes:
-        cache.set(cache_key, b"", 600)
         return HttpResponse(status=404)
 
+    # 3. Save to disk for future nginx serving
+    _save_logo_to_disk(svc, uni_id, logo_bytes)
     content_type = _detect_image_content_type(logo_bytes)
-    cache.set(cache_key, (logo_bytes, content_type), 3600)
     return HttpResponse(logo_bytes, content_type=content_type, headers=_LOGO_HEADERS)
 
 

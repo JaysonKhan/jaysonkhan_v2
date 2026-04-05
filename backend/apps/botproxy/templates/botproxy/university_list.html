@@ -29,8 +29,11 @@
     {% for uni in universities %}
     <div class="rb-card" style="margin-bottom:0;">
         <div class="rb-uni-card">
-            {% if uni.logo_path %}
-            <img src="{% url 'bot_university_logo' svc=svc uni_id=uni.id %}" alt="{{ uni.short_name }}" class="rb-uni-logo" loading="lazy" data-retries="0" onerror="if(+this.dataset.retries<2){this.dataset.retries=+this.dataset.retries+1;setTimeout(()=>{this.src=this.src.split('?')[0]+'?r='+this.dataset.retries},1000*this.dataset.retries)}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+            {% if uni._logo_url %}
+            <img src="{{ uni._logo_url }}" alt="{{ uni.short_name }}" class="rb-uni-logo" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="rb-uni-logo-placeholder" style="display:none;">{{ uni.code|truncatechars:2 }}</div>
+            {% elif uni.logo_path %}
+            <img src="{% url 'bot_university_logo' svc=svc uni_id=uni.id %}" alt="{{ uni.short_name }}" class="rb-uni-logo" loading="lazy" data-retries="0" data-proxy="{% url 'bot_university_logo' svc=svc uni_id=uni.id %}" onerror="if(+this.dataset.retries<2){this.dataset.retries=+this.dataset.retries+1;setTimeout(()=>{this.src=this.dataset.proxy+'?r='+this.dataset.retries},1500*this.dataset.retries)}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
             <div class="rb-uni-logo-placeholder" style="display:none;">{{ uni.code|truncatechars:2 }}</div>
             {% else %}
             <div class="rb-uni-logo-placeholder">{{ uni.code|truncatechars:2 }}</div>
