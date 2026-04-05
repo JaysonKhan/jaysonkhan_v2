@@ -96,11 +96,36 @@ class TelegramWebhookView(View):
             return
 
         if command == '/start':
-            self.api.send_message(tg_id, (
-                'Salom! Men sizga kommentlaringizga javob kelganda '
-                'yoki reaksiya qo\'yilganda xabar beraman.\n\n'
-                'Sozlamalar: /notifications'
-            ))
+            from servermonitor.handlers import is_owner
+            if is_owner(tg_id):
+                self.api.send_message(tg_id, (
+                    '👋 <b>Salom, Admin!</b>\n\n'
+                    '🔧 <b>Server Monitor</b>\n'
+                    '┌─────────────────────────\n'
+                    '│ /status  — 📊 Server holati (CPU, RAM, disk)\n'
+                    '│ /services — 🔧 Systemd servislar holati\n'
+                    '│ /disk — 💿 Disk ishlatilishi (batafsil)\n'
+                    '│ /tariff — 💰 Contabo tarif tavsiyasi\n'
+                    '│ /logs — 📋 Servis loglari (/logs nginx 30)\n'
+                    '│ /backup — 💾 PostgreSQL backup yaratish\n'
+                    '└─────────────────────────\n\n'
+                    '🔔 <b>Bildirishnomalar</b>\n'
+                    '┌─────────────────────────\n'
+                    '│ /notifications — sozlamalar\n'
+                    '│ /config — admin guruh sozlamalari\n'
+                    '└─────────────────────────\n\n'
+                    '⏰ <b>Avtomatik</b>\n'
+                    '┌─────────────────────────\n'
+                    '│ 📊 Kunlik hisobot — har kuni 09:00\n'
+                    '│ 🚨 CPU alert — har 10 daqiqada (>75%)\n'
+                    '└─────────────────────────'
+                ))
+            else:
+                self.api.send_message(tg_id, (
+                    'Salom! Men sizga kommentlaringizga javob kelganda '
+                    'yoki reaksiya qo\'yilganda xabar beraman.\n\n'
+                    'Sozlamalar: /notifications'
+                ))
         elif command == '/notifications':
             self._show_user_settings(tg_id)
 
