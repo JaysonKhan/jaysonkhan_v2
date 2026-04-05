@@ -417,6 +417,12 @@ class TelegramMixin(models.Model):
         help_text="Custom emoji ID for 💰 Tariff/pricing"
     )
 
+    # ── Dynamic extras (managed via /emoji bot command)
+    tg_emoji_extra = models.JSONField(
+        default=dict, blank=True,
+        help_text='Extra custom emoji IDs as JSON: {"key": "emoji_id"}. Managed via /emoji bot command.'
+    )
+
     class Meta:
         abstract = True
 

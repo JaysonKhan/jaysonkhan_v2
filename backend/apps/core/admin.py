@@ -269,6 +269,7 @@ class SiteSettingsAdmin(ModelAdmin):
                         'tg_emoji_chart',
                         'tg_emoji_alert',
                         'tg_emoji_money',
+                        'tg_emoji_extra',
                     ) if f in columns
                 ),
             })] if 'telegram_owner_id' in columns else []),

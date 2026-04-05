@@ -28,6 +28,7 @@ from interactions.models import (
 )
 from servermonitor.handlers import handle_server_callback, handle_server_command
 from telegram.models import TelegramEntity
+from .emoji_admin import handle_emoji_callback, handle_emoji_command, handle_emoji_input
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -74,11 +75,15 @@ class TelegramWebhookView(View):
 
     def _handle_message(self, message):
         text = message.get('text', '')
-        if not text.startswith('/'):
-            return
-
         chat = message.get('chat', {})
         chat_type = chat.get('type', '')
+
+        # Emoji input handler — captures text/sticker during pending edit state
+        if chat_type == 'private' and handle_emoji_input(message, self.api):
+            return
+
+        if not text.startswith('/'):
+            return
         command = text.split()[0].split('@')[0]  # strip @botname
 
         if chat_type == 'private':
@@ -90,6 +95,10 @@ class TelegramWebhookView(View):
 
     def _private_command(self, command, message):
         tg_id = message['from']['id']
+
+        # Emoji admin command (owner-only)
+        if handle_emoji_command(command, message, self.api):
+            return
 
         # Server monitor commands (owner-only)
         if handle_server_command(command, message, self.api):
@@ -287,6 +296,9 @@ class TelegramWebhookView(View):
 
     def _handle_callback(self, callback_query):
         data = callback_query.get('data', '')
+        # Emoji admin callbacks
+        if handle_emoji_callback(data, callback_query, self.api):
+            return
         # Server monitor callbacks (service restart, refresh)
         if handle_server_callback(data, callback_query, self.api):
             return

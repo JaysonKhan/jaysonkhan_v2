@@ -53,6 +53,11 @@ def _load_emojis() -> dict:
             'alert': getattr(site, 'tg_emoji_alert', '') or '',
             'money': getattr(site, 'tg_emoji_money', '') or '',
         }
+        # Merge dynamic extras from JSONField
+        extras = getattr(site, 'tg_emoji_extra', None) or {}
+        for key, eid in extras.items():
+            if eid:
+                _emoji_cache[key] = eid
     except Exception:
         _emoji_cache = {}
     return _emoji_cache
