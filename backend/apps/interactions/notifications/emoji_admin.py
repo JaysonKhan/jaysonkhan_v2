@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import time
 
+from core.emoji import ce
 from core.services import SiteSettingsService
 from .telegram_api import TelegramBotAPI
 
@@ -58,7 +59,7 @@ def handle_emoji_command(command: str, message: dict, api: TelegramBotAPI) -> bo
 
     tg_id = message['from']['id']
     if not _is_owner(tg_id):
-        api.send_message(tg_id, '🔒 Bu komanda faqat admin uchun.')
+        api.send_message(tg_id, f'{ce("lock", "🔒")} Bu komanda faqat admin uchun.')
         return True
 
     api.send_chat_action(tg_id, 'typing')

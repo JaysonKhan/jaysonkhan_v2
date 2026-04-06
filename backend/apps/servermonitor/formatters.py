@@ -1,17 +1,12 @@
 """
 Kreativ emoji dizayn for server health reports.
-
-Visual elements:
-- Custom premium emoji from SiteSettings (with Unicode fallback)
-- Color badges: 🟢 OK, 🟡 Warning, 🔴 Critical
-- Progress bars: ▓▓▓▓▓░░░░░ 50%
-- Box drawing for structure
-- Medal emojis for top processes
-- Telegram custom emoji: <tg-emoji emoji-id="ID">fallback</tg-emoji>
+Uses centralized core.emoji.ce() for custom emoji support.
 """
 from __future__ import annotations
 
 from datetime import timedelta
+
+from core.emoji import ce as _ce, reset_cache as reset_emoji_cache
 
 from .metrics import (
     CpuMetrics,
@@ -27,60 +22,6 @@ from .metrics import (
 
 WARN_THRESHOLD = 75
 CRIT_THRESHOLD = 90
-
-# ── Emoji Registry (loaded from SiteSettings) ───────────────────────────────
-
-_emoji_cache: dict | None = None
-
-
-def _load_emojis() -> dict:
-    """Load custom emoji IDs from SiteSettings, cache in module."""
-    global _emoji_cache
-    if _emoji_cache is not None:
-        return _emoji_cache
-    try:
-        from core.services import SiteSettingsService
-        site = SiteSettingsService.get()
-        _emoji_cache = {
-            'server': getattr(site, 'tg_emoji_server', '') or '',
-            'cpu': getattr(site, 'tg_emoji_cpu', '') or '',
-            'ram': getattr(site, 'tg_emoji_ram', '') or '',
-            'disk': getattr(site, 'tg_emoji_disk', '') or '',
-            'ok': getattr(site, 'tg_emoji_ok', '') or '',
-            'warn': getattr(site, 'tg_emoji_warn', '') or '',
-            'critical': getattr(site, 'tg_emoji_critical', '') or '',
-            'chart': getattr(site, 'tg_emoji_chart', '') or '',
-            'alert': getattr(site, 'tg_emoji_alert', '') or '',
-            'money': getattr(site, 'tg_emoji_money', '') or '',
-        }
-        # Merge dynamic extras from JSONField
-        extras = getattr(site, 'tg_emoji_extra', None) or {}
-        if isinstance(extras, dict):
-            for key, eid in extras.items():
-                if eid and isinstance(eid, str):
-                    _emoji_cache[key] = eid
-    except Exception:
-        import logging
-        logging.getLogger('servermonitor').error(
-            'Failed to load emoji cache', exc_info=True,
-        )
-        _emoji_cache = {}
-    return _emoji_cache
-
-
-def reset_emoji_cache():
-    """Reset cache (call after SiteSettings change)."""
-    global _emoji_cache
-    _emoji_cache = None
-
-
-def _ce(emoji_key: str, fallback: str) -> str:
-    """Custom Emoji — returns <tg-emoji> tag if ID exists, else fallback Unicode."""
-    emojis = _load_emojis()
-    eid = emojis.get(emoji_key, '')
-    if eid:
-        return f'<tg-emoji emoji-id="{eid}">{fallback}</tg-emoji>'
-    return fallback
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

@@ -1,8 +1,6 @@
 """
-Telegram Settings — custom admin page for managing Telegram bot configuration.
-
-Emoji Manager tab: all tg_emoji_* fields for customizing bot messages.
-Accessible at ADMIN_URL/telegram/settings/.
+Telegram Settings — custom admin page for managing ALL bot emoji IDs.
+Covers channel buttons, server monitor, notifications, admin log, commands, sharing.
 """
 from __future__ import annotations
 
@@ -12,15 +10,22 @@ from django.template.response import TemplateResponse
 from core.decorators import admin_permission_required
 from core.models import SiteSettings
 
-# ── Emoji Registry ───────────────────────────────────────────────────────────
+# ── Complete Emoji Registry (31 fields) ──────────────────────────────────────
+# (key, db_field, fallback, label, description, category)
 
 EMOJI_FIELDS = [
+    # Channel Buttons
     ('read_more',   'tg_emoji_read_more',   '📖', 'Read More',   'Batafsil tugmasi', 'channel'),
     ('google_play', 'tg_emoji_google_play', '▶️', 'Google Play', 'Google Play tugmasi', 'channel'),
     ('app_store',   'tg_emoji_app_store',   '🍎', 'App Store',   'App Store tugmasi', 'channel'),
     ('web',         'tg_emoji_web',         '🌐', 'Web',         'Web sayt tugmasi', 'channel'),
     ('bot',         'tg_emoji_bot',         '🤖', 'Bot',         'Telegram Bot tugmasi', 'channel'),
-    ('comment',     'tg_emoji_comment',     '💬', 'Comment',     'Komment ko\'rish tugmasi', 'channel'),
+    ('comment',     'tg_emoji_comment',     '💬', 'Comment',     'Komment tugmasi', 'channel'),
+    ('post',        'tg_emoji_post',        '📝', 'Post',        'Blog post caption', 'channel'),
+    ('project',     'tg_emoji_project',     '📱', 'Project',     'Loyiha caption', 'channel'),
+    ('tech',        'tg_emoji_tech',        '🛠', 'Tech Stack',  'Texnologiyalar ro\'yxati', 'channel'),
+
+    # Server Monitor
     ('server',      'tg_emoji_server',      '🖥', 'Server',      'Server status header', 'monitor'),
     ('cpu',         'tg_emoji_cpu',         '🧠', 'CPU',         'CPU bo\'limi', 'monitor'),
     ('ram',         'tg_emoji_ram',         '💾', 'RAM',         'RAM bo\'limi', 'monitor'),
@@ -31,31 +36,32 @@ EMOJI_FIELDS = [
     ('chart',       'tg_emoji_chart',       '📊', 'Chart',       'Hisobot header', 'monitor'),
     ('alert',       'tg_emoji_alert',       '🚨', 'Alert',       'CPU alert xabari', 'monitor'),
     ('money',       'tg_emoji_money',       '💰', 'Money',       'Tarif maslahatchi', 'monitor'),
+
+    # Notifications
+    ('reply',       'tg_emoji_reply',       '↩️', 'Reply',       'Javob xabarnomasi', 'notify'),
+    ('like',        'tg_emoji_like',        '👍', 'Like',        'Like xabarnomasi', 'notify'),
+    ('contact_msg', 'tg_emoji_contact_msg', '📩', 'Contact',     'Kontakt form logi', 'notify'),
+
+    # Admin Log
+    ('user',        'tg_emoji_user',        '👤', 'User',        'Yangi foydalanuvchi', 'admin_log'),
+    ('returning',   'tg_emoji_returning',   '🔄', 'Returning',   'Qaytgan foydalanuvchi', 'admin_log'),
+    ('premium',     'tg_emoji_premium',     '⭐️', 'Premium',     'Premium badge', 'admin_log'),
+    ('osint',       'tg_emoji_osint',       '🔍', 'OSINT',       'OSINT tugmasi', 'admin_log'),
+    ('education',   'tg_emoji_education',   '🎓', 'Education',   'TalabaOvozi manba', 'admin_log'),
+
+    # Commands
+    ('greeting',    'tg_emoji_greeting',    '👋', 'Greeting',    '/start salomlashuv', 'command'),
+    ('ban',         'tg_emoji_ban',         '🚫', 'Ban',         '/ban komandasi', 'command'),
+    ('mute',        'tg_emoji_mute',        '🔇', 'Mute',        '/mute komandasi', 'command'),
+    ('lock',        'tg_emoji_lock',        '🔒', 'Lock',        'Cheklangan kirish', 'command'),
 ]
 
 CATEGORIES = [
-    ('channel', '📢', 'Channel Buttons', 'Kanal postlari inline tugmalaridagi emojilar', '#7c3aed'),
-    ('monitor', '🖥', 'Server Monitor', 'Health report va /status xabarlaridagi emojilar', '#10b981'),
-]
-
-HARDCODED_EMOJIS = [
-    {'emoji': '↩️', 'label': 'Reply', 'used_in': 'Javob xabarnomasi', 'file': 'service.py'},
-    {'emoji': '👍', 'label': 'Like', 'used_in': 'Like xabarnomasi', 'file': 'service.py'},
-    {'emoji': '👎', 'label': 'Unlike', 'used_in': 'Unlike xabarnomasi', 'file': 'service.py'},
-    {'emoji': '📩', 'label': 'Contact', 'used_in': 'Kontakt form logi', 'file': 'service.py'},
-    {'emoji': '👤', 'label': 'User', 'used_in': 'Yangi foydalanuvchi', 'file': 'service.py'},
-    {'emoji': '🔄', 'label': 'Returning', 'used_in': 'Qaytgan foydalanuvchi', 'file': 'service.py'},
-    {'emoji': '⭐️', 'label': 'Premium', 'used_in': 'Premium badge', 'file': 'service.py'},
-    {'emoji': '🔍', 'label': 'OSINT', 'used_in': 'OSINT tugmasi', 'file': 'service.py'},
-    {'emoji': '🎓', 'label': 'TalabaOvozi', 'used_in': 'TalabaOvozi manba', 'file': 'service.py'},
-    {'emoji': '🌐', 'label': 'jaysonkhan', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
-    {'emoji': '⚡', 'label': 'nginx', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
-    {'emoji': '🐘', 'label': 'postgresql', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
-    {'emoji': '🥇🥈🥉', 'label': 'Medals', 'used_in': 'Top processes', 'file': 'formatters.py'},
-    {'emoji': '🚫', 'label': 'Ban', 'used_in': '/ban komandasi', 'file': 'webhook.py'},
-    {'emoji': '🔇', 'label': 'Mute', 'used_in': '/mute komandasi', 'file': 'webhook.py'},
-    {'emoji': '📝', 'label': 'Post', 'used_in': 'Blog post sarlavhasi', 'file': 'channel_share.py'},
-    {'emoji': '📱', 'label': 'Project', 'used_in': 'Loyiha sarlavhasi', 'file': 'channel_share.py'},
+    ('channel',   '📢', 'Channel & Sharing',  'Kanal postlari, inline tugmalar, content sharing', '#7c3aed'),
+    ('monitor',   '🖥', 'Server Monitor',     'Health report, /status, CPU alert xabarlari', '#10b981'),
+    ('notify',    '🔔', 'Notifications',      'Foydalanuvchilarga yuborilgan xabarnomalar', '#3b82f6'),
+    ('admin_log', '👤', 'Admin Log',          'Admin guruhga loglanadigan user eventlari', '#f59e0b'),
+    ('command',   '⚡', 'Bot Commands',       '/start, /ban, /mute va boshqa komanda javoblari', '#ef4444'),
 ]
 
 
@@ -85,7 +91,6 @@ def emoji_manager(request):
                 messages.success(request, f'{len(update_fields)} ta emoji yangilandi.')
             else:
                 messages.info(request, 'O\'zgarish yo\'q.')
-
         elif action == 'clear_all':
             update_fields = []
             for _, field, *_ in EMOJI_FIELDS:
@@ -97,7 +102,6 @@ def emoji_manager(request):
                 _reset_caches()
                 messages.warning(request, 'Barcha emojilar tozalandi.')
 
-    # Build categories
     categories = []
     for cat_key, cat_icon, cat_title, cat_desc, cat_color in CATEGORIES:
         items = []
@@ -119,7 +123,6 @@ def emoji_manager(request):
         })
 
     filled = sum(1 for _, f, *_ in EMOJI_FIELDS if getattr(site, f, ''))
-
     notification_fields = [
         ('Yangi userlar', getattr(site, 'admin_notify_new_users', True)),
         ('Kommentlar', getattr(site, 'admin_notify_comments', True)),
@@ -131,7 +134,6 @@ def emoji_manager(request):
 
     return TemplateResponse(request, 'core/emoji_manager.html', _ctx(request, {
         'categories': categories,
-        'hardcoded_emojis': HARDCODED_EMOJIS,
         'notification_fields': notification_fields,
         'site': site,
         'stats': {
@@ -144,7 +146,7 @@ def emoji_manager(request):
 
 def _reset_caches():
     try:
-        from servermonitor.formatters import reset_emoji_cache
-        reset_emoji_cache()
+        from core.emoji import reset_cache
+        reset_cache()
     except Exception:
         pass

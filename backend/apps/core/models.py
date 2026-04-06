@@ -417,10 +417,78 @@ class TelegramMixin(models.Model):
         help_text="Custom emoji ID for 💰 Tariff/pricing"
     )
 
-    # ── Dynamic extras (managed via /emoji bot command)
+    # ── Notification Emoji ──
+    tg_emoji_reply = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for ↩️ Reply notification"
+    )
+    tg_emoji_like = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 👍 Like notification"
+    )
+    tg_emoji_contact_msg = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 📩 Contact form log"
+    )
+
+    # ── Admin Log Emoji ──
+    tg_emoji_user = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 👤 New user icon"
+    )
+    tg_emoji_returning = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🔄 Returning user"
+    )
+    tg_emoji_premium = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for ⭐️ Premium badge"
+    )
+    tg_emoji_osint = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🔍 OSINT button"
+    )
+    tg_emoji_education = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🎓 TalabaOvozi source"
+    )
+
+    # ── Command Emoji ──
+    tg_emoji_greeting = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 👋 Bot greeting"
+    )
+    tg_emoji_ban = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🚫 Ban action"
+    )
+    tg_emoji_mute = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🔇 Mute action"
+    )
+    tg_emoji_lock = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🔒 Restricted access"
+    )
+
+    # ── Channel Sharing Emoji ──
+    tg_emoji_post = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 📝 Blog post caption"
+    )
+    tg_emoji_project = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 📱 Project caption"
+    )
+    tg_emoji_tech = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 🛠 Tech stack label"
+    )
+
+    # ── Dynamic extras ──
     tg_emoji_extra = models.JSONField(
         default=dict, blank=True,
-        help_text='Extra custom emoji IDs as JSON: {"key": "emoji_id"}. Managed via /emoji bot command.'
+        help_text='Extra custom emoji IDs as JSON.'
     )
 
     class Meta:

@@ -15,6 +15,7 @@ from typing import Optional
 
 from django.conf import settings
 
+from core.emoji import ce
 from core.services import SiteSettingsService
 from .telegram_api import TelegramBotAPI
 
@@ -62,7 +63,7 @@ class NotificationService:
         snippet = escape(comment.text[:200]) if comment.text else ''
 
         text = (
-            f'↩️ <b>{replier}</b> sizning kommentingizga javob yozdi:\n\n'
+            f'{ce("reply", "↩️")} <b>{replier}</b> sizning kommentingizga javob yozdi:\n\n'
             f'"{snippet}"'
         )
         fallback_url = f'{self._domain}{self._content_url(comment)}#comment-{comment.id}'
@@ -101,7 +102,7 @@ class NotificationService:
             return
         author = escape(comment.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
-        text = f'💬 <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'💬 <b>{author}</b> komment yozdi:'
+        text = f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
             '💬 Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
@@ -185,24 +186,24 @@ class NotificationService:
 
         # ── Entity type ───────────────────────────────────────────────────
         type_map = {
-            'user': ('👤', 'Foydalanuvchi'),
-            'bot': ('🤖', 'Bot'),
+            'user': (ce('user', '👤'), 'Foydalanuvchi'),
+            'bot': (ce('bot', '🤖'), 'Bot'),
             'group': ('👥', 'Guruh'),
             'supergroup': ('👥', 'Superguruh'),
             'channel': ('📢', 'Kanal'),
         }
-        emoji, type_label = type_map.get(profile.entity_type, ('👤', 'Noma\'lum'))
+        emoji, type_label = type_map.get(profile.entity_type, (ce('user', '👤'), 'Noma\'lum'))
 
         # ── Servis manbalarini erta so'rash (yangi vs qaytgan user uchun) ──
         svc_labels = {
-            'site': '🌐 Sayt (Login)',
-            'osint': '🔍 OSINT',
-            'talabaovozi': '🎓 TalabaOvozi',
+            'site': f'{ce("web", "🌐")} Sayt (Login)',
+            'osint': f'{ce("osint", "🔍")} OSINT',
+            'talabaovozi': f'{ce("education", "🎓")} TalabaOvozi',
         }
         svc_action_labels = {
-            'site': '🌐 Saytga kirdi',
-            'osint': '🔍 OSINT qidirildi',
-            'talabaovozi': '🎓 TalabaOvozi botga qo\'shildi',
+            'site': f'{ce("web", "🌐")} Saytga kirdi',
+            'osint': f'{ce("osint", "🔍")} OSINT qidirildi',
+            'talabaovozi': f'{ce("education", "🎓")} TalabaOvozi botga qo\'shildi',
         }
         try:
             from telegram.models import EntitySource
@@ -225,7 +226,7 @@ class NotificationService:
             # Qaytgan user — yangi servisdan kirdi
             new_service = sources[0] if sources else ''  # ordering = ["-updated_at"]
             action = svc_action_labels.get(new_service, f'{new_service} dan topildi')
-            lines = [f'🔄 <b>{name}</b> — {action}']
+            lines = [f'{ce("returning", "🔄")} <b>{name}</b> — {action}']
         else:
             lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
 
@@ -248,7 +249,7 @@ class NotificationService:
         # ── Badgelar ──────────────────────────────────────────────────────
         badges = []
         if funstat.get('is_premium') or getattr(profile, 'is_premium', False):
-            badges.append('⭐️ Premium')
+            badges.append(f'{ce("premium", "⭐️")} Premium')
         if funstat.get('is_verified') or getattr(profile, 'is_verified', False):
             badges.append('✅ Tasdiqlangan')
         if funstat.get('is_scam') or getattr(profile, 'is_scam', False):
@@ -314,7 +315,7 @@ class NotificationService:
             startapp = f'osint-p-{profile.telegram_id}'
         deep_url = self._tg_deep_link(startapp)
         if deep_url:
-            buttons.append([{'text': '🔍 OSINT', 'url': deep_url}])
+            buttons.append([{'text': f'{ce("osint", "🔍")} OSINT', 'url': deep_url}])
         else:
             # Fallback — oddiy URL
             try:
@@ -330,7 +331,7 @@ class NotificationService:
                         kwargs={'user_id': profile.telegram_id},
                     )
                 buttons.append([{
-                    'text': '🔍 OSINT',
+                    'text': f'{ce("osint", "🔍")} OSINT',
                     'url': f'{self._domain}{osint_url}',
                 }])
             except Exception:
@@ -355,14 +356,14 @@ class NotificationService:
         subject = escape(contact.subject or '')
         body = escape((contact.message or '')[:300])
         text = (
-            f'📩 Yangi xabar:\n'
+            f'{ce("contact_msg", "📩")} Yangi xabar:\n'
             f'<b>From:</b> {name} ({email})\n'
             f'<b>Subject:</b> {subject}\n'
             f'<b>Message:</b> {body}'
         )
         admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
         admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
-        button = {'inline_keyboard': [[{'text': '📩 Admin panelda ko\'rish', 'url': admin_url}]]}
+        button = {'inline_keyboard': [[{'text': f'{ce("contact_msg", "📩")} Admin panelda ko\'rish', 'url': admin_url}]]}
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
 
     # ── Private helpers ──────────────────────────────────────────────────────

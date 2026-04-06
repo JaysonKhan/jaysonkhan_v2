@@ -20,6 +20,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
+from core.emoji import ce
 from core.services import SiteSettingsService
 from interactions.models import (
     NotificationPreference,
@@ -112,7 +113,7 @@ class TelegramWebhookView(View):
 
         if command == '/start':
             from servermonitor.handlers import is_owner
-            from servermonitor.formatters import _ce
+            from core.emoji import ce as _ce
             if is_owner(tg_id):
                 self.api.send_chat_action(tg_id, 'typing')
                 chart = _ce('chart', '📊')
@@ -240,10 +241,10 @@ class TelegramWebhookView(View):
                 reason=reason,
                 is_active=True,
             )
-            self.api.send_message(chat_id, f'🚫 <b>{profile.display_name}</b> doimiy ban qilindi.')
+            self.api.send_message(chat_id, f'{ce("ban", "🚫")} <b>{profile.display_name}</b> doimiy ban qilindi.')
             self.api.send_message(
                 profile.telegram_id,
-                '🚫 Siz jaysonkhan.com da komment yozishdan doimiy bloklangansiz.',
+                f'{ce("ban", "🚫")} Siz jaysonkhan.com da komment yozishdan doimiy bloklangansiz.',
             )
         else:
             expires = timezone.now() + timedelta(days=MUTE_DAYS)
@@ -257,11 +258,11 @@ class TelegramWebhookView(View):
             until = timezone.localtime(expires).strftime('%Y-%m-%d %H:%M')
             self.api.send_message(
                 chat_id,
-                f'🔇 <b>{profile.display_name}</b> {MUTE_DAYS} kunga mute qilindi ({until} gacha).',
+                f'{ce("mute", "🔇")} <b>{profile.display_name}</b> {MUTE_DAYS} kunga mute qilindi ({until} gacha).',
             )
             self.api.send_message(
                 profile.telegram_id,
-                f'🔇 Siz jaysonkhan.com da {MUTE_DAYS} kunga mute qilindingiz ({until} gacha).',
+                f'{ce("mute", "🔇")} Siz jaysonkhan.com da {MUTE_DAYS} kunga mute qilindingiz ({until} gacha).',
             )
 
     @staticmethod

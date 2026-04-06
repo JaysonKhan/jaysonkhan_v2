@@ -13,6 +13,8 @@ from typing import Optional
 from core.services import SiteSettingsService
 from interactions.notifications.telegram_api import TelegramBotAPI
 
+from core.emoji import ce
+
 from .contabo import analyze_tariff, format_tariff_advice
 from .formatters import (
     format_cpu,
@@ -55,7 +57,7 @@ def handle_server_command(command: str, message: dict, api: TelegramBotAPI) -> b
     tg_id = message['from']['id']
 
     if not is_owner(tg_id):
-        api.send_message(tg_id, '🔒 Bu komanda faqat server egasi uchun.')
+        api.send_message(tg_id, f'{ce("lock", "🔒")} Bu komanda faqat server egasi uchun.')
         return True
 
     if command == '/status':
