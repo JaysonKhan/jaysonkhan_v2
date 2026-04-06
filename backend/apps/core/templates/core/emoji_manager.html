@@ -116,7 +116,7 @@ html.dark .tg-tab.active{box-shadow:0 2px 8px rgba(167,139,250,.2)}
             <div style="display:flex;gap:.75rem;padding:.75rem 1rem;border-radius:var(--r);border:1px solid var(--bd);background:var(--bg2);align-items:flex-start">
                 <span style="font-size:1.25rem;margin-top:1px">💡</span>
                 <span style="font-size:.8rem;color:var(--fg2);line-height:1.5">
-                    Botda <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:.725rem;color:var(--pr)">/emoji</code> → custom emoji yuboring → ID qaytaradi.
+                    Botga custom emoji yuboring → ID avtomatik qaytaradi.
                     ID bo'sh = Unicode fallback.
                 </span>
             </div>
@@ -154,14 +154,15 @@ html.dark .tg-tab.active{box-shadow:0 2px 8px rgba(167,139,250,.2)}
             </div>
             {% endfor %}
 
-            <div style="display:flex;justify-content:space-between;margin-bottom:var(--g)">
-                <form method="post" onsubmit="return confirm('Barcha emojilarni tozalashni xohlaysizmi?')" style="display:inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="clear_all">
-                    <button type="submit" class="tg-btn tg-btn-d">🗑 Hammasini tozalash</button>
-                </form>
+            <div style="display:flex;justify-content:flex-end;margin-bottom:var(--g);gap:.5rem">
                 <button type="submit" class="tg-btn tg-btn-p">💾 Saqlash</button>
             </div>
+        </form>
+
+        <form method="post" onsubmit="return confirm('Barcha emojilarni tozalashni xohlaysizmi?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear_all">
+            <button type="submit" class="tg-btn tg-btn-d" style="margin-bottom:var(--g)">🗑 Hammasini tozalash</button>
         </form>
     </div>
 
