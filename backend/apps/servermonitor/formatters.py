@@ -71,7 +71,7 @@ def _service_badge(status: ServiceStatus) -> str:
         return _ce('ok', '🟢')
     if status.status in ('inactive', 'dead'):
         return _ce('critical', '🔴')
-    return '⚪'
+    return ''
 
 
 MEDAL_EMOJIS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
