@@ -90,6 +90,21 @@ CATEGORIES = [
     ('command',   '⚡', 'Bot Commands',       '/start, /ban, /config javoblari', '#ef4444'),
 ]
 
+CONFIG_ID_FIELDS = [
+    ('telegram_owner_id', 'Owner ID'),
+    ('telegram_admin_group_id', 'Admin Group ID'),
+    ('telegram_channel_id', 'Channel ID'),
+]
+
+NOTIFICATION_FIELDS = [
+    ('admin_notify_new_users', 'Yangi userlar'),
+    ('admin_notify_comments', 'Kommentlar'),
+    ('admin_notify_replies', 'Javoblar'),
+    ('admin_notify_reactions', 'Reaksiyalar'),
+    ('admin_notify_likes', 'Likelar'),
+    ('admin_notify_contacts', 'Kontakt xabarlar'),
+]
+
 
 def _ctx(request, extra=None):
     ctx = admin.site.each_context(request)
@@ -127,6 +142,39 @@ def emoji_manager(request):
                 site.save(update_fields=update_fields)
                 _reset_caches()
                 messages.warning(request, 'Barcha emojilar tozalandi.')
+        elif action == 'save_config':
+            update_fields = []
+            errors = []
+            # 3 ID fields (BigIntegerField, nullable)
+            for id_field, label in CONFIG_ID_FIELDS:
+                raw = request.POST.get(id_field, '').strip()
+                if not raw:
+                    if getattr(site, id_field) is not None:
+                        setattr(site, id_field, None)
+                        update_fields.append(id_field)
+                else:
+                    try:
+                        val = int(raw)
+                        if getattr(site, id_field) != val:
+                            setattr(site, id_field, val)
+                            update_fields.append(id_field)
+                    except (ValueError, OverflowError):
+                        errors.append(f'{label}: noto\'g\'ri raqam "{raw}"')
+            # 6 notification toggles (checkbox: present=True, absent=False)
+            for toggle_field, *_ in NOTIFICATION_FIELDS:
+                new_val = toggle_field in request.POST
+                if getattr(site, toggle_field) != new_val:
+                    setattr(site, toggle_field, new_val)
+                    update_fields.append(toggle_field)
+            if errors:
+                for e in errors:
+                    messages.error(request, e)
+            elif update_fields:
+                site.save(update_fields=update_fields)
+                _reset_caches()
+                messages.success(request, f'Bot konfiguratsiya yangilandi ({len(update_fields)} ta maydon).')
+            else:
+                messages.info(request, 'O\'zgarish yo\'q.')
         return redirect('telegram_settings')
 
     categories = []
@@ -151,12 +199,8 @@ def emoji_manager(request):
 
     filled = sum(1 for _, f, *_ in EMOJI_FIELDS if getattr(site, f, ''))
     notification_fields = [
-        ('Yangi userlar', getattr(site, 'admin_notify_new_users', True)),
-        ('Kommentlar', getattr(site, 'admin_notify_comments', True)),
-        ('Javoblar', getattr(site, 'admin_notify_replies', True)),
-        ('Reaksiyalar', getattr(site, 'admin_notify_reactions', True)),
-        ('Likelar', getattr(site, 'admin_notify_likes', True)),
-        ('Kontakt xabarlar', getattr(site, 'admin_notify_contacts', True)),
+        (field, label, getattr(site, field, True))
+        for field, label in NOTIFICATION_FIELDS
     ]
 
     return TemplateResponse(request, 'core/emoji_manager.html', _ctx(request, {

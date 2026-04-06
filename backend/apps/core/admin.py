@@ -235,61 +235,8 @@ class SiteSettingsAdmin(ModelAdmin):
                 'fields': tuple(footer_fields),
             }),
 
-            # ── Tab 8: Telegram ─────────────────────────────────────────────────
-            *([('Telegram', {
-                'classes': ('tab',),
-                'description': (
-                    'Telegram bot notification settings. Configure the admin group '
-                    'and site owner ID for notification routing.'
-                ),
-                'fields': tuple(
-                    f for f in (
-                        'telegram_owner_id',
-                        'telegram_admin_group_id',
-                        'telegram_channel_id',
-                        'admin_notify_new_users',
-                        'admin_notify_comments',
-                        'admin_notify_replies',
-                        'admin_notify_reactions',
-                        'admin_notify_likes',
-                        'admin_notify_contacts',
-                        'tg_emoji_read_more',
-                        'tg_emoji_google_play',
-                        'tg_emoji_app_store',
-                        'tg_emoji_web',
-                        'tg_emoji_bot',
-                        'tg_emoji_comment',
-                        'tg_emoji_server',
-                        'tg_emoji_cpu',
-                        'tg_emoji_ram',
-                        'tg_emoji_disk',
-                        'tg_emoji_ok',
-                        'tg_emoji_warn',
-                        'tg_emoji_critical',
-                        'tg_emoji_chart',
-                        'tg_emoji_alert',
-                        'tg_emoji_money',
-                        'tg_emoji_reply',
-                        'tg_emoji_like',
-                        'tg_emoji_contact_msg',
-                        'tg_emoji_user',
-                        'tg_emoji_returning',
-                        'tg_emoji_premium',
-                        'tg_emoji_osint',
-                        'tg_emoji_education',
-                        'tg_emoji_greeting',
-                        'tg_emoji_ban',
-                        'tg_emoji_mute',
-                        'tg_emoji_lock',
-                        'tg_emoji_post',
-                        'tg_emoji_project',
-                        'tg_emoji_tech',
-                        'tg_emoji_extra',
-                    ) if f in columns
-                ),
-            })] if 'telegram_owner_id' in columns else []),
-
-            # ── Tab 9: System ──────────────────────────────────────────────────
+            # ── Tab 8: System ──────────────────────────────────────────────────
+            # Telegram settings managed at /admin/telegram/settings/
             ('System', {
                 'classes': ('tab',),
                 'fields': (
