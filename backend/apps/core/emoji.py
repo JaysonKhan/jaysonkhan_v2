@@ -4,9 +4,6 @@ Centralized custom emoji helper.
 Usage:
     from core.emoji import ce
     text = f'{ce("chart", "📊")} Server Health Report'
-
-Returns <tg-emoji emoji-id="ID">fallback</tg-emoji> if custom ID is set,
-otherwise returns the plain Unicode fallback.
 """
 from __future__ import annotations
 
@@ -14,20 +11,22 @@ import logging
 
 logger = logging.getLogger('core.emoji')
 
-# All tg_emoji_* field names that exist on SiteSettings
 _ALL_FIELDS = [
-    # Channel
-    'read_more', 'google_play', 'app_store', 'web', 'bot', 'comment',
-    # Monitor
+    # Channel (9)
+    'read_more', 'google_play', 'app_store', 'web', 'bot', 'comment', 'post', 'project', 'tech',
+    # Monitor (22)
     'server', 'cpu', 'ram', 'disk', 'ok', 'warn', 'critical', 'chart', 'alert', 'money',
-    # Notification
-    'reply', 'like', 'contact_msg',
-    # Admin Log
+    'clock', 'uptime', 'load', 'swap', 'services_icon', 'trophy', 'nginx', 'postgresql',
+    'package', 'upgrade', 'downgrade',
+    # Notification (4)
+    'reply', 'like', 'unlike', 'contact_msg',
+    # Admin Log (12)
     'user', 'returning', 'premium', 'osint', 'education',
-    # Command
+    'group', 'channel_icon', 'id_badge', 'phone', 'sources', 'crown',
+    'verified', 'scam_warn', 'history', 'pencil', 'calendar',
+    # Command (10)
     'greeting', 'ban', 'mute', 'lock',
-    # Channel Sharing
-    'post', 'project', 'tech',
+    'notifications_icon', 'config_icon', 'error', 'success', 'backup_icon', 'logs_icon',
 ]
 
 _cache: dict | None = None
@@ -44,7 +43,6 @@ def _load() -> dict:
         for key in _ALL_FIELDS:
             field = f'tg_emoji_{key}'
             _cache[key] = getattr(site, field, '') or ''
-        # Merge extras
         extras = getattr(site, 'tg_emoji_extra', None) or {}
         if isinstance(extras, dict):
             for k, v in extras.items():
@@ -57,13 +55,11 @@ def _load() -> dict:
 
 
 def reset_cache():
-    """Reset emoji cache. Call after SiteSettings save."""
     global _cache
     _cache = None
 
 
 def ce(key: str, fallback: str) -> str:
-    """Custom Emoji — returns <tg-emoji> tag if ID set, else Unicode fallback."""
     emojis = _load()
     eid = emojis.get(key, '')
     if eid:

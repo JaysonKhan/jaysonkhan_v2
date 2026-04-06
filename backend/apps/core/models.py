@@ -412,29 +412,27 @@ class TelegramMixin(models.Model):
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 🚨 Alert notifications"
     )
-    tg_emoji_money = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 💰 Tariff/pricing"
-    )
+    tg_emoji_money = models.CharField(max_length=30, blank=True, default='', help_text="💰 Tariff/pricing")
+    tg_emoji_clock = models.CharField(max_length=30, blank=True, default='', help_text="🕐 Timestamp")
+    tg_emoji_uptime = models.CharField(max_length=30, blank=True, default='', help_text="⏱ Uptime")
+    tg_emoji_load = models.CharField(max_length=30, blank=True, default='', help_text="📈 Load average")
+    tg_emoji_swap = models.CharField(max_length=30, blank=True, default='', help_text="🔄 Swap")
+    tg_emoji_services_icon = models.CharField(max_length=30, blank=True, default='', help_text="🔧 Services section")
+    tg_emoji_trophy = models.CharField(max_length=30, blank=True, default='', help_text="🏆 Top processes")
+    tg_emoji_nginx = models.CharField(max_length=30, blank=True, default='', help_text="⚡ nginx icon")
+    tg_emoji_postgresql = models.CharField(max_length=30, blank=True, default='', help_text="🐘 PostgreSQL icon")
+    tg_emoji_package = models.CharField(max_length=30, blank=True, default='', help_text="📦 Plan package")
+    tg_emoji_upgrade = models.CharField(max_length=30, blank=True, default='', help_text="⬆️ Upgrade")
+    tg_emoji_downgrade = models.CharField(max_length=30, blank=True, default='', help_text="⬇️ Downgrade")
 
     # ── Notification Emoji ──
-    tg_emoji_reply = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for ↩️ Reply notification"
-    )
-    tg_emoji_like = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 👍 Like notification"
-    )
-    tg_emoji_contact_msg = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 📩 Contact form log"
-    )
+    tg_emoji_reply = models.CharField(max_length=30, blank=True, default='', help_text="↩️ Reply")
+    tg_emoji_like = models.CharField(max_length=30, blank=True, default='', help_text="👍 Like")
+    tg_emoji_unlike = models.CharField(max_length=30, blank=True, default='', help_text="👎 Unlike")
+    tg_emoji_contact_msg = models.CharField(max_length=30, blank=True, default='', help_text="📩 Contact")
 
     # ── Admin Log Emoji ──
-    tg_emoji_user = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 👤 New user icon"
+    tg_emoji_user = models.CharField(max_length=30, blank=True, default='', help_text="👤 User"
     )
     tg_emoji_returning = models.CharField(
         max_length=30, blank=True, default='',
@@ -448,41 +446,35 @@ class TelegramMixin(models.Model):
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 🔍 OSINT button"
     )
-    tg_emoji_education = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 🎓 TalabaOvozi source"
-    )
+    tg_emoji_education = models.CharField(max_length=30, blank=True, default='', help_text="🎓 TalabaOvozi")
+    tg_emoji_group = models.CharField(max_length=30, blank=True, default='', help_text="👥 Group/supergroup")
+    tg_emoji_channel_icon = models.CharField(max_length=30, blank=True, default='', help_text="📢 Channel entity")
+    tg_emoji_id_badge = models.CharField(max_length=30, blank=True, default='', help_text="🆔 Telegram ID")
+    tg_emoji_phone = models.CharField(max_length=30, blank=True, default='', help_text="📱 Phone number")
+    tg_emoji_sources = models.CharField(max_length=30, blank=True, default='', help_text="📡 Service sources")
+    tg_emoji_crown = models.CharField(max_length=30, blank=True, default='', help_text="👑 Admin count")
+    tg_emoji_verified = models.CharField(max_length=30, blank=True, default='', help_text="✅ Verified badge")
+    tg_emoji_scam_warn = models.CharField(max_length=30, blank=True, default='', help_text="⚠️ SCAM/warning")
+    tg_emoji_history = models.CharField(max_length=30, blank=True, default='', help_text="📝 Username history")
+    tg_emoji_pencil = models.CharField(max_length=30, blank=True, default='', help_text="✏️ Name history")
+    tg_emoji_calendar = models.CharField(max_length=30, blank=True, default='', help_text="📅 Activity dates")
 
     # ── Command Emoji ──
-    tg_emoji_greeting = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 👋 Bot greeting"
-    )
-    tg_emoji_ban = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 🚫 Ban action"
-    )
-    tg_emoji_mute = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 🔇 Mute action"
-    )
-    tg_emoji_lock = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 🔒 Restricted access"
-    )
+    tg_emoji_greeting = models.CharField(max_length=30, blank=True, default='', help_text="👋 Greeting")
+    tg_emoji_ban = models.CharField(max_length=30, blank=True, default='', help_text="🚫 Ban")
+    tg_emoji_mute = models.CharField(max_length=30, blank=True, default='', help_text="🔇 Mute")
+    tg_emoji_lock = models.CharField(max_length=30, blank=True, default='', help_text="🔒 Lock")
+    tg_emoji_notifications_icon = models.CharField(max_length=30, blank=True, default='', help_text="🔔 Notifications")
+    tg_emoji_config_icon = models.CharField(max_length=30, blank=True, default='', help_text="⚙️ Config")
+    tg_emoji_error = models.CharField(max_length=30, blank=True, default='', help_text="❌ Error")
+    tg_emoji_success = models.CharField(max_length=30, blank=True, default='', help_text="✅ Success")
+    tg_emoji_backup_icon = models.CharField(max_length=30, blank=True, default='', help_text="💾 Backup")
+    tg_emoji_logs_icon = models.CharField(max_length=30, blank=True, default='', help_text="📋 Logs")
 
     # ── Channel Sharing Emoji ──
-    tg_emoji_post = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 📝 Blog post caption"
-    )
-    tg_emoji_project = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 📱 Project caption"
-    )
-    tg_emoji_tech = models.CharField(
-        max_length=30, blank=True, default='',
-        help_text="Custom emoji ID for 🛠 Tech stack label"
+    tg_emoji_post = models.CharField(max_length=30, blank=True, default='', help_text="📝 Blog post")
+    tg_emoji_project = models.CharField(max_length=30, blank=True, default='', help_text="📱 Project")
+    tg_emoji_tech = models.CharField(max_length=30, blank=True, default='', help_text="🛠 Tech stack"
     )
 
     # ── Dynamic extras ──

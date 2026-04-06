@@ -138,20 +138,20 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
     from .formatters import _ce
 
     rec_emoji = {
-        'upgrade': '⬆️',
-        'downgrade': '⬇️',
-        'keep': '✅',
+        'upgrade': _ce('upgrade', '⬆️'),
+        'downgrade': _ce('downgrade', '⬇️'),
+        'keep': _ce('ok', '✅'),
     }
     emoji = rec_emoji.get(advice.recommendation, '📋')
 
     money = _ce('money', '💰')
     lines = [
         f'{money} <b>Contabo Tariff Advisor</b>\n',
-        f'📦 Current: <b>{advice.current_plan["name"]}</b>',
+        f'{_ce("package", "📦")} Current: <b>{advice.current_plan["name"]}</b>',
         f'{advice.current_plan["cpu_cores"]} CPU / {advice.current_plan["ram_gb"]}GB RAM / {advice.current_plan["disk_gb"]}GB Disk',
         f'€{advice.current_plan["price_eur"]}/mo\n',
         f'{emoji} <b>Tavsiya: {advice.recommendation.upper()}</b>',
-        f'📝 {advice.reason}\n',
+        f'{_ce("history", "📝")} {advice.reason}\n',
     ]
 
     for d in advice.details:
@@ -159,7 +159,7 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
 
     if advice.suggested_plan:
         sp = advice.suggested_plan
-        lines.append(f'\n📦 Tavsiya etilgan plan: <b>{sp["name"]}</b>')
+        lines.append(f'\n{_ce("package", "📦")} Tavsiya etilgan plan: <b>{sp["name"]}</b>')
         lines.append(f'   {sp["cpu_cores"]} CPU / {sp["ram_gb"]}GB RAM / {sp["disk_gb"]}GB Disk')
         lines.append(f'   €{sp["price_eur"]}/mo')
 

@@ -57,13 +57,13 @@ def _format_uptime(td: timedelta) -> str:
 
 def _service_icon(svc_name: str) -> str:
     icons = {
-        'jaysonkhan': '🌐',
-        'talabaovozi': '🤖',
-        'nginx': '⚡',
-        'postgresql': '🐘',
-        'redis-server': '🔴',
+        'jaysonkhan': _ce('web', '🌐'),
+        'talabaovozi': _ce('bot', '🤖'),
+        'nginx': _ce('nginx', '⚡'),
+        'postgresql': _ce('postgresql', '🐘'),
+        'redis-server': _ce('critical', '🔴'),
     }
-    return icons.get(svc_name, '⚙️')
+    return icons.get(svc_name, _ce('services_icon', '⚙️'))
 
 
 def _service_badge(status: ServiceStatus) -> str:
@@ -86,8 +86,8 @@ def format_header(snapshot: ServerSnapshot) -> str:
     return (
         f'{chart} <b>Server Health Report</b>\n\n'
         f'{server} <b>{snapshot.hostname}</b>\n'
-        f'🕐 {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
-        f'⏱ Uptime: <b>{_format_uptime(snapshot.uptime)}</b>'
+        f'{_ce("clock", "🕐")} {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
+        f'{_ce("uptime", "⏱")} Uptime: <b>{_format_uptime(snapshot.uptime)}</b>'
     )
 
 
@@ -102,7 +102,7 @@ def format_cpu(cpu: CpuMetrics) -> str:
             f'  {_badge(c.percent)} Core {c.core}: {_progress_bar(c.percent, 8)} {c.percent}%'
         )
     lines.append(
-        f'  📈 Load: {cpu.load_avg_1} / {cpu.load_avg_5} / {cpu.load_avg_15}'
+        f'  {_ce("load", "📈")} Load: {cpu.load_avg_1} / {cpu.load_avg_5} / {cpu.load_avg_15}'
     )
     return '\n'.join(lines)
 
@@ -112,7 +112,7 @@ def format_cpu_compact(cpu: CpuMetrics) -> str:
     return (
         f'\n{cpu_icon} <b>CPU</b> ({cpu.core_count} cores)\n'
         f'  {_badge(cpu.total_percent)} {_progress_bar(cpu.total_percent)} <b>{cpu.total_percent}%</b>\n'
-        f'  📈 Load: {cpu.load_avg_1} / {cpu.load_avg_5} / {cpu.load_avg_15}'
+        f'  {_ce("load", "📈")} Load: {cpu.load_avg_1} / {cpu.load_avg_5} / {cpu.load_avg_15}'
     )
 
 
@@ -127,9 +127,9 @@ def format_memory(mem: MemoryMetrics) -> str:
 
 def format_swap(swap: SwapMetrics) -> str:
     if swap.total_gb == 0:
-        return '\n🔄 <b>Swap</b>: not configured'
+        return f'\n{_ce("swap", "🔄")} <b>Swap</b>: not configured'
     return (
-        f'\n🔄 <b>Swap</b>\n'
+        f'\n{_ce("swap", "🔄")} <b>Swap</b>\n'
         f'  {_badge(swap.percent)} {_progress_bar(swap.percent)} <b>{swap.percent}%</b>\n'
         f'  {swap.used_gb}GB / {swap.total_gb}GB'
     )
@@ -157,7 +157,7 @@ def format_disk_detailed(partitions: list[DiskPartitionInfo]) -> str:
 
 
 def format_services(services: list[ServiceStatus]) -> str:
-    lines = ['\n🔧 <b>Services</b>']
+    lines = [f'\n{_ce("services_icon", "🔧")} <b>Services</b>']
     for svc in services:
         icon = _service_icon(svc.name)
         badge = _service_badge(svc)
@@ -167,7 +167,7 @@ def format_services(services: list[ServiceStatus]) -> str:
 
 
 def format_top_processes(procs: list[dict]) -> str:
-    lines = ['\n🏆 <b>Top Processes (CPU)</b>']
+    lines = [f'\n{_ce("trophy", "🏆")} <b>Top Processes (CPU)</b>']
     for i, p in enumerate(procs):
         medal = MEDAL_EMOJIS[i] if i < len(MEDAL_EMOJIS) else '  '
         lines.append(
