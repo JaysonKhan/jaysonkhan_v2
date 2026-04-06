@@ -432,8 +432,7 @@ class TelegramMixin(models.Model):
     tg_emoji_contact_msg = models.CharField(max_length=30, blank=True, default='', help_text="📩 Contact")
 
     # ── Admin Log Emoji ──
-    tg_emoji_user = models.CharField(max_length=30, blank=True, default='', help_text="👤 User"
-    )
+    tg_emoji_user = models.CharField(max_length=30, blank=True, default='', help_text="👤 User")
     tg_emoji_returning = models.CharField(
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 🔄 Returning user"
@@ -474,8 +473,7 @@ class TelegramMixin(models.Model):
     # ── Channel Sharing Emoji ──
     tg_emoji_post = models.CharField(max_length=30, blank=True, default='', help_text="📝 Blog post")
     tg_emoji_project = models.CharField(max_length=30, blank=True, default='', help_text="📱 Project")
-    tg_emoji_tech = models.CharField(max_length=30, blank=True, default='', help_text="🛠 Tech stack"
-    )
+    tg_emoji_tech = models.CharField(max_length=30, blank=True, default='', help_text="🛠 Tech stack")
 
     # ── Dynamic extras ──
     tg_emoji_extra = models.JSONField(

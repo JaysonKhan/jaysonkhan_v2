@@ -29,7 +29,7 @@ from interactions.models import (
 )
 from servermonitor.handlers import handle_server_callback, handle_server_command
 from telegram.models import TelegramEntity
-from .emoji_admin import handle_emoji_callback, handle_emoji_command, handle_emoji_input
+from .emoji_admin import handle_emoji_callback, handle_emoji_input
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -102,10 +102,6 @@ class TelegramWebhookView(View):
 
     def _private_command(self, command, message):
         tg_id = message['from']['id']
-
-        # Emoji admin command (owner-only)
-        if handle_emoji_command(command, message, self.api):
-            return
 
         # Server monitor commands (owner-only)
         if handle_server_command(command, message, self.api):

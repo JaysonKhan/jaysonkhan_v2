@@ -139,10 +139,7 @@ class NotificationService:
         actor = escape(reaction.author.display_name)
         comment_author = escape(reaction.comment.author.display_name)
         verb = 'reacted' if action == 'added' else 'removed'
-        text = (
-            f'{reaction.emoji} <b>{actor}</b> {verb} '
-            f'{reaction.emoji} on <b>{comment_author}</b>\'s comment'
-        )
+        text = f'{reaction.emoji} <b>{actor}</b> {verb} on <b>{comment_author}</b>\'s comment'
         comment = reaction.comment
         fallback_url = self._comment_anchor_url(comment)
         button = self._deep_link_button(

@@ -16,32 +16,33 @@ def _is_owner(tg_id: int) -> bool:
 
 
 def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
-    """
-    Auto-extract custom emoji IDs from owner messages.
-    Returns True if emoji was found and response sent.
-    """
+    """Auto-extract custom emoji IDs from owner messages."""
     tg_id = message.get('from', {}).get('id')
     if not tg_id or not _is_owner(tg_id):
         return False
 
-    # Skip command messages
     text = message.get('text', '').strip()
     if text.startswith('/'):
         return False
 
-    # 1. Premium sticker with custom_emoji_id
+    # Premium sticker
     sticker = message.get('sticker')
     if sticker:
         eid = sticker.get('custom_emoji_id')
         if eid:
             api.send_message(tg_id, f'<code>{eid}</code>')
             return True
-        return False  # Regular sticker — ignore silently
+        return False
 
-    # 2. Custom emoji entities in text
+    # Custom emoji entities
     entities = message.get('entities') or []
+    if not isinstance(entities, list):
+        return False
+
     found = []
     for ent in entities:
+        if not isinstance(ent, dict):
+            continue
         if ent.get('type') == 'custom_emoji':
             eid = ent.get('custom_emoji_id')
             if eid:
@@ -58,10 +59,6 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
     return False
 
 
-def handle_emoji_command(command: str, message: dict, api: TelegramBotAPI) -> bool:
-    """No longer used — kept for backward compatibility."""
-    return False
-
-
 def handle_emoji_callback(data: str, cq: dict, api: TelegramBotAPI) -> bool:
+    """No emoji callbacks — managed in admin panel."""
     return False
