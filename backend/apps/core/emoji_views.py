@@ -1,8 +1,8 @@
 """
 Emoji Manager — standalone admin page for managing custom emoji IDs.
 
-Professional CRUD interface for all tg_emoji_* fields + dynamic extras.
-Accessible at ADMIN_URL/emoji/.
+Covers ALL emoji used across the bot: channel sharing, server monitor,
+notifications, admin logging. Professional CRUD with live preview.
 """
 from __future__ import annotations
 
@@ -15,33 +15,62 @@ from core.decorators import admin_permission_required
 from core.models import SiteSettings
 
 _VALID_NAME = re.compile(r'^[a-zA-Z0-9_]+$')
-_VALID_ID = re.compile(r'^\d*$')  # empty or numeric
+_VALID_ID = re.compile(r'^\d*$')
 
-# Same registry as bot emoji_admin.py
+# ── Complete Emoji Registry ──────────────────────────────────────────────────
+# (key, db_field, fallback, label, description, category)
+
 EMOJI_FIELDS = [
-    # (key, db_field, fallback, label, category)
-    ('read_more',   'tg_emoji_read_more',   '📖', 'Read More',   'channel'),
-    ('google_play', 'tg_emoji_google_play', '▶️', 'Google Play', 'channel'),
-    ('app_store',   'tg_emoji_app_store',   '🍎', 'App Store',   'channel'),
-    ('web',         'tg_emoji_web',         '🌐', 'Web',         'channel'),
-    ('bot',         'tg_emoji_bot',         '🤖', 'Bot',         'channel'),
-    ('comment',     'tg_emoji_comment',     '💬', 'Comment',     'channel'),
-    ('server',      'tg_emoji_server',      '🖥', 'Server',      'monitor'),
-    ('cpu',         'tg_emoji_cpu',         '🧠', 'CPU',         'monitor'),
-    ('ram',         'tg_emoji_ram',         '💾', 'RAM',         'monitor'),
-    ('disk',        'tg_emoji_disk',        '💿', 'Disk',        'monitor'),
-    ('ok',          'tg_emoji_ok',          '🟢', 'OK',          'monitor'),
-    ('warn',        'tg_emoji_warn',        '🟡', 'Warning',     'monitor'),
-    ('critical',    'tg_emoji_critical',    '🔴', 'Critical',    'monitor'),
-    ('chart',       'tg_emoji_chart',       '📊', 'Chart',       'monitor'),
-    ('alert',       'tg_emoji_alert',       '🚨', 'Alert',       'monitor'),
-    ('money',       'tg_emoji_money',       '💰', 'Money',       'monitor'),
+    # Channel Buttons (inline button icon_custom_emoji_id)
+    ('read_more',   'tg_emoji_read_more',   '📖', 'Read More',   'Batafsil tugmasi', 'channel'),
+    ('google_play', 'tg_emoji_google_play', '▶️', 'Google Play', 'Google Play tugmasi', 'channel'),
+    ('app_store',   'tg_emoji_app_store',   '🍎', 'App Store',   'App Store tugmasi', 'channel'),
+    ('web',         'tg_emoji_web',         '🌐', 'Web',         'Web sayt tugmasi', 'channel'),
+    ('bot',         'tg_emoji_bot',         '🤖', 'Bot',         'Telegram Bot tugmasi', 'channel'),
+    ('comment',     'tg_emoji_comment',     '💬', 'Comment',     'Komment ko\'rish tugmasi', 'channel'),
+
+    # Server Monitor
+    ('server',      'tg_emoji_server',      '🖥', 'Server',      'Server status header', 'monitor'),
+    ('cpu',         'tg_emoji_cpu',         '🧠', 'CPU',         'CPU bo\'limi', 'monitor'),
+    ('ram',         'tg_emoji_ram',         '💾', 'RAM',         'RAM bo\'limi', 'monitor'),
+    ('disk',        'tg_emoji_disk',        '💿', 'Disk',        'Disk bo\'limi', 'monitor'),
+    ('ok',          'tg_emoji_ok',          '🟢', 'OK',          'Yashil status (<75%)', 'monitor'),
+    ('warn',        'tg_emoji_warn',        '🟡', 'Warning',     'Sariq status (75-90%)', 'monitor'),
+    ('critical',    'tg_emoji_critical',    '🔴', 'Critical',    'Qizil status (>90%)', 'monitor'),
+    ('chart',       'tg_emoji_chart',       '📊', 'Chart',       'Hisobot header', 'monitor'),
+    ('alert',       'tg_emoji_alert',       '🚨', 'Alert',       'CPU alert xabari', 'monitor'),
+    ('money',       'tg_emoji_money',       '💰', 'Money',       'Tarif maslahatchi', 'monitor'),
 ]
 
 CATEGORIES = [
-    ('channel', '📢 Channel Buttons', 'Inline button emojilar (icon_custom_emoji_id)'),
-    ('monitor', '🖥 Server Monitor', 'Server health report xabarlaridagi emojilar'),
-    ('extra',   '➕ Dynamic Extras', 'Qo\'shimcha custom emojilar (tg_emoji_extra JSON)'),
+    ('channel', '📢', 'Channel Buttons', 'Kanal postlari inline tugmalaridagi emojilar', '#7c3aed'),
+    ('monitor', '🖥', 'Server Monitor', 'Health report va /status xabarlaridagi emojilar', '#10b981'),
+]
+
+# Hardcoded emojis across the codebase (for reference display, not editable as model fields)
+HARDCODED_EMOJIS = [
+    # Notifications
+    {'emoji': '↩️', 'label': 'Reply', 'used_in': 'Javob xabarnomasi', 'file': 'service.py'},
+    {'emoji': '👍', 'label': 'Like', 'used_in': 'Like xabarnomasi', 'file': 'service.py'},
+    {'emoji': '👎', 'label': 'Unlike', 'used_in': 'Unlike xabarnomasi', 'file': 'service.py'},
+    {'emoji': '📩', 'label': 'Contact', 'used_in': 'Kontakt form logi', 'file': 'service.py'},
+    # New User Log
+    {'emoji': '👤', 'label': 'User', 'used_in': 'Yangi foydalanuvchi', 'file': 'service.py'},
+    {'emoji': '🔄', 'label': 'Returning', 'used_in': 'Qaytgan foydalanuvchi', 'file': 'service.py'},
+    {'emoji': '⭐️', 'label': 'Premium', 'used_in': 'Premium badge', 'file': 'service.py'},
+    {'emoji': '🔍', 'label': 'OSINT', 'used_in': 'OSINT tugmasi', 'file': 'service.py'},
+    {'emoji': '🎓', 'label': 'TalabaOvozi', 'used_in': 'TalabaOvozi manba', 'file': 'service.py'},
+    # Server Monitor extras
+    {'emoji': '🌐', 'label': 'jaysonkhan', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
+    {'emoji': '⚡', 'label': 'nginx', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
+    {'emoji': '🐘', 'label': 'postgresql', 'used_in': 'Servis ikonkasi', 'file': 'formatters.py'},
+    {'emoji': '🥇🥈🥉', 'label': 'Medals', 'used_in': 'Top processes', 'file': 'formatters.py'},
+    # Commands
+    {'emoji': '🚫', 'label': 'Ban', 'used_in': '/ban komandasi', 'file': 'webhook.py'},
+    {'emoji': '🔇', 'label': 'Mute', 'used_in': '/mute komandasi', 'file': 'webhook.py'},
+    # Content Sharing
+    {'emoji': '📝', 'label': 'Post', 'used_in': 'Blog post sarlavhasi', 'file': 'channel_share.py'},
+    {'emoji': '📱', 'label': 'Project', 'used_in': 'Loyiha sarlavhasi', 'file': 'channel_share.py'},
 ]
 
 
@@ -49,7 +78,6 @@ def _ctx(request, extra=None):
     ctx = admin.site.each_context(request)
     ctx.update({
         'title': 'Emoji Manager',
-        'subtitle': 'Custom Emoji ID Sozlamalari',
         **(extra or {}),
     })
     return ctx
@@ -57,14 +85,12 @@ def _ctx(request, extra=None):
 
 @admin_permission_required('core.change_sitesettings')
 def emoji_manager(request):
-    """Main emoji manager page — list all emoji fields with edit forms."""
     site = SiteSettings.load()
 
     if request.method == 'POST':
         action = request.POST.get('action', '')
 
         if action == 'save_fields':
-            # Save model fields
             update_fields = []
             for key, field, *_ in EMOJI_FIELDS:
                 new_val = request.POST.get(f'field_{key}', '').strip()
@@ -80,7 +106,6 @@ def emoji_manager(request):
                 messages.info(request, 'O\'zgarish yo\'q.')
 
         elif action == 'save_extras':
-            # Save extras from form
             extras = {}
             names = request.POST.getlist('extra_name')
             values = request.POST.getlist('extra_value')
@@ -107,9 +132,9 @@ def emoji_manager(request):
             if not name:
                 messages.error(request, 'Nom kiritilmadi.')
             elif not _VALID_NAME.match(name):
-                messages.error(request, f'Noto\'g\'ri nom: faqat harf, raqam, _')
+                messages.error(request, 'Noto\'g\'ri nom: faqat harf, raqam, _')
             elif value and not _VALID_ID.match(value):
-                messages.error(request, f'Noto\'g\'ri ID: faqat raqam')
+                messages.error(request, 'Noto\'g\'ri ID: faqat raqam')
             else:
                 extras = site.tg_emoji_extra or {}
                 extras[name] = value
@@ -142,50 +167,58 @@ def emoji_manager(request):
                 _reset_caches()
                 messages.warning(request, 'Barcha emojilar tozalandi.')
 
-    # Build context
+    # Build categories
     categories = []
-    for cat_key, cat_title, cat_desc in CATEGORIES:
-        if cat_key == 'extra':
-            continue
+    for cat_key, cat_icon, cat_title, cat_desc, cat_color in CATEGORIES:
         items = []
-        for key, field, fallback, label, cat in EMOJI_FIELDS:
+        cat_filled = 0
+        for key, field, fallback, label, desc, cat in EMOJI_FIELDS:
             if cat != cat_key:
                 continue
             value = getattr(site, field, '') or ''
+            if value:
+                cat_filled += 1
             items.append({
                 'key': key,
                 'field': field,
                 'fallback': fallback,
                 'label': label,
+                'description': desc,
                 'value': value,
             })
         categories.append({
             'key': cat_key,
+            'icon': cat_icon,
             'title': cat_title,
             'description': cat_desc,
+            'color': cat_color,
             'items': items,
+            'filled': cat_filled,
+            'total': len(items),
         })
 
     extras = site.tg_emoji_extra or {}
     extra_items = [{'name': k, 'value': v} for k, v in extras.items()]
 
     filled = sum(1 for _, f, *_ in EMOJI_FIELDS if getattr(site, f, ''))
+    filled_extras = sum(1 for v in extras.values() if v)
     total = len(EMOJI_FIELDS) + len(extras)
-    filled += sum(1 for v in extras.values() if v)
 
     return TemplateResponse(request, 'core/emoji_manager.html', _ctx(request, {
         'categories': categories,
         'extra_items': extra_items,
+        'hardcoded_emojis': HARDCODED_EMOJIS,
         'stats': {
             'total': total,
-            'filled': filled,
-            'empty': total - filled,
+            'filled': filled + filled_extras,
+            'empty': total - filled - filled_extras,
+            'model_fields': len(EMOJI_FIELDS),
+            'extras_count': len(extras),
         },
     }))
 
 
 def _reset_caches():
-    """Reset all emoji-related caches."""
     try:
         from servermonitor.formatters import reset_emoji_cache
         reset_emoji_cache()
