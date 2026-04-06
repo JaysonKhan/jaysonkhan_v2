@@ -91,7 +91,7 @@ def _handle_status(tg_id: int, api: TelegramBotAPI) -> None:
         api.send_message(tg_id, text)
     except Exception as exc:
         logger.error('Failed to collect status: %s', exc)
-        api.send_message(tg_id, f'❌ Xatolik: <code>{exc}</code>')
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
 
 
 def _handle_services(tg_id: int, api: TelegramBotAPI) -> None:
@@ -106,7 +106,7 @@ def _handle_services(tg_id: int, api: TelegramBotAPI) -> None:
         api.send_message(tg_id, text, reply_markup=keyboard)
     except Exception as exc:
         logger.error('Failed to collect services: %s', exc)
-        api.send_message(tg_id, f'❌ Xatolik: <code>{exc}</code>')
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
 
 
 def _build_services_keyboard(services: list) -> dict:
@@ -115,12 +115,12 @@ def _build_services_keyboard(services: list) -> dict:
     for svc in services:
         if not svc.active:
             rows.append([{
-                'text': f'🔄 Restart {svc.name}',
+                'text': f'{ce("swap", "🔄")} Restart {svc.name}',
                 'callback_data': f'svc_restart_{svc.name}',
             }])
     if not rows:
         return {}
-    rows.append([{'text': '🔄 Barchasini yangilash', 'callback_data': 'svc_refresh'}])
+    rows.append([{'text': f'{ce("swap", "🔄")} Yangilash', 'callback_data': 'svc_refresh'}])
     return {'inline_keyboard': rows}
 
 
@@ -133,7 +133,7 @@ def _handle_disk(tg_id: int, api: TelegramBotAPI) -> None:
         api.send_message(tg_id, text)
     except Exception as exc:
         logger.error('Failed to collect disk: %s', exc)
-        api.send_message(tg_id, f'❌ Xatolik: <code>{exc}</code>')
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
 
 
 def _handle_tariff(tg_id: int, api: TelegramBotAPI) -> None:
@@ -148,7 +148,7 @@ def _handle_tariff(tg_id: int, api: TelegramBotAPI) -> None:
         api.send_message(tg_id, text)
     except Exception as exc:
         logger.error('Failed tariff analysis: %s', exc)
-        api.send_message(tg_id, f'❌ Xatolik: <code>{exc}</code>')
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
 
 
 def _handle_logs(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
@@ -166,7 +166,7 @@ def _handle_logs(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
     if service not in MONITORED_SERVICES:
         api.send_message(
             tg_id,
-            f'⚠️ Noma\'lum servis: <code>{service}</code>\n'
+            f'{ce("scam_warn", "⚠️")} Noma\'lum servis: <code>{service}</code>\n'
             f'Mavjud: {", ".join(MONITORED_SERVICES)}',
         )
         return
@@ -183,19 +183,19 @@ def _handle_logs(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
             output = '... (kesildi)\n' + output
 
         text = (
-            f'📋 <b>Logs: {service}</b> (oxirgi {n_lines} qator)\n\n'
+            f'{ce("logs_icon", "📋")} <b>Logs: {service}</b> (oxirgi {n_lines} qator)\n\n'
             f'<pre>{output}</pre>'
         )
         api.send_message(tg_id, text)
     except FileNotFoundError:
-        api.send_message(tg_id, '⚠️ journalctl topilmadi (systemd yo\'q)')
+        api.send_message(tg_id, f'{ce("scam_warn", "⚠️")} journalctl topilmadi (systemd yo\'q)')
     except Exception as exc:
-        api.send_message(tg_id, f'❌ Xatolik: <code>{exc}</code>')
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
 
 
 def _handle_backup(tg_id: int, api: TelegramBotAPI) -> None:
     """Trigger a PostgreSQL database backup."""
-    api.send_message(tg_id, '🔄 Backup boshlanmoqda...')
+    api.send_message(tg_id, f'{ce("swap", "🔄")} Backup boshlanmoqda...')
     try:
         result = subprocess.run(
             ['pg_dump', '-Fc', '-f', '/tmp/jaysonkhan_backup.dump', 'jaysonkhan_db'],
@@ -211,12 +211,12 @@ def _handle_backup(tg_id: int, api: TelegramBotAPI) -> None:
                 pass
             api.send_message(
                 tg_id,
-                f'✅ <b>Backup tayyor!</b>\n'
-                f'📁 <code>/tmp/jaysonkhan_backup.dump</code>\n'
-                f'💾 Hajm: {size_mb}MB',
+                f'{ce("success", "✅")} <b>Backup tayyor!</b>\n'
+                f'{ce("backup_icon", "📁")} <code>/tmp/jaysonkhan_backup.dump</code>\n'
+                f'{ce("backup_icon", "💾")} Hajm: {size_mb}MB',
             )
         else:
-            api.send_message(tg_id, f'❌ Backup xatolik:\n<pre>{result.stderr[:1000]}</pre>')
+            api.send_message(tg_id, f'{ce("error", "❌")} Backup xatolik:\n<pre>{result.stderr[:1000]}</pre>')
     except Exception as exc:
         api.send_message(tg_id, f'❌ Backup xatolik: <code>{exc}</code>')
 
@@ -251,7 +251,7 @@ def handle_server_callback(callback_data: str, callback_query: dict, api: Telegr
     if callback_data.startswith('svc_restart_'):
         service_name = callback_data.replace('svc_restart_', '')
         if service_name not in MONITORED_SERVICES:
-            api.answer_callback_query(cb_id, '⚠️ Noma\'lum servis')
+            api.answer_callback_query(cb_id, 'Noma\'lum servis')
             return True
 
         try:

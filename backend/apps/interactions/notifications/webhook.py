@@ -125,15 +125,15 @@ class TelegramWebhookView(View):
                     f'{_ce("greeting", "👋")} <b>Salom, Admin!</b>\n\n'
                     f'{server} <b>Server Monitor</b>\n'
                     f'/status — {chart} Server holati\n'
-                    f'/services — 🔧 Servislar holati\n'
+                    f'/services — {_ce("services_icon", "🔧")} Servislar holati\n'
                     f'/disk — {disk} Disk ishlatilishi\n'
                     f'/tariff — {money} Contabo tarif tavsiyasi\n'
-                    f'/logs — 📋 Servis loglari\n'
-                    f'/backup — 💾 DB backup\n\n'
-                    f'⚙️ <b>Sozlamalar</b>\n'
-                    f'/notifications — 🔔 Bildirishnomalar\n'
-                    f'/config — ⚙️ Admin guruh\n\n'
-                    f'⏰ <b>Avtomatik</b>\n'
+                    f'/logs — {_ce("logs_icon", "📋")} Servis loglari\n'
+                    f'/backup — {_ce("backup_icon", "💾")} DB backup\n\n'
+                    f'{_ce("config_icon", "⚙️")} <b>Sozlamalar</b>\n'
+                    f'/notifications — {_ce("notifications_icon", "🔔")} Bildirishnomalar\n'
+                    f'/config — {_ce("config_icon", "⚙️")} Admin guruh\n\n'
+                    f'{_ce("clock", "⏰")} <b>Avtomatik</b>\n'
                     f'{chart} Kunlik hisobot — 09:00\n'
                     f'{alert} CPU alert — har 10 daq (>75%)'
                 ))
@@ -160,7 +160,7 @@ class TelegramWebhookView(View):
         keyboard = self._build_user_keyboard(pref)
         self.api.send_message(
             telegram_id,
-            '🔔 <b>Bildirishnoma sozlamalari</b>',
+            f'{ce("notifications_icon", "🔔")} <b>Bildirishnoma sozlamalari</b>',
             reply_markup=keyboard,
         )
 
@@ -198,7 +198,7 @@ class TelegramWebhookView(View):
 
         if not reply_to:
             self.api.send_message(
-                chat_id, 'ℹ️ Foydalanuvchi xabariga reply qilib /ban yoki /mute yuboring.',
+                chat_id, f'{ce("scam_warn", "ℹ️")} Foydalanuvchi xabariga reply qilib /ban yoki /mute yuboring.',
             )
             return
 
@@ -212,11 +212,11 @@ class TelegramWebhookView(View):
                 message_id=reply_msg_id,
             )
         except AdminLogMessage.DoesNotExist:
-            self.api.send_message(chat_id, '⚠️ Bu xabardan foydalanuvchini aniqlab bo\'lmadi.')
+            self.api.send_message(chat_id, f'{ce("scam_warn", "⚠️")} Bu xabardan foydalanuvchini aniqlab bo\'lmadi.')
             return
 
         if not log_entry.profile:
-            self.api.send_message(chat_id, '⚠️ Bu eventda foydalanuvchi profili yo\'q.')
+            self.api.send_message(chat_id, f'{ce("scam_warn", "⚠️")} Bu eventda foydalanuvchi profili yo\'q.')
             return
 
         profile = log_entry.profile
@@ -287,7 +287,7 @@ class TelegramWebhookView(View):
         """Send config keyboard, return message_id."""
         keyboard = self._build_config_keyboard()
         result = self.api.send_message(
-            chat_id, '⚙️ <b>Admin guruh sozlamalari</b>', reply_markup=keyboard,
+            chat_id, f'{ce("config_icon", "⚙️")} <b>Admin guruh sozlamalari</b>', reply_markup=keyboard,
         )
         if result and result.get('ok'):
             return result['result']['message_id']
