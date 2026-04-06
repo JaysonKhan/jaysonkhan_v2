@@ -83,9 +83,11 @@ MEDAL_EMOJIS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
 def format_header(snapshot: ServerSnapshot) -> str:
     chart = _ce('chart', '📊')
     server = _ce('server', '🖥')
+    web = _ce('web', '🌐')
     return (
         f'{chart} <b>Server Health Report</b>\n\n'
-        f'{server} <b>{snapshot.hostname}</b>\n'
+        f'{web} jaysonkhan.com\n'
+        f'{server} {snapshot.hostname}\n'
         f'{_ce("clock", "🕐")} {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
         f'{_ce("uptime", "⏱")} Uptime: <b>{_format_uptime(snapshot.uptime)}</b>'
     )
