@@ -16,7 +16,6 @@ BOT_COMMANDS = [
     {'command': 'tariff', 'description': 'Contabo tarif tavsiyasi'},
     {'command': 'logs', 'description': 'Servis loglari (/logs [servis] [qator])'},
     {'command': 'backup', 'description': 'PostgreSQL backup yaratish'},
-    {'command': 'emoji', 'description': 'Custom emoji sozlamalari (admin)'},
 ]
 
 
