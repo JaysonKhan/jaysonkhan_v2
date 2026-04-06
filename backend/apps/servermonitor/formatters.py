@@ -84,12 +84,10 @@ def format_header(snapshot: ServerSnapshot) -> str:
     chart = _ce('chart', '📊')
     server = _ce('server', '🖥')
     return (
-        f'{chart} <b>Server Health Report</b>\n'
-        f'┌─────────────────────────\n'
-        f'│ {server} <b>{snapshot.hostname}</b>\n'
-        f'│ 🕐 {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
-        f'│ ⏱ Uptime: <b>{_format_uptime(snapshot.uptime)}</b>\n'
-        f'└─────────────────────────'
+        f'{chart} <b>Server Health Report</b>\n\n'
+        f'{server} <b>{snapshot.hostname}</b>\n'
+        f'🕐 {snapshot.timestamp.strftime("%Y-%m-%d %H:%M")}\n'
+        f'⏱ Uptime: <b>{_format_uptime(snapshot.uptime)}</b>'
     )
 
 
@@ -190,13 +188,11 @@ def format_cpu_alert(cpu: CpuMetrics, threshold: float = 75.0) -> str | None:
     alert_icon = _ce('alert', '🚨')
     lines = [
         f'{alert_icon} <b>CPU Alert!</b> {len(hot_cores)}/{cpu.core_count} cores above {threshold}%\n',
-        '┌─────────────────────────',
     ]
     for c in hot_cores:
         lines.append(
-            f'│ {_badge(c.percent)} Core {c.core}: {_progress_bar(c.percent)} <b>{c.percent}%</b>'
+            f'{_badge(c.percent)} Core {c.core}: {_progress_bar(c.percent)} <b>{c.percent}%</b>'
         )
-    lines.append('└─────────────────────────')
     lines.append(
         f'\n⚠️ <b>Server kuchaytirish kerak bo\'lishi mumkin!</b>\n'
         f'CPU overload — ko\'proq yadro yoki kuchliroq protsessor tavsiya etiladi.'

@@ -147,11 +147,9 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
     money = _ce('money', '💰')
     lines = [
         f'{money} <b>Contabo Tariff Advisor</b>\n',
-        f'┌─────────────────────────',
-        f'│ 📦 Current: <b>{advice.current_plan["name"]}</b>',
-        f'│    {advice.current_plan["cpu_cores"]} CPU / {advice.current_plan["ram_gb"]}GB RAM / {advice.current_plan["disk_gb"]}GB Disk',
-        f'│    €{advice.current_plan["price_eur"]}/mo',
-        f'└─────────────────────────\n',
+        f'📦 Current: <b>{advice.current_plan["name"]}</b>',
+        f'{advice.current_plan["cpu_cores"]} CPU / {advice.current_plan["ram_gb"]}GB RAM / {advice.current_plan["disk_gb"]}GB Disk',
+        f'€{advice.current_plan["price_eur"]}/mo\n',
         f'{emoji} <b>Tavsiya: {advice.recommendation.upper()}</b>',
         f'📝 {advice.reason}\n',
     ]
