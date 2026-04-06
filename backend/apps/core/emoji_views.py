@@ -5,6 +5,7 @@ Covers channel buttons, server monitor, notifications, admin log, commands, shar
 from __future__ import annotations
 
 from django.contrib import admin, messages
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 
 from core.decorators import admin_permission_required
@@ -101,6 +102,8 @@ def emoji_manager(request):
                 site.save(update_fields=update_fields)
                 _reset_caches()
                 messages.warning(request, 'Barcha emojilar tozalandi.')
+        # PRG pattern — redirect after POST to prevent double-submit on refresh
+        return redirect('telegram_settings')
 
     categories = []
     for cat_key, cat_icon, cat_title, cat_desc, cat_color in CATEGORIES:
