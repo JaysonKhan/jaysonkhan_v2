@@ -158,7 +158,7 @@ class NotificationService:
             return
         actor = escape(like.author.display_name)
         title = self._content_title(obj)
-        emoji = ce('like', '👍') if action == 'liked' else '👎'
+        emoji = ce('like', '👍') if action == 'liked' else ce('like', '👎')
         text = f'{emoji} <b>{actor}</b> {action} <b>{escape(title)}</b>'
         startapp = self._content_startapp(obj)
         fallback_url = ''
@@ -188,9 +188,9 @@ class NotificationService:
         type_map = {
             'user': (ce('user', '👤'), 'Foydalanuvchi'),
             'bot': (ce('bot', '🤖'), 'Bot'),
-            'group': ('👥', 'Guruh'),
-            'supergroup': ('👥', 'Superguruh'),
-            'channel': ('📢', 'Kanal'),
+            'group': (ce('user', '👥'), 'Guruh'),
+            'supergroup': (ce('user', '👥'), 'Superguruh'),
+            'channel': (ce('user', '📢'), 'Kanal'),
         }
         emoji, type_label = type_map.get(profile.entity_type, (ce('user', '👤'), 'Noma\'lum'))
 
@@ -232,37 +232,37 @@ class NotificationService:
 
         # ── Asosiy ma'lumotlar ────────────────────────────────────────────
         username = funstat.get('username') or profile.username
-        info_parts = [f'🆔 <code>{profile.telegram_id}</code>']
+        info_parts = [f'{ce("user", "🆔")} <code>{profile.telegram_id}</code>']
         if username:
             info_parts.append(f'@{escape(username)}')
         lines.append(' · '.join(info_parts))
 
         phone = funstat.get('phone') or profile.phone
         if phone:
-            lines.append(f'📱 <code>{escape(phone)}</code>')
+            lines.append(f'{ce("user", "📱")} <code>{escape(phone)}</code>')
 
         # ── Qaysi servislar orqali topilgan ──────────────────────────────
         if sources:
             src_str = ', '.join(svc_labels.get(s, s) for s in sources)
-            lines.append(f'📡 {src_str}')
+            lines.append(f'{ce("user", "📡")} {src_str}')
 
         # ── Badgelar ──────────────────────────────────────────────────────
         badges = []
         if funstat.get('is_premium') or getattr(profile, 'is_premium', False):
             badges.append(f'{ce("premium", "⭐️")} Premium')
         if funstat.get('is_verified') or getattr(profile, 'is_verified', False):
-            badges.append('✅ Tasdiqlangan')
+            badges.append(f'{ce("ok", "✅")} Tasdiqlangan')
         if funstat.get('is_scam') or getattr(profile, 'is_scam', False):
-            badges.append('⚠️ SCAM')
+            badges.append(f'{ce("critical", "⚠️")} SCAM')
         if funstat.get('is_fake') or getattr(profile, 'is_fake', False):
-            badges.append('🚫 FAKE')
+            badges.append(f'{ce("ban", "🚫")} FAKE')
         if funstat.get('is_bot'):
-            badges.append('🤖 Bot')
+            badges.append(f'{ce("bot", "🤖")} Bot')
         is_active = funstat.get('is_active')
         if is_active is True:
-            badges.append('🟢 Faol')
+            badges.append(f'{ce("ok", "🟢")} Faol')
         elif is_active is False:
-            badges.append('🔴 Nofaol')
+            badges.append(f'{ce("critical", "🔴")} Nofaol')
         if badges:
             lines.append(' · '.join(badges))
 
@@ -271,13 +271,13 @@ class NotificationService:
             stats_parts = []
             total_msg = funstat.get('total_msg_count')
             if total_msg:
-                stats_parts.append(f'💬 {total_msg:,} xabar')
+                stats_parts.append(f'{ce("comment", "💬")} {total_msg:,} xabar')
             total_grp = funstat.get('total_groups')
             if total_grp:
-                stats_parts.append(f'👥 {total_grp} guruh')
+                stats_parts.append(f'{ce("user", "👥")} {total_grp} guruh')
             adm = funstat.get('adm_in_groups')
             if adm:
-                stats_parts.append(f'👑 {adm} admin')
+                stats_parts.append(f'{ce("premium", "👑")} {adm} admin')
             if stats_parts:
                 lines.append(' · '.join(stats_parts))
 
