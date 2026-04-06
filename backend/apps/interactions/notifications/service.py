@@ -68,7 +68,7 @@ class NotificationService:
         )
         fallback_url = f'{self._domain}{self._content_url(comment)}#comment-{comment.id}'
         reply_markup = self._deep_link_button(
-            '💬 Javob berish', f'c-{comment.id}', fallback_url,
+            'Javob berish', f'c-{comment.id}', fallback_url,
         )
         self.api.send_message(
             recipient.telegram_id, text, reply_markup=reply_markup,
@@ -105,7 +105,7 @@ class NotificationService:
         text = f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            '💬 Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
@@ -122,10 +122,10 @@ class NotificationService:
         author = escape(comment.author.display_name)
         parent_author = escape(parent.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
-        text = f'↩️ <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'↩️ <b>{author}</b> → <b>{parent_author}</b>'
+        text = f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            '💬 Javobni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Javobni ko\'rish', f'c-{comment.id}', fallback_url,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
@@ -146,7 +146,7 @@ class NotificationService:
         comment = reaction.comment
         fallback_url = self._comment_anchor_url(comment)
         button = self._deep_link_button(
-            f'{reaction.emoji} Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
         )
         self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button)
 
@@ -158,14 +158,14 @@ class NotificationService:
             return
         actor = escape(like.author.display_name)
         title = self._content_title(obj)
-        emoji = '👍' if action == 'liked' else '👎'
+        emoji = ce('like', '👍') if action == 'liked' else '👎'
         text = f'{emoji} <b>{actor}</b> {action} <b>{escape(title)}</b>'
         startapp = self._content_startapp(obj)
         fallback_url = ''
         if hasattr(obj, 'get_absolute_url'):
             fallback_url = f'{self._domain}{obj.get_absolute_url()}'
         button = self._deep_link_button(
-            f'{emoji} Ko\'rish', startapp, fallback_url,
+            'Ko\'rish', startapp, fallback_url,
         ) if (startapp or fallback_url) else None
         self._send_to_admin_group(text, like.author, 'like', reply_markup=button)
 
@@ -315,7 +315,7 @@ class NotificationService:
             startapp = f'osint-p-{profile.telegram_id}'
         deep_url = self._tg_deep_link(startapp)
         if deep_url:
-            buttons.append([{'text': f'{ce("osint", "🔍")} OSINT', 'url': deep_url}])
+            buttons.append([{'text': '🔍 OSINT', 'url': deep_url}])
         else:
             # Fallback — oddiy URL
             try:
@@ -331,7 +331,7 @@ class NotificationService:
                         kwargs={'user_id': profile.telegram_id},
                     )
                 buttons.append([{
-                    'text': f'{ce("osint", "🔍")} OSINT',
+                    'text': '🔍 OSINT',
                     'url': f'{self._domain}{osint_url}',
                 }])
             except Exception:
@@ -363,7 +363,7 @@ class NotificationService:
         )
         admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
         admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
-        button = {'inline_keyboard': [[{'text': f'{ce("contact_msg", "📩")} Admin panelda ko\'rish', 'url': admin_url}]]}
+        button = {'inline_keyboard': [[{'text': 'Admin panelda ko\'rish', 'url': admin_url}]]}
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
 
     # ── Private helpers ──────────────────────────────────────────────────────
@@ -469,19 +469,15 @@ class NotificationService:
     def _deep_link_button(self, label: str, startapp: str, fallback_url: str = '') -> dict:
         """Build inline keyboard with Mini App deep link button.
 
-        If deep link settings (bot username / app name) are configured,
-        the button opens the page inside Telegram's Mini App browser.
-        Otherwise falls back to a regular URL button.
-
-        Supports Bot API 9.4 icon_custom_emoji_id for animated emoji.
+        Button text should NOT contain emoji — icon_custom_emoji_id handles that.
         """
         deep_url = self._tg_deep_link(startapp) if startapp else ''
         url = deep_url or fallback_url or self._domain
         btn = {'text': label, 'url': url}
-        # Add custom emoji for comment buttons (💬)
+        # Add custom emoji icon for the button
         site = SiteSettingsService.get()
         emoji_id = getattr(site, 'tg_emoji_comment', '') or ''
-        if emoji_id and label.startswith('💬'):
+        if emoji_id:
             btn['icon_custom_emoji_id'] = emoji_id
         return {'inline_keyboard': [[btn]]}
 
