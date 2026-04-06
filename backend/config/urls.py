@@ -27,7 +27,7 @@ sitemaps = {
 }
 
 urlpatterns = [
-    path(ADMIN_URL + 'emoji/', emoji_manager, name='emoji_manager'),
+    path(ADMIN_URL + 'telegram/settings/', emoji_manager, name='telegram_settings'),
     path(ADMIN_URL + 'bot/', include('botproxy.urls')),
     path(ADMIN_URL + 'osint/', include('osint.urls')),
     path(ADMIN_URL, admin.site.urls),

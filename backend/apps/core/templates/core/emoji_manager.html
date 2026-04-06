@@ -1,283 +1,262 @@
 {% extends "admin/base_site.html" %}
-{% block title %}Emoji Manager | {{ block.super }}{% endblock %}
+{% block title %}Telegram Settings | {{ block.super }}{% endblock %}
 {% block content %}
 <style>
-:root { --em-radius: 12px; --em-gap: 1.5rem; }
-.em { max-width: 1200px; margin: 0 auto; padding: 1.5rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-sizing: border-box; }
-.em *, .em *::before, .em *::after { box-sizing: border-box; }
-.em { --c-bg: #fff; --c-bg2: #f8fafc; --c-bg3: #f1f5f9; --c-fg: #0f172a; --c-fg2: #475569; --c-fg3: #94a3b8;
-      --c-border: #e2e8f0; --c-primary: #7c3aed; --c-primary-10: rgba(124,58,237,0.08); --c-primary-20: rgba(124,58,237,0.15);
-      --c-success: #059669; --c-success-10: rgba(5,150,105,0.08); --c-warn: #d97706; --c-warn-10: rgba(217,119,6,0.08);
-      --c-danger: #dc2626; --c-danger-10: rgba(220,38,38,0.06); --c-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); }
-html.dark .em { --c-bg: #0f172a; --c-bg2: #1e293b; --c-bg3: #334155; --c-fg: #f1f5f9; --c-fg2: #94a3b8; --c-fg3: #64748b;
-                --c-border: #334155; --c-primary: #a78bfa; --c-primary-10: rgba(167,139,250,0.1); --c-primary-20: rgba(167,139,250,0.2);
-                --c-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+:root{--r:12px;--g:1.5rem}
+.tg{max-width:1200px;margin:0 auto;padding:1.5rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.tg,.tg *{box-sizing:border-box}
+.tg{--bg:#fff;--bg2:#f8fafc;--bg3:#f1f5f9;--fg:#0f172a;--fg2:#475569;--fg3:#94a3b8;--bd:#e2e8f0;
+    --pr:#7c3aed;--pr1:rgba(124,58,237,.08);--pr2:rgba(124,58,237,.15);
+    --ok:#059669;--ok1:rgba(5,150,105,.08);--wr:#d97706;--wr1:rgba(217,119,6,.08);
+    --dn:#dc2626;--dn1:rgba(220,38,38,.06);--sh:0 1px 3px rgba(0,0,0,.06)}
+html.dark .tg{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--fg:#f1f5f9;--fg2:#94a3b8;--fg3:#64748b;
+              --bd:#334155;--pr:#a78bfa;--pr1:rgba(167,139,250,.1);--pr2:rgba(167,139,250,.2);--sh:0 1px 3px rgba(0,0,0,.3)}
 
-/* ── Header ── */
-.em-hero { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--em-gap); gap: 1rem; flex-wrap: wrap; }
-.em-hero-left h1 { font-size: 1.75rem; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -0.02em; }
-.em-hero-left p { color: var(--c-fg2); margin: 0.375rem 0 0; font-size: 0.875rem; }
-.em-pills { display: flex; gap: 0.5rem; align-items: center; }
-.em-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.875rem; border-radius: 100px; font-size: 0.8rem; font-weight: 600; }
-.em-pill-ok { background: var(--c-success-10); color: var(--c-success); }
-.em-pill-warn { background: var(--c-warn-10); color: var(--c-warn); }
-.em-pill-total { background: var(--c-primary-10); color: var(--c-primary); }
-.em-pill-dot { width: 6px; height: 6px; border-radius: 50%; }
-.em-pill-ok .em-pill-dot { background: var(--c-success); }
-.em-pill-warn .em-pill-dot { background: var(--c-warn); }
+/* Header */
+.tg-head{margin-bottom:var(--g)}
+.tg-head h1{font-size:1.75rem;font-weight:800;color:var(--fg);margin:0;letter-spacing:-.02em}
+.tg-head p{color:var(--fg2);margin:.25rem 0 0;font-size:.875rem}
 
-/* ── Info banner ── */
-.em-banner { display: flex; gap: 1rem; padding: 1rem 1.25rem; border-radius: var(--em-radius); border: 1px solid var(--c-border);
-             background: var(--c-bg2); margin-bottom: var(--em-gap); align-items: flex-start; }
-.em-banner-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 0.125rem; }
-.em-banner-text { flex: 1; }
-.em-banner-text strong { display: block; font-size: 0.875rem; color: var(--c-fg); margin-bottom: 0.25rem; }
-.em-banner-text span { font-size: 0.8rem; color: var(--c-fg2); line-height: 1.6; }
-.em-banner-text code { background: var(--c-bg3); padding: 0.125rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: var(--c-primary); }
+/* Tabs */
+.tg-tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:4px;margin-bottom:var(--g)}
+.tg-tab{flex:1;padding:.625rem 1rem;border-radius:10px;font-size:.825rem;font-weight:600;color:var(--fg2);background:transparent;
+        border:none;cursor:pointer;transition:all .15s;text-align:center;display:flex;align-items:center;justify-content:center;gap:.375rem}
+.tg-tab:hover{background:var(--pr1);color:var(--fg)}
+.tg-tab.active{background:var(--pr);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.25)}
+html.dark .tg-tab.active{box-shadow:0 2px 8px rgba(167,139,250,.2)}
+.tg-tab-badge{font-size:.7rem;padding:.125rem .375rem;border-radius:6px;background:rgba(255,255,255,.2)}
+.tg-tab.active .tg-tab-badge{background:rgba(255,255,255,.25)}
 
-/* ── Category Card ── */
-.em-card { background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--em-radius); margin-bottom: var(--em-gap);
-           box-shadow: var(--c-shadow); overflow: hidden; }
-.em-card-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--c-border); }
-.em-card-head-left { display: flex; align-items: center; gap: 0.75rem; }
-.em-card-badge { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; }
-.em-card-title { font-weight: 700; font-size: 0.95rem; color: var(--c-fg); }
-.em-card-desc { font-size: 0.775rem; color: var(--c-fg3); margin-top: 0.125rem; }
-.em-card-counter { font-size: 0.75rem; font-weight: 600; color: var(--c-fg3); background: var(--c-bg2); padding: 0.25rem 0.625rem; border-radius: 6px; }
+/* Panel */
+.tg-panel{display:none}
+.tg-panel.active{display:block}
 
-/* ── Emoji Row ── */
-.em-row { display: grid; grid-template-columns: 48px 1fr 1fr; align-items: center; gap: 0 1rem; padding: 0; border-bottom: 1px solid var(--c-border); transition: background 0.1s; }
-.em-row:last-child { border-bottom: none; }
-.em-row:hover { background: var(--c-primary-10); }
-.em-row-icon { width: 48px; height: 52px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
-               border-right: 1px solid var(--c-border); background: var(--c-bg2); flex-shrink: 0; }
-.em-row-info { padding: 0.5rem 0; }
-.em-row-label { font-weight: 600; font-size: 0.825rem; color: var(--c-fg); }
-.em-row-desc { font-size: 0.725rem; color: var(--c-fg3); margin-top: 0.0625rem; }
-.em-row-field { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem 0.5rem 0; }
-.em-input { flex: 1; padding: 0.4375rem 0.625rem; border: 1px solid var(--c-border); border-radius: 8px; font-size: 0.8rem;
-            font-family: "SF Mono", "Fira Code", monospace; background: var(--c-bg); color: var(--c-fg); transition: all 0.15s; min-width: 0; }
-.em-input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-10); }
-.em-input::placeholder { color: var(--c-fg3); }
-.em-input:not(:placeholder-shown) { border-color: var(--c-success); background: var(--c-success-10); }
-.em-x { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: none;
-        color: var(--c-fg3); cursor: pointer; border-radius: 6px; font-size: 0.875rem; transition: all 0.15s; flex-shrink: 0; }
-.em-x:hover { color: var(--c-danger); background: var(--c-danger-10); }
+/* Card */
+.tg-card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:var(--g);box-shadow:var(--sh);overflow:hidden}
+.tg-card-h{display:flex;align-items:center;justify-content:space-between;padding:.875rem 1.25rem;border-bottom:1px solid var(--bd)}
+.tg-card-h-l{display:flex;align-items:center;gap:.625rem}
+.tg-badge{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.tg-card-t{font-weight:700;font-size:.9rem;color:var(--fg)}
+.tg-card-d{font-size:.75rem;color:var(--fg3);margin-top:1px}
+.tg-counter{font-size:.725rem;font-weight:600;color:var(--fg3);background:var(--bg2);padding:.2rem .5rem;border-radius:6px}
 
-/* ── Extras ── */
-.em-extra-row { display: grid; grid-template-columns: 180px 1fr 32px; gap: 0.75rem; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--c-border); align-items: center; }
-.em-extra-row:last-child { border-bottom: none; }
-.em-extra-row:hover { background: var(--c-primary-10); }
-.em-name { padding: 0.4375rem 0.625rem; border: 1px solid var(--c-border); border-radius: 8px; font-size: 0.8rem; font-weight: 500;
-           background: var(--c-bg); color: var(--c-fg); width: 100%; }
-.em-name:focus { outline: none; border-color: var(--c-primary); }
-.em-add-bar { display: flex; gap: 0.75rem; padding: 0.75rem 1.25rem; background: var(--c-primary-10); border-top: 1px dashed var(--c-border); align-items: center; }
-.em-add-bar input:first-child { width: 180px; flex-shrink: 0; }
+/* Emoji row */
+.tg-row{display:grid;grid-template-columns:44px 1fr 1fr;align-items:center;border-bottom:1px solid var(--bd);transition:background .1s}
+.tg-row:last-child{border-bottom:none}
+.tg-row:hover{background:var(--pr1)}
+.tg-row-i{width:44px;height:48px;display:flex;align-items:center;justify-content:center;font-size:1.125rem;border-right:1px solid var(--bd);background:var(--bg2)}
+.tg-row-t{padding:.375rem .75rem}
+.tg-row-l{font-weight:600;font-size:.8rem;color:var(--fg)}
+.tg-row-d{font-size:.7rem;color:var(--fg3)}
+.tg-row-f{display:flex;align-items:center;gap:.375rem;padding:.375rem .75rem .375rem 0}
+.tg-inp{flex:1;padding:.375rem .5rem;border:1px solid var(--bd);border-radius:7px;font-size:.775rem;
+        font-family:"SF Mono","Fira Code",monospace;background:var(--bg);color:var(--fg);transition:all .15s;min-width:0}
+.tg-inp:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px var(--pr1)}
+.tg-inp:not(:placeholder-shown){border-color:var(--ok);background:var(--ok1)}
+.tg-x{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:none;
+      color:var(--fg3);cursor:pointer;border-radius:6px;font-size:.8rem;flex-shrink:0}
+.tg-x:hover{color:var(--dn);background:var(--dn1)}
 
-/* ── Buttons ── */
-.em-btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1.125rem; border: none; border-radius: 8px;
-          font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s; text-decoration: none; }
-.em-btn:hover { transform: translateY(-1px); }
-.em-btn-primary { background: var(--c-primary); color: #fff; box-shadow: 0 2px 8px rgba(124,58,237,0.25); }
-.em-btn-primary:hover { box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
-.em-btn-ghost { background: var(--c-bg2); color: var(--c-fg2); border: 1px solid var(--c-border); }
-.em-btn-ghost:hover { background: var(--c-bg3); }
-.em-btn-danger { background: var(--c-danger-10); color: var(--c-danger); border: 1px solid rgba(220,38,38,0.2); }
-.em-btn-danger:hover { background: rgba(220,38,38,0.12); }
-.em-btn-add { background: var(--c-primary-10); color: var(--c-primary); border: 1.5px dashed var(--c-primary); }
-.em-btn-add:hover { background: var(--c-primary); color: #fff; border-style: solid; }
+/* Info card */
+.tg-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:var(--g)}
+.tg-info-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:1rem 1.25rem;box-shadow:var(--sh)}
+.tg-info-label{font-size:.725rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--fg3);margin-bottom:.25rem}
+.tg-info-val{font-size:1.125rem;font-weight:700;color:var(--fg);font-family:monospace}
+.tg-info-val.tg-dim{color:var(--fg3);font-size:.85rem;font-family:inherit;font-weight:500}
 
-/* ── Actions footer ── */
-.em-foot { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--c-border); background: var(--c-bg2); }
-.em-foot-right { display: flex; gap: 0.5rem; }
+/* Reference */
+.tg-ref-row{display:grid;grid-template-columns:36px 72px 1fr 100px;align-items:center;padding:.375rem 1rem;border-bottom:1px solid var(--bd);font-size:.775rem}
+.tg-ref-row:last-child{border-bottom:none}
+.tg-ref-row:hover{background:var(--bg2)}
+.tg-ref-e{font-size:1rem;text-align:center}
+.tg-ref-l{font-weight:500;color:var(--fg)}
+.tg-ref-d{color:var(--fg2)}
+.tg-ref-f{font-family:monospace;font-size:.675rem;color:var(--fg3);text-align:right}
 
-/* ── Reference table ── */
-.em-ref { padding: 0; }
-.em-ref-row { display: grid; grid-template-columns: 40px 80px 1fr 120px; align-items: center; padding: 0.5rem 1.25rem; border-bottom: 1px solid var(--c-border); font-size: 0.8rem; }
-.em-ref-row:last-child { border-bottom: none; }
-.em-ref-row:hover { background: var(--c-bg2); }
-.em-ref-emoji { font-size: 1.125rem; text-align: center; }
-.em-ref-label { font-weight: 500; color: var(--c-fg); }
-.em-ref-desc { color: var(--c-fg2); }
-.em-ref-file { font-family: monospace; font-size: 0.725rem; color: var(--c-fg3); text-align: right; }
+/* Buttons */
+.tg-btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1rem;border:none;border-radius:8px;
+        font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
+.tg-btn:hover{transform:translateY(-1px)}
+.tg-btn-p{background:var(--pr);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,.25)}
+.tg-btn-d{background:var(--dn1);color:var(--dn);border:1px solid rgba(220,38,38,.2)}
 
-/* ── Empty state ── */
-.em-empty { padding: 2rem; text-align: center; color: var(--c-fg3); }
-.em-empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-.em-empty p { font-size: 0.85rem; }
+/* Footer */
+.tg-foot{display:flex;justify-content:space-between;padding:.75rem 1.25rem;border-top:1px solid var(--bd);background:var(--bg2)}
 
-/* ── Section divider ── */
-.em-section { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-fg3);
-              padding: 0.75rem 1.5rem; background: var(--c-bg2); border-bottom: 1px solid var(--c-border); }
-
-@media (max-width: 768px) {
-    .em-row { grid-template-columns: 40px 1fr; }
-    .em-row-field { grid-column: 1 / -1; padding: 0 1rem 0.5rem; }
-    .em-ref-row { grid-template-columns: 32px 60px 1fr; }
-    .em-ref-file { display: none; }
-    .em-extra-row, .em-add-bar { grid-template-columns: 1fr; }
+@media(max-width:768px){
+    .tg-row{grid-template-columns:36px 1fr}
+    .tg-row-f{grid-column:1/-1;padding:0 .75rem .375rem}
+    .tg-tabs{flex-direction:column}
+    .tg-info{grid-template-columns:1fr 1fr}
 }
 </style>
 
-<div class="em">
-    <!-- Hero -->
-    <div class="em-hero">
-        <div class="em-hero-left">
-            <h1>Emoji Manager</h1>
-            <p>Telegram Bot custom emoji ID larni boshqarish — barcha xabarlardagi emojilar</p>
-        </div>
-        <div class="em-pills">
-            <span class="em-pill em-pill-ok"><span class="em-pill-dot"></span> {{ stats.filled }} sozlangan</span>
-            <span class="em-pill em-pill-warn"><span class="em-pill-dot"></span> {{ stats.empty }} bo'sh</span>
-            <span class="em-pill em-pill-total">{{ stats.model_fields }} field + {{ stats.extras_count }} extra</span>
-        </div>
+<div class="tg">
+    <div class="tg-head">
+        <h1>Telegram Settings</h1>
+        <p>Bot konfiguratsiyasi, custom emoji, sessiya va bildirishnoma sozlamalari</p>
     </div>
 
-    <!-- Info -->
-    <div class="em-banner">
-        <span class="em-banner-icon">💡</span>
-        <div class="em-banner-text">
-            <strong>Emoji ID qanday olish?</strong>
-            <span>
-                Botda <code>/emoji</code> → custom emoji yuboring → bot ID qaytaradi.
-                Yoki Telegram Desktop: stiker ustiga o'ng klik → Copy Custom Emoji ID.
-                ID bo'sh bo'lsa Unicode fallback ishlatiladi.
-            </span>
-        </div>
+    <!-- Tabs -->
+    <div class="tg-tabs">
+        <button class="tg-tab active" onclick="switchTab(this,'emoji')">
+            <span>🎨</span> Custom Emoji <span class="tg-tab-badge">{{ stats.filled }}/{{ stats.total }}</span>
+        </button>
+        <button class="tg-tab" onclick="switchTab(this,'config')">
+            <span>⚙️</span> Bot Config
+        </button>
+        <button class="tg-tab" onclick="switchTab(this,'ref')">
+            <span>📋</span> Emoji Reference
+        </button>
     </div>
 
-    <!-- Category forms -->
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="save_fields">
-
-        {% for cat in categories %}
-        <div class="em-card">
-            <div class="em-card-head">
-                <div class="em-card-head-left">
-                    <div class="em-card-badge" style="background: {{ cat.color }}22; color: {{ cat.color }};">{{ cat.icon }}</div>
-                    <div>
-                        <div class="em-card-title">{{ cat.title }}</div>
-                        <div class="em-card-desc">{{ cat.description }}</div>
-                    </div>
-                </div>
-                <span class="em-card-counter">{{ cat.filled }}/{{ cat.total }}</span>
+    <!-- Tab 1: Emoji Manager -->
+    <div id="tab-emoji" class="tg-panel active">
+        <div class="tg-card" style="border:none;box-shadow:none;background:transparent;margin-bottom:1rem;padding:0">
+            <div style="display:flex;gap:.75rem;padding:.75rem 1rem;border-radius:var(--r);border:1px solid var(--bd);background:var(--bg2);align-items:flex-start">
+                <span style="font-size:1.25rem;margin-top:1px">💡</span>
+                <span style="font-size:.8rem;color:var(--fg2);line-height:1.5">
+                    Botda <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:.725rem;color:var(--pr)">/emoji</code> → custom emoji yuboring → ID qaytaradi.
+                    ID bo'sh = Unicode fallback.
+                </span>
             </div>
-
-            {% for item in cat.items %}
-            <div class="em-row">
-                <div class="em-row-icon">{{ item.fallback }}</div>
-                <div class="em-row-info">
-                    <div class="em-row-label">{{ item.label }}</div>
-                    <div class="em-row-desc">{{ item.description }}</div>
-                </div>
-                <div class="em-row-field">
-                    <input type="text" name="field_{{ item.key }}" value="{{ item.value }}" class="em-input"
-                           placeholder="Emoji ID yozing...">
-                    <button type="button" class="em-x" title="Tozalash"
-                            onclick="this.previousElementSibling.value=''">✕</button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endfor %}
-
-        <div style="display:flex; justify-content:flex-end; margin-bottom:var(--em-gap);">
-            <button type="submit" class="em-btn em-btn-primary">💾 Saqlash</button>
-        </div>
-    </form>
-
-    <!-- Dynamic Extras -->
-    <div class="em-card">
-        <div class="em-card-head">
-            <div class="em-card-head-left">
-                <div class="em-card-badge" style="background: rgba(249,115,22,0.12); color: #ea580c;">➕</div>
-                <div>
-                    <div class="em-card-title">Dynamic Extras</div>
-                    <div class="em-card-desc">Qo'shimcha custom emojilar — <code>tg_emoji_extra</code> JSONField orqali</div>
-                </div>
-            </div>
-            <span class="em-card-counter">{{ extra_items|length }} ta</span>
         </div>
 
         <form method="post">
             {% csrf_token %}
-            <input type="hidden" name="action" value="save_extras">
+            <input type="hidden" name="action" value="save_fields">
 
-            {% for item in extra_items %}
-            <div class="em-extra-row">
-                <input type="text" name="extra_name" value="{{ item.name }}" class="em-name" placeholder="nom" pattern="[a-zA-Z0-9_]+">
-                <input type="text" name="extra_value" value="{{ item.value }}" class="em-input" placeholder="Emoji ID">
-                <button type="button" class="em-x" title="O'chirish" onclick="this.closest('.em-extra-row').remove()">🗑</button>
+            {% for cat in categories %}
+            <div class="tg-card">
+                <div class="tg-card-h">
+                    <div class="tg-card-h-l">
+                        <div class="tg-badge" style="background:{{ cat.color }}22;color:{{ cat.color }}">{{ cat.icon }}</div>
+                        <div>
+                            <div class="tg-card-t">{{ cat.title }}</div>
+                            <div class="tg-card-d">{{ cat.description }}</div>
+                        </div>
+                    </div>
+                    <span class="tg-counter">{{ cat.filled }}/{{ cat.total }}</span>
+                </div>
+                {% for item in cat.items %}
+                <div class="tg-row">
+                    <div class="tg-row-i">{{ item.fallback }}</div>
+                    <div class="tg-row-t">
+                        <div class="tg-row-l">{{ item.label }}</div>
+                        <div class="tg-row-d">{{ item.description }}</div>
+                    </div>
+                    <div class="tg-row-f">
+                        <input type="text" name="field_{{ item.key }}" value="{{ item.value }}" class="tg-inp" placeholder="Emoji ID...">
+                        <button type="button" class="tg-x" onclick="this.previousElementSibling.value=''">✕</button>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
             {% endfor %}
 
-            {% if not extra_items %}
-            <div class="em-empty">
-                <div class="em-empty-icon">📦</div>
-                <p>Hozircha qo'shimcha emoji yo'q</p>
-            </div>
-            {% endif %}
-
-            <div class="em-foot">
-                <button type="button" class="em-btn em-btn-add" onclick="toggleAdd()">➕ Yangi qo'shish</button>
-                <div class="em-foot-right">
-                    {% if extra_items %}<button type="submit" class="em-btn em-btn-primary">💾 Saqlash</button>{% endif %}
-                </div>
-            </div>
-        </form>
-
-        <form method="post" id="addForm" style="display:none;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="add_extra">
-            <div class="em-add-bar">
-                <input type="text" name="new_name" class="em-name" placeholder="Nom" pattern="[a-zA-Z0-9_]+" required>
-                <input type="text" name="new_value" class="em-input" placeholder="Emoji ID">
-                <button type="submit" class="em-btn em-btn-primary">➕ Qo'shish</button>
+            <div style="display:flex;justify-content:space-between;margin-bottom:var(--g)">
+                <form method="post" onsubmit="return confirm('Barcha emojilarni tozalashni xohlaysizmi?')" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear_all">
+                    <button type="submit" class="tg-btn tg-btn-d">🗑 Hammasini tozalash</button>
+                </form>
+                <button type="submit" class="tg-btn tg-btn-p">💾 Saqlash</button>
             </div>
         </form>
     </div>
 
-    <!-- Hardcoded Reference -->
-    <div class="em-card">
-        <div class="em-card-head">
-            <div class="em-card-head-left">
-                <div class="em-card-badge" style="background: rgba(100,116,139,0.1); color: #64748b;">📋</div>
-                <div>
-                    <div class="em-card-title">Hardcoded Emojilar</div>
-                    <div class="em-card-desc">Kodda o'rnatilgan emojilar — extras orqali custom versiya qo'shish mumkin</div>
-                </div>
+    <!-- Tab 2: Bot Config -->
+    <div id="tab-config" class="tg-panel">
+        <div class="tg-info">
+            <div class="tg-info-item">
+                <div class="tg-info-label">Owner ID</div>
+                <div class="tg-info-val">{{ site.telegram_owner_id|default:"—" }}</div>
+            </div>
+            <div class="tg-info-item">
+                <div class="tg-info-label">Admin Group</div>
+                <div class="tg-info-val {% if not site.telegram_admin_group_id %}tg-dim{% endif %}">{{ site.telegram_admin_group_id|default:"Sozlanmagan" }}</div>
+            </div>
+            <div class="tg-info-item">
+                <div class="tg-info-label">Channel ID</div>
+                <div class="tg-info-val {% if not site.telegram_channel_id %}tg-dim{% endif %}">{{ site.telegram_channel_id|default:"Sozlanmagan" }}</div>
             </div>
         </div>
-        <div class="em-ref">
+
+        <div class="tg-card">
+            <div class="tg-card-h">
+                <div class="tg-card-h-l">
+                    <div class="tg-badge" style="background:rgba(59,130,246,.1);color:#3b82f6">🔔</div>
+                    <div>
+                        <div class="tg-card-t">Bildirishnoma sozlamalari</div>
+                        <div class="tg-card-d">Admin guruhga qaysi eventlar loglansin</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:1rem 1.25rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem">
+                {% for label, field in notification_fields %}
+                <div style="display:flex;align-items:center;gap:.5rem;font-size:.825rem">
+                    {% if field %}
+                    <span style="color:var(--ok)">✅</span>
+                    {% else %}
+                    <span style="color:var(--fg3)">❌</span>
+                    {% endif %}
+                    <span style="color:var(--fg)">{{ label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="tg-foot">
+                <span style="font-size:.75rem;color:var(--fg3)">O'zgartirish: Site Settings → Telegram tab yoki botda /config</span>
+            </div>
+        </div>
+
+        <div class="tg-card">
+            <div class="tg-card-h">
+                <div class="tg-card-h-l">
+                    <div class="tg-badge" style="background:rgba(16,185,129,.1);color:#10b981">⏰</div>
+                    <div>
+                        <div class="tg-card-t">Avtomatik vazifalar</div>
+                        <div class="tg-card-d">Server monitoring cron/timer sozlamalari</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:1rem 1.25rem;font-size:.825rem;color:var(--fg2);line-height:1.8">
+                📊 Kunlik health report — <b>har kuni 09:00</b> (systemd timer)<br>
+                🚨 CPU alert — <b>har 10 daqiqada</b> (cron, >75% threshold)<br>
+                🔔 Webhook — <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:.725rem">/api/telegram/webhook/&lt;secret&gt;/</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Reference -->
+    <div id="tab-ref" class="tg-panel">
+        <div class="tg-card">
+            <div class="tg-card-h">
+                <div class="tg-card-h-l">
+                    <div class="tg-badge" style="background:rgba(100,116,139,.1);color:#64748b">📋</div>
+                    <div>
+                        <div class="tg-card-t">Kodda ishlatilgan emojilar</div>
+                        <div class="tg-card-d">Unicode fallback — model fieldlari orqali custom emoji ga almashtirilishi mumkin</div>
+                    </div>
+                </div>
+            </div>
             {% for h in hardcoded_emojis %}
-            <div class="em-ref-row">
-                <span class="em-ref-emoji">{{ h.emoji }}</span>
-                <span class="em-ref-label">{{ h.label }}</span>
-                <span class="em-ref-desc">{{ h.used_in }}</span>
-                <span class="em-ref-file">{{ h.file }}</span>
+            <div class="tg-ref-row">
+                <span class="tg-ref-e">{{ h.emoji }}</span>
+                <span class="tg-ref-l">{{ h.label }}</span>
+                <span class="tg-ref-d">{{ h.used_in }}</span>
+                <span class="tg-ref-f">{{ h.file }}</span>
             </div>
             {% endfor %}
-        </div>
-    </div>
-
-    <!-- Danger Zone -->
-    <div class="em-card" style="border-color: rgba(220,38,38,0.2);">
-        <div style="padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
-            <div>
-                <div style="font-weight:600; font-size:0.875rem; color:var(--c-fg);">Barcha emojilarni tozalash</div>
-                <div style="font-size:0.775rem; color:var(--c-fg3); margin-top:0.125rem;">16 model field + barcha extras — Unicode fallback ga qaytadi</div>
-            </div>
-            <form method="post" onsubmit="return confirm('Haqiqatan ham BARCHA emojilarni tozalashni xohlaysizmi?');">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="clear_all">
-                <button type="submit" class="em-btn em-btn-danger">🗑 Tozalash</button>
-            </form>
         </div>
     </div>
 </div>
 
 <script>
-function toggleAdd(){const f=document.getElementById('addForm');f.style.display=f.style.display==='none'?'block':'none';if(f.style.display==='block')f.querySelector('input').focus();}
+function switchTab(btn,id){
+    document.querySelectorAll('.tg-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tg-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+id).classList.add('active');
+}
 </script>
 {% endblock %}

@@ -325,8 +325,20 @@ UNFOLD = {
                         "link": f"{_A}core/sitesettings/",
                         "permission": lambda r: r.user.is_superuser,
                     },
+                ],
+            },
+            {
+                "title": "Telegram",
+                "separator": True,
+                "items": [
                     {
-                        "title": "Telegram Session",
+                        "title": "Emoji Manager",
+                        "icon": "emoji_emotions",
+                        "link": f"{_A}telegram/settings/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Session",
                         "icon": "key",
                         "link": f"{_A}bot/telegram/session/",
                         "permission": lambda r: r.user.has_perm("botproxy.manage_telegram_session"),
