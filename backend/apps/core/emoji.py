@@ -43,9 +43,10 @@ _ALL_FIELDS = [
     'stats', 'growth', 'document', 'name_badge', 'mobile', 'device', 'numbers',
     # Bot System (6)
     'settings', 'secure', 'locked', 'key', 'shield', 'cloud',
-    # Bot Misc (12)
+    # Bot Misc (19)
     'globe', 'moon', 'clover', 'target', 'diamond', 'control',
     'fire', 'triangle', 'graduation', 'pray', 'school', 'ballot',
+    'blue_square', 'lightning', 'celebration', 'memo', 'pin', 'undo', 'skip',
 ]
 
 _cache: dict | None = None

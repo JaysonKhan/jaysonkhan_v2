@@ -543,6 +543,13 @@ class TelegramMixin(models.Model):
     tg_emoji_pray = models.CharField(max_length=30, blank=True, default='', help_text="🙏 Pray")
     tg_emoji_school = models.CharField(max_length=30, blank=True, default='', help_text="🏫 School")
     tg_emoji_ballot = models.CharField(max_length=30, blank=True, default='', help_text="🗳 Ballot box")
+    tg_emoji_blue_square = models.CharField(max_length=30, blank=True, default='', help_text="🟦 Blue square")
+    tg_emoji_lightning = models.CharField(max_length=30, blank=True, default='', help_text="⚡ Lightning")
+    tg_emoji_celebration = models.CharField(max_length=30, blank=True, default='', help_text="🎉 Celebration")
+    tg_emoji_memo = models.CharField(max_length=30, blank=True, default='', help_text="📝 Memo/write")
+    tg_emoji_pin = models.CharField(max_length=30, blank=True, default='', help_text="📍 Pin/location")
+    tg_emoji_undo = models.CharField(max_length=30, blank=True, default='', help_text="↩️ Undo")
+    tg_emoji_skip = models.CharField(max_length=30, blank=True, default='', help_text="⏭ Skip")
 
     # ── Dynamic extras ──
     tg_emoji_extra = models.JSONField(

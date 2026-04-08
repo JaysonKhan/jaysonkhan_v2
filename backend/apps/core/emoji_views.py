@@ -149,6 +149,13 @@ EMOJI_FIELDS = [
     ('pray',       'tg_emoji_pray',       '🙏', 'Pray',       'Iltimos', 'bot_misc'),
     ('school',     'tg_emoji_school',     '🏫', 'School',     'Maktab', 'bot_misc'),
     ('ballot',     'tg_emoji_ballot',     '🗳', 'Ballot',     'Ovoz berish', 'bot_misc'),
+    ('blue_square','tg_emoji_blue_square','🟦', 'Blue Square','Ko\'k kvadrat', 'bot_misc'),
+    ('lightning',  'tg_emoji_lightning',  '⚡', 'Lightning',  'Chaqmoq', 'bot_misc'),
+    ('celebration','tg_emoji_celebration','🎉', 'Celebration','Tabriklanadi', 'bot_misc'),
+    ('memo',       'tg_emoji_memo',       '📝', 'Memo',       'Yozish/izoh', 'bot_misc'),
+    ('pin',        'tg_emoji_pin',        '📍', 'Pin',        'Joylashuv', 'bot_misc'),
+    ('undo',       'tg_emoji_undo',       '↩️', 'Undo',       'Orqaga qaytarish', 'bot_misc'),
+    ('skip',       'tg_emoji_skip',       '⏭', 'Skip',       'O\'tkazib yuborish', 'bot_misc'),
 ]
 
 CATEGORIES = [
