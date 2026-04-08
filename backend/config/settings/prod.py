@@ -77,7 +77,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # ── File Upload Security ─────────────────────────────────────────────────────
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 100              # Prevent HashDoS via many fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 200              # 111 emoji fields + config/notification fields
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
