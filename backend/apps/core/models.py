@@ -475,6 +475,75 @@ class TelegramMixin(models.Model):
     tg_emoji_project = models.CharField(max_length=30, blank=True, default='', help_text="📱 Project")
     tg_emoji_tech = models.CharField(max_length=30, blank=True, default='', help_text="🛠 Tech stack")
 
+    # ── Bot Status ──
+    tg_emoji_warning = models.CharField(max_length=30, blank=True, default='', help_text="⚠️ Warning")
+    tg_emoji_red_dot = models.CharField(max_length=30, blank=True, default='', help_text="🔴 Red dot")
+    tg_emoji_green_dot = models.CharField(max_length=30, blank=True, default='', help_text="🟢 Green dot")
+    tg_emoji_blocked = models.CharField(max_length=30, blank=True, default='', help_text="🚫 Blocked")
+
+    # ── Bot Actions ──
+    tg_emoji_plus = models.CharField(max_length=30, blank=True, default='', help_text="➕ Add")
+    tg_emoji_minus = models.CharField(max_length=30, blank=True, default='', help_text="➖ Remove")
+    tg_emoji_edit = models.CharField(max_length=30, blank=True, default='', help_text="✏️ Edit")
+    tg_emoji_right_arrow = models.CharField(max_length=30, blank=True, default='', help_text="➡️ Right arrow")
+
+    # ── Bot Navigation ──
+    tg_emoji_point_right = models.CharField(max_length=30, blank=True, default='', help_text="👉 Point right")
+    tg_emoji_point_down = models.CharField(max_length=30, blank=True, default='', help_text="👇 Point down")
+    tg_emoji_back = models.CharField(max_length=30, blank=True, default='', help_text="🔙 Back")
+    tg_emoji_home = models.CharField(max_length=30, blank=True, default='', help_text="🏠 Home")
+
+    # ── Bot Awards ──
+    tg_emoji_gold = models.CharField(max_length=30, blank=True, default='', help_text="🥇 Gold/1st")
+    tg_emoji_silver = models.CharField(max_length=30, blank=True, default='', help_text="🥈 Silver/2nd")
+    tg_emoji_bronze = models.CharField(max_length=30, blank=True, default='', help_text="🥉 Bronze/3rd")
+
+    # ── Bot People ──
+    tg_emoji_person = models.CharField(max_length=30, blank=True, default='', help_text="👤 Person")
+    tg_emoji_people = models.CharField(max_length=30, blank=True, default='', help_text="👥 People")
+    tg_emoji_teacher = models.CharField(max_length=30, blank=True, default='', help_text="👨‍🏫 Teacher")
+    tg_emoji_crown_icon = models.CharField(max_length=30, blank=True, default='', help_text="👑 Crown icon")
+    tg_emoji_eye = models.CharField(max_length=30, blank=True, default='', help_text="👁 Eye")
+
+    # ── Bot Communication ──
+    tg_emoji_mail = models.CharField(max_length=30, blank=True, default='', help_text="📨 Mail")
+    tg_emoji_upload = models.CharField(max_length=30, blank=True, default='', help_text="📤 Upload")
+    tg_emoji_email_icon = models.CharField(max_length=30, blank=True, default='', help_text="📧 Email")
+    tg_emoji_phone_icon = models.CharField(max_length=30, blank=True, default='', help_text="📞 Phone")
+    tg_emoji_thought = models.CharField(max_length=30, blank=True, default='', help_text="💭 Thought bubble")
+    tg_emoji_speech = models.CharField(max_length=30, blank=True, default='', help_text="💬 Speech bubble")
+
+    # ── Bot Data ──
+    tg_emoji_stats = models.CharField(max_length=30, blank=True, default='', help_text="📊 Stats")
+    tg_emoji_growth = models.CharField(max_length=30, blank=True, default='', help_text="📈 Growth")
+    tg_emoji_document = models.CharField(max_length=30, blank=True, default='', help_text="📄 Document")
+    tg_emoji_name_badge = models.CharField(max_length=30, blank=True, default='', help_text="📛 Name badge")
+    tg_emoji_mobile = models.CharField(max_length=30, blank=True, default='', help_text="📱 Mobile")
+    tg_emoji_device = models.CharField(max_length=30, blank=True, default='', help_text="📲 Device")
+    tg_emoji_numbers = models.CharField(max_length=30, blank=True, default='', help_text="🔢 Numbers")
+
+    # ── Bot System ──
+    tg_emoji_settings = models.CharField(max_length=30, blank=True, default='', help_text="⚙️ Settings")
+    tg_emoji_secure = models.CharField(max_length=30, blank=True, default='', help_text="🔐 Secure")
+    tg_emoji_locked = models.CharField(max_length=30, blank=True, default='', help_text="🔒 Locked")
+    tg_emoji_key = models.CharField(max_length=30, blank=True, default='', help_text="🔑 Key")
+    tg_emoji_shield = models.CharField(max_length=30, blank=True, default='', help_text="🛡 Shield")
+    tg_emoji_cloud = models.CharField(max_length=30, blank=True, default='', help_text="☁️ Cloud")
+
+    # ── Bot Misc ──
+    tg_emoji_globe = models.CharField(max_length=30, blank=True, default='', help_text="🌐 Globe")
+    tg_emoji_moon = models.CharField(max_length=30, blank=True, default='', help_text="🌙 Moon")
+    tg_emoji_clover = models.CharField(max_length=30, blank=True, default='', help_text="🍀 Clover")
+    tg_emoji_target = models.CharField(max_length=30, blank=True, default='', help_text="🎯 Target")
+    tg_emoji_diamond = models.CharField(max_length=30, blank=True, default='', help_text="💎 Diamond")
+    tg_emoji_control = models.CharField(max_length=30, blank=True, default='', help_text="🎛 Control")
+    tg_emoji_fire = models.CharField(max_length=30, blank=True, default='', help_text="🔥 Fire")
+    tg_emoji_triangle = models.CharField(max_length=30, blank=True, default='', help_text="🔺 Triangle")
+    tg_emoji_graduation = models.CharField(max_length=30, blank=True, default='', help_text="🎓 Graduation")
+    tg_emoji_pray = models.CharField(max_length=30, blank=True, default='', help_text="🙏 Pray")
+    tg_emoji_school = models.CharField(max_length=30, blank=True, default='', help_text="🏫 School")
+    tg_emoji_ballot = models.CharField(max_length=30, blank=True, default='', help_text="🗳 Ballot box")
+
     # ── Dynamic extras ──
     tg_emoji_extra = models.JSONField(
         default=dict, blank=True,

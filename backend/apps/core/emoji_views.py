@@ -1,5 +1,5 @@
 """
-Telegram Settings — manage ALL 58 custom emoji IDs.
+Telegram Settings — manage ALL 111 custom emoji IDs.
 """
 from __future__ import annotations
 
@@ -80,14 +80,92 @@ EMOJI_FIELDS = [
     ('success',            'tg_emoji_success',            '✅', 'Success',        'Muvaffaqiyat xabarlari', 'command'),
     ('backup_icon',        'tg_emoji_backup_icon',        '💾', 'Backup',         'Backup komandasi', 'command'),
     ('logs_icon',          'tg_emoji_logs_icon',          '📋', 'Logs',           'Loglar komandasi', 'command'),
+
+    # Bot Status (4)
+    ('warning',    'tg_emoji_warning',    '⚠️', 'Warning',     'Ogohlantirish', 'bot_status'),
+    ('red_dot',    'tg_emoji_red_dot',    '🔴', 'Red Dot',     'Qizil nuqta', 'bot_status'),
+    ('green_dot',  'tg_emoji_green_dot',  '🟢', 'Green Dot',   'Yashil nuqta', 'bot_status'),
+    ('blocked',    'tg_emoji_blocked',    '🚫', 'Blocked',     'Bloklangan', 'bot_status'),
+
+    # Bot Actions (4)
+    ('plus',        'tg_emoji_plus',        '➕', 'Plus',        'Qo\'shish', 'bot_action'),
+    ('minus',       'tg_emoji_minus',       '➖', 'Minus',       'Olib tashlash', 'bot_action'),
+    ('edit',        'tg_emoji_edit',        '✏️', 'Edit',        'Tahrirlash', 'bot_action'),
+    ('right_arrow', 'tg_emoji_right_arrow', '➡️', 'Arrow',       'Davom etish', 'bot_action'),
+
+    # Bot Navigation (4)
+    ('point_right', 'tg_emoji_point_right', '👉', 'Point Right', 'Ko\'rsatgich o\'ng', 'bot_nav'),
+    ('point_down',  'tg_emoji_point_down',  '👇', 'Point Down',  'Ko\'rsatgich pastga', 'bot_nav'),
+    ('back',        'tg_emoji_back',        '🔙', 'Back',        'Orqaga qaytish', 'bot_nav'),
+    ('home',        'tg_emoji_home',        '🏠', 'Home',        'Bosh sahifa', 'bot_nav'),
+
+    # Bot Awards (3)
+    ('gold',   'tg_emoji_gold',   '🥇', 'Gold',   '1-o\'rin', 'bot_awards'),
+    ('silver', 'tg_emoji_silver', '🥈', 'Silver', '2-o\'rin', 'bot_awards'),
+    ('bronze', 'tg_emoji_bronze', '🥉', 'Bronze', '3-o\'rin', 'bot_awards'),
+
+    # Bot People (5)
+    ('person',     'tg_emoji_person',     '👤', 'Person',  'Shaxs', 'bot_people'),
+    ('people',     'tg_emoji_people',     '👥', 'People',  'Odamlar guruhi', 'bot_people'),
+    ('teacher',    'tg_emoji_teacher',    '👨‍🏫', 'Teacher', 'O\'qituvchi', 'bot_people'),
+    ('crown_icon', 'tg_emoji_crown_icon', '👑', 'Crown',   'Toj belgisi', 'bot_people'),
+    ('eye',        'tg_emoji_eye',        '👁', 'Eye',     'Ko\'z belgisi', 'bot_people'),
+
+    # Bot Communication (6)
+    ('mail',       'tg_emoji_mail',       '📨', 'Mail',    'Xat', 'bot_comm'),
+    ('upload',     'tg_emoji_upload',     '📤', 'Upload',  'Yuklash', 'bot_comm'),
+    ('email_icon', 'tg_emoji_email_icon', '📧', 'Email',   'Email belgisi', 'bot_comm'),
+    ('phone_icon', 'tg_emoji_phone_icon', '📞', 'Phone',   'Telefon belgisi', 'bot_comm'),
+    ('thought',    'tg_emoji_thought',    '💭', 'Thought', 'Fikr buluti', 'bot_comm'),
+    ('speech',     'tg_emoji_speech',     '💬', 'Speech',  'Gapirish buluti', 'bot_comm'),
+
+    # Bot Data (7)
+    ('stats',      'tg_emoji_stats',      '📊', 'Stats',     'Statistika', 'bot_data'),
+    ('growth',     'tg_emoji_growth',     '📈', 'Growth',    'O\'sish', 'bot_data'),
+    ('document',   'tg_emoji_document',   '📄', 'Document',  'Hujjat', 'bot_data'),
+    ('name_badge', 'tg_emoji_name_badge', '📛', 'Badge',     'Ism belgisi', 'bot_data'),
+    ('mobile',     'tg_emoji_mobile',     '📱', 'Mobile',    'Mobil telefon', 'bot_data'),
+    ('device',     'tg_emoji_device',     '📲', 'Device',    'Qurilma', 'bot_data'),
+    ('numbers',    'tg_emoji_numbers',    '🔢', 'Numbers',   'Raqamlar', 'bot_data'),
+
+    # Bot System (6)
+    ('settings', 'tg_emoji_settings', '⚙️', 'Settings', 'Sozlamalar', 'bot_system'),
+    ('secure',   'tg_emoji_secure',   '🔐', 'Secure',   'Himoyalangan', 'bot_system'),
+    ('locked',   'tg_emoji_locked',   '🔒', 'Locked',   'Qulflangan', 'bot_system'),
+    ('key',      'tg_emoji_key',      '🔑', 'Key',      'Kalit', 'bot_system'),
+    ('shield',   'tg_emoji_shield',   '🛡', 'Shield',   'Qalqon', 'bot_system'),
+    ('cloud',    'tg_emoji_cloud',    '☁️', 'Cloud',    'Bulut', 'bot_system'),
+
+    # Bot Misc (12)
+    ('globe',      'tg_emoji_globe',      '🌐', 'Globe',      'Dunyo', 'bot_misc'),
+    ('moon',       'tg_emoji_moon',       '🌙', 'Moon',       'Oy', 'bot_misc'),
+    ('clover',     'tg_emoji_clover',     '🍀', 'Clover',     'Klover', 'bot_misc'),
+    ('target',     'tg_emoji_target',     '🎯', 'Target',     'Nishon', 'bot_misc'),
+    ('diamond',    'tg_emoji_diamond',    '💎', 'Diamond',    'Olmos', 'bot_misc'),
+    ('control',    'tg_emoji_control',    '🎛', 'Control',    'Boshqaruv', 'bot_misc'),
+    ('fire',       'tg_emoji_fire',       '🔥', 'Fire',       'Olov', 'bot_misc'),
+    ('triangle',   'tg_emoji_triangle',   '🔺', 'Triangle',   'Uchburchak', 'bot_misc'),
+    ('graduation', 'tg_emoji_graduation', '🎓', 'Graduation', 'Bitiruvchi', 'bot_misc'),
+    ('pray',       'tg_emoji_pray',       '🙏', 'Pray',       'Iltimos', 'bot_misc'),
+    ('school',     'tg_emoji_school',     '🏫', 'School',     'Maktab', 'bot_misc'),
+    ('ballot',     'tg_emoji_ballot',     '🗳', 'Ballot',     'Ovoz berish', 'bot_misc'),
 ]
 
 CATEGORIES = [
-    ('channel',   '📢', 'Channel & Sharing',  'Kanal postlari, inline tugmalar', '#7c3aed'),
-    ('monitor',   '🖥', 'Server Monitor',     'Health report, /status, tariff', '#10b981'),
-    ('notify',    '🔔', 'Notifications',      'Like, reply, contact xabarnomalar', '#3b82f6'),
-    ('admin_log', '👤', 'Admin Log',          'Yangi user, badge, stats emojilar', '#f59e0b'),
-    ('command',   '⚡', 'Bot Commands',       '/start, /ban, /config javoblari', '#ef4444'),
+    ('channel',    '📢', 'Channel & Sharing',  'Kanal postlari, inline tugmalar', '#7c3aed'),
+    ('monitor',    '🖥', 'Server Monitor',     'Health report, /status, tariff', '#10b981'),
+    ('notify',     '🔔', 'Notifications',      'Like, reply, contact xabarnomalar', '#3b82f6'),
+    ('admin_log',  '👤', 'Admin Log',          'Yangi user, badge, stats emojilar', '#f59e0b'),
+    ('command',    '⚡', 'Bot Commands',       '/start, /ban, /config javoblari', '#ef4444'),
+    ('bot_status', '🚦', 'Bot Status',         'Warning, active, blocked holatlari', '#dc2626'),
+    ('bot_action', '⚡', 'Bot Actions',        'Qo\'shish, o\'chirish, tahrirlash', '#8b5cf6'),
+    ('bot_nav',    '🧭', 'Bot Navigation',     'Orqaga, boshiga, ko\'rsatgichlar', '#06b6d4'),
+    ('bot_awards', '🏅', 'Bot Awards',         'Oltin, kumush, bronza o\'rinlar', '#eab308'),
+    ('bot_people', '👥', 'Bot People',         'Shaxs, guruh, o\'qituvchi', '#ec4899'),
+    ('bot_comm',   '📨', 'Bot Communication',  'Xat, telefon, gapirish', '#14b8a6'),
+    ('bot_data',   '📊', 'Bot Data',           'Statistika, hujjat, raqamlar', '#6366f1'),
+    ('bot_system', '🔐', 'Bot System',         'Sozlamalar, kalit, qalqon', '#64748b'),
+    ('bot_misc',   '🎯', 'Bot Misc',           'Globe, olov, ovoz berish', '#f97316'),
 ]
 
 CONFIG_ID_FIELDS = [

@@ -20,13 +20,32 @@ _ALL_FIELDS = [
     'package', 'upgrade', 'downgrade',
     # Notification (4)
     'reply', 'like', 'unlike', 'contact_msg',
-    # Admin Log (12)
+    # Admin Log (16)
     'user', 'returning', 'premium', 'osint', 'education',
     'group', 'channel_icon', 'id_badge', 'phone', 'sources', 'crown',
     'verified', 'scam_warn', 'history', 'pencil', 'calendar',
     # Command (10)
     'greeting', 'ban', 'mute', 'lock',
     'notifications_icon', 'config_icon', 'error', 'success', 'backup_icon', 'logs_icon',
+    # Bot Status (4)
+    'warning', 'red_dot', 'green_dot', 'blocked',
+    # Bot Actions (4)
+    'plus', 'minus', 'edit', 'right_arrow',
+    # Bot Navigation (4)
+    'point_right', 'point_down', 'back', 'home',
+    # Bot Awards (3)
+    'gold', 'silver', 'bronze',
+    # Bot People (5)
+    'person', 'people', 'teacher', 'crown_icon', 'eye',
+    # Bot Communication (6)
+    'mail', 'upload', 'email_icon', 'phone_icon', 'thought', 'speech',
+    # Bot Data (7)
+    'stats', 'growth', 'document', 'name_badge', 'mobile', 'device', 'numbers',
+    # Bot System (6)
+    'settings', 'secure', 'locked', 'key', 'shield', 'cloud',
+    # Bot Misc (12)
+    'globe', 'moon', 'clover', 'target', 'diamond', 'control',
+    'fire', 'triangle', 'graduation', 'pray', 'school', 'ballot',
 ]
 
 _cache: dict | None = None
