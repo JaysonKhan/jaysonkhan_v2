@@ -1408,6 +1408,23 @@ def feedback_dashboard(request, svc="talabaovozi"):
 # ─── Emoji Manager ───────────────────────────────────────────────────────────
 
 # TalabaOvozi emoji categories (same as bot/modules/admin/emoji_settings.py)
+_EMOJI_CAT_META = {
+    "channel":    ("#7c3aed", "Kanal postlari, inline tugmalar"),
+    "monitor":    ("#10b981", "Health report, /status, tariff"),
+    "notify":     ("#3b82f6", "Like, reply, contact xabarnomalar"),
+    "admin_log":  ("#f59e0b", "Yangi user, badge, stats emojilar"),
+    "command":    ("#ef4444", "/start, /ban, /config javoblari"),
+    "bot_status": ("#dc2626", "Warning, active, blocked holatlari"),
+    "bot_action": ("#8b5cf6", "Qo'shish, o'chirish, tahrirlash"),
+    "bot_nav":    ("#06b6d4", "Orqaga, boshiga, ko'rsatgichlar"),
+    "bot_awards": ("#eab308", "Oltin, kumush, bronza o'rinlar"),
+    "bot_people": ("#ec4899", "Shaxs, guruh, o'qituvchi"),
+    "bot_comm":   ("#14b8a6", "Xat, telefon, gapirish"),
+    "bot_data":   ("#6366f1", "Statistika, hujjat, raqamlar"),
+    "bot_system": ("#64748b", "Sozlamalar, kalit, qalqon"),
+    "bot_misc":   ("#f97316", "Globe, olov, ovoz berish"),
+}
+
 _EMOJI_CATEGORIES = [
     ("channel", "📢", "Channel & Sharing", [
         ("read_more", "📖"), ("google_play", "▶️"), ("app_store", "🍎"),
@@ -1534,12 +1551,14 @@ def emoji_manager(request, svc="talabaovozi"):
             })
         total_filled += cat_filled
         total_count += len(items)
+        meta = _EMOJI_CAT_META.get(cat_key, ("#64748b", ""))
         categories.append({
-            'key': cat_key, 'icon': cat_icon, 'name': cat_name,
+            'key': cat_key, 'icon': cat_icon, 'title': cat_name,
+            'description': meta[1], 'color': meta[0],
             'items': cat_items, 'filled': cat_filled, 'total': len(items),
         })
 
     return TemplateResponse(request, "botproxy/emoji_manager.html", _ctx(request, svc, {
         'categories': categories,
-        'stats': {'filled': total_filled, 'total': total_count},
+        'stats': {'filled': total_filled, 'total': total_count, 'empty': total_count - total_filled},
     }))
