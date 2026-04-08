@@ -1403,3 +1403,143 @@ def feedback_dashboard(request, svc="talabaovozi"):
         "polls": polls,
         "summaries": summaries,
     }))
+
+
+# ─── Emoji Manager ───────────────────────────────────────────────────────────
+
+# TalabaOvozi emoji categories (same as bot/modules/admin/emoji_settings.py)
+_EMOJI_CATEGORIES = [
+    ("channel", "📢", "Channel & Sharing", [
+        ("read_more", "📖"), ("google_play", "▶️"), ("app_store", "🍎"),
+        ("web", "🌐"), ("bot", "🤖"), ("comment", "💬"),
+        ("post", "📝"), ("project", "📱"), ("tech", "🛠"),
+    ]),
+    ("monitor", "🖥", "Server Monitor", [
+        ("server", "🖥"), ("cpu", "🧠"), ("ram", "💾"), ("disk", "💿"),
+        ("ok", "🟢"), ("warn", "🟡"), ("critical", "🔴"), ("chart", "📊"),
+        ("alert", "🚨"), ("money", "💰"), ("clock", "🕐"), ("uptime", "⏱"),
+        ("load", "📈"), ("swap", "🔄"), ("services_icon", "🔧"),
+        ("trophy", "🏆"), ("nginx", "⚡"), ("postgresql", "🐘"),
+        ("package", "📦"), ("upgrade", "⬆️"), ("downgrade", "⬇️"),
+    ]),
+    ("notify", "🔔", "Notifications", [
+        ("reply", "↩️"), ("like", "👍"), ("unlike", "👎"), ("contact_msg", "📩"),
+    ]),
+    ("admin_log", "👤", "Admin Log", [
+        ("user", "👤"), ("returning", "🔄"), ("premium", "⭐"), ("osint", "🔍"),
+        ("education", "🎓"), ("group", "👥"), ("channel_icon", "📢"),
+        ("id_badge", "🆔"), ("phone", "📱"), ("sources", "📡"),
+        ("crown", "👑"), ("verified", "✅"), ("scam_warn", "⚠️"),
+        ("history", "📝"), ("pencil", "✏️"), ("calendar", "📅"),
+    ]),
+    ("command", "⚡", "Bot Commands", [
+        ("greeting", "👋"), ("ban", "🚫"), ("mute", "🔇"), ("lock", "🔒"),
+        ("notifications_icon", "🔔"), ("config_icon", "⚙️"),
+        ("error", "❌"), ("success", "✅"), ("backup_icon", "💾"), ("logs_icon", "📋"),
+    ]),
+    ("bot_status", "🚦", "Bot Status", [
+        ("warning", "⚠️"), ("red_dot", "🔴"), ("green_dot", "🟢"), ("blocked", "🚫"),
+    ]),
+    ("bot_action", "⚡", "Bot Actions", [
+        ("plus", "➕"), ("minus", "➖"), ("edit", "✏️"), ("right_arrow", "➡️"),
+    ]),
+    ("bot_nav", "🧭", "Bot Navigation", [
+        ("point_right", "👉"), ("point_down", "👇"), ("back", "🔙"), ("home", "🏠"),
+    ]),
+    ("bot_awards", "🏅", "Bot Awards", [
+        ("gold", "🥇"), ("silver", "🥈"), ("bronze", "🥉"),
+    ]),
+    ("bot_people", "👥", "Bot People", [
+        ("person", "👤"), ("people", "👥"), ("teacher", "👨‍🏫"),
+        ("crown_icon", "👑"), ("eye", "👁"),
+    ]),
+    ("bot_comm", "📨", "Bot Communication", [
+        ("mail", "📨"), ("upload", "📤"), ("email_icon", "📧"),
+        ("phone_icon", "📞"), ("thought", "💭"), ("speech", "💬"),
+    ]),
+    ("bot_data", "📊", "Bot Data", [
+        ("stats", "📊"), ("growth", "📈"), ("document", "📄"),
+        ("name_badge", "📛"), ("mobile", "📱"), ("device", "📲"), ("numbers", "🔢"),
+    ]),
+    ("bot_system", "🔐", "Bot System", [
+        ("settings", "⚙️"), ("secure", "🔐"), ("locked", "🔒"),
+        ("key", "🔑"), ("shield", "🛡"), ("cloud", "☁️"),
+    ]),
+    ("bot_misc", "🎯", "Bot Misc", [
+        ("globe", "🌐"), ("moon", "🌙"), ("clover", "🍀"), ("target", "🎯"),
+        ("diamond", "💎"), ("control", "🎛"), ("fire", "🔥"), ("triangle", "🔺"),
+        ("graduation", "🎓"), ("pray", "🙏"), ("school", "🏫"), ("ballot", "🗳"),
+        ("blue_square", "🟦"), ("lightning", "⚡"), ("celebration", "🎉"),
+        ("memo", "📝"), ("pin", "📍"), ("undo", "↩️"), ("skip", "⏭"),
+    ]),
+]
+
+_ALL_EMOJI_KEYS = {}
+for _, _, _, items in _EMOJI_CATEGORIES:
+    for k, fb in items:
+        _ALL_EMOJI_KEYS[k] = fb
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def emoji_manager(request, svc="talabaovozi"):
+    """Emoji manager — view and edit custom emoji IDs for the bot."""
+    client = _client(svc)
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action == 'save_fields':
+            # Collect all emoji values from form
+            updates = {}
+            for key in _ALL_EMOJI_KEYS:
+                new_val = request.POST.get(f'field_{key}', '').strip()
+                updates[key] = new_val
+            # Only send non-empty values
+            payload = {k: v for k, v in updates.items() if v}
+            try:
+                client._request('POST', '/api/v1/emoji/config', json=payload)
+                messages.success(request, f"{len(payload)} ta emoji yangilandi.")
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+        elif action == 'clear_all':
+            try:
+                # Send empty values for all keys
+                payload = {k: '' for k in _ALL_EMOJI_KEYS}
+                client._request('POST', '/api/v1/emoji/config', json=payload)
+                messages.warning(request, "Barcha emojilar tozalandi.")
+            except BotAPIError as e:
+                _handle_api_error(request, e)
+        return HttpResponseRedirect(reverse('bot_emoji_list', kwargs={'svc': svc}))
+
+    # GET — load current emoji config from bot
+    emoji_config = {}
+    try:
+        resp = client._request('GET', '/api/v1/emoji/config')
+        emoji_config = resp.json()
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+
+    # Build categories with filled/total counts
+    categories = []
+    total_filled = 0
+    total_count = 0
+    for cat_key, cat_icon, cat_name, items in _EMOJI_CATEGORIES:
+        cat_items = []
+        cat_filled = 0
+        for key, fallback in items:
+            value = emoji_config.get(key, '')
+            if value:
+                cat_filled += 1
+            cat_items.append({
+                'key': key, 'fallback': fallback, 'value': value,
+            })
+        total_filled += cat_filled
+        total_count += len(items)
+        categories.append({
+            'key': cat_key, 'icon': cat_icon, 'name': cat_name,
+            'items': cat_items, 'filled': cat_filled, 'total': len(items),
+        })
+
+    return TemplateResponse(request, "botproxy/emoji_manager.html", _ctx(request, svc, {
+        'categories': categories,
+        'stats': {'filled': total_filled, 'total': total_count},
+    }))

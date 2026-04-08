@@ -1,0 +1,126 @@
+{% extends "botproxy/base.html" %}
+{% block page_title %}Emojis — {{ service_title }}{% endblock %}
+
+{% block bot_content %}
+<style>
+    .em-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .em-header h1 { margin: 0; font-size: 1.5rem; }
+    .em-stats { font-size: 0.875rem; color: var(--rb-fg-muted); }
+    .em-stats b { color: var(--rb-primary); }
+    .em-actions { display: flex; gap: 0.5rem; }
+
+    .em-category { margin-bottom: 1.5rem; }
+    .em-cat-header {
+        display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+        background: var(--rb-bg-muted); border-radius: 10px; cursor: pointer;
+        font-weight: 600; font-size: 0.9375rem; user-select: none;
+        transition: background 0.15s;
+    }
+    .em-cat-header:hover { background: var(--rb-border); }
+    .em-cat-icon { font-size: 1.25rem; }
+    .em-cat-badge {
+        margin-left: auto; font-size: 0.75rem; font-weight: 500;
+        background: var(--rb-primary-muted); color: var(--rb-primary);
+        padding: 0.125rem 0.5rem; border-radius: 999px;
+    }
+    .em-cat-badge.full { background: rgba(16,185,129,0.15); color: #10b981; }
+    .em-cat-chevron { margin-left: 0.5rem; transition: transform 0.2s; font-size: 1.25rem; color: var(--rb-fg-muted); }
+    .em-category.open .em-cat-chevron { transform: rotate(180deg); }
+
+    .em-cat-body { display: none; padding: 0.5rem 0; }
+    .em-category.open .em-cat-body { display: block; }
+
+    .em-row {
+        display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--rb-border-light);
+    }
+    .em-row:last-child { border-bottom: none; }
+    .em-emoji { font-size: 1.5rem; width: 2rem; text-align: center; flex-shrink: 0; }
+    .em-info { flex: 1; min-width: 0; }
+    .em-key { font-family: monospace; font-size: 0.8125rem; color: var(--rb-fg); }
+    .em-input {
+        width: 220px; padding: 0.375rem 0.625rem; font-size: 0.8125rem;
+        font-family: monospace; border: 1px solid var(--rb-border);
+        border-radius: 6px; background: var(--rb-bg); color: var(--rb-fg);
+        transition: border-color 0.15s;
+    }
+    .em-input:focus { outline: none; border-color: var(--rb-primary); box-shadow: 0 0 0 2px var(--rb-primary-muted); }
+    .em-input.has-value { border-color: #10b981; }
+    .em-clear {
+        background: none; border: none; cursor: pointer; color: var(--rb-fg-muted);
+        font-size: 1.125rem; padding: 0.25rem; border-radius: 4px;
+    }
+    .em-clear:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+    @media (max-width: 640px) {
+        .em-row { flex-wrap: wrap; }
+        .em-input { width: 100%; }
+    }
+</style>
+
+<form method="POST">
+{% csrf_token %}
+<div class="em-header">
+    <div>
+        <h1>Custom Emoji Manager</h1>
+        <div class="em-stats">
+            Sozlangan: <b>{{ stats.filled }}</b> / {{ stats.total }}
+        </div>
+    </div>
+    <div class="em-actions">
+        <button type="submit" name="action" value="save_fields" class="rb-btn rb-btn-primary">
+            <span class="material-symbols-outlined">save</span> Saqlash
+        </button>
+        <button type="submit" name="action" value="clear_all" class="rb-btn rb-btn-danger"
+                onclick="return confirm('Barcha emoji IDlarni tozalashni xohlaysizmi?')">
+            <span class="material-symbols-outlined">delete_sweep</span> Tozalash
+        </button>
+    </div>
+</div>
+
+<div class="rb-card" style="padding: 0.5rem;">
+    <p style="padding: 0.75rem 1rem; margin: 0; font-size: 0.8125rem; color: var(--rb-fg-muted);">
+        Botga custom emoji yuboring &rarr; bot ID ni qaytaradi. ID ni shu yerga kiriting. Bo'sh = oddiy Unicode emoji.
+    </p>
+</div>
+
+{% for cat in categories %}
+<div class="em-category{% if cat.filled < cat.total %} open{% endif %}" data-cat="{{ cat.key }}">
+    <div class="em-cat-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="em-cat-icon">{{ cat.icon }}</span>
+        {{ cat.name }}
+        <span class="em-cat-badge{% if cat.filled == cat.total %} full{% endif %}">
+            {{ cat.filled }}/{{ cat.total }}
+        </span>
+        <span class="material-symbols-outlined em-cat-chevron">expand_more</span>
+    </div>
+    <div class="em-cat-body">
+        {% for item in cat.items %}
+        <div class="em-row">
+            <span class="em-emoji">{{ item.fallback }}</span>
+            <div class="em-info">
+                <span class="em-key">{{ item.key }}</span>
+            </div>
+            <input type="text" name="field_{{ item.key }}" value="{{ item.value }}"
+                   class="em-input{% if item.value %} has-value{% endif %}"
+                   placeholder="Emoji ID kiriting..."
+                   oninput="this.classList.toggle('has-value', this.value.length > 0)">
+            {% if item.value %}
+            <button type="button" class="em-clear" title="Tozalash"
+                    onclick="this.previousElementSibling.value=''; this.previousElementSibling.classList.remove('has-value'); this.remove();">
+                &times;
+            </button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+    <button type="submit" name="action" value="save_fields" class="rb-btn rb-btn-primary">
+        <span class="material-symbols-outlined">save</span> Saqlash
+    </button>
+</div>
+</form>
+{% endblock %}

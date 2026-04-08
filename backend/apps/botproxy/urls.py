@@ -54,4 +54,6 @@ urlpatterns = [
     path("<str:svc>/staff/<int:staff_id>/photo/", views.staff_photo_proxy, name="bot_staff_photo"),
     # Feedback
     path("<str:svc>/feedback/", views.feedback_dashboard, name="bot_feedback_dashboard"),
+    # Emoji
+    path("<str:svc>/emojis/", views.emoji_manager, name="bot_emoji_list"),
 ]
