@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from django.conf import settings as djsettings
@@ -655,6 +656,17 @@ def user_detail(request, user_id: int, svc="talabaovozi"):
         user_data = client.get_user_history(user_id)
     except BotAPIError:
         pass
+
+    # On-demand Telethon enrichment (non-blocking, fire-and-forget)
+    # Runs in background thread so it doesn't slow page load
+    if user_data:
+        username = user_data.get("username")
+        _executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            from botproxy.enrich_service import enrich_user_on_view
+            _executor.submit(enrich_user_on_view, user_id, username, client)
+        except Exception:
+            pass  # Never block page for enrichment
 
     # OSINT data (optional — only if user has osint permission)
     # NOTE: We only load cached data here. Fresh data is loaded via AJAX
