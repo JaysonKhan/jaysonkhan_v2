@@ -18,6 +18,17 @@
     <meta name="author" content="{{ site_settings.site_author }}">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
+    <!-- Search Console Verification -->
+    {% if site_settings.google_site_verification %}
+    <meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">
+    {% endif %}
+    {% if site_settings.yandex_verification %}
+    <meta name="yandex-verification" content="{{ site_settings.yandex_verification }}">
+    {% endif %}
+    {% if site_settings.bing_verification %}
+    <meta name="msvalidate.01" content="{{ site_settings.bing_verification }}">
+    {% endif %}
+
     <!-- RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="{{ site_settings.site_author }} Blog" href="{% url 'blog_rss_feed' %}">
 
@@ -50,12 +61,33 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Person",
-      "name": "{{ site_settings.site_author }}",
-      "url": "{{ site_settings.og_url }}",
-      "jobTitle": "Flutter Mobile Engineer",
-      "email": "{{ site_settings.email }}"{% if site_settings.github_url or site_settings.linkedin_url %},
-      "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %},{% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}]{% endif %}
+      "@graph": [
+        {
+          "@type": "Person",
+          "@id": "{{ site_settings.og_url }}#person",
+          "name": "{{ site_settings.site_author }}",
+          "url": "{{ site_settings.og_url }}",
+          "jobTitle": "Flutter Mobile Engineer",
+          "description": "{{ site_settings.meta_description|escapejs }}",
+          "email": "{{ site_settings.email }}"{% if site_settings.og_image %},
+          "image": "{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}"{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
+          "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %}, {% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}{% if site_settings.twitter_url and site_settings.linkedin_url %}, {% elif site_settings.twitter_url and site_settings.github_url %}, {% endif %}{% if site_settings.twitter_url %}"{{ site_settings.twitter_url }}"{% endif %}{% if site_settings.telegram_url %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url %}, {% endif %}"{{ site_settings.telegram_url }}"{% endif %}]{% endif %}
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ site_settings.og_url }}#website",
+          "url": "{{ site_settings.og_url }}",
+          "name": "{{ site_settings.site_title }}",
+          "description": "{{ site_settings.meta_description|escapejs }}",
+          "publisher": {"@id": "{{ site_settings.og_url }}#person"},
+          "inLanguage": "en",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ site_settings.og_url }}/blog/search/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }{% block jsonld_extra %}{% endblock %}
+      ]
     }
     </script>
 
@@ -971,6 +1003,30 @@
 
     <!-- Telegram WebApp API — enables auto-login when opened via Telegram in-app browser -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    {# ── Google Analytics 4 ─────────────────────────────────────────────── #}
+    {% if site_settings.google_analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ site_settings.google_analytics_id }}');
+    </script>
+    {% endif %}
+
+    {# ── Yandex Metrica ─────────────────────────────────────────────────── #}
+    {% if site_settings.yandex_metrika_id %}
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+        ym({{ site_settings.yandex_metrika_id }}, "init", {clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/{{ site_settings.yandex_metrika_id }}" style="position:absolute;left:-9999px;" alt="" /></div></noscript>
+    {% endif %}
 
     {% block extra_head %}{% endblock %}
 </head>

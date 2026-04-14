@@ -130,6 +130,33 @@ class SiteSettingsAdmin(ModelAdmin):
                 ),
             }),
 
+            # ── Tab 2b: Analytics ──────────────────────────────────────────────
+            ('Analytics', {
+                'classes': ('tab',),
+                'description': (
+                    'Tracking snippets — Google Analytics 4 and Yandex Metrica. '
+                    'Leave empty to disable the tracker.'
+                ),
+                'fields': (
+                    'google_analytics_id',
+                    'yandex_metrika_id',
+                ),
+            }),
+
+            # ── Tab 2c: Search Console Verification ────────────────────────────
+            ('Search Console verification', {
+                'classes': ('tab',),
+                'description': (
+                    'Verification tokens for Google Search Console, Yandex Webmaster '
+                    'and Bing Webmaster. Paste only the content= value of the meta tag.'
+                ),
+                'fields': (
+                    'google_site_verification',
+                    'yandex_verification',
+                    'bing_verification',
+                ),
+            }),
+
             # ── Tab 3: Navigation ──────────────────────────────────────────────
             ('Navigation', {
                 'classes': ('tab',),

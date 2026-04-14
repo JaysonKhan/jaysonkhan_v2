@@ -70,6 +70,30 @@ class SEOMixin(models.Model):
         help_text="Twitter/X handle without @ — for twitter:site tag"
     )
 
+    # ── Analytics ────────────────────────────────────────────────────────────
+    google_analytics_id = models.CharField(
+        max_length=20, blank=True, default="",
+        help_text="GA4 Measurement ID, e.g. G-XXXXXXXXXX"
+    )
+    yandex_metrika_id = models.CharField(
+        max_length=20, blank=True, default="",
+        help_text="Yandex Metrica counter ID (digits only)"
+    )
+
+    # ── Search Console Verification ──────────────────────────────────────────
+    google_site_verification = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="Google Search Console token (content= value of the meta tag)"
+    )
+    yandex_verification = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="Yandex Webmaster verification token (content= value)"
+    )
+    bing_verification = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="Bing Webmaster msvalidate.01 token"
+    )
+
     class Meta:
         abstract = True
 
