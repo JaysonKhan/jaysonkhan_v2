@@ -326,20 +326,50 @@ def github_contributions(request):
 # ── robots.txt ─────────────────────────────────────────────────────────────────
 
 def robots_txt(request):
-    """Serve robots.txt with dynamic Sitemap URL."""
+    """Serve robots.txt with dynamic sitemap URL and professional bot policy.
+
+    Blocks aggressive SEO scrapers (Ahrefs, Semrush, etc.) and reserves private
+    paths (/admin, /api, /auth). Explicit Googlebot-Image allow for image SEO.
+    """
     sitemap_url = request.build_absolute_uri(
-        reverse('django.contrib.sitemaps.views.sitemap')
+        reverse("django.contrib.sitemaps.views.sitemap")
     )
-    content = (
-        "User-agent: *\n"
-        "Allow: /\n"
-        "\n"
-        "Disallow: /api/\n"
-        "Disallow: /auth/\n"
-        "\n"
-        f"Sitemap: {sitemap_url}\n"
-    )
-    return HttpResponse(content, content_type='text/plain')
+    lines = [
+        "# jaysonkhan.com — Flutter Mobile Engineer Portfolio",
+        "# Allow search engines, block SEO scrapers.",
+        "",
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "Disallow: /auth/",
+        "Disallow: /jk-dinadmin/",
+        "Disallow: /admin/",
+        "Disallow: /*?success=*",
+        "Disallow: /*?error=*",
+        "Crawl-delay: 1",
+        "",
+        "# Block SEO/scraping bots (bandwidth hogs, zero value)",
+        "User-agent: AhrefsBot",
+        "Disallow: /",
+        "User-agent: SemrushBot",
+        "Disallow: /",
+        "User-agent: DotBot",
+        "Disallow: /",
+        "User-agent: MJ12bot",
+        "Disallow: /",
+        "User-agent: PetalBot",
+        "Disallow: /",
+        "User-agent: DataForSeoBot",
+        "Disallow: /",
+        "",
+        "# Google image crawler — full access for image SEO",
+        "User-agent: Googlebot-Image",
+        "Allow: /",
+        "",
+        f"Sitemap: {sitemap_url}",
+        "",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

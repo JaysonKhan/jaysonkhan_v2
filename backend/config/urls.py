@@ -3,6 +3,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.cache import cache_page
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -39,8 +40,12 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # ── SEO & Feeds ────────────────────────────────────────────────────────────
-    path('robots.txt', robots_txt, name='robots_txt'),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps},
+    # robots.txt cached 1 day (rarely changes, served on every crawl)
+    path('robots.txt', cache_page(86400)(robots_txt), name='robots_txt'),
+    # sitemap.xml cached 1 hour (fresh enough for crawlers, saves DB queries)
+    path('sitemap.xml',
+         cache_page(3600)(sitemap),
+         {'sitemaps': sitemaps},
          name='django.contrib.sitemaps.views.sitemap'),
     path('blog/feed/', LatestPostsFeed(), name='blog_rss_feed'),
     path('blog/feed/atom/', LatestPostsAtomFeed(), name='blog_atom_feed'),
