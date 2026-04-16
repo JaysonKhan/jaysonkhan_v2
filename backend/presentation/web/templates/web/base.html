@@ -1036,16 +1036,36 @@
         base: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/',
       };
       window.applyEmoji = function(root) {
-        if (!window.twemoji) return;
-        if (!document.body) {
-          document.addEventListener('DOMContentLoaded', () => window.applyEmoji(root), { once: true });
-          return;
-        }
+        if (!window.twemoji || !document.body) return;
         window.twemoji.parse(root || document.body, {
           folder: '', ext: '.png', className: 'apple-emoji',
           callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
         });
       };
+      (function() {
+        let pending = null;
+        const tryParse = () => {
+          if (pending) return;
+          pending = requestAnimationFrame(() => {
+            pending = null;
+            if (window.twemoji && document.body) window.applyEmoji();
+          });
+        };
+        document.addEventListener('DOMContentLoaded', tryParse);
+        window.addEventListener('load', tryParse);
+        if ('MutationObserver' in window) {
+          const obs = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+              for (const n of m.addedNodes) {
+                if (n.nodeType === 1 || n.nodeType === 3) { tryParse(); return; }
+              }
+            }
+          });
+          const start = () => obs.observe(document.body, { childList: true, subtree: true });
+          if (document.body) start();
+          else document.addEventListener('DOMContentLoaded', start);
+        }
+      })();
       document.addEventListener('error', function(e) {
         if (e.target.tagName === 'IMG' && e.target.classList.contains('apple-emoji')) {
           e.target.replaceWith(document.createTextNode(e.target.alt || ''));
