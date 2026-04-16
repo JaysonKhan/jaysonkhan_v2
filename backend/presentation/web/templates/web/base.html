@@ -1051,9 +1051,11 @@
       };
       (function() {
         const run = () => { if (window.twemoji && document.body) window.applyEmoji(); };
-        document.addEventListener('DOMContentLoaded', run);
-        window.addEventListener('load', run);
-        document.addEventListener('htmx:afterSwap', () => window.applyEmoji(document.body));
+        const tryAll = () => { run(); setTimeout(run, 150); setTimeout(run, 500); setTimeout(run, 1500); };
+        document.addEventListener('DOMContentLoaded', tryAll);
+        window.addEventListener('load', tryAll);
+        document.addEventListener('htmx:afterSwap', () => setTimeout(run, 50));
+        document.addEventListener('alpine:initialized', () => setTimeout(run, 50));
       })();
       document.addEventListener('error', function(e) {
         const t = e.target;
