@@ -1035,19 +1035,13 @@
       window.__appleEmojiConfig = {
         base: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/',
       };
-      window.__parsingEmoji = false;
+      // twemoji.parse() idempotent — guard kerak emas
       window.applyEmoji = function(root) {
         if (!window.twemoji || !document.body) return;
-        if (window.__parsingEmoji) return;
-        window.__parsingEmoji = true;
-        try {
-          window.twemoji.parse(root || document.body, {
-            folder: '', ext: '.png', className: 'apple-emoji',
-            callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
-          });
-        } finally {
-          setTimeout(() => { window.__parsingEmoji = false; }, 0);
-        }
+        window.twemoji.parse(root || document.body, {
+          folder: '', ext: '.png', className: 'apple-emoji',
+          callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
+        });
       };
       (function() {
         const run = () => { if (window.twemoji && document.body) window.applyEmoji(); };
