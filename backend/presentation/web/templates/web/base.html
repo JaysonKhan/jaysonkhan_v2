@@ -1064,6 +1064,14 @@
     <style>
       img.apple-emoji { height:1.2em; width:1.2em; vertical-align:-0.2em; display:inline-block; margin:0 0.05em; }
     </style>
+    <script>
+      // Service Worker — emoji rasmlarini forever-cache qiladi
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+        });
+      }
+    </script>
 </head>
 
 <body class="min-h-screen flex flex-col">

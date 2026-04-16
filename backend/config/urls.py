@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.decorators.cache import cache_page
+from django.views.generic import TemplateView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -49,6 +50,12 @@ urlpatterns = [
          name='django.contrib.sitemaps.views.sitemap'),
     path('blog/feed/', LatestPostsFeed(), name='blog_rss_feed'),
     path('blog/feed/atom/', LatestPostsAtomFeed(), name='blog_atom_feed'),
+
+    # ── Service Worker — emoji cache (root scope majburiy) ─────────────────
+    path('sw.js', TemplateView.as_view(
+        template_name='web/sw.js',
+        content_type='application/javascript',
+    ), name='service_worker'),
 
     # ── Health check ──────────────────────────────────────────────────────────
     path('health/', health_check, name='health_check'),
