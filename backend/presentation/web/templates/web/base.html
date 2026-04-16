@@ -1030,50 +1030,7 @@
 
     {% block extra_head %}{% endblock %}
 
-    {# ── Apple-style Emoji (cross-platform consistency) ───────────────── #}
-    <script>
-      window.__appleEmojiConfig = {
-        base: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/',
-      };
-      // twemoji.parse() idempotent — guard kerak emas
-      window.applyEmoji = function(root) {
-        if (!window.twemoji || !document.body) return;
-        window.twemoji.parse(root || document.body, {
-          folder: '', ext: '.png', className: 'apple-emoji',
-          callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
-        });
-      };
-      (function() {
-        const run = () => { if (window.twemoji && document.body) window.applyEmoji(); };
-        const tryAll = () => { run(); setTimeout(run, 150); setTimeout(run, 500); setTimeout(run, 1500); };
-        document.addEventListener('DOMContentLoaded', tryAll);
-        window.addEventListener('load', tryAll);
-        document.addEventListener('htmx:afterSwap', () => setTimeout(run, 50));
-        document.addEventListener('alpine:initialized', () => setTimeout(run, 50));
-      })();
-      document.addEventListener('error', function(e) {
-        const t = e.target;
-        if (t.tagName !== 'IMG' || !t.classList.contains('apple-emoji')) return;
-        if (!t.alt || t.dataset.fallbackDone) return;
-        t.dataset.fallbackDone = '1';
-        setTimeout(() => {
-          if (t.naturalWidth === 0 && t.isConnected) t.replaceWith(document.createTextNode(t.alt));
-        }, 1000);
-      }, true);
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js"
-            onload="window.applyEmoji && window.applyEmoji()"></script>
-    <style>
-      img.apple-emoji { height:1.2em; width:1.2em; vertical-align:-0.2em; display:inline-block; margin:0 0.05em; }
-    </style>
-    <script>
-      // Service Worker — emoji rasmlarini forever-cache qiladi
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-        });
-      }
-    </script>
+    {# Native OS emojilar ishlatiladi (Apple/Segoe/Noto) — custom font CDN yo'q #}
 </head>
 
 <body class="min-h-screen flex flex-col">
