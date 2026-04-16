@@ -1030,37 +1030,26 @@
 
     {% block extra_head %}{% endblock %}
 
-    {# ── Apple-style Emoji (cross-platform consistency) ─────────────────
-       Twemoji DOM parser + Apple emoji images from jsDelivr CDN.
-       Har operatsion tizimda (Android, Windows, Linux, Safari, Chrome)
-       bir xil iOS emojilar ko'rinadi. ~15KB JS + lazy images. #}
-    <script defer src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js"></script>
-    <script defer>
-      (function() {
-        'use strict';
-        const APPLE = 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/';
-        function applyEmoji(root) {
-          if (!window.twemoji) return;
-          twemoji.parse(root || document.body, {
-            folder: '', ext: '.png', className: 'apple-emoji',
-            callback: (icon, opts) => APPLE + icon + '.png',
-          });
+    {# ── Apple-style Emoji (cross-platform consistency) ───────────────── #}
+    <script>
+      window.__appleEmojiConfig = {
+        base: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/',
+      };
+      window.applyEmoji = function(root) {
+        if (!window.twemoji) return;
+        window.twemoji.parse(root || document.body, {
+          folder: '', ext: '.png', className: 'apple-emoji',
+          callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
+        });
+      };
+      document.addEventListener('error', function(e) {
+        if (e.target.tagName === 'IMG' && e.target.classList.contains('apple-emoji')) {
+          e.target.replaceWith(document.createTextNode(e.target.alt || ''));
         }
-        function boot() {
-          if (!window.twemoji) return setTimeout(boot, 30);
-          applyEmoji();
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', boot);
-        } else { boot(); }
-        window.applyEmoji = applyEmoji;
-        document.addEventListener('error', function(e) {
-          if (e.target.tagName === 'IMG' && e.target.classList.contains('apple-emoji')) {
-            e.target.replaceWith(document.createTextNode(e.target.alt || ''));
-          }
-        }, true);
-      })();
+      }, true);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js"
+            onload="window.applyEmoji && window.applyEmoji()"></script>
     <style>
       img.apple-emoji { height:1.2em; width:1.2em; vertical-align:-0.2em; display:inline-block; margin:0 0.05em; }
     </style>
