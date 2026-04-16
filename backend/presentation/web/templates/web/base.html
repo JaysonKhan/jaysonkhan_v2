@@ -1035,41 +1035,34 @@
       window.__appleEmojiConfig = {
         base: 'https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/',
       };
+      window.__parsingEmoji = false;
       window.applyEmoji = function(root) {
         if (!window.twemoji || !document.body) return;
-        window.twemoji.parse(root || document.body, {
-          folder: '', ext: '.png', className: 'apple-emoji',
-          callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
-        });
+        if (window.__parsingEmoji) return;
+        window.__parsingEmoji = true;
+        try {
+          window.twemoji.parse(root || document.body, {
+            folder: '', ext: '.png', className: 'apple-emoji',
+            callback: (icon) => window.__appleEmojiConfig.base + icon + '.png',
+          });
+        } finally {
+          setTimeout(() => { window.__parsingEmoji = false; }, 0);
+        }
       };
       (function() {
-        let pending = null;
-        const tryParse = () => {
-          if (pending) return;
-          pending = requestAnimationFrame(() => {
-            pending = null;
-            if (window.twemoji && document.body) window.applyEmoji();
-          });
-        };
-        document.addEventListener('DOMContentLoaded', tryParse);
-        window.addEventListener('load', tryParse);
-        if ('MutationObserver' in window) {
-          const obs = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-              for (const n of m.addedNodes) {
-                if (n.nodeType === 1 || n.nodeType === 3) { tryParse(); return; }
-              }
-            }
-          });
-          const start = () => obs.observe(document.body, { childList: true, subtree: true });
-          if (document.body) start();
-          else document.addEventListener('DOMContentLoaded', start);
-        }
+        const run = () => { if (window.twemoji && document.body) window.applyEmoji(); };
+        document.addEventListener('DOMContentLoaded', run);
+        window.addEventListener('load', run);
+        document.addEventListener('htmx:afterSwap', () => window.applyEmoji(document.body));
       })();
       document.addEventListener('error', function(e) {
-        if (e.target.tagName === 'IMG' && e.target.classList.contains('apple-emoji')) {
-          e.target.replaceWith(document.createTextNode(e.target.alt || ''));
-        }
+        const t = e.target;
+        if (t.tagName !== 'IMG' || !t.classList.contains('apple-emoji')) return;
+        if (!t.alt || t.dataset.fallbackDone) return;
+        t.dataset.fallbackDone = '1';
+        setTimeout(() => {
+          if (t.naturalWidth === 0 && t.isConnected) t.replaceWith(document.createTextNode(t.alt));
+        }, 1000);
       }, true);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js"
