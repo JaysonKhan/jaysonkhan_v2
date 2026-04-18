@@ -1574,3 +1574,162 @@ def emoji_manager(request, svc="talabaovozi"):
         'categories': categories,
         'stats': {'filled': total_filled, 'total': total_count, 'empty': total_count - total_filled},
     }))
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# v21: University Enrichment (prof-emis.edu.uz)
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def enrichment_dashboard(request, svc: str = "talabaovozi"):
+    """Main enrichment page — overview + recent jobs + all unis with match status."""
+    client = _client(svc)
+    try:
+        overview = client.get_enrichment_overview()
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        overview = {
+            "total": 0, "matched": 0, "manual": 0, "unmatched": 0,
+            "low_confidence": 0, "running_job_id": None, "universities": [],
+        }
+    try:
+        jobs_data = client.list_enrichment_jobs(limit=10)
+    except BotAPIError:
+        jobs_data = {"jobs": [], "running_job_id": None}
+
+    search = request.GET.get("q", "").strip().lower()
+    status_filter = request.GET.get("status", "")
+    unis = overview.get("universities", [])
+    if search:
+        unis = [
+            u for u in unis
+            if search in (u.get("short_name") or "").lower()
+            or search in (u.get("full_name") or "").lower()
+            or search in (u.get("code") or "").lower()
+        ]
+    if status_filter == "matched":
+        unis = [u for u in unis if u.get("prof_emis_id")]
+    elif status_filter == "unmatched":
+        unis = [u for u in unis if not u.get("prof_emis_id")]
+    elif status_filter == "low_confidence":
+        unis = [
+            u for u in unis
+            if u.get("match_method") == "fuzzy"
+            and (u.get("match_confidence") or 0) < 90
+        ]
+    elif status_filter == "manual":
+        unis = [u for u in unis if u.get("match_method") == "manual"]
+
+    return TemplateResponse(request, "botproxy/enrichment_dashboard.html", _ctx(request, svc, {
+        "overview": overview,
+        "universities": unis,
+        "jobs": jobs_data.get("jobs", []),
+        "running_job_id": jobs_data.get("running_job_id"),
+        "search": search,
+        "status_filter": status_filter,
+    }))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def enrichment_overview_api(request, svc: str = "talabaovozi"):
+    """AJAX endpoint — overview counts (for live refresh)."""
+    client = _client(svc)
+    try:
+        return JsonResponse(client.get_enrichment_overview())
+    except BotAPIError as e:
+        return JsonResponse({"error": str(e)}, status=502)
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def enrichment_job_status_api(request, job_id: int, svc: str = "talabaovozi"):
+    """AJAX endpoint — single job progress."""
+    client = _client(svc)
+    try:
+        return JsonResponse(client.get_enrichment_job(job_id))
+    except BotAPIError as e:
+        return JsonResponse({"error": str(e)}, status=502)
+
+
+@require_POST
+@admin_permission_required('botproxy.manage_universities')
+def enrichment_start_sync(request, svc: str = "talabaovozi"):
+    """Start bulk enrichment — redirects back to dashboard with job_id."""
+    client = _client(svc)
+    mode = request.POST.get("mode", "sync")
+    live_flag = request.POST.get("live", "1") == "1"
+    user_id = getattr(request.user, "id", None)
+    try:
+        result = client.start_enrichment_sync(mode=mode, live=live_flag, started_by=user_id)
+        messages.success(
+            request,
+            f"Sinxronizatsiya boshlandi (job #{result.get('job_id')}, mode={mode})",
+        )
+    except BotAPIError as e:
+        if e.status == 409:
+            messages.warning(request, "Boshqa sinxronizatsiya hozir ishlamoqda — kuting")
+        else:
+            _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_enrichment_dashboard", svc))
+
+
+@require_POST
+@admin_permission_required('botproxy.manage_universities')
+def enrichment_single_uni(request, uni_id: int, svc: str = "talabaovozi"):
+    """Re-enrich one university."""
+    client = _client(svc)
+    try:
+        client.enrich_single_university(uni_id, live=True)
+        messages.success(request, f"Universitet #{uni_id} boyitish boshlandi")
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_enrichment_dashboard", svc))
+
+
+@require_POST
+@admin_permission_required('botproxy.manage_universities')
+def enrichment_set_match(request, uni_id: int, svc: str = "talabaovozi"):
+    """Manual prof_emis_id override."""
+    client = _client(svc)
+    prof_emis_id = request.POST.get("prof_emis_id", "").strip()
+    if not prof_emis_id.isdigit():
+        messages.error(request, "prof_emis_id raqam bo'lishi kerak")
+    else:
+        try:
+            client.set_university_enrichment_match(uni_id, int(prof_emis_id))
+            messages.success(request, f"Match o'rnatildi: prof_emis_id={prof_emis_id}")
+        except BotAPIError as e:
+            _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_enrichment_dashboard", svc))
+
+
+@require_POST
+@admin_permission_required('botproxy.manage_universities')
+def enrichment_clear_match(request, uni_id: int, svc: str = "talabaovozi"):
+    client = _client(svc)
+    try:
+        client.clear_university_enrichment_match(uni_id)
+        messages.success(request, f"Match olib tashlandi (uni #{uni_id})")
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+    return HttpResponseRedirect(_rev("bot_enrichment_dashboard", svc))
+
+
+@admin_permission_required('botproxy.view_bot_dashboard')
+def enrichment_uni_detail(request, uni_id: int, svc: str = "talabaovozi"):
+    """Full enrichment breakdown for one uni — used to verify enrichment quality."""
+    client = _client(svc)
+    try:
+        uni_wrapper = client.get_university(uni_id)
+        enriched = client.get_university_enrichment(uni_id)
+    except BotAPIError as e:
+        _handle_api_error(request, e)
+        return HttpResponseRedirect(_rev("bot_enrichment_dashboard", svc))
+
+    return TemplateResponse(request, "botproxy/enrichment_detail.html", _ctx(request, svc, {
+        "university": uni_wrapper.get("university", {}),
+        "enrichment": enriched.get("enrichment"),
+        "stats": enriched.get("stats"),
+        "specialties": enriched.get("specialties", []),
+        "specialty_counts": enriched.get("specialty_counts", {}),
+    }))

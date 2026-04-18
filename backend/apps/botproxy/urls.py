@@ -56,4 +56,13 @@ urlpatterns = [
     path("<str:svc>/feedback/", views.feedback_dashboard, name="bot_feedback_dashboard"),
     # Emoji
     path("<str:svc>/emojis/", views.emoji_manager, name="bot_emoji_list"),
+    # v21: Enrichment (prof-emis.edu.uz)
+    path("<str:svc>/enrichment/", views.enrichment_dashboard, name="bot_enrichment_dashboard"),
+    path("<str:svc>/enrichment/sync/", views.enrichment_start_sync, name="bot_enrichment_sync"),
+    path("<str:svc>/enrichment/overview/", views.enrichment_overview_api, name="bot_enrichment_overview_api"),
+    path("<str:svc>/enrichment/jobs/<int:job_id>/", views.enrichment_job_status_api, name="bot_enrichment_job_api"),
+    path("<str:svc>/enrichment/universities/<int:uni_id>/", views.enrichment_uni_detail, name="bot_enrichment_uni_detail"),
+    path("<str:svc>/enrichment/universities/<int:uni_id>/enrich/", views.enrichment_single_uni, name="bot_enrichment_single"),
+    path("<str:svc>/enrichment/universities/<int:uni_id>/match/", views.enrichment_set_match, name="bot_enrichment_match_set"),
+    path("<str:svc>/enrichment/universities/<int:uni_id>/match/clear/", views.enrichment_clear_match, name="bot_enrichment_match_clear"),
 ]

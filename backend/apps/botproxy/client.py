@@ -279,6 +279,41 @@ class BotAPIClient:
     def remove_university_faculty(self, fac_id: int) -> dict:
         return self._request("DELETE", f"/api/v1/universities/faculties/{fac_id}").json()
 
+    # ─── Enrichment (v21: prof-emis.edu.uz) ─────────────────────────────────
+
+    def get_university_enrichment(self, uni_id: int) -> dict:
+        return self._request("GET", f"/api/v1/universities/{uni_id}/enriched").json()
+
+    def set_university_enrichment_match(self, uni_id: int, prof_emis_id: int) -> dict:
+        return self._request(
+            "POST", f"/api/v1/universities/{uni_id}/enriched/match",
+            json={"prof_emis_id": prof_emis_id},
+        ).json()
+
+    def clear_university_enrichment_match(self, uni_id: int) -> dict:
+        return self._request("DELETE", f"/api/v1/universities/{uni_id}/enriched/match").json()
+
+    def enrich_single_university(self, uni_id: int, live: bool = True) -> dict:
+        path = f"/api/v1/universities/{uni_id}/enrich"
+        if not live:
+            path += "?live=0"
+        return self._request("POST", path).json()
+
+    def get_enrichment_overview(self) -> dict:
+        return self._request("GET", "/api/v1/enrichment/overview").json()
+
+    def start_enrichment_sync(self, mode: str = "sync", live: bool = True, started_by: int | None = None) -> dict:
+        data = {"mode": mode, "live": live}
+        if started_by:
+            data["started_by"] = started_by
+        return self._request("POST", "/api/v1/enrichment/sync", json=data).json()
+
+    def list_enrichment_jobs(self, limit: int = 20) -> dict:
+        return self._request("GET", f"/api/v1/enrichment/jobs?limit={limit}").json()
+
+    def get_enrichment_job(self, job_id: int) -> dict:
+        return self._request("GET", f"/api/v1/enrichment/jobs/{job_id}").json()
+
     # ─── Staff ──────────────────────────────────────────────────────────────
 
     def list_staff(self, university_id: int | None = None) -> list[dict]:

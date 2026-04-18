@@ -322,6 +322,9 @@
         <a href="{% url 'bot_feedback_dashboard' svc=svc %}" class="{% if 'feedback' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">reviews</span> Feedback
         </a>
+        <a href="{% url 'bot_enrichment_dashboard' svc=svc %}" class="{% if 'enrichment' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="material-symbols-outlined">auto_awesome</span> Enrichment
+        </a>
         <a href="{% url 'bot_emoji_list' svc=svc %}" class="{% if 'emoji' in request.resolver_match.url_name %}active{% endif %}">
             <span class="material-symbols-outlined">emoji_emotions</span> Emojis
         </a>
