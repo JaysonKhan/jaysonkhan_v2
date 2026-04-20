@@ -9,6 +9,7 @@ allows re-sharing.
 from __future__ import annotations
 
 import logging
+import os
 from html import escape
 from typing import Optional, Tuple
 
@@ -73,9 +74,12 @@ class ChannelShareService:
         keyboard = self._build_post_keyboard(post)
         reply_markup = {'inline_keyboard': keyboard}
 
-        photo_url = f'{self._domain}{post.featured_image.url}'
+        # Pass the local file path so the API client uploads the bytes
+        # via multipart. URL-based fetch fails on Cyrillic filenames,
+        # HTTP/2-only hosts, or strict Content-Type checks.
+        photo = self._photo_source(post.featured_image)
         result = self.api.send_photo(
-            channel_id, photo_url,
+            channel_id, photo,
             caption=caption,
             reply_markup=reply_markup,
         )
@@ -119,12 +123,14 @@ class ChannelShareService:
         keyboard = self._build_project_keyboard(project)
         reply_markup = {'inline_keyboard': keyboard}
 
-        # Try photo first
+        # Try photo first — prefer local file path (multipart upload)
+        # over URL fetch because Telegram's URL fetcher chokes on
+        # Cyrillic filenames, HTTP/2-only hosts, and strict CDN headers.
         result = None
         if project.image:
-            photo_url = f'{self._domain}{project.image.url}'
+            photo = self._photo_source(project.image)
             result = self.api.send_photo(
-                channel_id, photo_url,
+                channel_id, photo,
                 caption=caption,
                 reply_markup=reply_markup,
             )
@@ -366,6 +372,28 @@ class ChannelShareService:
         return ''
 
     # ── Private helpers ────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _photo_source(image_field) -> str:
+        """Return the best input for Telegram sendPhoto.
+
+        Prefer the local filesystem path so the API client can do a
+        multipart upload — avoids URL-fetch failures on non-ASCII
+        filenames. Fall back to a public HTTPS URL only if the path
+        is inaccessible (e.g. remote storage backend).
+        """
+        try:
+            path = image_field.path
+            if path and os.path.isfile(path):
+                return path
+        except (NotImplementedError, AttributeError, ValueError):
+            # Remote storage backends raise NotImplementedError on .path
+            pass
+        # URL fallback — may fail on Cyrillic filenames, caller handles.
+        domain = getattr(
+            settings, 'TELEGRAM_WEBHOOK_DOMAIN', DEFAULT_DOMAIN,
+        ).rstrip('/')
+        return f'{domain}{image_field.url}'
 
     @staticmethod
     def _emoji_ids() -> dict:

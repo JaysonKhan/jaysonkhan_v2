@@ -6,7 +6,9 @@ All exceptions are caught and logged — notification failure never crashes a re
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 from typing import Optional
 
 import httpx
@@ -54,7 +56,23 @@ class TelegramBotAPI:
         parse_mode: str = 'HTML',
         reply_markup: Optional[dict] = None,
     ) -> Optional[dict]:
-        """POST /sendPhoto.  *photo* is a URL string."""
+        """POST /sendPhoto. *photo* can be:
+          - HTTPS URL string  → Telegram fetches it
+          - Local file path   → uploaded as multipart (recommended)
+
+        URL fetch often fails with non-ASCII filenames, HTTP/2-only
+        servers, or >5MB images served with strict headers — Telegram
+        returns `400 wrong type of the web page content`. Direct
+        multipart upload bypasses the fetcher entirely.
+        """
+        is_url = photo.startswith(('http://', 'https://'))
+        if not is_url and os.path.isfile(photo):
+            return self._send_photo_multipart(
+                chat_id, photo,
+                caption=caption,
+                parse_mode=parse_mode,
+                reply_markup=reply_markup,
+            )
         payload: dict = {
             'chat_id': chat_id,
             'photo': photo,
@@ -65,6 +83,58 @@ class TelegramBotAPI:
         if reply_markup:
             payload['reply_markup'] = reply_markup
         return self._post('sendPhoto', payload)
+
+    def _send_photo_multipart(
+        self,
+        chat_id: int,
+        photo_path: str,
+        *,
+        caption: str = '',
+        parse_mode: str = 'HTML',
+        reply_markup: Optional[dict] = None,
+    ) -> Optional[dict]:
+        """Multipart /sendPhoto upload — sidesteps URL-fetch brittleness.
+
+        httpx's `files=` parameter builds the multipart body automatically;
+        `data=` for text fields carries chat_id / caption / reply_markup.
+        Complex fields (reply_markup dict) must be JSON-encoded — Telegram
+        rejects raw Python repr.
+        """
+        if not self._token:
+            logger.warning('TELEGRAM_BOT_TOKEN not configured — skipping sendPhoto')
+            return None
+        url = f'{self._base}/sendPhoto'
+        data = {
+            'chat_id': str(chat_id),
+            'parse_mode': parse_mode,
+        }
+        if caption:
+            data['caption'] = caption
+        if reply_markup:
+            data['reply_markup'] = json.dumps(reply_markup)
+        try:
+            with open(photo_path, 'rb') as fh:
+                filename = os.path.basename(photo_path) or 'photo.png'
+                # Force ASCII-safe filename; some Telegram MIME parsers choke
+                # on non-ASCII in multipart Content-Disposition. The name
+                # inside the upload doesn't matter for display anyway.
+                safe_name = filename.encode('ascii', errors='replace').decode('ascii')
+                files = {'photo': (safe_name, fh, 'application/octet-stream')}
+                # 60s timeout — large photos over slow network need room.
+                resp = self._client.post(url, data=data, files=files, timeout=60.0)
+            result = resp.json()
+            if not result.get('ok'):
+                logger.warning(
+                    'Telegram sendPhoto (multipart) error: %s',
+                    result.get('description', result),
+                )
+            return result
+        except FileNotFoundError:
+            logger.error('sendPhoto multipart: file not found: %s', photo_path)
+            return None
+        except Exception as exc:  # noqa: BLE001
+            logger.error('sendPhoto multipart failed: %s', exc)
+            return None
 
     def answer_callback_query(
         self,
