@@ -394,6 +394,10 @@ class TelegramMixin(models.Model):
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 🤖 Telegram Bot button"
     )
+    tg_emoji_github = models.CharField(
+        max_length=30, blank=True, default='',
+        help_text="Custom emoji ID for 💻 GitHub button"
+    )
     tg_emoji_comment = models.CharField(
         max_length=30, blank=True, default='',
         help_text="Custom emoji ID for 💬 Comment/reply buttons"

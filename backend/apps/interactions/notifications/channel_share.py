@@ -239,69 +239,96 @@ class ChannelShareService:
         """Build inline keyboard for a blog post (Mini App deep link)."""
         emojis = self._emoji_ids()
         detail_url = self._detail_deep_link(post)
-        btn = {'text': '📖 Batafsil', 'url': detail_url, 'style': 'primary'}
-        if emojis['read_more']:
-            btn['icon_custom_emoji_id'] = emojis['read_more']
+        btn = self._make_btn('📖 Batafsil', detail_url, emojis['read_more'])
         return [[btn]]
 
     def _build_project_keyboard(self, project) -> list:
-        """Build inline keyboard for a project with store links."""
+        """Build inline keyboard for a project with store links, web,
+        GitHub, and bot — one colourful button per link kind.
+
+        Layout (each row only appears if it has buttons):
+          [▶️ Google Play] [🍎 App Store]   — mobile stores (same row)
+          [🌐 Web]        [💻 GitHub]       — external links (paired)
+          [🤖 Telegram Bot]                 — bot projects (own row)
+          [📖 Batafsil]                     — always, primary CTA
+
+        Telegram's Bot API doesn't support a native `color` / `style`
+        on inline buttons, so differentiation comes from (a) the unicode
+        emoji prefix in the text, and (b) `icon_custom_emoji_id` —
+        a premium-only colourful icon that replaces the leading emoji
+        when the admin has uploaded a custom emoji pack and pasted the
+        IDs into SiteSettings (/jk-panel/).
+        """
         emojis = self._emoji_ids()
+        web_url = (project.web_page_url or '').strip()
+        # t.me URLs are treated as "the bot itself" — we don't show both
+        # Web and Bot buttons pointing at the same place.
+        web_is_telegram = 't.me/' in web_url
+
         rows = []
 
-        # Store buttons (same row if both exist)
+        # Mobile stores — same row if both exist
         store_row = []
         if project.play_store_url:
-            btn = {
-                'text': '▶️ Google Play',
-                'url': project.play_store_url,
-                'style': 'success',
-            }
-            if emojis['google_play']:
-                btn['icon_custom_emoji_id'] = emojis['google_play']
-            store_row.append(btn)
+            store_row.append(self._make_btn(
+                '▶️ Google Play', project.play_store_url, emojis['google_play'],
+            ))
         if project.app_store_url:
-            btn = {
-                'text': '🍎 App Store',
-                'url': project.app_store_url,
-                'style': 'primary',
-            }
-            if emojis['app_store']:
-                btn['icon_custom_emoji_id'] = emojis['app_store']
-            store_row.append(btn)
+            store_row.append(self._make_btn(
+                '🍎 App Store', project.app_store_url, emojis['app_store'],
+            ))
         if store_row:
             rows.append(store_row)
 
-        # Additional links row
-        extra_row = []
-        if project.web_page_url:
-            btn = {'text': '🌐 Web', 'url': project.web_page_url}
-            if emojis['web']:
-                btn['icon_custom_emoji_id'] = emojis['web']
-            extra_row.append(btn)
-        # Bot projects: web_page_url is likely the bot link itself,
-        # so only add a generic bot link if there is no web_page_url
-        if project.is_bot and not project.web_page_url:
-            bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
-            if bot_username:
-                btn = {
-                    'text': '🤖 Telegram Bot',
-                    'url': f'https://t.me/{bot_username}',
-                }
-                if emojis['bot']:
-                    btn['icon_custom_emoji_id'] = emojis['bot']
-                extra_row.append(btn)
-        if extra_row:
-            rows.append(extra_row)
+        # External links — Web + GitHub (paired 2-per-row when both exist)
+        external_row = []
+        if web_url and not (project.is_bot and web_is_telegram):
+            # Regular web link (skip when web_page_url is just the bot chat)
+            external_row.append(self._make_btn(
+                '🌐 Web', web_url, emojis['web'],
+            ))
+        if project.github_url:
+            external_row.append(self._make_btn(
+                '💻 GitHub', project.github_url, emojis['github'],
+            ))
+        if external_row:
+            rows.append(external_row)
 
-        # Detail button (always present — Mini App deep link)
+        # Telegram Bot link — separate row so it stands out
+        bot_url = ''
+        if project.is_bot:
+            if web_is_telegram:
+                bot_url = web_url
+            else:
+                bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
+                if bot_username:
+                    bot_url = f'https://t.me/{bot_username}'
+        if bot_url:
+            rows.append([self._make_btn(
+                '🤖 Telegram Bot', bot_url, emojis['bot'],
+            )])
+
+        # Detail CTA — always present, Mini App deep link
         detail_url = self._detail_deep_link(project)
-        btn = {'text': '📖 Batafsil', 'url': detail_url, 'style': 'primary'}
-        if emojis['read_more']:
-            btn['icon_custom_emoji_id'] = emojis['read_more']
-        rows.append([btn])
+        rows.append([self._make_btn(
+            '📖 Batafsil', detail_url, emojis['read_more'],
+        )])
 
         return rows
+
+    @staticmethod
+    def _make_btn(text: str, url: str, custom_emoji_id: str = '') -> dict:
+        """Tiny factory so every button has identical shape.
+
+        Keeping the `icon_custom_emoji_id` wiring in one place means
+        adding a new link kind is a one-liner; the dead `style` key
+        the old code passed was dropped because Telegram's Bot API
+        silently ignores unknown fields on inline buttons.
+        """
+        btn = {'text': text, 'url': url}
+        if custom_emoji_id:
+            btn['icon_custom_emoji_id'] = custom_emoji_id
+        return btn
 
     # ── Deep link helpers ─────────────────────────────────────────────────────
 
@@ -342,7 +369,11 @@ class ChannelShareService:
 
     @staticmethod
     def _emoji_ids() -> dict:
-        """Load custom emoji IDs from SiteSettings (Bot API 9.4)."""
+        """Load custom emoji IDs from SiteSettings (Bot API 9.4).
+
+        One key per button kind. Empty string → fall back to the
+        built-in unicode emoji in the button text.
+        """
         site = SiteSettingsService.get()
         return {
             'read_more': getattr(site, 'tg_emoji_read_more', '') or '',
@@ -350,6 +381,7 @@ class ChannelShareService:
             'app_store': getattr(site, 'tg_emoji_app_store', '') or '',
             'web': getattr(site, 'tg_emoji_web', '') or '',
             'bot': getattr(site, 'tg_emoji_bot', '') or '',
+            'github': getattr(site, 'tg_emoji_github', '') or '',
         }
 
     @staticmethod
