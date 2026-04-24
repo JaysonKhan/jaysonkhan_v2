@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'botproxy',
     'osint',
     'servermonitor',
+    'ops',
 ]
 
 MIDDLEWARE = [
@@ -451,11 +452,29 @@ UNFOLD = {
                         "link": f"{_A}bot/talabaovozi/dashboard/",
                         "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
                     },
-{
+                    {
                         "title": "OSINT",
                         "icon": "person_search",
                         "link": f"{_A}osint/search/",
                         "permission": lambda r: r.user.has_perm("osint.use_osint"),
+                    },
+                ],
+            },
+            {
+                "title": "Ops",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Cron jadvallar",
+                        "icon": "schedule",
+                        "link": f"{_A}ops/managedcron/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Cron tarixi",
+                        "icon": "history",
+                        "link": f"{_A}ops/cronrun/",
+                        "permission": lambda r: r.user.is_superuser,
                     },
                 ],
             },
