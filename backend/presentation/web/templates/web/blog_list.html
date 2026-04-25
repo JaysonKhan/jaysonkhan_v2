@@ -1,133 +1,116 @@
 {% extends 'web/base.html' %}
 {% load static %}
 
-{% block title %}Blog | {{ site_settings.site_author }}{% endblock %}
+{% block title %}Journal | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.blog_page_subtitle }}{% endblock %}
-{% block og_title %}{{ site_settings.blog_page_title }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_title %}{{ site_settings.blog_page_title|default:"Journal" }} | {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ site_settings.blog_page_subtitle }}{% endblock %}
 
 {% block content %}
-<section class="max-w-7xl mx-auto px-6"
-    style="max-width:72rem;padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-
-    <!-- Page Header -->
-    <div class="text-center reveal" style="margin-bottom:var(--space-page-heading-mb)">
-        <span class="section-tag">
-            <i class="fa-solid fa-pen-nib"></i>
-            Writing
-        </span>
-        <h1 class="text-4xl md:text-6xl font-bold mt-2 mb-4">{{ site_settings.blog_page_title }}</h1>
-        <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.blog_page_subtitle }}</p>
-    </div>
-
-    <!-- Search Bar -->
-    <form action="{% url 'blog_search' %}" method="get" class="max-w-xl mx-auto mb-12 reveal">
-        <div class="relative">
-            <input type="text" name="q"
-                placeholder="Search articles..."
-                autocomplete="off"
-                class="w-full px-5 py-3 pl-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition">
-            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-        </div>
-    </form>
-
-    <div id="items-grid" class="grid"
-        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;"
-        data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
-        {% for post in posts %}
-        <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 reveal w-full"
-            style="border-radius:var(--radius-card); max-width:420px; justify-self:center;">
-            <a href="{% url 'blog_detail' post.slug %}" class="block overflow-hidden relative">
-                {% if post.featured_image %}
-                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy"
-                    class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">
-                {% else %}
-                <div class="w-full h-52 bg-white/5 flex items-center justify-center text-slate-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                    </svg>
+<main>
+    {# ========================== HERO ========================== #}
+    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
+                <div class="row gap-3">
+                    <span class="tag">Section · 04</span>
+                    <span class="tag">{{ paginator.count|default:0 }} dispatches</span>
                 </div>
-                {% endif %}
-                <!-- Category badge overlay -->
-                <div class="absolute top-3 left-3">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-dark/70 backdrop-blur-sm border border-white/10 text-primary">
-                        {{ post.category.name }}
-                    </span>
-                </div>
-            </a>
-            <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
-                <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
-                    <i class="fa-regular fa-calendar"></i>
-                    <span>{{ post.created_at|date:"M d, Y" }}</span>
-                    <span>&middot;</span>
-                    <span>{{ post.reading_time }} min read</span>
-                </div>
-                <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition line-clamp-2 leading-snug">
-                    <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
-                </h2>
-                <p class="text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed">{{ post.excerpt }}</p>
-                <a href="{% url 'blog_detail' post.slug %}"
-                    class="mt-auto inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-white transition group/link">
-                    Read Article
-                    <span class="transition-transform group-hover/link:translate-x-1">&rarr;</span>
-                </a>
+                <span class="tag"><span class="dot-live"></span> New every fortnight</span>
             </div>
-        </article>
-        {% empty %}
-        <p class="col-span-full text-center text-slate-500 py-20">We haven't published any articles yet.</p>
-        {% endfor %}
-    </div>
+            <div class="eyebrow" style="margin-bottom: 24px;">Journal · Field notes from the studio</div>
+            <h1 class="display-xl">
+                {{ site_settings.blog_page_title|default:"Long-form notes," }}<br>
+                <em style="font-weight: 300; font-style: italic;">from the field.</em>
+            </h1>
+            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">
+                {{ site_settings.blog_page_subtitle|default:"Things I figured out the hard way, written up so you don't have to. No tutorials. No \"10 things.\" Just engineering essays from production." }}
+            </p>
+        </div>
+    </section>
 
-    <!-- Infinite scroll sentinel & spinner -->
-    <div id="scroll-sentinel" class="scroll-sentinel"></div>
-    <div id="scroll-spinner" class="scroll-spinner" style="display:none">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-    </div>
-</section>
+    {# ========================== INDEX ========================== #}
+    <section class="section">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
+                <h2 class="display-md serif">All <em style="font-weight: 300;">dispatches.</em></h2>
+                <form action="{% url 'blog_search' %}" method="get" class="row" style="max-width: 320px; flex: 1;">
+                    <div style="position: relative; width: 100%;">
+                        <input type="text" name="q" placeholder="Search..." autocomplete="off" class="input" style="padding-left: 28px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: var(--fg-3);">
+                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                    </div>
+                </form>
+            </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!window.InfiniteScroll) {
-            document.getElementById('scroll-sentinel')?.remove();
-            document.getElementById('scroll-spinner')?.remove();
-            return;
-        }
-
-        InfiniteScroll.init({
-            apiUrl: '/api/posts/',
-            gridId: 'items-grid',
-            sentinelId: 'scroll-sentinel',
-            spinnerId: 'scroll-spinner',
-            renderItem: (post) => `
-            <article class="flex flex-col glass overflow-hidden group hover:border-primary/20 transition-all duration-300 w-full"
-                style="border-radius:var(--radius-card); max-width:420px; justify-self:center;">
-                <a href="/blog/${post.slug}/" class="block overflow-hidden relative">
-                    ${post.image_url
-                    ? `<img src="${post.image_url}" alt="${post.title}" class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">`
-                    : `<div class="w-full h-52 bg-white/5 flex items-center justify-center text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg></div>`
-                    }
-                    <div class="absolute top-3 left-3">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/10 text-primary" style="background:rgba(15,23,42,0.7)">${post.category_name}</span>
+            <div id="items-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
+                {% for post in posts %}
+                <a href="{% url 'blog_detail' post.slug %}" class="reveal article-card" style="padding: 40px; border-top: 1px solid var(--line-1); {% if forloop.counter|divisibleby:3 %}{% else %}border-right: 1px solid var(--line-1);{% endif %} min-height: 380px; display: flex; flex-direction: column; gap: 20px; transition: background .4s var(--ease-out);">
+                    <div class="between" style="align-items: flex-start;">
+                        <span class="numeral article-num" style="font-size: 56px; line-height: 1; color: var(--fg-4); transition: color .3s;">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Vol. 03 / {{ forloop.counter|stringformat:"02d" }}</span>
+                    </div>
+                    {% if post.category %}<span class="tag" style="align-self: flex-start;">{{ post.category.name }}</span>{% endif %}
+                    <h3 class="display-sm serif article-title" style="flex: 1; transition: color .3s;"><em style="font-weight: 300;">{{ post.title }}</em></h3>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:20 }}</p>
+                    <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
+                        <span class="mono article-meta" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em; transition: color .3s;">{{ post.reading_time }} MIN ↗</span>
                     </div>
                 </a>
-                <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
-                    <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <span>${post.created_at}</span>
-                    </div>
-                    <h2 class="text-xl font-bold mb-3 group-hover:text-primary transition line-clamp-2 leading-snug">
-                        <a href="/blog/${post.slug}/">${post.title}</a>
-                    </h2>
-                    <p class="text-slate-400 text-sm mb-5 line-clamp-2 leading-relaxed">${post.excerpt}</p>
-                    <a href="/blog/${post.slug}/" class="mt-auto inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-white transition">
-                        Read Article <span>&rarr;</span>
-                    </a>
+                {% empty %}
+                <div style="grid-column: 1 / -1; padding: 80px 0; text-align: center; color: var(--fg-3);">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— No dispatches yet —</span>
                 </div>
-            </article>
-        `,
-        });
+                {% endfor %}
+            </div>
+
+            <div id="scroll-sentinel" class="scroll-sentinel"></div>
+            <div id="scroll-spinner" class="scroll-spinner">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+    .article-card:hover { background: var(--bg-2); }
+    .article-card:hover .article-title { color: var(--accent); }
+    .article-card:hover .article-num { color: var(--accent); }
+    .article-card:hover .article-meta { color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof InfiniteScroll === 'undefined') return;
+    InfiniteScroll.init({
+        apiUrl: '/api/posts/',
+        gridId: 'items-grid',
+        sentinelId: 'scroll-sentinel',
+        spinnerId: 'scroll-spinner',
+        renderItem: function(post) {
+            var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
+            var num = parseInt(idx, 10);
+            var cat = post.category_name ? '<span class="tag" style="align-self:flex-start;">' + post.category_name + '</span>' : '';
+            var date = (post.created_at || '').slice(0, 10);
+            return '<a href="/blog/' + post.slug + '/" class="reveal in article-card" style="padding:40px;border-top:1px solid var(--line-1);' +
+                (num % 3 !== 0 ? 'border-right:1px solid var(--line-1);' : '') +
+                'min-height:380px;display:flex;flex-direction:column;gap:20px;">' +
+                '<div class="between" style="align-items:flex-start;">' +
+                '<span class="numeral article-num" style="font-size:56px;line-height:1;color:var(--fg-4);">' + idx + '</span>' +
+                '<span class="mono" style="font-size:10px;letter-spacing:0.16em;color:var(--fg-3);text-transform:uppercase;">Vol. 03 / ' + idx + '</span>' +
+                '</div>' + cat +
+                '<h3 class="display-sm serif article-title" style="flex:1;"><em style="font-weight:300;">' + post.title + '</em></h3>' +
+                '<p style="color:var(--fg-2);font-size:14px;line-height:1.55;">' + (post.excerpt || '') + '</p>' +
+                '<div class="between" style="padding-top:16px;border-top:1px solid var(--line-1);">' +
+                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + date.toUpperCase() + '</span>' +
+                '<span class="mono article-meta" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + (post.reading_time || 5) + ' MIN ↗</span>' +
+                '</div></a>';
+        }
     });
+});
 </script>
 {% endblock %}

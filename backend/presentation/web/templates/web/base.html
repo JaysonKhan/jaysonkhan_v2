@@ -1,24 +1,42 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
-
+{% load static %}<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable" data-hud="on" data-noise="on" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {# Apply persisted theme before paint to avoid FOUC #}
+    <script>
+    (function() {
+        try {
+            var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
+            var r = document.documentElement;
+            if (t.theme)   r.setAttribute('data-theme',   t.theme);
+            if (t.density) r.setAttribute('data-density', t.density);
+            if (t.hud)     r.setAttribute('data-hud',     t.hud);
+            if (t.noise === false) r.setAttribute('data-noise', 'off');
+            if (t.accent) {
+                r.style.setProperty('--accent', t.accent);
+                var h = t.accent.replace('#','');
+                if (h.length === 6) {
+                    r.style.setProperty('--accent-rgb',
+                        parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16));
+                }
+            }
+        } catch (e) {}
+    })();
+    </script>
+
     <title>{% block title %}{{ site_settings.site_title }}{% endblock %}</title>
 
-    <!-- Favicon -->
     {% if site_settings.favicon %}
     <link rel="icon" type="image/png" href="{{ site_settings.favicon.url }}">
     {% endif %}
 
-    <!-- SEO Meta -->
     <meta name="description" content="{% block meta_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     <meta name="author" content="{{ site_settings.site_author }}">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
 
-    <!-- Search Console Verification -->
     {% if site_settings.google_site_verification %}
     <meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">
     {% endif %}
@@ -29,14 +47,11 @@
     <meta name="msvalidate.01" content="{{ site_settings.bing_verification }}">
     {% endif %}
 
-    <!-- RSS Feed -->
-    <link rel="alternate" type="application/rss+xml" title="{{ site_settings.site_author }} Blog" href="{% url 'blog_rss_feed' %}">
+    <link rel="alternate" type="application/rss+xml" title="{{ site_settings.site_author }} Journal" href="{% url 'blog_rss_feed' %}">
 
-    <!-- Open Graph -->
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
-    <meta property="og:description"
-        content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     {% if site_settings.og_image %}
@@ -45,19 +60,16 @@
     <meta property="og:image:height" content="630">
     {% endif %}
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     {% if site_settings.twitter_handle %}
     <meta name="twitter:site" content="@{{ site_settings.twitter_handle }}">
     {% endif %}
     <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_title }}{% endblock %}">
-    <meta name="twitter:description"
-        content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
     {% if site_settings.og_image %}
     <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}">
     {% endif %}
 
-    <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -92,919 +104,9 @@
     </script>
 
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        /* Modern Skill Pill Hover Glow */
-        .skill-pill-glow {
-            transition: all 0.3s ease;
-        }
-
-        .skill-pill-glow:hover {
-            box-shadow: 0 0 15px rgba(var(--color-primary-rgb, 0, 150, 255), 0.2) inset;
-        }
-
-        /* Hero Orbit Animation */
-        .hero-orbit-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 32rem;
-            height: 32rem;
-            border-radius: 50%;
-            border: 1px dashed rgba(255, 255, 255, 0.08);
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-            .hero-orbit-container {
-                width: 20rem;
-                height: 20rem;
-            }
-        }
-
-        .orbit-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            animation: orbit-spin 35s linear infinite;
-            animation-delay: calc(-35s / var(--total) * var(--i));
-            will-change: transform;
-        }
-
-        .orbit-icon {
-            position: absolute;
-            top: -2rem;
-            /* half height */
-            left: 50%;
-            margin-left: -2rem;
-            /* half width */
-            width: 4rem;
-            height: 4rem;
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-primary);
-            font-size: 1.5rem;
-            animation: orbit-counter-spin 35s linear infinite;
-            animation-delay: calc(-35s / var(--total) * var(--i));
-            will-change: transform;
-            box-shadow: 0 0 24px rgba(0, 0, 0, 0.3);
-        }
-
-        @keyframes orbit-spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes orbit-counter-spin {
-            100% {
-                transform: rotate(-360deg);
-            }
-        }
-
-        /* ── Skills Globe Orbit (sk- prefix, isolated) ──────── */
-        /* orbit wrappers are invisible — pointer-events: none  */
-        /* only the icon bubble captures mouse events            */
-        .sk-orbit-item {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            animation: sk-orbit 45s linear infinite;
-            animation-delay: calc(-45s / var(--n) * var(--i));
-            will-change: transform;
-            pointer-events: none;
-        }
-
-        .sk-orbit-icon {
-            position: absolute;
-            top: -1.125rem;
-            left: calc(50% - 1.125rem);
-            width: 2.25rem;
-            height: 2.25rem;
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-primary, #a855f7);
-            font-size: 0.8rem;
-            animation: sk-counter-orbit 45s linear infinite;
-            animation-delay: calc(-45s / var(--n) * var(--i));
-            will-change: transform;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-            pointer-events: auto;
-            cursor: default;
-            scale: 1;
-            transition: scale 0.25s ease, border-color 0.25s ease,
-                box-shadow 0.25s ease, background 0.25s ease;
-        }
-
-        @media (min-width: 768px) {
-            .sk-orbit-icon {
-                top: -1.5rem;
-                left: calc(50% - 1.5rem);
-                width: 3rem;
-                height: 3rem;
-                font-size: 1rem;
-            }
-        }
-
-        .sk-orbit-icon:hover {
-            scale: 1.22;
-            border-color: rgba(168, 85, 247, 0.55);
-            box-shadow: 0 0 22px rgba(168, 85, 247, 0.38),
-                0 4px 20px rgba(0, 0, 0, 0.35);
-            background: rgba(25, 35, 70, 0.95);
-        }
-
-        /* CSS tooltip for orbit icons */
-        .sk-orbit-icon[data-label] {
-            position: relative;
-        }
-
-        .sk-orbit-icon[data-label]::after {
-            content: attr(data-label);
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%) rotate(0deg);
-            white-space: nowrap;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #e2e8f0;
-            background: rgba(15, 23, 42, 0.92);
-            border: 1px solid rgba(168, 85, 247, 0.3);
-            border-radius: 6px;
-            padding: 3px 8px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 100;
-            backdrop-filter: blur(8px);
-        }
-
-        .sk-orbit-icon[data-label]:hover::after {
-            opacity: 1;
-        }
-
-        @keyframes sk-orbit {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes sk-counter-orbit {
-            to {
-                transform: rotate(-360deg);
-            }
-        }
-
-        /* Globe wrapper — total size includes icon bleed on all sides.
-           sk-orbit-body is inset by icon_r so icons never escape wrapper. */
-        .sk-globe-wrap {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            flex-shrink: 0;
-            overflow: visible;
-        }
-
-        /* Orbit body: inset by icon radius so icons stay inside wrapper box */
-        .sk-orbit-body {
-            position: absolute;
-            inset: 20px;
-            /* mobile icon-r = 18px, use 20px */
-        }
-
-        #sk-globe-area {
-            overflow: visible;
-        }
-
-        @media (min-width: 768px) {
-            .sk-globe-wrap {
-                width: 380px;
-                height: 380px;
-            }
-
-            .sk-orbit-body {
-                inset: 24px;
-                /* desktop icon-r = 24px */
-            }
-        }
-
-        /* Orbit ring decorations */
-        .sk-ring-outer,
-        .sk-ring-inner {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .sk-ring-outer {
-            inset: 0;
-            border: 1px dashed rgba(255, 255, 255, 0.08);
-        }
-
-        .sk-ring-inner {
-            inset: 50px;
-            border: 1px dashed rgba(255, 255, 255, 0.04);
-        }
-
-        @media (min-width: 768px) {
-            .sk-ring-inner {
-                inset: 70px;
-            }
-        }
-
-        /* Central globe */
-        .sk-globe-center {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .sk-globe-glow {
-            position: absolute;
-            width: 5rem;
-            height: 5rem;
-            background: rgba(168, 85, 247, 0.22);
-            border-radius: 50%;
-            filter: blur(2rem);
-        }
-
-        .sk-globe-icon {
-            font-size: 2.75rem;
-            opacity: 0.88;
-            position: relative;
-            z-index: 1;
-        }
-
-        @media (min-width: 768px) {
-            .sk-globe-glow {
-                width: 7rem;
-                height: 7rem;
-            }
-
-            .sk-globe-icon {
-                font-size: 3.75rem;
-            }
-        }
-
-        /* collapsed class no longer used — globe is always visible */
-    </style>
-
-    <!-- Design system + component styles -->
-    <style>
-        /* ── Design Tokens ──────────────────────────────────────────── */
-        :root {
-            /* Spacing */
-            --space-card-padding: 1.75rem;
-            /* 28px – card body  */
-            --space-section-gap: 2.5rem;
-            /* 40px – grid gap   */
-            --space-section-py: 6rem;
-            /* 96px – section y  */
-            --space-page-heading-mb: 3.5rem;
-            /* 56px – page title → content */
-
-            /* Border radius */
-            --radius-card: 1.25rem;
-            /* 20px – cards      */
-            --radius-badge: 0.5rem;
-            /* 8px  – tech tags  */
-            --radius-input: 0.75rem;
-            /* 12px – inputs     */
-            --radius-button: 9999px;
-            /* pill buttons      */
-            --radius-section-bg: 1.5rem;
-            /* 24px – section bg */
-
-            /* Card image heights */
-            --img-card-h: 12rem;
-            /* 192px – card thumbs */
-        }
-
-        @media (max-width: 640px) {
-            :root {
-                --space-card-padding: 1.25rem;
-                /* 20px */
-                --space-section-gap: 1.5rem;
-                /* 24px */
-                --space-section-py: 3.5rem;
-                /* 56px */
-                --space-page-heading-mb: 2rem;
-                /* 32px */
-                --img-card-h: 11rem;
-                /* 176px */
-            }
-        }
-
-        /* ── Reusable component classes ─────────────────────────────── */
-
-        /* Tech tag – unified across all pages */
-        .tech-tag {
-            display: inline-block;
-            padding: 0.25rem 0.625rem;
-            background: rgba(255, 255, 255, 0.05);
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: rgba(203, 213, 225, 1);
-            border-radius: var(--radius-badge);
-        }
-
-        /* Larger variant for detail pages */
-        .tech-tag-lg {
-            display: inline-block;
-            padding: 0.375rem 0.875rem;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-primary, #a855f7);
-            border-radius: var(--radius-badge);
-        }
-
-        /* Back link – consistent across detail pages */
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-            color: rgba(148, 163, 184, 1);
-            font-weight: 500;
-            transition: color 0.2s ease;
-            margin-bottom: 2rem;
-        }
-
-        .back-link:hover {
-            color: var(--color-primary, #a855f7);
-        }
-
-        /* Prose content block – unified for detail pages */
-        .prose-content {
-            max-width: none;
-            color: rgba(203, 213, 225, 1);
-            line-height: 1.75;
-        }
-
-        .prose-content h1,
-        .prose-content h2,
-        .prose-content h3,
-        .prose-content h4,
-        .prose-content h5,
-        .prose-content h6 {
-            color: #fff;
-        }
-
-        .prose-content a {
-            color: var(--color-primary, #a855f7);
-        }
-
-        .prose-content p {
-            color: rgba(203, 213, 225, 1);
-        }
-
-        /* ── Infinite Scroll ────────────────────────────────────────── */
-        .scroll-sentinel {
-            height: 1px;
-        }
-
-        .scroll-spinner {
-            display: flex;
-            justify-content: center;
-            padding: 2rem 0;
-        }
-
-        .scroll-spinner .dot {
-            width: 8px;
-            height: 8px;
-            margin: 0 4px;
-            border-radius: 50%;
-            background: var(--color-primary, #a855f7);
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-
-        .scroll-spinner .dot:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .scroll-spinner .dot:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0);
-            }
-
-            40% {
-                transform: scale(1);
-            }
-        }
-
-        .nav-blur {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.72);
-            -webkit-backdrop-filter: saturate(180%) blur(20px);
-            backdrop-filter: saturate(180%) blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            will-change: transform;
-        }
-
-        .nav-blur.scrolled {
-            background: rgba(15, 23, 42, 0.88);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .platform-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.025em;
-        }
-
-        .platform-badge.android {
-            background: rgba(61, 220, 132, 0.12);
-            color: #3ddc84;
-        }
-
-        .platform-badge.ios {
-            background: rgba(99, 102, 241, 0.12);
-            color: #818cf8;
-        }
-
-        .platform-badge.cross {
-            background: rgba(168, 85, 247, 0.12);
-            color: #c084fc;
-        }
-
-        .platform-badge.web {
-            background: rgba(251, 191, 36, 0.12);
-            color: #fbbf24;
-        }
-
-        .platform-badge.bot {
-            background: rgba(56, 189, 248, 0.12);
-            color: #38bdf8;
-        }
-
-        .store-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .store-btn.appstore {
-            background: rgba(99, 102, 241, 0.1);
-            color: #818cf8;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .store-btn.appstore:hover {
-            background: rgba(99, 102, 241, 0.2);
-        }
-
-        .store-btn.playstore {
-            background: rgba(61, 220, 132, 0.1);
-            color: #3ddc84;
-            border: 1px solid rgba(61, 220, 132, 0.2);
-        }
-
-        .store-btn.playstore:hover {
-            background: rgba(61, 220, 132, 0.2);
-        }
-
-        .store-btn.web {
-            background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-
-        .store-btn.web:hover {
-            background: rgba(56, 189, 248, 0.2);
-        }
-
-        .device-mockup {
-            position: relative;
-            border-radius: 2rem;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        /* (Skills tile/card CSS removed — now using chip grid in home.html) */
-    </style>
-
-    <!-- ── UI/UX Pro Enhancements ─────────────────────────────────────── -->
-    <style>
-        /* ── Scroll Progress Bar ──────────────────────────────────── */
-        #scroll-progress {
-            position: fixed;
-            top: 0; left: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #6366f1, #ec4899, #6366f1);
-            background-size: 200% 100%;
-            animation: progress-shimmer 2.5s linear infinite;
-            z-index: 10000;
-            width: 0%;
-            transition: width 0.08s linear;
-            border-radius: 0 2px 2px 0;
-        }
-        @keyframes progress-shimmer {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
-
-        /* ── Scroll To Top Button ─────────────────────────────────── */
-        #scroll-top-btn {
-            position: fixed;
-            bottom: 2rem; right: 2rem;
-            width: 2.75rem; height: 2.75rem;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.35);
-            border-radius: 50%;
-            display: flex;
-            align-items: center; justify-content: center;
-            cursor: pointer;
-            opacity: 0; transform: translateY(16px) scale(0.85);
-            transition: opacity 0.3s ease, transform 0.3s ease,
-                        background 0.2s ease, box-shadow 0.2s ease;
-            z-index: 999;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            color: #a78bfa;
-        }
-        #scroll-top-btn.visible {
-            opacity: 1; transform: translateY(0) scale(1);
-        }
-        #scroll-top-btn:hover {
-            background: rgba(99, 102, 241, 0.28);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.35), 0 4px 14px rgba(0,0,0,0.3);
-            color: #fff;
-        }
-
-        /* ── Active Nav Links ─────────────────────────────────────── */
-        .nav-link {
-            position: relative;
-            transition: color 0.2s ease;
-        }
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -4px; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #6366f1, #ec4899);
-            border-radius: 2px;
-            transform: scaleX(0);
-            transform-origin: center;
-            transition: transform 0.25s ease;
-        }
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            transform: scaleX(1);
-        }
-        .nav-link.active { color: #fff !important; }
-        .nav-link:focus-visible {
-            outline: 2px solid rgba(129, 140, 248, 0.85);
-            outline-offset: 4px;
-            border-radius: 0.5rem;
-        }
-
-        /* ── Mobile Menu Slide Animation ──────────────────────────── */
-        #mobile-menu:not(.hidden) {
-            animation: mobileMenuIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        @keyframes mobileMenuIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── Page Entry Fade ──────────────────────────────────────── */
-        @keyframes pageEnter {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        main { animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
-
-        /* ── Scroll Reveal System ─────────────────────────────────── */
-        .reveal {
-            opacity: 0;
-            transform: translateY(28px);
-            transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-                        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .reveal.delay-1 { transition-delay: 0.1s; }
-        .reveal.delay-2 { transition-delay: 0.2s; }
-        .reveal.delay-3 { transition-delay: 0.3s; }
-        .reveal.delay-4 { transition-delay: 0.4s; }
-        .reveal.revealed { opacity: 1; transform: translateY(0); }
-
-        /* ── Section Tag / Label ──────────────────────────────────── */
-        .section-tag {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.25rem 0.875rem;
-            background: rgba(99, 102, 241, 0.08);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            border-radius: 9999px;
-            font-size: 0.7rem; font-weight: 700;
-            letter-spacing: 0.1em; text-transform: uppercase;
-            color: #a78bfa; margin-bottom: 0.875rem;
-        }
-
-        /* ── Stats Bar Items ──────────────────────────────────────── */
-        .stat-item { text-align: center; }
-        .stat-number {
-            font-size: 2.25rem; font-weight: 800;
-            background: linear-gradient(135deg, #818cf8, #ec4899);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text; line-height: 1; display: block;
-        }
-        .stat-label {
-            font-size: 0.8125rem; font-weight: 600;
-            color: rgba(148, 163, 184, 0.92);
-            text-transform: uppercase; letter-spacing: 0.08em;
-            margin-top: 0.35rem; display: block;
-        }
-
-        /* ── Rich Content (Medium-like) ───────────────────────────── */
-        .rich-content-wrapper {
-            color: #cbd5e1;
-            font-size: 1.0625rem;
-            line-height: 1.85;
-            word-break: break-word;
-        }
-        .rich-content-wrapper h1,
-        .rich-content-wrapper h2,
-        .rich-content-wrapper h3,
-        .rich-content-wrapper h4,
-        .rich-content-wrapper h5,
-        .rich-content-wrapper h6 {
-            color: #f1f5f9;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-top: 2.2rem;
-            margin-bottom: 0.75rem;
-        }
-        .rich-content-wrapper h1 { font-size: 2rem; }
-        .rich-content-wrapper h2 { font-size: 1.6rem; }
-        .rich-content-wrapper h3 { font-size: 1.3rem; }
-        .rich-content-wrapper h4 { font-size: 1.1rem; }
-        .rich-content-wrapper p {
-            margin-top: 0;
-            margin-bottom: 1.25rem;
-        }
-        .rich-content-wrapper a {
-            color: #818cf8;
-            text-decoration: underline;
-            text-decoration-color: rgba(129,140,248,0.4);
-            text-underline-offset: 3px;
-            transition: color 0.2s, text-decoration-color 0.2s;
-        }
-        .rich-content-wrapper a:hover {
-            color: #c7d2fe;
-            text-decoration-color: rgba(199,210,254,0.6);
-        }
-        .rich-content-wrapper strong, .rich-content-wrapper b {
-            color: #e2e8f0;
-            font-weight: 700;
-        }
-        .rich-content-wrapper em, .rich-content-wrapper i {
-            color: #cbd5e1;
-            font-style: italic;
-        }
-        .rich-content-wrapper img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            margin: 1.75rem auto;
-            display: block;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
-        }
-        .rich-content-wrapper figure {
-            margin: 1.75rem 0;
-        }
-        .rich-content-wrapper figure img { margin: 0 auto; }
-        .rich-content-wrapper figcaption {
-            text-align: center;
-            font-size: 0.82rem;
-            color: rgba(148,163,184,0.7);
-            margin-top: 0.5rem;
-        }
-        .rich-content-wrapper iframe {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            height: auto;
-            border-radius: 10px;
-            margin: 1.75rem 0;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .rich-content-wrapper blockquote {
-            border-left: 3px solid #818cf8;
-            background: rgba(99,102,241,0.06);
-            padding: 1rem 1.25rem;
-            border-radius: 0 8px 8px 0;
-            margin: 1.5rem 0;
-            color: #94a3b8;
-            font-style: italic;
-        }
-        .rich-content-wrapper blockquote p { margin-bottom: 0; }
-        .rich-content-wrapper code {
-            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-            font-size: 0.875em;
-            background: rgba(99,102,241,0.12);
-            color: #a5b4fc;
-            border: 1px solid rgba(99,102,241,0.2);
-            border-radius: 5px;
-            padding: 0.15em 0.45em;
-        }
-        .rich-content-wrapper pre {
-            background: rgba(15,23,42,0.85);
-            border: 1px solid rgba(99,102,241,0.15);
-            border-radius: 10px;
-            padding: 1.25rem 1.5rem;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        }
-        .rich-content-wrapper pre code {
-            background: none;
-            border: none;
-            padding: 0;
-            color: #94a3b8;
-            font-size: 0.9rem;
-            border-radius: 0;
-        }
-        .rich-content-wrapper ul,
-        .rich-content-wrapper ol {
-            padding-left: 1.5rem;
-            margin: 1rem 0 1.25rem;
-        }
-        .rich-content-wrapper ul { list-style-type: disc; }
-        .rich-content-wrapper ol { list-style-type: decimal; }
-        .rich-content-wrapper li {
-            margin-bottom: 0.4rem;
-            color: #cbd5e1;
-        }
-        .rich-content-wrapper hr {
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.25), rgba(236,72,153,0.2), transparent);
-            margin: 2.5rem 0;
-        }
-        .rich-content-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1.5rem 0;
-            font-size: 0.9rem;
-        }
-        .rich-content-wrapper th {
-            background: rgba(99,102,241,0.1);
-            color: #e2e8f0;
-            font-weight: 600;
-            padding: 0.7rem 1rem;
-            text-align: left;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .rich-content-wrapper td {
-            padding: 0.6rem 1rem;
-            border: 1px solid rgba(255,255,255,0.06);
-            color: #cbd5e1;
-        }
-        .rich-content-wrapper tr:nth-child(even) td {
-            background: rgba(255,255,255,0.02);
-        }
-        .rich-content-wrapper sup { font-size: 0.7em; }
-        .rich-content-wrapper sub { font-size: 0.7em; }
-
-        /* ── Gradient Divider ─────────────────────────────────────── */
-        .divider-gradient {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.25), rgba(236,72,153,0.25), transparent);
-            margin: 0;
-        }
-
-        /* ── Hero Animated Mesh Background ───────────────────────── */
-        .hero-mesh {
-            position: absolute; inset: 0;
-            overflow: hidden; pointer-events: none; z-index: 0;
-        }
-        .hero-mesh::before {
-            content: '';
-            position: absolute; top: -30%; left: -15%;
-            width: 55%; height: 150%;
-            background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 65%);
-            animation: meshFloat 9s ease-in-out infinite alternate;
-        }
-        .hero-mesh::after {
-            content: '';
-            position: absolute; bottom: -25%; right: -10%;
-            width: 50%; height: 130%;
-            background: radial-gradient(ellipse, rgba(236,72,153,0.06) 0%, transparent 65%);
-            animation: meshFloat 11s ease-in-out infinite alternate-reverse;
-        }
-        @keyframes meshFloat {
-            0%   { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(4%, 3%) scale(1.06); }
-        }
-
-        /* ── Card Glow on Hover ───────────────────────────────────── */
-        .glass {
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        .glass:hover {
-            border-color: rgba(99, 102, 241, 0.18);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(99,102,241,0.06);
-        }
-
-        /* ── CTA Button Glow ──────────────────────────────────────── */
-        .btn-primary-glow {
-            position: relative; overflow: hidden;
-            transition: box-shadow 0.3s ease, background 0.2s ease;
-        }
-        .btn-primary-glow:hover {
-            box-shadow: 0 0 24px rgba(99,102,241,0.45), 0 4px 16px rgba(0,0,0,0.3);
-        }
-        .btn-primary-glow:focus-visible,
-        .filter-chip:focus-visible,
-        .store-btn:focus-visible,
-        .send-btn:focus-visible,
-        .input-field:focus-visible,
-        a:focus-visible,
-        button:focus-visible {
-            outline: 2px solid rgba(129, 140, 248, 0.9);
-            outline-offset: 2px;
-        }
-
-        /* ── Footer Top Gradient ──────────────────────────────────── */
-        .footer-enhanced {
-            background: linear-gradient(180deg, rgba(99,102,241,0.03) 0%, rgba(15,23,42,0) 40%),
-                        rgba(255,255,255,0.03);
-        }
-
-        /* ── Navbar Logo Pulse ────────────────────────────────────── */
-        .logo-pulse::before {
-            content: '';
-            position: absolute;
-            inset: -4px; border-radius: 50%;
-            background: rgba(99,102,241,0.15);
-            animation: logoPulse 2.5s ease-in-out infinite;
-        }
-        @keyframes logoPulse {
-            0%, 100% { transform: scale(0.9); opacity: 0; }
-            50%       { transform: scale(1.15); opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .section-tag {
-                letter-spacing: 0.08em;
-            }
-            #scroll-top-btn {
-                bottom: 1.25rem;
-                right: 1.25rem;
-            }
-        }
-    </style>
-
-    <!-- Telegram WebApp API — enables auto-login when opened via Telegram in-app browser -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    {# ── Google Analytics 4 ─────────────────────────────────────────────── #}
     {% if site_settings.google_analytics_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
     <script>
@@ -1015,7 +117,6 @@
     </script>
     {% endif %}
 
-    {# ── Yandex Metrica ─────────────────────────────────────────────────── #}
     {% if site_settings.yandex_metrika_id %}
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -1029,273 +130,262 @@
     {% endif %}
 
     {% block extra_head %}{% endblock %}
-
-    {# Native OS emojilar ishlatiladi (Apple/Segoe/Noto) — custom font CDN yo'q #}
 </head>
 
-<body class="min-h-screen flex flex-col">
-
-    <!-- Scroll Progress Bar -->
+<body>
     <div id="scroll-progress"></div>
 
-    <!-- Navigation — iOS-style backdrop blur -->
-    <nav class="nav-blur py-4 px-6" id="main-nav">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{% url 'home' %}" class="text-2xl font-bold text-gradient">
-                {{ site_settings.display_logo_text }}
-            </a>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{% url 'home' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
-                {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Apps</a>
-                {% endif %}
-                <a href="{% url 'blog_list' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}active{% endif %}">Blog</a>
-                <a href="{% url 'contact' %}" class="nav-link hover:text-primary transition {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
-            </div>
-            <button id="mobile-menu-btn" class="flex md:hidden text-white focus:outline-none" style="width:44px;height:44px;align-items:center;justify-content:center;" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
-                <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    <header class="site-header" id="main-nav">
+        <div class="container between" style="height: 84px;">
+            <a href="{% url 'home' %}" class="row gap-3" style="align-items: center; color: var(--fg-0);">
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1"/>
+                    <text x="20" y="26" text-anchor="middle" font-family="Fraunces, serif" font-size="20" font-style="italic" font-weight="400" fill="currentColor">J</text>
+                    <circle cx="32" cy="8" r="2" fill="var(--accent)"/>
                 </svg>
-            </button>
-            <a href="{{ site_settings.nav_cta_url }}"
-                class="hidden md:inline-flex items-center btn-primary-glow bg-primary hover:bg-secondary px-7 py-2.5 rounded-full transition font-semibold text-sm"
-                style="min-height:44px;box-shadow:0 8px 24px rgba(99,102,241,0.35);">
-                {{ site_settings.nav_cta_text }}
+                <span class="col" style="line-height: 1; gap: 2px;">
+                    <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
+                    <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; color: var(--fg-3); text-transform: uppercase;">Build Studio · Est. 2022</span>
+                </span>
             </a>
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden px-6 space-y-4 border-t border-white/10 mt-4 pt-4 pb-4">
-            <a href="{% url 'home' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'home' %}text-white font-semibold{% endif %}">Home</a>
-            {% if site_settings.apps_section_visible %}
-            <a href="{% url 'projects' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}text-white font-semibold{% endif %}">Apps</a>
-            {% endif %}
-            <a href="{% url 'blog_list' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' %}text-white font-semibold{% endif %}">Blog</a>
-            <a href="{% url 'contact' %}" class="block hover:text-primary transition py-3 {% if request.resolver_match.url_name == 'contact' %}text-white font-semibold{% endif %}">Contact</a>
-            <a href="{{ site_settings.nav_cta_url }}"
-                class="inline-block bg-primary hover:bg-secondary px-6 py-2.5 rounded-full transition font-semibold mt-2"
-                style="min-height:44px;display:inline-flex;align-items:center;justify-content:center;">
-                {{ site_settings.nav_cta_text }}
-            </a>
-        </div>
-    </nav>
 
-    <main class="flex-1">{% block content %}{% endblock %}</main>
+            <nav class="row gap-8 desktop-nav" style="align-items: center;">
+                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Index</a>
+                {% if site_settings.apps_section_visible %}
+                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
+                {% endif %}
+                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
+                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+            </nav>
 
-    <!-- Scroll To Top Button -->
-    <button id="scroll-top-btn" aria-label="Scroll to top" title="Back to top">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+            <div class="row gap-3" style="align-items: center;">
+                <span class="tag hud-only hide-mobile"><span class="dot-live"></span> Available · Q2</span>
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" type="button">
+                    <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"/>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                    </svg>
+                </button>
+                {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
+                <a href="{{ site_settings.nav_cta_url }}" class="btn btn-ghost hide-mobile" style="--pad-y: 10px; --pad-x: 18px;">{{ site_settings.nav_cta_text }}</a>
+                {% endif %}
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav" type="button">
+                    <svg id="menu-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="mobile-nav" id="mobile-nav">
+                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Index</a>
+                {% if site_settings.apps_section_visible %}
+                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
+                {% endif %}
+                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
+                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+                {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
+                <a href="{{ site_settings.nav_cta_url }}" class="btn btn-primary" style="margin-top: 16px; align-self: flex-start;">{{ site_settings.nav_cta_text }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <button id="scroll-top-btn" aria-label="Scroll to top" title="Back to top" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 15l7-7 7 7"/>
         </svg>
     </button>
 
-    <!-- Footer -->
-    <div class="divider-gradient"></div>
-    <footer class="footer-enhanced mt-0 pt-20 pb-16 border-t border-white/5">
-        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12 text-center md:text-left">
-            <div>
-                <h3 class="text-xl font-bold text-gradient mb-3">{{ site_settings.display_logo_text }}</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">{{ site_settings.footer_display_description }}</p>
+    <footer class="surface-ink" style="margin-top: 0;">
+        <div class="container" style="padding-top: 100px; padding-bottom: 48px;">
+            <div class="reveal" style="margin-bottom: 80px;">
+                <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">End / Transmission complete</span>
+                <h2 class="display-lg" style="max-width: 1100px; margin-top: 16px;">
+                    Have an ambitious mobile product to ship?<br>
+                    <em style="font-weight: 300;">Let's </em><a href="{% url 'contact' %}" style="border-bottom: 2px solid var(--accent);">open a channel.</a>
+                </h2>
             </div>
-            <div class="flex flex-col space-y-2">
-                <h4 class="font-bold mb-3 text-sm uppercase tracking-widest text-slate-300">Navigation</h4>
-                <a href="{% url 'home' %}" class="text-slate-400 hover:text-primary transition text-sm">Home</a>
-                {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="text-slate-400 hover:text-primary transition text-sm">Apps</a>
-                {% endif %}
-                <a href="{% url 'blog_list' %}" class="text-slate-400 hover:text-primary transition text-sm">Blog</a>
-                <a href="{% url 'contact' %}" class="text-slate-400 hover:text-primary transition text-sm">Contact</a>
-            </div>
-            <div>
-                <h4 class="font-bold mb-3 text-sm uppercase tracking-widest text-slate-300">Connect</h4>
-                <p class="text-slate-400">
-                    <a href="mailto:{{ site_settings.footer_display_email }}" class="hover:text-primary transition">
-                        {{ site_settings.footer_display_email }}
-                    </a>
-                </p>
-                <div class="flex justify-center md:justify-start space-x-4 mt-4">
-                    {% if site_settings.footer_display_github %}
-                    <a href="{{ site_settings.footer_display_github }}" target="_blank" rel="noopener"
-                        class="text-slate-400 hover:text-primary transition" aria-label="GitHub">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; padding-top: 60px; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-4-mobile-2">
+                <div class="col gap-5">
+                    <div class="row gap-3" style="align-items: center;">
+                        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                            <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1"/>
+                            <text x="20" y="26" text-anchor="middle" font-family="Fraunces, serif" font-size="20" font-style="italic" font-weight="400" fill="currentColor">J</text>
+                            <circle cx="32" cy="8" r="2" fill="var(--accent)"/>
                         </svg>
-                    </a>
-                    {% endif %}
-                    {% if site_settings.footer_display_linkedin %}
-                    <a href="{{ site_settings.footer_display_linkedin }}" target="_blank" rel="noopener"
-                        class="text-slate-400 hover:text-primary transition" aria-label="LinkedIn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                        </svg>
-                    </a>
-                    {% endif %}
-                    {% if site_settings.footer_display_twitter %}
-                    <a href="{{ site_settings.footer_display_twitter }}" target="_blank" rel="noopener"
-                        class="text-slate-400 hover:text-primary transition" aria-label="Twitter/X">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                        </svg>
-                    </a>
-                    {% endif %}
-                    {% if site_settings.footer_display_telegram %}
-                    <a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener"
-                        class="text-slate-400 hover:text-primary transition" aria-label="Telegram">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                            viewBox="0 0 24 24">
-                            <path
-                                d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-                        </svg>
-                    </a>
-                    {% endif %}
+                        <span class="col" style="line-height: 1; gap: 2px;">
+                            <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
+                            <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; opacity: 0.5; text-transform: uppercase;">Build Studio · Est. 2022</span>
+                        </span>
+                    </div>
+                    <p style="opacity: 0.7; max-width: 380px; font-size: 14px; line-height: 1.6;">
+                        {{ site_settings.footer_display_description|default:"A small studio engineering production-grade mobile experiences." }}
+                    </p>
+                    <div class="row gap-2" style="flex-wrap: wrap;">
+                        {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" class="tag" target="_blank" rel="noopener">Telegram ↗</a>{% endif %}
+                        {% if site_settings.footer_display_github %}<a href="{{ site_settings.footer_display_github }}" class="tag" target="_blank" rel="noopener">GitHub ↗</a>{% endif %}
+                        {% if site_settings.footer_display_linkedin %}<a href="{{ site_settings.footer_display_linkedin }}" class="tag" target="_blank" rel="noopener">LinkedIn ↗</a>{% endif %}
+                        {% if site_settings.footer_display_twitter %}<a href="{{ site_settings.footer_display_twitter }}" class="tag" target="_blank" rel="noopener">X ↗</a>{% endif %}
+                    </div>
+                </div>
+
+                <div class="col gap-3">
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Index</div>
+                    <a href="{% url 'home' %}" style="opacity: 0.85; font-size: 14px;">Home</a>
+                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" style="opacity: 0.85; font-size: 14px;">Work</a>{% endif %}
+                    <a href="{% url 'blog_list' %}" style="opacity: 0.85; font-size: 14px;">Journal</a>
+                    <a href="{% url 'contact' %}" style="opacity: 0.85; font-size: 14px;">Contact</a>
+                </div>
+
+                <div class="col gap-3">
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Practice</div>
+                    <span style="opacity: 0.85; font-size: 14px;">Mobile · Flutter</span>
+                    <span style="opacity: 0.85; font-size: 14px;">Backend · Django</span>
+                    <span style="opacity: 0.85; font-size: 14px;">Architecture</span>
+                    <span style="opacity: 0.85; font-size: 14px;">Design systems</span>
+                </div>
+
+                <div class="col gap-3">
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Channels</div>
+                    {% if site_settings.footer_display_email %}<a href="mailto:{{ site_settings.footer_display_email }}" style="opacity: 0.85; font-size: 14px;">{{ site_settings.footer_display_email }}</a>{% endif %}
+                    {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">t.me/jaysonkhan</a>{% endif %}
+                    {% if site_settings.footer_display_github %}<a href="{{ site_settings.footer_display_github }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">github/jaysonkhan</a>{% endif %}
                 </div>
             </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-6" style="margin-top:3.5rem;margin-bottom:2rem;"><div class="divider-gradient"></div></div>
-        <div class="text-center text-slate-400 text-sm pb-6">
-            {{ site_settings.footer_text }}
+
+            <div class="between" style="margin-top: 60px; padding-top: 24px; border-top: 1px solid rgba(243,239,230,0.12); flex-wrap: wrap; gap: 16px;">
+                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em; text-transform: uppercase;">{{ site_settings.footer_text|default:"© 2026 Jaysonkhan Studio · Tashkent, UZ · All rights reserved" }}</span>
+                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em;">VOL. 03 · ISSUE 01</span>
+            </div>
         </div>
     </footer>
 
+    <script src="{% static 'js/infinite-scroll.js' %}"></script>
+
     <script>
-    window.InfiniteScroll = window.InfiniteScroll || (() => {
-        let page = 1;
-        let loading = false;
-        let hasNext = true;
-        let config = {};
-
-        function showSpinner() {
-            const el = document.getElementById(config.spinnerId);
-            if (el) el.style.display = 'flex';
-        }
-
-        function hideSpinner() {
-            const el = document.getElementById(config.spinnerId);
-            if (el) el.style.display = 'none';
-        }
-
-        function hideSentinel() {
-            const el = document.getElementById(config.sentinelId);
-            if (el) el.style.display = 'none';
-        }
-
-        async function fetchNextPage() {
-            if (loading || !hasNext) return;
-            loading = true;
-            showSpinner();
-
-            try {
-                const params = new URLSearchParams({ page: page + 1 });
-                if (config.extraParams) {
-                    Object.entries(config.extraParams).forEach(([k, v]) => {
-                        if (v) params.set(k, v);
-                    });
+    /* Tweaks store + theme toggle */
+    (function() {
+        var KEY = 'jk-tweaks';
+        var DEFAULTS = { theme: 'light', density: 'comfortable', hud: 'on', noise: true };
+        function load() { try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return Object.assign({}, DEFAULTS); } }
+        function save(t) { localStorage.setItem(KEY, JSON.stringify(t)); apply(t); }
+        function apply(t) {
+            var r = document.documentElement;
+            r.setAttribute('data-theme', t.theme || 'light');
+            r.setAttribute('data-density', t.density || 'comfortable');
+            r.setAttribute('data-hud', t.hud || 'on');
+            r.setAttribute('data-noise', t.noise === false ? 'off' : 'on');
+            if (t.accent) {
+                r.style.setProperty('--accent', t.accent);
+                var h = String(t.accent).replace('#','');
+                if (h.length === 6) {
+                    r.style.setProperty('--accent-rgb',
+                        parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16));
                 }
-
-                const resp = await fetch(`${config.apiUrl}?${params.toString()}`);
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-                const data = await resp.json();
-                const items = data.results || data.items || [];
-                hasNext = !!data.next;
-                page += 1;
-
-                const grid = document.getElementById(config.gridId);
-                if (grid && items.length > 0) {
-                    const fragment = document.createDocumentFragment();
-                    items.forEach(item => {
-                        const wrapper = document.createElement('div');
-                        wrapper.innerHTML = config.renderItem(item).trim();
-                        const el = wrapper.firstElementChild;
-                        if (el) {
-                            el.style.opacity = '0';
-                            el.style.transform = 'translateY(20px)';
-                            fragment.appendChild(el);
-                        }
-                    });
-                    grid.appendChild(fragment);
-
-                    requestAnimationFrame(() => {
-                        grid.querySelectorAll('[style*="opacity: 0"]').forEach((el, i) => {
-                            setTimeout(() => {
-                                el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                                el.style.opacity = '1';
-                                el.style.transform = 'translateY(0)';
-                            }, i * 60);
-                        });
-                    });
-                }
-
-                if (!hasNext) {
-                    hideSentinel();
-                    hideSpinner();
-                }
-            } catch (err) {
-                console.error('InfiniteScroll fetch error:', err);
-            } finally {
-                loading = false;
-                hideSpinner();
             }
         }
+        var tweaks = load();
+        apply(tweaks);
+        window.JKTweaks = {
+            get: function() { return Object.assign({}, tweaks); },
+            update: function(p) { tweaks = Object.assign({}, tweaks, p); save(tweaks); },
+            toggleTheme: function() { tweaks.theme = tweaks.theme === 'light' ? 'dark' : 'light'; save(tweaks); }
+        };
+        var btn = document.getElementById('theme-toggle');
+        if (btn) btn.addEventListener('click', function() { window.JKTweaks.toggleTheme(); });
+    })();
+    </script>
 
-        function init(opts) {
-            config = opts;
-            page = 1;
-            loading = false;
-            hasNext = true;
-
-            const grid = document.getElementById(config.gridId);
-            if (grid && grid.dataset.hasNext === 'false') {
-                hasNext = false;
-                hideSentinel();
-                hideSpinner();
-                return;
+    <script>
+    /* Sticky nav scrolled-state, scroll-progress, scroll-top, reveal-on-scroll, mobile menu */
+    (function() {
+        var nav = document.getElementById('main-nav');
+        var progress = document.getElementById('scroll-progress');
+        var topBtn = document.getElementById('scroll-top-btn');
+        function onScroll() {
+            var sy = window.scrollY;
+            if (nav) nav.classList.toggle('scrolled', sy > 20);
+            if (progress) {
+                var h = document.documentElement.scrollHeight - window.innerHeight;
+                progress.style.width = (h > 0 ? (sy / h) * 100 : 0) + '%';
             }
+            if (topBtn) topBtn.classList.toggle('visible', sy > 450);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        if (topBtn) topBtn.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
-            const sentinel = document.getElementById(config.sentinelId);
-            if (!sentinel) return;
-
-            hideSpinner();
-
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    if (entries[0].isIntersecting && hasNext && !loading) {
-                        fetchNextPage();
-                    }
-                },
-                { rootMargin: '200px' }
-            );
-            observer.observe(sentinel);
+        /* Mobile menu */
+        var mBtn = document.getElementById('mobile-menu-btn');
+        var mNav = document.getElementById('mobile-nav');
+        var mIcon = document.getElementById('menu-icon');
+        if (mBtn && mNav) {
+            mBtn.addEventListener('click', function() {
+                var open = !mNav.classList.contains('open');
+                mNav.classList.toggle('open', open);
+                mBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (mIcon) mIcon.innerHTML = open
+                    ? '<path d="M6 18L18 6M6 6l12 12"/>'
+                    : '<path d="M4 6h16M4 12h16M4 18h16"/>';
+            });
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 980 && mNav.classList.contains('open')) {
+                    mNav.classList.remove('open');
+                    mBtn.setAttribute('aria-expanded', 'false');
+                    if (mIcon) mIcon.innerHTML = '<path d="M4 6h16M4 12h16M4 18h16"/>';
+                }
+            }, { passive: true });
         }
 
-        return { init };
+        /* Reveal-on-scroll */
+        if ('IntersectionObserver' in window) {
+            var io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+            }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+        } else {
+            document.querySelectorAll('.reveal').forEach(function(el) { el.classList.add('in'); });
+        }
+
+        /* Count-up */
+        if ('IntersectionObserver' in window) {
+            var co = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (!e.isIntersecting) return;
+                    var el = e.target, target = parseFloat(el.dataset.count);
+                    if (isNaN(target)) return;
+                    var suffix = el.dataset.suffix || '', start = 0, dur = 1400, steps = dur / 16, step = target / steps;
+                    var t = setInterval(function() {
+                        start += step;
+                        if (start >= target) { el.textContent = (Number.isInteger(target) ? target : target.toFixed(1)) + suffix; clearInterval(t); }
+                        else { el.textContent = (Number.isInteger(target) ? Math.floor(start) : start.toFixed(1)) + suffix; }
+                    }, 16);
+                    co.unobserve(el);
+                });
+            }, { threshold: 0.5 });
+            document.querySelectorAll('[data-count]').forEach(function(el) { co.observe(el); });
+        }
     })();
     </script>
 
     {% block extra_js %}{% endblock %}
 
-    <!-- Telegram WebApp auto-login: silently authenticates when opened in Telegram's in-app browser -->
     <script>
+    /* Telegram WebApp auto-login */
     (function() {
-        // Tell Telegram WebApp the page is ready (no-op outside Telegram)
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-        }
-
-        // Skip if no WebApp initData (not in Telegram WebView)
+        if (window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.ready();
         if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData) return;
-
-        // Skip if already logged in
         if (document.documentElement.dataset.tgLoggedIn === 'true') return;
-
-        // Prevent infinite reload — attempt once per tab session
         if (sessionStorage.getItem('tg_webapp_login_attempted')) return;
         sessionStorage.setItem('tg_webapp_login_attempted', '1');
-
         fetch("{% url 'interactions:telegram_webapp_login' %}", {
             method: 'POST',
             credentials: 'same-origin',
@@ -1304,109 +394,10 @@
         })
         .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
         .then(function(res) {
-            if (res.ok && res.data.status === 'ok') {
-                window.location.reload();
-            } else {
-                console.warn('[TG-WebApp-AutoLogin] Failed:', res.data.error || 'Unknown');
-            }
+            if (res.ok && res.data.status === 'ok') window.location.reload();
         })
-        .catch(function(err) {
-            console.warn('[TG-WebApp-AutoLogin] Network error:', err);
-        });
-    })();
-    </script>
-
-    <!-- ── Global UI/UX Enhancement Scripts ──────────────────────────── -->
-    <script>
-    (() => {
-        // ── Scroll Progress Bar (skipped if page provides custom handler) ──
-        const progressBar = document.getElementById('scroll-progress');
-        if (progressBar && !window.__customProgressBar) {
-            window.addEventListener('scroll', () => {
-                const docH = document.documentElement.scrollHeight - window.innerHeight;
-                progressBar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
-            }, { passive: true });
-        }
-
-        // ── Scroll To Top ────────────────────────────────────
-        const scrollTopBtn = document.getElementById('scroll-top-btn');
-        if (scrollTopBtn) {
-            window.addEventListener('scroll', () => {
-                scrollTopBtn.classList.toggle('visible', window.scrollY > 450);
-            }, { passive: true });
-            scrollTopBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
-
-        // ── Scroll Reveal ────────────────────────────────────
-        const revealObs = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                    revealObs.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-        document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-        // ── Count-Up Animation ───────────────────────────────
-        const countObs = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                const el = entry.target;
-                const target = parseInt(el.dataset.count, 10);
-                const suffix = el.dataset.suffix || '';
-                if (isNaN(target)) return;
-                let start = 0;
-                const duration = 1600;
-                const step = target / (duration / 16);
-                const timer = setInterval(() => {
-                    start += step;
-                    if (start >= target) {
-                        el.textContent = target + suffix;
-                        clearInterval(timer);
-                    } else {
-                        el.textContent = Math.floor(start) + suffix;
-                    }
-                }, 16);
-                countObs.unobserve(el);
-            });
-        }, { threshold: 0.6 });
-        document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
-
-        // ── Mobile Menu Toggle + Hamburger/X Icon ───────────
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const menuIcon = document.getElementById('menu-icon');
-        if (menuBtn && mobileMenu && menuIcon) {
-            menuBtn.addEventListener('click', () => {
-                const willOpen = mobileMenu.classList.contains('hidden');
-                mobileMenu.classList.toggle('hidden');
-                menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-                menuIcon.innerHTML = willOpen
-                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
-                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
-            });
-
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    mobileMenu.classList.add('hidden');
-                    menuBtn.setAttribute('aria-expanded', 'false');
-                    menuIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
-                }
-            }, { passive: true });
-        }
-
-        // ── Navbar scroll class (override existing inline script) ──
-        const nav = document.getElementById('main-nav');
-        if (nav) {
-            window.addEventListener('scroll', () => {
-                nav.classList.toggle('scrolled', window.scrollY > 20);
-            }, { passive: true });
-        }
+        .catch(function() {});
     })();
     </script>
 </body>
-
 </html>

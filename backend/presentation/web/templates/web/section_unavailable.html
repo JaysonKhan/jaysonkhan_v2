@@ -1,43 +1,27 @@
 {% extends 'web/base.html' %}
 
-{% block title %}Section Unavailable — {{ site_settings.site_title }}{% endblock %}
+{% block title %}Section unavailable — {{ site_settings.site_title }}{% endblock %}
 
 {% block content %}
-<section class="min-h-[70vh] flex items-center justify-center px-6 py-32">
-    <div class="text-center max-w-md mx-auto">
-
-        <!-- Animated icon -->
-        <div class="relative inline-flex items-center justify-center mb-8">
-            <!-- Glow ring -->
-            <div class="absolute w-32 h-32 rounded-full bg-primary/10 animate-pulse"></div>
-            <div class="relative w-24 h-24 rounded-full bg-white/5 border border-white/10
-                        flex items-center justify-center backdrop-blur-sm">
-                <i class="fa-solid fa-lock text-4xl text-primary/70"></i>
+<main>
+    <section style="min-height: calc(100vh - 84px); display: flex; align-items: center; justify-content: center; padding: 80px 0;">
+        <div class="container-narrow" style="text-align: center;">
+            <div class="reveal in">
+                <span class="numeral" style="font-size: clamp(120px, 18vw, 220px); color: var(--accent); display: block; line-height: 1; font-style: italic;">∅</span>
+                <span class="eyebrow" style="margin-top: 32px; justify-content: center;">— Transmission paused</span>
+                <h1 class="display-md serif" style="margin-top: 24px;">This section is<br><em style="font-weight: 300;">temporarily offline.</em></h1>
+                <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">
+                    {% if message %}{{ message }}{% else %}This part of the site is temporarily offline. Check back soon — it should be up again shortly.{% endif %}
+                </p>
+                <div class="row gap-3" style="justify-content: center; margin-top: 40px; flex-wrap: wrap;">
+                    <a href="{% url 'home' %}" class="btn btn-primary btn-arrow">
+                        Back home
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="{% url 'contact' %}" class="btn">Open a channel</a>
+                </div>
             </div>
         </div>
-
-        <!-- Heading -->
-        <h1 class="text-3xl font-bold mb-3">
-            <span class="text-gradient">This section is unavailable</span>
-        </h1>
-
-        <!-- Subtext -->
-        <p class="text-slate-400 text-base leading-relaxed mb-8">
-            {% if message %}
-            {{ message }}
-            {% else %}
-            This part of the site is temporarily offline.<br>
-            Check back soon — it should be back up shortly.
-            {% endif %}
-        </p>
-
-        <!-- CTA -->
-        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 bg-primary hover:bg-secondary
-                  px-6 py-3 rounded-xl transition font-semibold">
-            <i class="fa-solid fa-arrow-left text-sm"></i>
-            Back to Home
-        </a>
-
-    </div>
-</section>
+    </section>
+</main>
 {% endblock %}

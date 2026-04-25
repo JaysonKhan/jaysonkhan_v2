@@ -1,164 +1,155 @@
 {% extends 'web/base.html' %}
 {% load static %}
 
-{% block title %}Apps | {{ site_settings.site_author }}{% endblock %}
+{% block title %}Work | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
-{% block og_title %}{{ site_settings.projects_page_title }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_title %}{{ site_settings.projects_page_title|default:"Work" }} | {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
 
 {% block content %}
-<section class="max-w-7xl mx-auto px-6"
-    style="max-width:72rem;padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="text-center" style="margin-bottom:var(--space-page-heading-mb)">
-        <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ site_settings.projects_page_title }}</h1>
-        <p class="text-slate-400 max-w-2xl mx-auto">{{ site_settings.projects_page_subtitle }}</p>
-    </div>
-
-    <!-- Platform filter tabs -->
-    <div class="flex justify-center flex-wrap mb-12" style="gap: 0.75rem;">
-        {% for tab in filter_tabs %}
-        <a href="{{ tab.url }}"
-            style="min-height:44px;padding: 0.6rem 1.5rem; display: inline-flex; align-items: center; justify-content: center;"
-            class="filter-chip rounded-full text-sm font-semibold transition-all duration-300 {% if active_filter == tab.key %}bg-primary text-white shadow-xl shadow-primary/30 border border-primary/40{% else %}glass hover:bg-white/10 text-slate-400 hover:text-white{% endif %}">
-            {{ tab.label }}
-        </a>
-        {% endfor %}
-    </div>
-
-    <div id="items-grid" class="grid"
-        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;"
-        data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
-        {% for project in projects %}
-        <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col w-full"
-            style="border-radius:var(--radius-card); cursor: pointer; max-width:420px; justify-self:center;"
-            onclick="window.location.href='{% url 'project_detail' project.slug %}';">
-
-            {% if project.image %}
-            <div class="relative overflow-hidden">
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy"
-                    class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
+<main>
+    {# ========================== HERO ========================== #}
+    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
+                <div class="row gap-3">
+                    <span class="tag">Section · 02</span>
+                    <span class="tag">{{ paginator.count|default:0 }} entries · 2022–2026</span>
+                </div>
+                <span class="tag"><span class="dot-live"></span> Production builds</span>
             </div>
+            <div class="eyebrow" style="margin-bottom: 24px;">Selected work · Production builds</div>
+            <h1 class="display-xl">
+                <em style="font-weight: 300;">{{ site_settings.projects_page_title|default:"Things I've shipped," }}</em><br>
+                and what they<br>
+                taught me.
+            </h1>
+            {% if site_settings.projects_page_subtitle %}
+            <p class="reveal" style="margin-top: 40px; font-size: 18px; color: var(--fg-2); max-width: 720px; line-height: 1.55;">
+                {{ site_settings.projects_page_subtitle }}
+            </p>
             {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
-                No image
-            </div>
+            <p class="reveal" style="margin-top: 40px; font-size: 18px; color: var(--fg-2); max-width: 720px; line-height: 1.55;">
+                Every entry is a real production app — paying users, App Store reviews, telemetry I check on Mondays. No concept work, no portfolio fillers.
+            </p>
             {% endif %}
+        </div>
+    </section>
 
-            <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
-                <h3 class="text-2xl font-bold mb-3">{{ project.title }}</h3>
-                <p class="text-slate-400 mb-5 line-clamp-3">{{ project.get_card_description }}</p>
-
-                <!-- Tech stack -->
-                <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden">
-                    {% for tech in project.technologies.all %}
-                    <span class="tech-tag">{{ tech.name }}</span>
+    {# ========================== INDEX ========================== #}
+    <section class="section">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 48px; flex-wrap: wrap; gap: 24px;">
+                <h2 class="display-md serif">The full <em style="font-weight: 300;">index.</em></h2>
+                <div class="row gap-2" style="flex-wrap: wrap;">
+                    {% for tab in filter_tabs %}
+                    <a href="{{ tab.url }}" class="tag" style="padding: 8px 16px; {% if active_filter == tab.key %}background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0);{% endif %}">{{ tab.label }}</a>
                     {% endfor %}
                 </div>
+            </div>
 
-                <!-- Actions -->
-                <div class="flex items-center gap-3 flex-wrap mt-auto">
-                    {% if project.app_store_url %}
-                    <a href="{{ project.app_store_url }}" target="_blank"
-                        class="store-btn appstore text-xs relative z-10" onclick="event.stopPropagation()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                        </svg>
-                        App Store
-                    </a>
-                    {% endif %}
-                    {% if project.play_store_url %}
-                    <a href="{{ project.play_store_url }}" target="_blank"
-                        class="store-btn playstore text-xs relative z-10" onclick="event.stopPropagation()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 20.5v-17c0-.59.34-1.11.84-1.35L13.69 12l-9.85 9.85c-.5-.24-.84-.76-.84-1.35m13.81-5.38L6.05 21.34l8.49-8.49 2.27 2.27m3.35-1.86c.56.32.84.82.84 1.25 0 .43-.28.93-.84 1.25l-2.04 1.15-2.5-2.5 2.5-2.5 2.04 1.35M6.05 2.66l10.76 6.22-2.27 2.27-8.49-8.49z" />
-                        </svg>
-                        Google Play
-                    </a>
-                    {% endif %}
-                    {% if project.web_page_url %}
-                    <a href="{{ project.web_page_url }}" target="_blank"
-                        class="store-btn web text-xs relative z-10" onclick="event.stopPropagation()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
-                        Web Page
-                    </a>
-                    {% endif %}
-                    {% if project.github_url %}
-                    <a href="{{ project.github_url }}" target="_blank"
-                        class="text-slate-300 hover:text-white transition text-sm relative z-10"
-                        onclick="event.stopPropagation()">GitHub &rarr;</a>
-                    {% endif %}
-                    <a href="{% url 'project_detail' project.slug %}"
-                        class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details &rarr;</a>
+            <div style="display: grid; grid-template-columns: 60px 2fr 1fr 100px 1.5fr 80px 60px; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line-2);" class="hide-mobile">
+                <span class="mono index-head">Nº</span>
+                <span class="mono index-head">Project</span>
+                <span class="mono index-head">Category</span>
+                <span class="mono index-head">Year</span>
+                <span class="mono index-head">Stack</span>
+                <span class="mono index-head">Result</span>
+                <span></span>
+            </div>
+
+            <div id="items-grid" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
+                {% for project in projects %}
+                <a href="{% url 'project_detail' project.slug %}" class="reveal index-row" style="transition-delay: {{ forloop.counter0|stringformat:'s' }}0ms; display: block; border-bottom: 1px solid var(--line-1); transition: background .4s var(--ease-out);">
+                    <div style="display: grid; grid-template-columns: 60px 2fr 1fr 100px 1.5fr 80px 60px; gap: 20px; padding: 28px 0; align-items: center;" class="grid-3-mobile-1">
+                        <span class="numeral index-num" style="font-size: 32px; color: var(--fg-3); transition: color .3s;">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <h3 class="serif index-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
+                            {% if project.app_store_url and project.play_store_url %}Cross-platform{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}Web{% elif project.is_bot %}Telegram{% else %}Mobile{% endif %}
+                        </span>
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ project.created_at|date:"Y" }}</span>
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.12em;">
+                            {% with techs=project.technologies.all %}{% for tech in techs|slice:":3" %}{{ tech.name }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endwith %}
+                        </span>
+                        <span class="mono" style="font-size: 10px; color: var(--accent); letter-spacing: 0.14em;">
+                            {% if project.is_featured %}● Featured{% else %}● Live{% endif %}
+                        </span>
+                        <span class="index-arrow" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s; justify-self: end;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
+                </a>
+                {% empty %}
+                <div style="padding: 80px 0; text-align: center; color: var(--fg-3);">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— No entries yet —</span>
                 </div>
+                {% endfor %}
+            </div>
+
+            <div id="scroll-sentinel" class="scroll-sentinel"></div>
+            <div id="scroll-spinner" class="scroll-spinner">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
             </div>
         </div>
-        {% empty %}
-        <p class="col-span-full text-center text-slate-500 py-20">No projects to display at the moment.</p>
-        {% endfor %}
-    </div>
+    </section>
+</main>
 
-    <!-- Infinite scroll sentinel & spinner -->
-    <div id="scroll-sentinel" class="scroll-sentinel"></div>
-    <div id="scroll-spinner" class="scroll-spinner" style="display:none">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-    </div>
-</section>
+<style>
+    .index-head { font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase; }
+    .index-row {
+        margin-left: 0; margin-right: 0;
+        padding-left: 0; padding-right: 0;
+    }
+    .index-row .index-title {
+        font-size: 28px;
+        color: var(--fg-0);
+        transition: color .3s var(--ease-out);
+    }
+    .index-row:hover { background: var(--bg-2); padding-left: 16px; padding-right: 16px; margin-left: -16px; margin-right: -16px; }
+    .index-row:hover .index-title { color: var(--accent); }
+    .index-row:hover .index-num { color: var(--accent); }
+    .index-row:hover .index-arrow { background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0); }
+</style>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!window.InfiniteScroll) {
-            document.getElementById('scroll-sentinel')?.remove();
-            document.getElementById('scroll-spinner')?.remove();
-            return;
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof InfiniteScroll === 'undefined') return;
+    var urlParams = new URLSearchParams(window.location.search);
+    var filterKey = urlParams.get('filter') || '';
+    var extraParams = {};
+    if (filterKey) extraParams.filter = filterKey;
+
+    InfiniteScroll.init({
+        apiUrl: '/api/projects/',
+        gridId: 'items-grid',
+        sentinelId: 'scroll-sentinel',
+        spinnerId: 'scroll-spinner',
+        extraParams: extraParams,
+        renderItem: function(p) {
+            var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
+            var year = (p.created_at || '').slice(0, 4) || '';
+            var category = p.app_store_url && p.play_store_url ? 'Cross-platform'
+                : p.app_store_url ? 'iOS'
+                : p.play_store_url ? 'Android'
+                : p.web_page_url ? 'Web'
+                : p.is_bot ? 'Telegram' : 'Mobile';
+            var stack = (p.tech_tags || []).slice(0, 3).join(' · ');
+            var status = p.is_featured ? '● Featured' : '● Live';
+            return '<a href="/projects/' + p.slug + '/" class="reveal in index-row" style="display:block;border-bottom:1px solid var(--line-1);">' +
+                '<div style="display:grid;grid-template-columns:60px 2fr 1fr 100px 1.5fr 80px 60px;gap:20px;padding:28px 0;align-items:center;" class="grid-3-mobile-1">' +
+                '<span class="numeral index-num" style="font-size:32px;color:var(--fg-3);">' + idx + '</span>' +
+                '<h3 class="serif index-title"><em style="font-weight:300;">' + p.title + '</em></h3>' +
+                '<span class="mono" style="font-size:11px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;">' + category + '</span>' +
+                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + year + '</span>' +
+                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.12em;">' + stack + '</span>' +
+                '<span class="mono" style="font-size:10px;color:var(--accent);letter-spacing:0.14em;">' + status + '</span>' +
+                '<span class="index-arrow" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line-3);display:inline-flex;align-items:center;justify-content:center;justify-self:end;">' +
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>' +
+                '</div></a>';
         }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const filterKey = urlParams.get('filter') || '';
-        const extraParams = {};
-        if (filterKey) extraParams.filter = filterKey;
-
-        InfiniteScroll.init({
-            apiUrl: '/api/projects/',
-            gridId: 'items-grid',
-            sentinelId: 'scroll-sentinel',
-            spinnerId: 'scroll-spinner',
-            extraParams,
-            renderItem: (p) => `
-            <div class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 relative flex flex-col w-full"
-                 style="border-radius:var(--radius-card); cursor: pointer; max-width:420px; justify-self:center;"
-                 onclick="window.location.href='/projects/${p.slug}/';">
-
-                ${p.image_url
-                    ? `<div class="relative overflow-hidden">
-                        <img src="${p.image_url}" alt="${p.title}" class="w-full object-cover group-hover:scale-105 transition duration-500" style="height:var(--img-card-h)">
-                       </div>`
-                    : `<div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative" style="height:var(--img-card-h)">
-                        No image
-                       </div>`
-                }
-
-                <div style="padding:var(--space-card-padding)" class="flex-grow flex flex-col">
-                    <h3 class="text-2xl font-bold mb-3">${p.title}</h3>
-                    <p class="text-slate-400 mb-5 line-clamp-3">${p.description}</p>
-                    <div class="flex flex-wrap gap-2 mb-6 max-h-[3.5rem] overflow-hidden">
-                        ${p.tech_tags.map(t => `<span class="tech-tag">${t}</span>`).join('')}
-                    </div>
-                    <div class="flex items-center gap-3 flex-wrap mt-auto">
-                        ${p.app_store_url ? `<a href="${p.app_store_url}" target="_blank" class="store-btn appstore text-xs relative z-10" onclick="event.stopPropagation()">App Store</a>` : ''}
-                        ${p.play_store_url ? `<a href="${p.play_store_url}" target="_blank" class="store-btn playstore text-xs relative z-10" onclick="event.stopPropagation()">Google Play</a>` : ''}
-                        ${p.web_page_url ? `<a href="${p.web_page_url}" target="_blank" class="store-btn web text-xs relative z-10" onclick="event.stopPropagation()">Web Page</a>` : ''}
-                        ${p.github_url ? `<a href="${p.github_url}" target="_blank" class="text-slate-300 hover:text-white transition text-sm relative z-10" onclick="event.stopPropagation()">GitHub →</a>` : ''}
-                        <a href="/projects/${p.slug}/" class="text-primary text-sm font-semibold ml-auto transition hover:scale-105">Details →</a>
-                    </div>
-                </div>
-            </div>
-        `,
-        });
     });
+});
 </script>
 {% endblock %}

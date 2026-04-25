@@ -1,941 +1,440 @@
 {% extends 'web/base.html' %}
 {% load static %}
-{% load markdown_extras %}
 
 {% block title %}{{ site_settings.site_title }}{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="relative max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between overflow-visible"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <!-- Animated mesh background -->
-    <div class="hero-mesh"></div>
+<main>
+    {# ========================== HERO ========================== #}
+    <section style="position: relative; overflow: hidden; min-height: calc(100vh - 84px); display: flex; flex-direction: column;">
+        <div class="container hud-only" style="padding-top: 24px; padding-bottom: 24px;">
+            <div class="between" style="flex-wrap: wrap; gap: 16px;">
+                <div class="row gap-3" style="flex-wrap: wrap;">
+                    <span class="tag">Vol. 03 · Issue 01</span>
+                    <span class="tag">Tashkent · 41.2995° N</span>
+                    <span class="tag mono" id="hero-clock">— UTC+5</span>
+                </div>
+                <div class="row gap-3">
+                    <span class="tag"><span class="dot-live"></span> {{ site_settings.hero_availability_badge|default:"Now booking · Q2 2026" }}</span>
+                </div>
+            </div>
+        </div>
 
-    <div class="md:w-1/2 space-y-6 relative z-10">
-        <div class="inline-flex max-w-fit items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-            <span class="w-2 h-2 shrink-0 bg-green-400 rounded-full animate-pulse"></span>
-            <span class="text-green-400 text-sm font-medium pr-1">{{ site_settings.hero_availability_badge }}</span>
-        </div>
-        <h1 class="text-4xl md:text-7xl font-bold leading-tight">
-            {{ site_settings.hero_title }}
-        </h1>
-        <p class="text-slate-400 text-lg max-w-lg leading-relaxed">{{ site_settings.hero_subtitle }}</p>
-        {% if site_settings.hero_typing_texts %}
-        <div class="text-lg sm:text-2xl md:text-3xl font-bold" style="overflow:visible;white-space:nowrap;">
-            <span class="text-slate-300">I am a </span>
-            <span id="typing-text" class="text-gradient"></span>
-            <span id="typing-cursor" style="color:#6366f1;animation:cursorBlink .7s step-end infinite;">|</span>
-        </div>
-        {% endif %}
-        <div class="flex flex-wrap gap-3">
-            <span class="platform-badge cross">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-                Flutter
-            </span>
-            <span class="platform-badge android">Android</span>
-            <span class="platform-badge ios">iOS</span>
-        </div>
-        <div class="flex flex-wrap gap-4 pt-2">
-            {% if site_settings.apps_section_visible %}
-            <a href="{{ site_settings.hero_primary_cta_url }}"
-                class="btn-primary-glow bg-primary hover:bg-secondary px-8 py-3 rounded-xl transition font-semibold shadow-lg">
-                {{ site_settings.hero_primary_cta_text }}
-            </a>
-            {% endif %}
-            <a href="{{ site_settings.hero_secondary_cta_url }}"
-                class="glass hover:bg-white/10 px-8 py-3 rounded-xl transition font-semibold border border-white/10 hover:border-white/20">
-                {{ site_settings.hero_secondary_cta_text }}
-            </a>
-        </div>
-    </div>
-    <div class="md:w-1/2 mt-12 md:mt-0 relative flex justify-center items-center">
-        <div class="w-64 h-64 md:w-80 md:h-80 bg-primary/20 rounded-full blur-3xl absolute -top-10 -left-10"></div>
-        <div class="w-64 h-64 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl absolute -bottom-10 -right-10"></div>
+        <div class="container flex-1" style="display: flex; flex-direction: column; justify-content: center; padding-top: 60px; padding-bottom: 80px;">
+            <div class="eyebrow fade-up" style="margin-bottom: 32px; animation-delay: 0.1s;">Personal · Build Studio · Mobile Engineering</div>
+            <h1 class="display-xl fade-up" style="animation-delay: 0.2s; max-width: 95%;">
+                {% if site_settings.hero_title %}{{ site_settings.hero_title|safe }}{% else %}Mobile experiences,<br>engineered with<br><span style="font-style: italic; font-weight: 300; position: relative; display: inline-block;">intent.<svg style="position: absolute; left: -8%; bottom: -8%; width: 116%; height: 60%; pointer-events: none;" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M2,18 Q 30,2 60,16 T 98,12" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-linecap="round" pathLength="1" style="stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.6s var(--ease-out) 0.8s forwards;"/></svg></span>{% endif %}
+            </h1>
 
-        {% with orbit_skills=portfolio.hero_skills %}
-        {% if orbit_skills %}
-        <!-- Hero Orbit Animation -->
-        <div class="hero-orbit-container hidden md:block" style="--total: {{ orbit_skills|length }};">
-            {% for skill in orbit_skills %}
-            <div class="orbit-item" style="--i: {{ forloop.counter0 }};">
-                <div class="orbit-icon">
-                    {% if skill.icon %}
-                    <i class="{{ skill.icon }}"></i>
+            <div class="row between fade-up" style="margin-top: 60px; animation-delay: 0.4s; flex-wrap: wrap; gap: 24px;">
+                <p style="max-width: 560px; font-size: 18px; line-height: 1.55; color: var(--fg-2);">
+                    {% if site_settings.hero_subtitle %}{{ site_settings.hero_subtitle }}{% else %}I'm <strong style="color: var(--fg-0);">{{ site_settings.site_author }}</strong> — a Flutter mobile engineer running a small studio in Tashkent. I ship production apps for fintech, logistics, and consumer products.{% endif %}
+                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">See the work →</a>{% endif %}
+                </p>
+                <div class="row gap-3" style="align-items: center; flex-wrap: wrap;">
+                    {% if site_settings.hero_primary_cta_text %}
+                    <a href="{{ site_settings.hero_primary_cta_url|default_if_none:'' }}" class="btn btn-primary btn-arrow">
+                        {{ site_settings.hero_primary_cta_text }}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
                     {% else %}
-                    <span class="text-xs font-bold">{{ skill.name|slice:":2"|upper }}</span>
+                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow">
+                        Start a project
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    {% endif %}
+                    {% if site_settings.apps_section_visible %}
+                    <a href="{% url 'projects' %}" class="btn">View case studies</a>
                     {% endif %}
                 </div>
             </div>
+        </div>
+
+        <div class="container hud-only" style="padding-bottom: 40px;">
+            <div class="between" style="padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">Scroll · Begin transmission</span>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">01 / 07</span>
+            </div>
+        </div>
+    </section>
+
+    {# ========================== TICKER ========================== #}
+    <div class="ticker hud-only" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1); padding: 14px 0; background: var(--bg-0);">
+        <div class="ticker-track mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3);">
+            {% for _ in "12" %}
+                <span style="display: inline-flex; align-items: center; gap: 60px;">Flutter mobile engineering<span style="color: var(--accent);">✦</span></span>
+                <span style="display: inline-flex; align-items: center; gap: 60px;">Production apps<span style="color: var(--accent);">✦</span></span>
+                <span style="display: inline-flex; align-items: center; gap: 60px;">Fintech · Logistics · Consumer<span style="color: var(--accent);">✦</span></span>
+                <span style="display: inline-flex; align-items: center; gap: 60px;">Tashkent — worldwide remote<span style="color: var(--accent);">✦</span></span>
+                <span style="display: inline-flex; align-items: center; gap: 60px;">Built for scale, not for demos<span style="color: var(--accent);">✦</span></span>
             {% endfor %}
         </div>
-        {% endif %}
-        {% endwith %}
-
-        {% if site_settings.hero_image %}
-        <div class="device-mockup relative z-10 w-64 md:w-72">
-            <img src="{{ site_settings.hero_image.url }}" alt="{{ site_settings.site_author }} — Mobile Developer"
-                class="w-full">
-        </div>
-        {% else %}
-        <div class="device-mockup relative z-10 w-64 md:w-72">
-            <img src="{% static 'images/hero.jpg' %}" alt="{{ site_settings.site_author }} — Mobile Developer"
-                class="w-full">
-        </div>
-        {% endif %}
     </div>
-</section>
 
-<!-- ── Stats Bar ────────────────────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6" style="padding-bottom:calc(var(--space-section-py) - 1.5rem)">
-    <div class="divider-gradient mb-10 reveal"></div>
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-6 reveal">
-        <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="{{ site_settings.stat_1_count }}" data-suffix="{{ site_settings.stat_1_suffix }}">{{ site_settings.stat_1_count }}{{ site_settings.stat_1_suffix }}</span>
-            <span class="stat-label">{{ site_settings.stat_1_label }}</span>
+    {# ========================== MANIFESTO ========================== #}
+    <section class="section" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 80px;" class="grid-2-mobile-1">
+                <div class="col gap-4 reveal">
+                    <span class="eyebrow">02 — Philosophy</span>
+                    <h2 class="display-md serif">Manifesto.</h2>
+                    <p class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-4); text-transform: uppercase; margin-top: 16px;">03 PRINCIPLES · ON BUILDING</p>
+                </div>
+                <div class="col gap-10">
+                    <div class="reveal" style="padding-bottom: 40px; border-bottom: 1px solid var(--line-1);">
+                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
+                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">01</span>
+                            <div class="col gap-3 flex-1">
+                                <h3 class="display-sm serif"><em style="font-weight: 300;">Code is a side effect of thinking clearly.</em></h3>
+                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">A clean codebase is the residue of a clear understanding of the problem. I don't ship spaghetti and call it pragmatic.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="reveal" style="padding-bottom: 40px; border-bottom: 1px solid var(--line-1); transition-delay: 0.08s;">
+                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
+                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">02</span>
+                            <div class="col gap-3 flex-1">
+                                <h3 class="display-sm serif"><em style="font-weight: 300;">Production is the only opinion that matters.</em></h3>
+                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">Demos are theatre. I measure my work by App Store reviews, crash-free sessions, and revenue clients can count.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="reveal" style="transition-delay: 0.16s;">
+                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
+                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">03</span>
+                            <div class="col gap-3 flex-1">
+                                <h3 class="display-sm serif"><em style="font-weight: 300;">Boring infrastructure is high craft.</em></h3>
+                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">CI that never fails. Migrations that never lose data. Observability you actually use. The unglamorous parts are where senior engineers earn their fee.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="{{ site_settings.stat_2_count }}" data-suffix="{{ site_settings.stat_2_suffix }}">{{ site_settings.stat_2_count }}{{ site_settings.stat_2_suffix }}</span>
-            <span class="stat-label">{{ site_settings.stat_2_label }}</span>
-        </div>
-        <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="{{ site_settings.stat_3_count }}" data-suffix="{{ site_settings.stat_3_suffix }}">{{ site_settings.stat_3_count }}{{ site_settings.stat_3_suffix }}</span>
-            <span class="stat-label">{{ site_settings.stat_3_label }}</span>
-        </div>
-        <div class="stat-item glass rounded-2xl py-6 px-4">
-            <span class="stat-number" data-count="{{ site_settings.stat_4_count }}" data-suffix="{{ site_settings.stat_4_suffix }}">{{ site_settings.stat_4_count }}{{ site_settings.stat_4_suffix }}</span>
-            <span class="stat-label">{{ site_settings.stat_4_label }}</span>
-        </div>
-        <div class="stat-item glass rounded-2xl py-6 px-4 col-span-2 md:col-span-1">
-            <span class="stat-number" data-count="{{ visitor_count }}" data-suffix="">{{ visitor_count }}</span>
-            <span class="stat-label">Site Visitors</span>
-        </div>
-    </div>
-    <div class="divider-gradient mt-10 reveal"></div>
-</section>
+    </section>
 
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- About Section -->
-<section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="grid md:grid-cols-2 gap-14 items-center">
-        <div class="space-y-6 reveal">
-            <span class="section-tag">
-                <i class="fa-solid fa-user-tie"></i>
-                About Me
-            </span>
-            <h2 class="text-3xl md:text-4xl font-bold"><span class="text-gradient">{{ site_settings.about_title }}</span></h2>
-            <p class="text-slate-400 text-lg leading-relaxed">{{ site_settings.about_description }}</p>
-            {% if site_settings.resume_file %}
-            <a href="{{ site_settings.resume_file.url }}" download
-                class="inline-flex items-center gap-2 btn-primary-glow bg-primary hover:bg-secondary px-6 py-3 rounded-xl transition font-semibold">
-                <i class="fa-solid fa-download text-sm"></i>
-                {{ site_settings.resume_button_text }}
-            </a>
-            {% endif %}
-        </div>
-        <div class="reveal delay-2">
-            {% if site_settings.about_image %}
-            <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" loading="lazy"
-                class="rounded-2xl border border-white/10 shadow-2xl hover:border-primary/20 transition duration-500">
-            {% else %}
-            <img src="{% static 'images/about.jpg' %}" alt="{{ site_settings.site_author }}" loading="lazy"
-                class="rounded-2xl border border-white/10 shadow-2xl hover:border-primary/20 transition duration-500">
-            {% endif %}
-        </div>
-    </div>
-</section>
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- Experience Section -->
-{% if portfolio.experience %}
-<section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="text-center mb-12 reveal">
-        <span class="section-tag">
-            <i class="fa-solid fa-briefcase"></i>
-            Career
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">
-            <span class="text-gradient">{{ site_settings.experience_section_title }}</span>
-        </h2>
-    </div>
-    <div class="max-w-3xl mx-auto space-y-8 relative">
-        <!-- Timeline line -->
-        <div class="absolute left-[1.35rem] top-2 bottom-2 w-px bg-white/10 hidden md:block"></div>
-
-        {% for exp in portfolio.experience %}
-        <div class="relative flex flex-col md:flex-row gap-6 md:gap-8 items-start">
-            <!-- Timeline dot / company logo -->
-            <div class="hidden md:flex shrink-0 w-11 h-11 items-center justify-center rounded-full bg-dark border-2 border-white/10 z-10 overflow-hidden">
-                {% if exp.company_logo %}
-                <img src="{{ exp.company_logo.url }}" alt="{{ exp.company }}" loading="lazy" class="w-full h-full object-cover rounded-full">
-                {% else %}
-                <div class="w-3 h-3 rounded-full bg-primary"></div>
+    {# ========================== METRICS (ink) ========================== #}
+    <section class="surface-ink section">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 80px; flex-wrap: wrap; gap: 24px;">
+                <div class="col gap-3">
+                    <span class="eyebrow">03 — By the numbers</span>
+                    <h2 class="display-md serif">A track record,<br><em style="font-weight: 300;">measured.</em></h2>
+                </div>
+                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">
+                    Numbers from live production apps over the last four years. Pulled from dashboards, not pitch decks.
+                </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-4-mobile-2">
+                {% if site_settings.stat_1_count %}
+                <div class="reveal" style="padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
+                    <div class="row" style="align-items: baseline; gap: 8px;">
+                        <span class="numeral" data-count="{{ site_settings.stat_1_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_1_count }}</span>
+                        {% if site_settings.stat_1_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_1_suffix }}</span>{% endif %}
+                    </div>
+                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_1_label }}</p>
+                </div>
                 {% endif %}
-            </div>
-
-            <!-- Content Card -->
-            <div class="glass p-6 md:p-8 rounded-2xl w-full reveal">
-                <div class="flex items-start justify-between flex-wrap gap-4 md:gap-2">
-                    <div>
-                        <h3 class="text-xl font-bold">{{ exp.position }}</h3>
-                        <p class="text-primary font-medium mt-1">
-                            {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener"
-                                class="hover:underline">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}
-                            {% if exp.location %}<span class="text-slate-500"> · {{ exp.location }}</span>{% endif %}
-                        </p>
+                {% if site_settings.stat_2_count %}
+                <div class="reveal" style="transition-delay: 0.08s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
+                    <div class="row" style="align-items: baseline; gap: 8px;">
+                        <span class="numeral" data-count="{{ site_settings.stat_2_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_2_count }}</span>
+                        {% if site_settings.stat_2_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_2_suffix }}</span>{% endif %}
                     </div>
-                    <div
-                        class="inline-flex items-center px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300 font-medium whitespace-nowrap">
-                        {{ exp.start_date|date:"M Y" }} —
-                        {% if exp.is_current %}<span class="text-green-400 ml-1">Present</span>{% else %}<span
-                            class="ml-1">{{ exp.end_date|date:"M Y" }}</span>{% endif %}
+                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_2_label }}</p>
+                </div>
+                {% endif %}
+                {% if site_settings.stat_3_count %}
+                <div class="reveal" style="transition-delay: 0.16s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
+                    <div class="row" style="align-items: baseline; gap: 8px;">
+                        <span class="numeral" data-count="{{ site_settings.stat_3_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_3_count }}</span>
+                        {% if site_settings.stat_3_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_3_suffix }}</span>{% endif %}
                     </div>
+                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_3_label }}</p>
                 </div>
-                <p class="text-slate-400 mt-4 text-sm leading-relaxed">{{ exp.description|truncatewords:40 }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-{% if site_settings.apps_section_visible %}
-<!-- ── Featured Apps Section ──────────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 reveal"
-        style="max-width:1040px;margin:0 auto 3rem;">
-        <div>
-            <span class="section-tag">
-                <i class="fa-solid fa-mobile-screen"></i>
-                Portfolio
-            </span>
-            <h2 class="text-3xl md:text-4xl font-bold">{{ site_settings.featured_projects_title }}</h2>
-            <p class="text-slate-400 mt-2">{{ site_settings.featured_projects_subtitle }}</p>
-        </div>
-        <a href="{% url 'projects' %}"
-            class="inline-flex items-center gap-1.5 text-primary hover:text-white transition font-medium group">
-            View All
-            <span class="transition-transform group-hover:translate-x-1">&rarr;</span>
-        </a>
-    </div>
-    <div class="grid"
-        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;">
-        {% for project in portfolio.featured_projects|slice:":6" %}
-        <a href="{% url 'project_detail' project.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
-            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
-            {% if project.image %}
-            <div class="relative overflow-hidden">
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy"
-                    class="w-full object-cover group-hover:scale-105 transition duration-500"
-                    style="height:var(--img-card-h)">
-            </div>
-            {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm relative"
-                style="height:var(--img-card-h)">
-                No image
-            </div>
-            {% endif %}
-            <div style="padding:var(--space-card-padding)">
-                <h3 class="text-xl font-bold mb-2">{{ project.title }}</h3>
-                <p class="text-slate-400 text-sm line-clamp-2 mb-4">{{ project.get_card_description }}</p>
-
-                <!-- Tech stack tags -->
-                <div class="flex flex-wrap gap-2 mb-4">
-                    {% for tech in project.technologies.all|slice:":5" %}
-                    <span class="tech-tag">{{ tech.name }}</span>
-                    {% endfor %}
-                </div>
-
-                <span class="text-primary text-sm font-semibold">Details &rarr;</span>
-            </div>
-        </a>
-        {% empty %}
-        <!-- Fallback: show first 3 projects if none marked featured -->
-        {% for project in portfolio.projects|slice:":3" %}
-        <a href="{% url 'project_detail' project.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
-            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
-            {% if project.image %}
-            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full object-cover"
-                style="height:var(--img-card-h)">
-            {% else %}
-            <div class="w-full bg-primary/10 flex items-center justify-center text-slate-500 text-sm"
-                style="height:var(--img-card-h)">No image
-            </div>
-            {% endif %}
-            <div style="padding:var(--space-card-padding)">
-                <h3 class="text-xl font-bold mb-2">{{ project.title }}</h3>
-                <p class="text-slate-400 text-sm line-clamp-3 mb-4">{{ project.get_card_description|truncatewords:25 }}</p>
-                <span class="text-primary font-semibold">Details &rarr;</span>
-            </div>
-        </a>
-        {% empty %}
-        <p class="col-span-full text-center text-slate-500">No projects to show yet.</p>
-        {% endfor %}
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- ── Latest Blog Posts Section ──────────────────────────────────── -->
-<section class="max-w-7xl mx-auto px-6 bg-white/[0.02]"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);border-radius:var(--radius-section-bg)">
-    <div class="text-center reveal" style="margin-bottom:3rem;">
-        <span class="section-tag">
-            <i class="fa-solid fa-pen-nib"></i>
-            Blog
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">{{ site_settings.latest_blog_title }}</h2>
-    </div>
-    <div class="grid"
-        style="gap:var(--space-section-gap);grid-template-columns:repeat(auto-fit,minmax(320px,1fr));max-width:1040px;margin:0 auto;">
-        {% for post in latest_posts %}
-        <a href="{% url 'blog_detail' post.slug %}"
-            class="glass overflow-hidden group hover:scale-[1.02] transition duration-300 block no-underline text-inherit w-full"
-            style="border-radius:var(--radius-card);max-width:420px;justify-self:center;">
-            <div class="overflow-hidden">
-                {% if post.featured_image %}
-                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy"
-                    class="w-full object-cover group-hover:scale-105 transition duration-500"
-                    style="height:var(--img-card-h)">
-                {% else %}
-                <div class="w-full bg-white/5 flex items-center justify-center text-slate-600"
-                    style="height:var(--img-card-h)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                    </svg>
+                {% endif %}
+                {% if site_settings.stat_4_count %}
+                <div class="reveal" style="transition-delay: 0.24s; padding: 40px 32px 40px 0;">
+                    <div class="row" style="align-items: baseline; gap: 8px;">
+                        <span class="numeral" data-count="{{ site_settings.stat_4_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_4_count }}</span>
+                        {% if site_settings.stat_4_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_4_suffix }}</span>{% endif %}
+                    </div>
+                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_4_label }}</p>
                 </div>
                 {% endif %}
             </div>
-            <div style="padding:var(--space-card-padding)">
-                <span class="text-slate-500 text-sm">{{ post.created_at|date:"F d, Y" }}</span>
-                <h3 class="text-lg font-bold mt-1.5 group-hover:text-primary transition line-clamp-2">{{ post.title }}
-                </h3>
-                <p class="text-slate-400 mt-2 text-sm line-clamp-2">{{ post.excerpt }}</p>
-                <span class="inline-block mt-3 text-sm font-bold border-b-2 border-primary text-primary">Read
-                    More</span>
-            </div>
-        </a>
-        {% empty %}
-        <p class="col-span-full text-center text-slate-500">The blog is currently empty.</p>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- ── GitHub Contribution Graph ────────────────────────────── -->
-{% if site_settings.github_url %}
-<section id="github-section" class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);display:none;">
-    <div class="text-center mb-12 reveal">
-        <span class="section-tag">
-            <i class="fa-brands fa-github"></i>
-            Open Source
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">
-            <span class="text-gradient">GitHub Activity</span>
-        </h2>
-    </div>
-
-    <div class="max-w-4xl mx-auto reveal">
-        <!-- Month labels -->
-        <div id="gh-months" style="display:flex;padding-left:28px;margin-bottom:4px;overflow:hidden;"></div>
-
-        <div style="display:flex;gap:4px;">
-            <!-- Day labels -->
-            <div style="display:flex;flex-direction:column;justify-content:space-between;padding:2px 4px 2px 0;font-size:0.6rem;color:#64748b;line-height:1;">
-                <span>Mon</span>
-                <span>Wed</span>
-                <span>Fri</span>
-            </div>
-            <!-- Heatmap grid -->
-            <div id="gh-heatmap" style="display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:2px;flex:1;overflow:hidden;"></div>
         </div>
+    </section>
 
-        <!-- Legend -->
-        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:0.65rem;color:#64748b;">
-            <span>Less</span>
-            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.08);border:1px solid rgba(255,255,255,0.05);"></div>
-            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.25);"></div>
-            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.50);"></div>
-            <div style="width:10px;height:10px;border-radius:2px;background:rgba(99,102,241,0.75);"></div>
-            <div style="width:10px;height:10px;border-radius:2px;background:#6366f1;"></div>
-            <span>More</span>
-        </div>
-
-        <!-- Stats row -->
-        <div id="gh-stats" style="display:flex;gap:24px;justify-content:center;margin-top:16px;font-size:0.8rem;color:#94a3b8;"></div>
-    </div>
-</section>
-{% endif %}
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- ── WakaTime Coding Activity ─────────────────────────────── -->
-{% if site_settings.wakatime_api_key %}
-<section id="wakatime-section" class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py);display:none;">
-    <div class="text-center mb-12 reveal">
-        <span class="section-tag">
-            <svg style="width:14px;height:14px;display:inline;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.1L6.1 6.1v4.5c0 4.3 2.5 8.3 5.9 10.3 3.4-2 5.9-6 5.9-10.3V6.1L12 3.1zm0 1.8l4.1 2.1v3.6c0 3.5-2 6.9-4.1 8.6-2.1-1.7-4.1-5.1-4.1-8.6V7l4.1-2.1z"/></svg>
-            Coding Activity
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">
-            <span class="text-gradient">WakaTime Stats</span>
-        </h2>
-        <p id="wk-subtitle" class="text-slate-400 mt-2">All-time coding activity</p>
-    </div>
-
-    <div class="max-w-4xl mx-auto reveal">
-        <!-- Top Stats Cards -->
-        <div id="wk-stats-cards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"></div>
-
-        <!-- Languages + Editors + OS Grid -->
-        <div class="grid md:grid-cols-3 gap-6">
-            <!-- Languages -->
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;">
-                <h3 style="font-size:0.85rem;font-weight:600;color:#e2e8f0;margin-bottom:16px;">
-                    <svg style="width:14px;height:14px;display:inline;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-                    Languages
-                </h3>
-                <div id="wk-languages" style="display:flex;flex-direction:column;gap:10px;"></div>
-            </div>
-
-            <!-- Editors -->
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;">
-                <h3 style="font-size:0.85rem;font-weight:600;color:#e2e8f0;margin-bottom:16px;">
-                    <svg style="width:14px;height:14px;display:inline;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                    Editors
-                </h3>
-                <div id="wk-editors" style="display:flex;flex-direction:column;gap:10px;"></div>
-            </div>
-
-            <!-- Operating Systems -->
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;">
-                <h3 style="font-size:0.85rem;font-weight:600;color:#e2e8f0;margin-bottom:16px;">
-                    <svg style="width:14px;height:14px;display:inline;margin-right:4px;vertical-align:-2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20M9 21V9"/></svg>
-                    Operating Systems
-                </h3>
-                <div id="wk-os" style="display:flex;flex-direction:column;gap:10px;"></div>
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<!-- ── Separator ── -->
-<div class="max-w-7xl mx-auto px-6"><div class="divider-gradient"></div></div>
-
-<!-- ── Skills Section (Globe Orbit + Chip Grid) ────────────── -->
-<section class="max-w-7xl mx-auto px-6"
-    style="padding-top:var(--space-section-py);padding-bottom:var(--space-section-py)">
-    <div class="text-center mb-4 reveal">
-        <span class="section-tag">
-            <i class="fa-solid fa-code"></i>
-            Tech Stack
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold">
-            <span class="text-gradient">{{ site_settings.skills_section_title }}</span>
-        </h2>
-    </div>
-    <p class="text-slate-400 text-center mb-16 max-w-2xl mx-auto reveal">
-        Technologies and tools I use to bring ideas to life.
-    </p>
-
-    <!-- Skills Grid — Roadmap Timeline layout -->
-    <div class="sk-roadmap max-w-5xl mx-auto">
-        {% for category_name, skills in portfolio.skills_grouped.items %}
-        <div class="sk-rm-section reveal" data-cat="{{ skills.0.category }}">
-            <!-- Left: Number + Title -->
-            <div class="sk-rm-info">
-                <span class="sk-rm-label">
-                    {% with cat_key=skills.0.category %}
-                    {% if cat_key == 'mobile' %}<i class="fa-solid fa-mobile-screen"></i>
-                    {% elif cat_key == 'architecture' %}<i class="fa-solid fa-layer-group"></i>
-                    {% elif cat_key == 'backend' %}<i class="fa-solid fa-server"></i>
-                    {% elif cat_key == 'database' %}<i class="fa-solid fa-database"></i>
-                    {% elif cat_key == 'security' %}<i class="fa-solid fa-shield-halved"></i>
-                    {% elif cat_key == 'performance' %}<i class="fa-solid fa-gauge-high"></i>
-                    {% elif cat_key == 'media' %}<i class="fa-solid fa-photo-film"></i>
-                    {% elif cat_key == 'devops' %}<i class="fa-brands fa-docker"></i>
-                    {% elif cat_key == 'uiux' %}<i class="fa-solid fa-pen-nib"></i>
-                    {% else %}<i class="fa-solid fa-code"></i>
+    {# ========================== ABOUT ========================== #}
+    {% if site_settings.about_title or site_settings.about_description %}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;" class="grid-2-mobile-1">
+                <div class="col gap-5 reveal">
+                    <span class="eyebrow">About · Operator</span>
+                    <h2 class="display-md serif">{{ site_settings.about_title|default:"Studio · Operator" }}</h2>
+                    <p style="color: var(--fg-2); font-size: 17px; line-height: 1.7; max-width: 540px;">{{ site_settings.about_description }}</p>
+                    {% if site_settings.resume_file %}
+                    <div class="row gap-3" style="margin-top: 12px;">
+                        <a href="{{ site_settings.resume_file.url }}" download class="btn btn-arrow">
+                            {{ site_settings.resume_button_text|default:"Download CV" }}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
                     {% endif %}
-                    {% endwith %}
-                </span>
-                <span class="sk-rm-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                <h3 class="sk-rm-title">{{ category_name }}</h3>
-            </div>
-            <!-- Right: Skills list -->
-            <div class="sk-rm-skills">
-                {% for skill in skills %}
-                <div class="sk-rm-item">
-                    <span class="sk-rm-dot"></span>
-                    <span class="sk-rm-name">{{ skill.name }}</span>
                 </div>
+                <div class="reveal brackets" style="padding: 24px; background: var(--bg-2); border: 1px solid var(--line-1); transition-delay: 0.1s;">
+                    {% if site_settings.about_image %}
+                    <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block;">
+                    {% else %}
+                    <div style="width: 100%; aspect-ratio: 4/5; background: var(--bg-3); display: flex; align-items: center; justify-content: center;">
+                        <span style="font-family: var(--font-display); font-style: italic; font-size: 200px; color: var(--accent); opacity: 0.6;">{{ site_settings.site_author_initials|default:"J" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========================== EXPERIENCE ========================== #}
+    {% if portfolio.experience %}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="reveal" style="margin-bottom: 60px; max-width: 720px;">
+                <span class="eyebrow" style="margin-bottom: 24px;">Career · Track record</span>
+                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.experience_section_title|default:"Where I've shipped." }}</h2>
+            </div>
+            <div class="col">
+                {% for exp in portfolio.experience %}
+                <div class="reveal">
+                    <div style="display: grid; grid-template-columns: 80px 1.5fr 2fr 220px; gap: 32px; padding: 32px 0; border-top: 1px solid var(--line-1); align-items: baseline;" class="grid-3-mobile-1">
+                        <span class="numeral" style="font-size: 32px; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <div class="col gap-2">
+                            <h3 class="serif" style="font-size: 24px;"><em style="font-weight: 300;">{{ exp.position }}</em></h3>
+                            <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
+                                {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener" class="link">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}
+                                {% if exp.location %} · {{ exp.location }}{% endif %}
+                            </span>
+                        </div>
+                        <p style="color: var(--fg-2); font-size: 15px; line-height: 1.6;">{{ exp.description|truncatewords:30 }}</p>
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); justify-self: end;">
+                            {{ exp.start_date|date:"M Y"|upper }} —
+                            {% if exp.is_current %}<span style="color: var(--accent);">PRESENT</span>{% else %}{{ exp.end_date|date:"M Y"|upper }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                <div style="border-top: 1px solid var(--line-1);"></div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========================== FEATURED WORK ========================== #}
+    {% if site_settings.apps_section_visible and portfolio.featured_projects %}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
+                <div class="col gap-3">
+                    <span class="eyebrow">04 — Selected work</span>
+                    <h2 class="display-md serif">{{ site_settings.featured_projects_title|default:"A handful of recent builds." }}</h2>
+                </div>
+                <a href="{% url 'projects' %}" class="btn btn-arrow">
+                    View all projects
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="col gap-2">
+                {% for project in portfolio.featured_projects|slice:":6" %}
+                <a href="{% url 'project_detail' project.slug %}" class="reveal featured-row">
+                    <div style="display: grid; grid-template-columns: 80px 1fr 2fr 200px 60px; gap: 32px; align-items: center;" class="grid-3-mobile-1">
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <div class="col gap-2">
+                            <h3 class="serif featured-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
+                            {% with techs=project.technologies.all %}
+                            {% if techs %}
+                            <span class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">{{ techs.0.name }}{% if techs|length > 1 %} · {{ techs.1.name }}{% endif %}</span>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        <p style="color: var(--fg-2); font-size: 16px; line-height: 1.5; max-width: 540px;">{{ project.get_card_description|truncatewords:25 }}</p>
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">
+                            {% if project.app_store_url and project.play_store_url %}iOS · Android{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}Web{% elif project.is_bot %}Telegram bot{% else %}—{% endif %}
+                        </span>
+                        <span class="featured-arrow" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s var(--ease-out);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+                <div style="border-top: 1px solid var(--line-1);"></div>
+            </div>
+        </div>
+    </section>
+    {% elif site_settings.apps_section_visible and portfolio.projects %}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
+                <div class="col gap-3">
+                    <span class="eyebrow">04 — Recent work</span>
+                    <h2 class="display-md serif">A handful of<br>recent builds.</h2>
+                </div>
+                <a href="{% url 'projects' %}" class="btn btn-arrow">
+                    View all projects
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div class="col gap-2">
+                {% for project in portfolio.projects|slice:":3" %}
+                <a href="{% url 'project_detail' project.slug %}" class="reveal featured-row">
+                    <div style="display: grid; grid-template-columns: 80px 1fr 2fr 60px; gap: 32px; align-items: center;" class="grid-3-mobile-1">
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <h3 class="serif featured-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
+                        <p style="color: var(--fg-2); font-size: 16px; line-height: 1.5;">{{ project.get_card_description|truncatewords:25 }}</p>
+                        <span class="featured-arrow" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </span>
+                    </div>
+                </a>
+                {% endfor %}
+                <div style="border-top: 1px solid var(--line-1);"></div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========================== PROCESS ========================== #}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="reveal" style="margin-bottom: 80px; max-width: 720px;">
+                <span class="eyebrow" style="margin-bottom: 24px;">05 — How I work</span>
+                <h2 class="display-md serif" style="margin-top: 16px;">Five steps,<br><em style="font-weight: 300;">no surprises.</em></h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;" class="grid-3-mobile-1">
+                <div class="reveal" style="padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">01</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Diagnose</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">A 60-minute call. We map the actual problem behind the brief — not the symptom.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.08s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">02</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Architect</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">A 1-week sprint to lay out the data model, state shape, integration surfaces. No code yet.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.16s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">03</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Build in slices</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">End-to-end working features each week. You can run it on your phone from day 7.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.24s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">04</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Harden + ship</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">Beta with real users, telemetry wired, rollout plan agreed. Then App Store + Play Store on the same day.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.32s; padding: 24px; border-left: 1px solid var(--line-1); border-right: 1px solid var(--line-1); position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">05</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Operate</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">Optional retainer. Crash triage, telemetry reviews — the boring middle that keeps things alive.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ========================== JOURNAL TEASER ========================== #}
+    {% if latest_posts %}
+    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
+                <div class="col gap-3">
+                    <span class="eyebrow">06 — From the journal</span>
+                    <h2 class="display-md serif">Latest<br><em style="font-weight: 300;">dispatches.</em></h2>
+                </div>
+                <a href="{% url 'blog_list' %}" class="btn btn-arrow">
+                    All entries
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
+                {% for post in latest_posts %}
+                <a href="{% url 'blog_detail' post.slug %}" class="reveal journal-card" style="padding: 40px; border-top: 1px solid var(--line-1); {% if not forloop.last %}border-right: 1px solid var(--line-1);{% endif %} min-height: 320px; display: flex; flex-direction: column; gap: 20px; transition: background .4s var(--ease-out);">
+                    <div class="between" style="align-items: flex-start;">
+                        <span class="numeral" style="font-size: 48px; color: var(--fg-4); line-height: 1;">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">{{ post.created_at|date:"M Y" }}</span>
+                    </div>
+                    {% if post.category %}<span class="tag" style="align-self: flex-start;">{{ post.category.name }}</span>{% endif %}
+                    <h3 class="display-sm serif" style="flex: 1;"><em style="font-weight: 300;">{{ post.title }}</em></h3>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:18 }}</p>
+                    <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.reading_time|default:5 }} MIN ↗</span>
+                    </div>
+                </a>
                 {% endfor %}
             </div>
         </div>
-        {% empty %}
-        <p class="text-center text-slate-500">No skills added yet.</p>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- Scripts -->
-<script>
-    /* ── Typing Animation ──────────────────────────────────────────── */
-    {% if site_settings.hero_typing_texts %}
-    (() => {
-        let phrases;
-        try { phrases = {{ site_settings.hero_typing_texts|safe }}; } catch(e) { return; }
-        if (!Array.isArray(phrases) || !phrases.length) return;
-        const el = document.getElementById('typing-text');
-        if (!el) return;
-        let pi = 0, ci = 0, deleting = false;
-        function tick() {
-            const phrase = phrases[pi];
-            if (!deleting) {
-                el.textContent = phrase.slice(0, ++ci);
-                if (ci === phrase.length) { setTimeout(() => { deleting = true; tick(); }, 2000); return; }
-                setTimeout(tick, 80);
-            } else {
-                el.textContent = phrase.slice(0, --ci);
-                if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; setTimeout(tick, 400); return; }
-                setTimeout(tick, 40);
-            }
-        }
-        setTimeout(tick, 800);
-    })();
+    </section>
     {% endif %}
 
-    /* ── GitHub Contribution Heatmap ──────────────────────────────── */
-    {% if site_settings.github_url %}
-    (() => {
-        const section = document.getElementById('github-section');
-        if (!section) return;
-
-        const colors = [
-            'rgba(99,102,241,0.08)',  // level 0
-            'rgba(99,102,241,0.25)',  // level 1
-            'rgba(99,102,241,0.50)',  // level 2
-            'rgba(99,102,241,0.75)',  // level 3
-            '#6366f1',               // level 4
-        ];
-
-        fetch('/api/github-contributions/')
-            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-            .then(data => {
-                if (!Array.isArray(data) || !data.length) return;
-
-                // Show the section
-                section.style.display = '';
-
-                const grid = document.getElementById('gh-heatmap');
-                const monthsEl = document.getElementById('gh-months');
-                const statsEl = document.getElementById('gh-stats');
-
-                // Build date map
-                const dateMap = {};
-                data.forEach(d => { dateMap[d.date] = d.level; });
-
-                // Get date range (last 52 weeks from today)
-                const today = new Date();
-                const startDate = new Date(today);
-                startDate.setDate(startDate.getDate() - (52 * 7) - startDate.getDay());
-
-                // Build cells
-                let totalContribs = 0;
-                let currentStreak = 0;
-                let maxStreak = 0;
-                let tempStreak = 0;
-                const cells = [];
-                const monthPositions = [];
-                let lastMonth = -1;
-                let weekIndex = 0;
-
-                const d = new Date(startDate);
-                while (d <= today) {
-                    const dateStr = d.toISOString().slice(0, 10);
-                    const level = dateMap[dateStr] || 0;
-                    const dayOfWeek = d.getDay();
-
-                    if (dayOfWeek === 0) weekIndex++;
-
-                    // Track months
-                    const month = d.getMonth();
-                    if (month !== lastMonth) {
-                        monthPositions.push({ month, week: weekIndex });
-                        lastMonth = month;
-                    }
-
-                    // Stats
-                    if (level > 0) {
-                        totalContribs += level;
-                        tempStreak++;
-                        if (tempStreak > maxStreak) maxStreak = tempStreak;
-                    } else {
-                        tempStreak = 0;
-                    }
-
-                    const cell = document.createElement('div');
-                    cell.style.cssText = `width:10px;height:10px;border-radius:2px;background:${colors[Math.min(level, 4)]};${level === 0 ? 'border:1px solid rgba(255,255,255,0.05);' : ''}`;
-                    cell.title = `${dateStr}: ${level} contribution${level !== 1 ? 's' : ''}`;
-                    cells.push(cell);
-
-                    d.setDate(d.getDate() + 1);
-                }
-
-                // Calculate current streak (from today backwards)
-                const checkDate = new Date(today);
-                while (true) {
-                    const ds = checkDate.toISOString().slice(0, 10);
-                    if ((dateMap[ds] || 0) > 0) {
-                        currentStreak++;
-                        checkDate.setDate(checkDate.getDate() - 1);
-                    } else break;
-                }
-
-                cells.forEach(c => grid.appendChild(c));
-
-                // Month labels
-                const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                if (monthsEl) {
-                    // Calculate approximate width per week
-                    const totalWeeks = weekIndex + 1;
-                    monthPositions.forEach((mp, i) => {
-                        const span = document.createElement('span');
-                        span.textContent = monthNames[mp.month];
-                        span.style.cssText = 'font-size:0.6rem;color:#64748b;flex:1;text-align:left;';
-                        // Only show every other month on small screens
-                        if (i % 2 !== 0 && totalWeeks > 40) span.classList.add('hidden', 'sm:inline');
-                        monthsEl.appendChild(span);
-                    });
-                }
-
-                // Stats
-                if (statsEl) {
-                    statsEl.innerHTML = `
-                        <span><strong style="color:#e2e8f0;">${totalContribs}</strong> contributions</span>
-                        <span><strong style="color:#e2e8f0;">${currentStreak}</strong> day streak</span>
-                        <span><strong style="color:#e2e8f0;">${maxStreak}</strong> best streak</span>
-                    `;
-                }
-            })
-            .catch(() => {
-                // Silently fail — section stays hidden
-            });
-    })();
-    {% endif %}
-
-    /* ── WakaTime Stats ───────────────────────────────────────────── */
-    {% if site_settings.wakatime_api_key %}
-    (() => {
-        const section = document.getElementById('wakatime-section');
-        if (!section) return;
-
-        const langColors = {
-            'Dart': '#00B4AB', 'Python': '#3572A5', 'JavaScript': '#f1e05a',
-            'TypeScript': '#3178c6', 'HTML': '#e34c26', 'CSS': '#563d7c',
-            'Java': '#b07219', 'Kotlin': '#A97BFF', 'Swift': '#F05138',
-            'Go': '#00ADD8', 'Rust': '#dea584', 'C++': '#f34b7d',
-            'Ruby': '#701516', 'PHP': '#4F5D95', 'Shell': '#89e051',
-            'SQL': '#e38c00', 'YAML': '#cb171e', 'JSON': '#64748b',
-            'Markdown': '#083fa1', 'Vue.js': '#41b883', 'Other': '#6366f1',
-            'XML': '#f06529', 'Groovy': '#4298b8', 'Gradle': '#02303A',
-            'Bash': '#89e051', 'GitIgnore file': '#64748b', 'Text': '#94a3b8',
-            'textmate': '#94a3b8', 'Image (svg)': '#f59e0b',
-        };
-
-        const editorColors = {
-            'Android Studio': '#3DDC84', 'Chrome': '#4285F4', 'VS Code': '#007ACC',
-            'IntelliJ IDEA': '#FC801D', 'Cursor': '#7c3aed', 'Firefox': '#FF7139',
-            'Unknown Editor': '#64748b', 'Vim': '#019733', 'Neovim': '#57A143',
-        };
-
-        const osColors = {
-            'Windows': '#0078D6', 'Mac': '#a3a3a3', 'Linux': '#FCC624',
-        };
-
-        function getColor(name, colorMap) {
-            return colorMap[name] || '#6366f1';
-        }
-
-        function buildBar(items, container, colorMap) {
-            items.forEach(item => {
-                const row = document.createElement('div');
-                const color = getColor(item.name, colorMap);
-                row.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-size:0.78rem;color:#cbd5e1;display:flex;align-items:center;gap:6px;">
-                            <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>
-                            ${item.name}
-                        </span>
-                        <span style="font-size:0.7rem;color:#64748b;">${item.text || item.percent + '%'}</span>
-                    </div>
-                    <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
-                        <div class="wk-bar-fill" style="height:100%;width:0;border-radius:4px;background:${color};transition:width 1s cubic-bezier(0.22,1,0.36,1);--target-w:${item.percent}%"></div>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        fetch('/api/wakatime-stats/')
-            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-            .then(data => {
-                if (data.error) return;
-
-                section.style.display = '';
-
-                // Update subtitle with start date
-                if (data.start_date) {
-                    const sub = document.getElementById('wk-subtitle');
-                    if (sub) sub.textContent = 'Coding activity since ' + data.start_date;
-                }
-
-                // Stats cards
-                const cards = document.getElementById('wk-stats-cards');
-                const statsData = [
-                    { label: 'Total Coding Time', value: data.total || '—', icon: '&#9201;' },
-                    { label: 'Daily Average', value: data.daily_average || '—', icon: '&#128200;' },
-                    { label: 'Best Day', value: data.best_day ? data.best_day.text : '—', icon: '&#128293;' },
-                    { label: 'Languages', value: (data.languages || []).length + ' used', icon: '&#128187;' },
-                ];
-                statsData.forEach(s => {
-                    const card = document.createElement('div');
-                    card.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;text-align:center;';
-                    card.innerHTML = `
-                        <div style="font-size:1.5rem;margin-bottom:4px;">${s.icon}</div>
-                        <div style="font-size:1.1rem;font-weight:700;color:#e2e8f0;">${s.value}</div>
-                        <div style="font-size:0.7rem;color:#64748b;margin-top:2px;">${s.label}</div>
-                    `;
-                    cards.appendChild(card);
-                });
-
-                // Languages
-                const langContainer = document.getElementById('wk-languages');
-                if (langContainer && data.languages) {
-                    buildBar(data.languages, langContainer, langColors);
-                }
-
-                // Editors
-                const edContainer = document.getElementById('wk-editors');
-                if (edContainer && data.editors) {
-                    buildBar(data.editors, edContainer, editorColors);
-                }
-
-                // Operating Systems
-                const osContainer = document.getElementById('wk-os');
-                if (osContainer && data.operating_systems) {
-                    buildBar(data.operating_systems, osContainer, osColors);
-                }
-
-                // Animate bars on scroll
-                if ('IntersectionObserver' in window) {
-                    const obs = new IntersectionObserver((entries) => {
-                        entries.forEach(e => {
-                            if (e.isIntersecting) {
-                                e.target.querySelectorAll('.wk-bar-fill').forEach(bar => {
-                                    bar.style.width = bar.style.getPropertyValue('--target-w');
-                                });
-                                obs.unobserve(e.target);
-                            }
-                        });
-                    }, { threshold: 0.2 });
-                    obs.observe(section);
-                } else {
-                    section.querySelectorAll('.wk-bar-fill').forEach(bar => {
-                        bar.style.width = bar.style.getPropertyValue('--target-w');
-                    });
-                }
-            })
-            .catch(() => {
-                // Silently fail — section stays hidden
-            });
-    })();
-    {% endif %}
-</script>
+    {# ========================== CTA ========================== #}
+    <section class="section">
+        <div class="container">
+            <div class="reveal" style="display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;" class="grid-2-mobile-1">
+                <div class="col gap-6">
+                    <span class="eyebrow">07 — Open channel</span>
+                    <h2 class="display-lg serif">
+                        Bring the<br>brief.<br>
+                        <em style="font-weight: 300; color: var(--accent);">I'll bring the team.</em>
+                    </h2>
+                    <p style="color: var(--fg-2); font-size: 18px; max-width: 540px; line-height: 1.5;">
+                        Two slots opening for Q2 2026. Best fit: ambitious mobile-first products with a 12+ week runway and a real user base in mind.
+                    </p>
+                </div>
+                <div class="col gap-3" style="align-items: flex-end;">
+                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 20px; --pad-x: 32px; font-size: 13px;">
+                        Start a conversation
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">Avg. response · 4–6h</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
 <style>
-@keyframes cursorBlink { 50% { opacity: 0; } }
-
-/* ── Skills Roadmap Timeline ──────────────────────────── */
-.sk-roadmap {
-    position: relative;
-}
-.sk-rm-section {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    align-items: start;
-    position: relative;
-    padding-bottom: 2.5rem;
-}
-.sk-rm-section:last-child {
-    padding-bottom: 0;
-}
-/* Horizontal colored connector line — from left col edge to first dot center */
-.sk-rm-section::after {
-    content: '';
-    position: absolute;
-    top: 20px;                          /* vertical center of 40px icon */
-    left: 260px;
-    width: 54px;                        /* 50px padding + 4px dot center */
-    height: 2px;
-    background: var(--wp-color, #6366f1);
-}
-/* Vertical timeline line through dot centers */
-.sk-rm-section .sk-rm-skills::before {
-    content: '';
-    position: absolute;
-    left: 54px;                         /* 50px padding + 4px = dot center */
-    top: 0;
-    bottom: -2.5rem;
-    width: 1px;
-    background: rgba(255,255,255,0.06);
-}
-.sk-rm-section:last-child .sk-rm-skills::before {
-    bottom: 0;
-}
-.sk-rm-info {
-    padding-right: 1rem;
-}
-.sk-rm-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    font-size: 1.15rem;
-    color: var(--wp-color, #6366f1);
-    background: color-mix(in srgb, var(--wp-color, #6366f1) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--wp-color, #6366f1) 20%, transparent);
-    margin-bottom: 6px;
-}
-.sk-rm-num {
-    display: block;
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1;
-    background: linear-gradient(to right, #6366f1, #ec4899);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    opacity: 0.18;
-    letter-spacing: -0.02em;
-}
-.sk-rm-title {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    margin-top: 0.75rem;
-    line-height: 1.3;
-}
-.sk-rm-skills {
-    padding-left: 50px;
-    padding-top: 9px;                   /* 9px + ~11px (half item height) = 20px = icon center */
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-.sk-rm-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 1;
-}
-.sk-rm-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--wp-color, #6366f1);
-    flex-shrink: 0;
-    box-shadow: 0 0 8px color-mix(in srgb, var(--wp-color, #6366f1) 40%, transparent);
-}
-.sk-rm-name {
-    font-size: 0.92rem;
-    font-weight: 500;
-    color: #cbd5e1;
-}
-/* Category colors */
-[data-cat="mobile"]      { --wp-color: #22c55e; }
-[data-cat="architecture"]{ --wp-color: #f97316; }
-[data-cat="backend"]     { --wp-color: #3b82f6; }
-[data-cat="database"]    { --wp-color: #a855f7; }
-[data-cat="security"]    { --wp-color: #ef4444; }
-[data-cat="performance"] { --wp-color: #14b8a6; }
-[data-cat="media"]       { --wp-color: #eab308; }
-[data-cat="devops"]      { --wp-color: #ec4899; }
-[data-cat="uiux"]        { --wp-color: #06b6d4; }
-
-/* Mobile responsive */
-@media (max-width: 640px) {
-    .sk-rm-section {
-        grid-template-columns: 1fr;
-        padding-bottom: 2rem;
+    .featured-row {
+        padding: 40px 0;
+        border-top: 1px solid var(--line-1);
+        display: block;
+        transition: padding .4s var(--ease-out);
+        position: relative;
     }
-    .sk-rm-section::after {
-        display: none;
+    .featured-row .featured-title {
+        font-size: 32px;
+        color: var(--fg-0);
+        transition: color .3s var(--ease-out);
     }
-    .sk-rm-section .sk-rm-skills::before {
-        left: 3px;
-    }
-    .sk-rm-section:last-child .sk-rm-skills::before {
-        bottom: 0;
-    }
-    .sk-rm-num {
-        font-size: 2.5rem;
-    }
-    .sk-rm-label {
-        width: 34px;
-        height: 34px;
-        font-size: 1rem;
-        border-radius: 8px;
-    }
-    .sk-rm-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding-right: 0;
-        flex-wrap: wrap;
-    }
-    .sk-rm-title {
-        margin-top: 0;
-        width: 100%;
-    }
-    .sk-rm-skills {
-        padding-left: 1.5rem;
-        padding-top: 0.75rem;
-        border-left: 2px solid var(--wp-color, #6366f1);
-        margin-left: 3px;
-    }
-    .sk-rm-section .sk-rm-skills::before {
-        display: none;
-    }
-}
+    .featured-row:hover .featured-title { color: var(--accent); }
+    .featured-row:hover .featured-arrow { background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0); }
+    .journal-card:hover { background: var(--bg-2); }
 </style>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+(function() {
+    var clock = document.getElementById('hero-clock');
+    if (!clock) return;
+    function tick() {
+        var d = new Date();
+        var hh = (d.getUTCHours() + 5) % 24;
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        clock.textContent = pad(hh) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC+5';
+    }
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
 {% endblock %}
