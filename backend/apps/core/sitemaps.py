@@ -45,6 +45,7 @@ class StaticViewSitemap(Sitemap):
     _PAGES = [
         ("home", 1.0, "daily"),
         ("projects", 0.9, "weekly"),
+        ("team", 0.7, "monthly"),
         ("blog_list", 0.9, "daily"),
         ("contact", 0.6, "monthly"),
     ]

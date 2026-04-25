@@ -154,6 +154,7 @@
                 {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
                 {% endif %}
+                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Studio</a>
                 <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
                 <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
             </nav>
@@ -186,6 +187,7 @@
                 {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
                 {% endif %}
+                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Studio</a>
                 <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
                 <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
                 {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
@@ -241,6 +243,7 @@
                     <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Index</div>
                     <a href="{% url 'home' %}" style="opacity: 0.85; font-size: 14px;">Home</a>
                     {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" style="opacity: 0.85; font-size: 14px;">Work</a>{% endif %}
+                    <a href="{% url 'team' %}" style="opacity: 0.85; font-size: 14px;">Studio</a>
                     <a href="{% url 'blog_list' %}" style="opacity: 0.85; font-size: 14px;">Journal</a>
                     <a href="{% url 'contact' %}" style="opacity: 0.85; font-size: 14px;">Contact</a>
                 </div>

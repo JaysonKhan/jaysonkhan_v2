@@ -1,0 +1,270 @@
+{% extends 'web/base.html' %}
+{% load static %}
+
+{% block title %}Studio | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}The team behind {{ site_settings.site_author }} — operators, builders, designers shipping production mobile apps from Tashkent.{% endblock %}
+{% block og_title %}Studio | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}Behind every strong product is a focused team. Meet the operators behind the work.{% endblock %}
+
+{% block content %}
+<main>
+    {# ========================== HERO ========================== #}
+    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
+        <div class="container">
+            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
+                <div class="row gap-3">
+                    <span class="tag">Section · 03</span>
+                    <span class="tag">{{ team_members|length }} operators · Est. 2022</span>
+                </div>
+                <span class="tag"><span class="dot-live"></span> Studio open · Tashkent</span>
+            </div>
+            <div class="eyebrow" style="margin-bottom: 24px;">Studio · Crew Manifest</div>
+            <h1 class="display-xl">
+                Behind every<br>
+                strong product is a<br>
+                <em style="font-weight: 300; font-style: italic;">focused</em> team.
+            </h1>
+            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">
+                A small studio of mobile engineers, designers, and operators. We combine technical execution, product thinking, and production experience to ship real apps for real users.
+            </p>
+        </div>
+    </section>
+
+    {# ========================== PORTRAIT GRID ========================== #}
+    {% if team_members %}
+    <section class="section">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
+                {% for m in team_members %}
+                <article class="reveal portrait-card" data-member="{{ m.pk }}" style="transition-delay: {{ forloop.counter0|stringformat:'s' }}0ms; padding: 40px; border-top: 1px solid var(--line-1); {% if not forloop.counter|divisibleby:3 %}border-right: 1px solid var(--line-1);{% endif %} {% if forloop.counter > 3 %}{% endif %} cursor: pointer; transition: background .4s var(--ease-out); min-height: 460px; display: flex; flex-direction: column;">
+                    <div class="between" style="margin-bottom: 24px;">
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }} / {{ team_members|length|stringformat:"02d" }}</span>
+                        {% if m.years_experience %}<span class="mono" style="font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3);">{{ m.years_experience }}y</span>{% endif %}
+                    </div>
+
+                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0; position: relative;">
+                        <div class="portrait-blob" style="width: 200px; height: 220px; background: var(--bg-3); position: relative; transition: all .5s var(--ease-out); display: flex; align-items: center; justify-content: center; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; overflow: hidden;">
+                            {% if m.photo %}
+                            <img src="{{ m.photo.url }}" alt="{{ m.name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <span class="portrait-initials" style="font-family: var(--font-display); font-style: italic; font-size: 110px; color: var(--fg-2); font-weight: 300; transition: color .5s;">{{ m.initials }}</span>
+                            {% endif %}
+                            <span class="mono" style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.2em; color: var(--fg-3);">● PORTRAIT NO. {{ forloop.counter }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col gap-2">
+                        <h3 class="display-sm serif portrait-title"><em style="font-weight: 300;">{{ m.name }}</em></h3>
+                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">{{ m.role }}</span>
+                        <p style="color: var(--fg-2); font-size: 14px; line-height: 1.5; margin-top: 12px;">{{ m.bio|truncatewords:24 }}</p>
+                        <div class="between" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-1);">
+                            <span class="mono" style="font-size: 10px; color: var(--fg-3); letter-spacing: 0.14em;">{{ m.skills_list|length }} skills · dossier</span>
+                            <span class="mono portrait-cta" style="font-size: 10px; letter-spacing: 0.14em; color: var(--fg-2); transition: color .3s;">READ →</span>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+                <div style="border-top: 1px solid var(--line-1); grid-column: 1 / -1;"></div>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section class="section">
+        <div class="container">
+            <div style="padding: 80px 0; text-align: center; color: var(--fg-3); border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
+                <span class="numeral" style="font-size: 120px; color: var(--accent); font-style: italic; display: block; line-height: 1;">∅</span>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 24px; display: block;">Crew manifest · pending</span>
+                <p class="serif" style="font-size: 24px; font-style: italic; font-weight: 300; color: var(--fg-1); margin-top: 12px;">The team page is being assembled.</p>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========================== VALUES (ink) ========================== #}
+    <section class="surface-ink section">
+        <div class="container">
+            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
+                <div class="col gap-3">
+                    <span class="eyebrow">Operating principles</span>
+                    <h2 class="display-md serif">How we<br>think.</h2>
+                </div>
+                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">
+                    Six values, four years together. These aren't slogans on a wall — they're the trade-offs we keep landing on.
+                </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-3-mobile-1">
+                {% for v in values %}{% endfor %}
+                <div class="reveal" style="padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12); border-bottom: 1px solid rgba(243,239,230,0.12);">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">01</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Clean code</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Code that the next engineer can read without a meeting.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.06s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12); border-bottom: 1px solid rgba(243,239,230,0.12);">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">02</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Scalable architecture</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Built for v3 — not just v1.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.12s; padding: 40px 32px 40px 0; border-bottom: 1px solid rgba(243,239,230,0.12);">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">03</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Product thinking</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">We ask "why" before "how".</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.18s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">04</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Fast delivery</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Two-week sprints, Friday demos, no surprises.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.24s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">05</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Long-term support</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">We don't hand off and disappear.</p>
+                </div>
+                <div class="reveal" style="transition-delay: 0.30s; padding: 40px 32px 40px 0;">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">06</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Production-first</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Real users, real reviews, real revenue.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ========================== CTA ========================== #}
+    <section class="section">
+        <div class="container">
+            <div class="reveal" style="display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;" class="grid-2-mobile-1">
+                <div class="col gap-6">
+                    <span class="eyebrow">— Want to work with us?</span>
+                    <h2 class="display-lg serif">
+                        Bring the<br>brief.<br>
+                        <em style="font-weight: 300; color: var(--accent);">We'll bring the team.</em>
+                    </h2>
+                </div>
+                <div class="col gap-3" style="align-items: flex-end;">
+                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 20px; --pad-x: 32px;">
+                        Open a channel
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">Avg. response · 4–6h</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{# ========================== DOSSIER MODAL ========================== #}
+{% if team_members %}
+<div id="dossier-modal" class="dossier-modal" style="display: none;">
+    <div class="dossier-overlay"></div>
+    <div class="dossier-content brackets" id="dossier-body" role="dialog" aria-modal="true" aria-labelledby="dossier-name"></div>
+</div>
+
+{{ team_payload|json_script:"team-data" }}
+{% endif %}
+
+<style>
+    .portrait-card:hover { background: var(--bg-2); }
+    .portrait-card:hover .portrait-blob { background: var(--accent); }
+    .portrait-card:hover .portrait-initials { color: var(--bg-1); }
+    .portrait-card:hover .portrait-title { color: var(--accent); }
+    .portrait-card:hover .portrait-cta { color: var(--accent); }
+
+    .dossier-modal {
+        position: fixed; inset: 0; z-index: 1000;
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px;
+        animation: fade-in .25s var(--ease-out) both;
+    }
+    .dossier-overlay {
+        position: absolute; inset: 0;
+        background: rgba(20,18,14,0.7);
+        backdrop-filter: blur(12px);
+    }
+    .dossier-content {
+        position: relative;
+        background: var(--bg-2);
+        border: 1px solid var(--line-2);
+        max-width: 920px;
+        width: 100%;
+        max-height: 90vh;
+        overflow: auto;
+    }
+    [data-theme="dark"] .dossier-overlay { background: rgba(243,239,230,0.15); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var modal = document.getElementById('dossier-modal');
+    var body = document.getElementById('dossier-body');
+    if (!modal || !body) return;
+
+    var teamData = {};
+    var dataNode = document.getElementById('team-data');
+    if (dataNode) { try { teamData = JSON.parse(dataNode.textContent); } catch (e) {} }
+
+    function openMember(pk) {
+        var m = teamData[String(pk)];
+        if (!m) return;
+
+        var skillsHtml = (m.skills || []).map(function(s) {
+            return '<span class="tag" style="border-color:var(--accent);color:var(--accent);">' + s + '</span>';
+        }).join('');
+        var channelsHtml = '';
+        ['telegram','github','linkedin'].forEach(function(k) {
+            if (m[k]) channelsHtml += '<a href="' + m[k] + '" target="_blank" rel="noopener" class="tag">' + k + ' ↗</a>';
+        });
+
+        var portrait = m.photo
+            ? '<img src="' + m.photo + '" alt="' + m.name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;">'
+            : '<span style="font-family:var(--font-display);font-style:italic;font-size:120px;color:var(--accent);">' + m.initials + '</span>';
+
+        body.innerHTML =
+            '<div class="between" style="padding:24px 32px;border-bottom:1px solid var(--line-1);">' +
+                '<span class="mono" style="font-size:11px;letter-spacing:0.18em;color:var(--fg-3);text-transform:uppercase;">Dossier · #' + String(m.id).padStart(2, '0') + '</span>' +
+                '<button type="button" class="mono" id="dossier-close" style="font-size:11px;letter-spacing:0.18em;color:var(--fg-2);">CLOSE ✕</button>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:320px 1fr;gap:0;" class="grid-2-mobile-1">' +
+                '<div style="padding:32px;background:var(--bg-3);border-right:1px solid var(--line-1);">' +
+                    '<div style="aspect-ratio:1;background:var(--bg-2);display:flex;align-items:center;justify-content:center;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;overflow:hidden;">' + portrait + '</div>' +
+                    (m.years ? ('<div class="col gap-2" style="margin-top:24px;"><span class="label">Tenure</span><span class="display-sm serif"><em>' + m.years + '</em> years</span></div>') : '') +
+                    (channelsHtml ? ('<div class="col gap-2" style="margin-top:20px;"><span class="label">Channels</span><div class="row gap-2" style="flex-wrap:wrap;">' + channelsHtml + '</div></div>') : '') +
+                '</div>' +
+                '<div class="col" style="padding:40px;gap:24px;">' +
+                    '<div>' +
+                        '<h2 class="display-md serif" id="dossier-name"><em style="font-weight:300;">' + m.name + '</em></h2>' +
+                        '<span class="mono" style="font-size:12px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;margin-top:8px;display:block;">' + m.role + '</span>' +
+                    '</div>' +
+                    '<p style="font-size:16px;color:var(--fg-2);line-height:1.6;">' + m.bio + '</p>' +
+                    (m.quote ? ('<blockquote class="serif" style="font-size:24px;font-style:italic;font-weight:300;color:var(--fg-0);border-left:2px solid var(--accent);padding-left:20px;line-height:1.4;margin:0;">"' + m.quote + '"</blockquote>') : '') +
+                    (skillsHtml ? ('<div><span class="label">Skills</span><div class="row gap-2" style="flex-wrap:wrap;">' + skillsHtml + '</div></div>') : '') +
+                '</div>' +
+            '</div>';
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        var closeBtn = document.getElementById('dossier-close');
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        body.innerHTML = '';
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.portrait-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            var pk = card.getAttribute('data-member');
+            if (pk) openMember(pk);
+        });
+    });
+
+    modal.querySelector('.dossier-overlay').addEventListener('click', closeModal);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+    });
+})();
+</script>
+{% endblock %}

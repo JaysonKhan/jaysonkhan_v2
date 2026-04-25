@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.text import Truncator
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from .models import Skill, Project, Experience
+from .models import Skill, Project, Experience, TeamMember
 from django import forms
 from core.widgets import RichTextWidget
 from django.utils.safestring import mark_safe
@@ -124,3 +124,44 @@ class ExperienceAdmin(UnfoldModelAdmin):
             ),
         }),
     )
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(UnfoldModelAdmin):
+    list_per_page = 20
+    list_display = ('thumbnail', 'name', 'role', 'years_experience', 'order', 'is_visible')
+    list_display_links = ('thumbnail', 'name')
+    list_editable = ('order', 'is_visible')
+    list_filter = ('is_visible',)
+    search_fields = ('name', 'role', 'bio')
+
+    fieldsets = (
+        ('Identity', {
+            'fields': ('name', 'role', 'photo', 'years_experience', 'is_visible', 'order'),
+        }),
+        ('Bio', {
+            'fields': ('bio', 'quote', 'skills'),
+            'description': 'Skills must be comma-separated.',
+        }),
+        ('Channels', {
+            'fields': ('telegram_url', 'github_url', 'linkedin_url'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def thumbnail(self, obj):
+        if obj.photo:
+            return format_html(
+                '<img src="{}" width="48" height="48" '
+                'style="border-radius:50%;object-fit:cover;'
+                'border:1px solid rgba(255,255,255,.12);" />',
+                obj.photo.url,
+            )
+        return format_html(
+            '<div style="width:48px;height:48px;border-radius:50%;'
+            'background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);'
+            'display:flex;align-items:center;justify-content:center;'
+            'font-family:Fraunces,serif;font-style:italic;font-size:18px;">{}</div>',
+            obj.initials,
+        )
+    thumbnail.short_description = ''

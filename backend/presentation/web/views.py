@@ -289,6 +289,33 @@ class BlogSearchView(ListView):
         return context
 
 
+class TeamView(TemplateView):
+    template_name = 'web/team.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        members = PortfolioRepository.get_visible_team()
+        context['team_members'] = members
+        context['team_payload'] = {
+            str(m.pk): {
+                'id': m.pk,
+                'name': m.name,
+                'role': m.role,
+                'bio': m.bio,
+                'quote': m.quote or '',
+                'years': m.years_experience,
+                'initials': m.initials,
+                'photo': m.photo.url if m.photo else '',
+                'skills': m.skills_list,
+                'telegram': m.telegram_url or '',
+                'github': m.github_url or '',
+                'linkedin': m.linkedin_url or '',
+            }
+            for m in members
+        }
+        return context
+
+
 class ContactView(TemplateView):
     template_name = 'web/contact.html'
 

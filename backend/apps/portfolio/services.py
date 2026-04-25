@@ -1,4 +1,4 @@
-from .models import Project, Skill, Experience
+from .models import Project, Skill, Experience, TeamMember
 
 
 class PortfolioRepository:
@@ -75,6 +75,10 @@ class PortfolioRepository:
     @staticmethod
     def get_all_experience():
         return Experience.objects.select_related().order_by('-start_date')
+
+    @staticmethod
+    def get_visible_team():
+        return TeamMember.objects.filter(is_visible=True).order_by('order', 'id')
 
 
 class PortfolioService:

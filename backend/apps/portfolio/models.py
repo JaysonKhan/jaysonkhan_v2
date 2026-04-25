@@ -148,3 +148,51 @@ class Experience(models.Model):
 
     def __str__(self):
         return f"{self.position} at {self.company}"
+
+
+class TeamMember(models.Model):
+    name = models.CharField(max_length=120)
+    role = models.CharField(max_length=160, help_text="e.g. Founder · Lead Mobile")
+    bio = models.TextField(help_text="2-4 sentences about the member")
+    photo = models.ImageField(
+        upload_to='team/', blank=True, null=True,
+        help_text="Square portrait (recommended 800x800)"
+    )
+    quote = models.CharField(
+        max_length=240, blank=True,
+        help_text="Optional one-liner shown in the dossier modal"
+    )
+    skills = models.CharField(
+        max_length=400, blank=True,
+        help_text="Comma-separated, e.g. 'Flutter, Bloc, Architecture, iOS, Android'"
+    )
+    years_experience = models.PositiveIntegerField(
+        default=0,
+        help_text="Total years of experience (shown as '4y')"
+    )
+    telegram_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    is_visible = models.BooleanField(default=True)
+    order = models.IntegerField(default=0, help_text="Lower = displayed first")
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Team member'
+        verbose_name_plural = 'Team members'
+
+    def __str__(self):
+        return f"{self.name} — {self.role}"
+
+    @property
+    def initials(self):
+        parts = self.name.strip().split()
+        if not parts:
+            return '?'
+        if len(parts) == 1:
+            return parts[0][:2].upper()
+        return (parts[0][0] + parts[-1][0]).upper()
+
+    @property
+    def skills_list(self):
+        return [s.strip() for s in self.skills.split(',') if s.strip()]
