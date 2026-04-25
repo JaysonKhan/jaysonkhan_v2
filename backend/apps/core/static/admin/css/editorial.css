@@ -1,0 +1,411 @@
+/* ============================================================
+   Jaysonkhan v3 — Editorial Admin Overlay
+   Loads on top of Unfold's tailwind to apply cream+black + Fraunces
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --jk-font-display: 'Fraunces', 'Times New Roman', serif;
+    --jk-font-sans: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+    --jk-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    --jk-bg-0: #f3efe6;
+    --jk-bg-1: #efeadf;
+    --jk-bg-2: #faf7ef;
+    --jk-bg-3: #e6dfd0;
+    --jk-bg-4: #d4cab5;
+    --jk-bg-ink: #14120e;
+
+    --jk-fg-0: #14120e;
+    --jk-fg-1: #1f1c16;
+    --jk-fg-2: #44403a;
+    --jk-fg-3: #6b665d;
+    --jk-fg-4: #9b948a;
+    --jk-fg-on-ink: #f3efe6;
+
+    --jk-line-1: rgba(20,18,14,0.08);
+    --jk-line-2: rgba(20,18,14,0.14);
+    --jk-line-3: rgba(20,18,14,0.28);
+
+    --jk-accent: #c5532b;
+    --jk-accent-rgb: 197,83,43;
+
+    --jk-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.dark {
+    --jk-bg-0: #0e0d0a;
+    --jk-bg-1: #14120e;
+    --jk-bg-2: #1c1a14;
+    --jk-bg-3: #25221b;
+    --jk-bg-4: #322e25;
+    --jk-bg-ink: #f3efe6;
+
+    --jk-fg-0: #f3efe6;
+    --jk-fg-1: #e7e3d9;
+    --jk-fg-2: #b6b0a3;
+    --jk-fg-3: #8a8478;
+    --jk-fg-4: #5a554c;
+    --jk-fg-on-ink: #14120e;
+
+    --jk-line-1: rgba(243,239,230,0.06);
+    --jk-line-2: rgba(243,239,230,0.12);
+    --jk-line-3: rgba(243,239,230,0.22);
+
+    --jk-accent: #e89972;
+    --jk-accent-rgb: 232,153,114;
+}
+
+/* ============ FONT OVERRIDE ============ */
+body, body.antialiased {
+    font-family: var(--jk-font-sans) !important;
+    background: var(--jk-bg-1) !important;
+    color: var(--jk-fg-1) !important;
+    font-feature-settings: "ss01", "cv11";
+}
+
+h1, h2, h3, h4, h5,
+.font-semibold, .font-bold {
+    font-family: var(--jk-font-sans) !important;
+}
+
+/* Make Unfold's "title" pieces editorial */
+.text-font-important-light, .dark\:text-font-important-dark, .text-font-default-light {
+    color: var(--jk-fg-0) !important;
+}
+
+/* ============ HEADERS ============ */
+.dashboard-title, h1.text-2xl, h1.text-3xl,
+header h1, .breadcrumbs ~ * h1 {
+    font-family: var(--jk-font-display) !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.02em;
+}
+
+/* ============ SIDEBAR (left navigation) ============ */
+aside, [data-name="sidebar"], .sidebar {
+    background: var(--jk-bg-2) !important;
+    border-right: 1px solid var(--jk-line-1) !important;
+}
+
+.sidebar a, aside a, [data-name="sidebar"] a {
+    font-family: var(--jk-font-sans) !important;
+    color: var(--jk-fg-2) !important;
+    transition: all .25s var(--jk-ease-out);
+}
+
+.sidebar a:hover, aside a:hover {
+    background: var(--jk-bg-3) !important;
+    color: var(--jk-fg-0) !important;
+}
+
+/* Active nav: terracotta dot + bold */
+.sidebar a.bg-primary-50, .sidebar a.dark\:bg-primary-950,
+.sidebar a[aria-current="page"], aside a.active {
+    background: var(--jk-bg-3) !important;
+    color: var(--jk-fg-0) !important;
+    font-weight: 500 !important;
+    border-left: 2px solid var(--jk-accent);
+}
+
+/* Section separators in sidebar */
+aside h3, .sidebar h3,
+[data-name="sidebar"] h3 {
+    font-family: var(--jk-font-mono) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: var(--jk-fg-3) !important;
+    font-weight: 500 !important;
+}
+
+/* ============ CARDS / SURFACES ============ */
+.bg-base-50, .bg-white,
+.dark\:bg-base-900, .dark\:bg-base-800 {
+    background: var(--jk-bg-2) !important;
+}
+
+.bg-base-100, .dark\:bg-base-800 {
+    background: var(--jk-bg-3) !important;
+}
+
+.border-base-200, .border-base-300,
+.dark\:border-base-700, .dark\:border-base-800 {
+    border-color: var(--jk-line-1) !important;
+}
+
+/* Tables */
+table {
+    border-color: var(--jk-line-1) !important;
+}
+table thead {
+    background: var(--jk-bg-2) !important;
+}
+table thead th {
+    font-family: var(--jk-font-mono) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: var(--jk-fg-3) !important;
+    font-weight: 500 !important;
+    border-bottom: 1px solid var(--jk-line-2) !important;
+}
+table tbody tr {
+    border-bottom: 1px solid var(--jk-line-1) !important;
+}
+table tbody tr:hover {
+    background: var(--jk-bg-3) !important;
+}
+
+/* ============ BUTTONS ============ */
+button[type="submit"].bg-primary-600,
+.bg-primary-600, .hover\:bg-primary-700:hover,
+.bg-primary-500, button.bg-primary-500 {
+    background: var(--jk-fg-0) !important;
+    color: var(--jk-bg-1) !important;
+    border-color: var(--jk-fg-0) !important;
+    transition: all .35s var(--jk-ease-out) !important;
+}
+
+button[type="submit"].bg-primary-600:hover,
+.bg-primary-600:hover, .bg-primary-500:hover {
+    background: var(--jk-accent) !important;
+    color: var(--jk-bg-1) !important;
+    border-color: var(--jk-accent) !important;
+}
+
+/* All "primary" emphasis colors */
+.text-primary-600, .text-primary-700,
+.dark\:text-primary-500, .dark\:text-primary-400 {
+    color: var(--jk-accent) !important;
+}
+
+.bg-primary-50, .dark\:bg-primary-950 {
+    background: rgba(var(--jk-accent-rgb), 0.08) !important;
+}
+
+.border-primary-300, .border-primary-500, .border-primary-600 {
+    border-color: var(--jk-accent) !important;
+}
+
+/* Form inputs */
+input[type="text"], input[type="email"], input[type="password"],
+input[type="url"], input[type="number"], textarea, select {
+    background: var(--jk-bg-2) !important;
+    border: 1px solid var(--jk-line-2) !important;
+    color: var(--jk-fg-0) !important;
+    border-radius: 4px !important;
+    font-family: var(--jk-font-sans) !important;
+    transition: border-color .3s var(--jk-ease-out);
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+input[type="url"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    border-color: var(--jk-accent) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(var(--jk-accent-rgb), 0.12) !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--jk-fg-4) !important;
+}
+
+label {
+    font-family: var(--jk-font-mono) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: var(--jk-fg-3) !important;
+    font-weight: 500 !important;
+}
+
+/* ============ EDITORIAL PRIMITIVES (custom dashboard/asset components) ============ */
+.jk-eyebrow {
+    font-family: var(--jk-font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--jk-fg-3);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.jk-eyebrow::before {
+    content: "";
+    width: 22px; height: 1px;
+    background: currentColor;
+    opacity: 0.5;
+}
+
+.jk-display-md {
+    font-family: var(--jk-font-display);
+    font-size: clamp(36px, 4vw, 56px);
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+    font-weight: 400;
+    color: var(--jk-fg-0);
+}
+
+.jk-display-sm {
+    font-family: var(--jk-font-display);
+    font-size: 24px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    color: var(--jk-fg-0);
+}
+
+.jk-numeral {
+    font-family: var(--jk-font-display);
+    font-feature-settings: "lnum", "tnum";
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+}
+
+.jk-mono {
+    font-family: var(--jk-font-mono);
+    font-feature-settings: "calt", "ss01";
+}
+
+.jk-tag {
+    font-family: var(--jk-font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--jk-fg-2);
+    padding: 5px 10px;
+    border: 1px solid var(--jk-line-2);
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+}
+
+.jk-dot {
+    width: 7px; height: 7px;
+    background: var(--jk-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(var(--jk-accent-rgb), 0.18);
+    display: inline-block;
+}
+
+.jk-brackets {
+    position: relative;
+}
+.jk-brackets::before, .jk-brackets::after {
+    content: "";
+    position: absolute;
+    width: 12px; height: 12px;
+    border: 1px solid var(--jk-line-3);
+    pointer-events: none;
+    transition: border-color .3s var(--jk-ease-out);
+}
+.jk-brackets::before {
+    top: -1px; left: -1px;
+    border-right: none; border-bottom: none;
+}
+.jk-brackets::after {
+    bottom: -1px; right: -1px;
+    border-left: none; border-top: none;
+}
+.jk-brackets:hover::before, .jk-brackets:hover::after {
+    border-color: var(--jk-accent);
+}
+
+.jk-tile {
+    background: var(--jk-bg-2);
+    border: 1px solid var(--jk-line-1);
+    padding: 32px;
+    position: relative;
+}
+
+.jk-tile-label {
+    font-family: var(--jk-font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--jk-fg-3);
+}
+
+.jk-tile-delta {
+    font-family: var(--jk-font-mono);
+    font-size: 11px;
+    color: var(--jk-accent);
+    letter-spacing: 0.14em;
+}
+
+.jk-tile-value {
+    font-family: var(--jk-font-display);
+    font-feature-settings: "lnum", "tnum";
+    font-size: 64px;
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    color: var(--jk-fg-0);
+    margin-top: 24px;
+}
+
+.jk-tile-value.accent { color: var(--jk-accent); }
+
+.jk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 22px;
+    font-family: var(--jk-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 1px solid var(--jk-line-3);
+    background: transparent;
+    color: var(--jk-fg-0);
+    border-radius: 999px;
+    transition: all .35s var(--jk-ease-out);
+    cursor: pointer;
+    text-decoration: none;
+}
+.jk-btn:hover { background: var(--jk-fg-0); color: var(--jk-bg-1); border-color: var(--jk-fg-0); }
+.jk-btn-primary { background: var(--jk-fg-0); color: var(--jk-bg-1); border-color: var(--jk-fg-0); }
+.jk-btn-primary:hover { background: var(--jk-accent); color: var(--jk-bg-1); border-color: var(--jk-accent); }
+.jk-btn-ghost { border-color: var(--jk-line-2); color: var(--jk-fg-2); }
+.jk-btn-ghost:hover { background: transparent; color: var(--jk-fg-0); border-color: var(--jk-line-3); }
+
+.jk-input {
+    width: 100%;
+    background: var(--jk-bg-2);
+    border: 1px solid var(--jk-line-2);
+    padding: 12px 16px;
+    border-radius: 4px;
+    color: var(--jk-fg-0);
+    font-family: var(--jk-font-sans);
+    font-size: 15px;
+    transition: border-color .3s var(--jk-ease-out);
+}
+.jk-input:focus {
+    outline: none;
+    border-color: var(--jk-accent);
+    box-shadow: 0 0 0 3px rgba(var(--jk-accent-rgb), 0.12);
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--jk-line-3); border-radius: 4px; }
+
+/* ============ BREADCRUMBS / HEADERS ============ */
+.breadcrumbs, nav.breadcrumb {
+    font-family: var(--jk-font-mono) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.14em !important;
+    text-transform: uppercase !important;
+    color: var(--jk-fg-3) !important;
+}
+
+/* ============ SUBMIT ROWS ============ */
+.submit-row, .submit-row > * {
+    background: var(--jk-bg-2) !important;
+    border-color: var(--jk-line-1) !important;
+}
