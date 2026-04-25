@@ -1,11 +1,15 @@
 import logging
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import connection
-from django.shortcuts import redirect
+from django.db.models import Sum
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.shortcuts import redirect, render
+from django.urls import path, reverse
 from django.utils.html import format_html
+from django.views.decorators.http import require_POST
 from unfold.admin import ModelAdmin
 
-from .models import SiteSettings, PageView
+from .models import SiteSettings, PageView, Asset
 
 logger = logging.getLogger(__name__)
 
@@ -347,3 +351,182 @@ class PageViewAdmin(ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Asset)
+class AssetAdmin(ModelAdmin):
+    """Editorial Asset Manager — replaces standard changelist with grid + drag-drop."""
+
+    list_display = ('thumbnail', 'name', 'folder', 'format', 'size_human_col', 'dimensions', 'uploaded_at')
+    list_display_links = ('thumbnail', 'name')
+    list_filter = ('folder', 'format', 'uploaded_at')
+    search_fields = ('name', 'alt_text')
+    readonly_fields = ('format', 'size_bytes', 'width', 'height', 'uploaded_at', 'updated_at', 'preview_large')
+
+    fieldsets = (
+        ('File', {
+            'fields': ('file', 'preview_large', 'name', 'folder', 'alt_text'),
+        }),
+        ('Metadata', {
+            'fields': ('format', 'size_bytes', 'width', 'height', 'uploaded_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def get_urls(self):
+        return [
+            path(
+                'manager/',
+                self.admin_site.admin_view(self.asset_manager_view),
+                name='core_asset_manager',
+            ),
+            path(
+                'manager/upload/',
+                self.admin_site.admin_view(self.asset_upload),
+                name='core_asset_upload',
+            ),
+            path(
+                'manager/bulk/',
+                self.admin_site.admin_view(self.asset_bulk),
+                name='core_asset_bulk',
+            ),
+        ] + super().get_urls()
+
+    def asset_manager_view(self, request):
+        """Editorial Asset Manager — the visual replacement for the changelist."""
+        folder = request.GET.get('folder', 'all')
+        qs = Asset.objects.all()
+        if folder != 'all':
+            qs = qs.filter(folder=folder)
+
+        total_size = Asset.objects.aggregate(total=Sum('size_bytes'))['total'] or 0
+        total_count = Asset.objects.count()
+
+        folders = [{'key': 'all', 'label': 'All', 'count': total_count}]
+        for key, label in Asset.FOLDER_CHOICES:
+            folders.append({
+                'key': key,
+                'label': label,
+                'count': Asset.objects.filter(folder=key).count(),
+            })
+
+        latest = Asset.objects.order_by('-uploaded_at').first()
+        from django.utils import timezone
+        from .dashboard import _humanize
+        last_upload = _humanize(timezone.now() - latest.uploaded_at) if latest else '—'
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Asset Manager',
+            'assets': qs,
+            'folders': folders,
+            'active_folder': folder,
+            'total_size_mb': round(total_size / 1024 / 1024, 1),
+            'total_count': total_count,
+            'last_upload': last_upload,
+            'opts': self.model._meta,
+        }
+        return render(request, 'admin/core/asset_manager.html', context)
+
+    def asset_upload(self, request):
+        """Drag-drop upload endpoint — returns JSON with new asset metadata."""
+        if request.method != 'POST':
+            return HttpResponseBadRequest("POST only")
+        if not (request.user.is_staff and request.user.is_active):
+            return JsonResponse({'error': 'forbidden'}, status=403)
+
+        files = request.FILES.getlist('files')
+        if not files:
+            return JsonResponse({'error': 'no files'}, status=400)
+
+        folder = request.POST.get('folder', 'misc')
+        if folder not in dict(Asset.FOLDER_CHOICES):
+            folder = 'misc'
+
+        created = []
+        for f in files:
+            asset = Asset(file=f, folder=folder)
+            asset.save()
+            created.append({
+                'id': asset.pk,
+                'asset_id': asset.asset_id,
+                'name': asset.name,
+                'format': asset.format,
+                'size': asset.size_human,
+                'dimensions': asset.dimensions,
+                'folder': asset.folder,
+                'url': asset.file.url,
+                'is_image': asset.is_image,
+            })
+        return JsonResponse({'status': 'ok', 'created': created})
+
+    def asset_bulk(self, request):
+        """Bulk delete / move endpoint."""
+        if request.method != 'POST':
+            return HttpResponseBadRequest("POST only")
+        if not (request.user.is_staff and request.user.is_active):
+            return JsonResponse({'error': 'forbidden'}, status=403)
+
+        action = request.POST.get('action')
+        ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+        if not ids:
+            return JsonResponse({'error': 'no ids'}, status=400)
+
+        qs = Asset.objects.filter(pk__in=ids)
+
+        if action == 'delete':
+            count = qs.count()
+            for a in qs:
+                try:
+                    a.file.delete(save=False)
+                except Exception:
+                    pass
+            qs.delete()
+            return JsonResponse({'status': 'ok', 'deleted': count})
+
+        if action == 'move':
+            target = request.POST.get('folder', 'misc')
+            if target not in dict(Asset.FOLDER_CHOICES):
+                return JsonResponse({'error': 'bad folder'}, status=400)
+            n = qs.update(folder=target)
+            return JsonResponse({'status': 'ok', 'moved': n, 'folder': target})
+
+        return JsonResponse({'error': 'unknown action'}, status=400)
+
+    def thumbnail(self, obj):
+        if obj.is_image and obj.file:
+            try:
+                return format_html(
+                    '<img src="{}" width="48" height="48" '
+                    'style="border-radius:4px;object-fit:cover;'
+                    'border:1px solid var(--jk-line-2,rgba(20,18,14,.14));" />',
+                    obj.file.url,
+                )
+            except Exception:
+                pass
+        return format_html(
+            '<div style="width:48px;height:48px;border-radius:4px;'
+            'background:var(--jk-bg-3,#e6dfd0);border:1px solid var(--jk-line-2,rgba(20,18,14,.14));'
+            'display:flex;align-items:center;justify-content:center;'
+            'font-family:Fraunces,serif;font-style:italic;font-size:18px;'
+            'color:var(--jk-fg-3,#6b665d);">{}</div>',
+            (obj.format or '?')[:1],
+        )
+    thumbnail.short_description = ''
+
+    def size_human_col(self, obj):
+        return obj.size_human
+    size_human_col.short_description = 'Size'
+
+    def preview_large(self, obj):
+        if obj.is_image and obj.file:
+            try:
+                return format_html(
+                    '<img src="{}" style="max-width:520px;max-height:340px;'
+                    'border:1px solid var(--jk-line-2,rgba(20,18,14,.14));" />',
+                    obj.file.url,
+                )
+            except Exception:
+                pass
+        return '—'
+    preview_large.short_description = 'Preview'

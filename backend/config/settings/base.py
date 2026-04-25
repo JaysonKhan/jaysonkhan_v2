@@ -2,6 +2,7 @@ import os
 import sys
 import environ
 from pathlib import Path
+from django.templatetags.static import static
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -285,37 +286,62 @@ _ADMIN_URL = env('ADMIN_URL', default='admin/')
 _A = '/' + _ADMIN_URL  # e.g. '/jk-dinadmin/'
 
 UNFOLD = {
-    "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Portfolio Admin"),
-    "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Portfolio Admin"),
+    "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Studio Console"),
+    "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Studio Console"),
+    "SITE_SUBHEADER": "v3.0 · OWNER",
     "SITE_URL": "/",
-    "SITE_SYMBOL": "smartphone",
+    "SITE_SYMBOL": "auto_awesome",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
+    "BORDER_RADIUS": "4px",
+    # Editorial overlay loaded on top of Unfold's tailwind base
+    "STYLES": [
+        lambda request: static("admin/css/editorial.css"),
+    ],
+    "DASHBOARD_CALLBACK": "core.dashboard.dashboard_callback",
     "LOGIN": {
-        "image": lambda r: "/static/images/hero.jpg",
+        "image": lambda r: static("images/hero.jpg"),
         "redirect_after": lambda r: "/" + env('ADMIN_URL', default='admin/'),
     },
-    # Unfold 0.67 + Tailwind v4 — oklch format kerak (opacity utility'lari uchun).
-    # Bu ranglar avvalgi purple/violet (#7c3aed) ni saqlab qoladi.
+    # Editorial palette — terracotta accent (#c5532b) replaces violet primary.
+    # oklch format required by Unfold 0.67 + Tailwind v4 for opacity utilities.
     "COLORS": {
         "primary": {
-            "50":  "oklch(97.7% .014 308.299)",
-            "100": "oklch(94.1% .033 307.174)",
-            "200": "oklch(88.2% .065 306.703)",
-            "300": "oklch(79.5% .120 306.383)",
-            "400": "oklch(68.1% .195 305.504)",
-            "500": "oklch(57.8% .249 303.900)",  # ~#7c3aed (violet-600)
-            "600": "oklch(50.2% .266 302.321)",
-            "700": "oklch(43.5% .243 301.924)",
-            "800": "oklch(37.2% .200 303.724)",
-            "900": "oklch(31.5% .160 304.987)",
-            "950": "oklch(22.0% .130 302.717)",
+            "50":  "oklch(97% .012 36)",
+            "100": "oklch(93% .030 36)",
+            "200": "oklch(86% .060 36)",
+            "300": "oklch(78% .100 36)",
+            "400": "oklch(68% .135 36)",
+            "500": "oklch(58% .150 36)",   # ≈ #c5532b (terracotta)
+            "600": "oklch(50% .145 36)",
+            "700": "oklch(42% .125 36)",
+            "800": "oklch(35% .105 36)",
+            "900": "oklch(28% .085 36)",
+            "950": "oklch(20% .065 36)",
         },
     },
     "SIDEBAR": {
         "show_search": False,
         "show_all_applications": True,
         "navigation": [
+            {
+                "title": "Workspace",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard",
+                        "link": _A,
+                        "permission": lambda r: r.user.is_active and r.user.is_staff,
+                    },
+                    {
+                        "title": "Assets",
+                        "icon": "image",
+                        "link": f"{_A}core/asset/manager/",
+                        "permission": lambda r: r.user.has_perm("core.view_asset"),
+                    },
+                ],
+            },
             {
                 "title": "Site",
                 "separator": True,
@@ -324,6 +350,12 @@ UNFOLD = {
                         "title": "Site Settings",
                         "icon": "settings",
                         "link": f"{_A}core/sitesettings/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Site Visitors",
+                        "icon": "person_pin",
+                        "link": f"{_A}core/pageview/",
                         "permission": lambda r: r.user.is_superuser,
                     },
                 ],

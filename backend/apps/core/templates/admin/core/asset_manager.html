@@ -1,0 +1,335 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}Asset Manager | {{ site_title|default:_('Studio Console') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 0; max-width: 1440px; margin: 0 auto;" class="jk-asset-manager">
+
+    {# ========================== HEADER ========================== #}
+    <div class="flex items-start justify-between" style="flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+        <div class="flex flex-col" style="gap: 8px;">
+            <span class="jk-eyebrow">Library · Studio Console</span>
+            <h1 class="jk-display-md">
+                <em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">Asset Manager.</em>
+            </h1>
+            <p class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em; text-transform: uppercase;">
+                {{ total_count }} files · {{ total_size_mb }} MB
+                {% if total_count %} · last upload {{ last_upload }} ago{% endif %}
+            </p>
+        </div>
+        <div class="flex items-center" style="gap: 8px;">
+            <button type="button" class="jk-btn" id="btn-trigger-upload">↑ Upload files</button>
+        </div>
+    </div>
+
+    {# ========================== DROPZONE ========================== #}
+    <form id="upload-form" enctype="multipart/form-data" style="margin-bottom: 32px;">
+        {% csrf_token %}
+        <div id="dropzone" class="jk-brackets" style="
+            padding: 48px;
+            border: 1.5px dashed var(--jk-line-3);
+            background: var(--jk-bg-2);
+            text-align: center;
+            cursor: pointer;
+            transition: all .3s var(--jk-ease-out);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        ">
+            <span style="font-family: var(--jk-font-display); font-style: italic; font-size: 28px; color: var(--jk-fg-0);">Drop files here</span>
+            <span class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em;">JPG · PNG · SVG · WEBP · MP4 · PDF · MAX 50 MB</span>
+            <select id="upload-folder" class="jk-input" style="max-width: 240px; margin-top: 8px;">
+                {% for f in folders %}{% if f.key != 'all' %}<option value="{{ f.key }}">→ {{ f.label }}</option>{% endif %}{% endfor %}
+            </select>
+        </div>
+        <input type="file" id="file-input" multiple style="display: none;" accept="image/*,video/*,application/pdf,.svg">
+    </form>
+
+    {# ========================== FOLDER FILTER ========================== #}
+    <div class="flex items-center justify-between" style="padding-bottom: 16px; border-bottom: 1px solid var(--jk-line-1); flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <div class="flex items-center" style="gap: 8px; flex-wrap: wrap;">
+            {% for f in folders %}
+            <a href="?folder={{ f.key }}" class="jk-tag" style="padding: 8px 16px; text-decoration: none; {% if active_folder == f.key %}background: var(--jk-fg-0); color: var(--jk-bg-1); border-color: var(--jk-fg-0);{% else %}color: var(--jk-fg-2);{% endif %}">
+                {{ f.label }} <span style="opacity: 0.6;">{{ f.count }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        <span class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em; text-transform: uppercase;">{{ assets|length }} ITEMS</span>
+    </div>
+
+    {# ========================== BULK BAR ========================== #}
+    <div id="bulk-bar" class="flex items-center justify-between jk-brackets" style="display: none; padding: 14px 24px; background: var(--jk-bg-3); border: 1px solid var(--jk-accent); margin-bottom: 24px;">
+        <span class="jk-mono" style="font-size: 11px; color: var(--jk-accent); letter-spacing: 0.14em;">● <span id="bulk-count">0</span> SELECTED</span>
+        <div class="flex items-center" style="gap: 8px; flex-wrap: wrap;">
+            <select id="bulk-move-folder" class="jk-input" style="padding: 8px 12px; max-width: 160px;">
+                {% for f in folders %}{% if f.key != 'all' %}<option value="{{ f.key }}">Move → {{ f.label }}</option>{% endif %}{% endfor %}
+            </select>
+            <button type="button" id="btn-bulk-move" class="jk-btn" style="padding: 8px 16px;">Move</button>
+            <button type="button" id="btn-bulk-delete" class="jk-btn" style="padding: 8px 16px; color: var(--danger,#b1432f); border-color: var(--danger,#b1432f);">✕ Delete</button>
+            <button type="button" id="btn-bulk-cancel" class="jk-btn jk-btn-ghost" style="padding: 8px 16px;">Cancel</button>
+        </div>
+    </div>
+
+    {# ========================== GRID ========================== #}
+    <div id="asset-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+        {% for a in assets %}
+        <article class="asset-card jk-brackets" data-id="{{ a.pk }}" data-url="{{ a.file.url }}" data-name="{{ a.name }}.{{ a.format|lower }}" data-format="{{ a.format }}" data-dimensions="{{ a.dimensions }}" data-size="{{ a.size_human }}" data-folder="{{ a.folder }}" data-folder-label="{{ a.get_folder_display }}" data-image="{% if a.is_image %}1{% else %}0{% endif %}" style="background: var(--jk-bg-2); border: 1px solid var(--jk-line-1); cursor: pointer; position: relative; transition: border-color .3s var(--jk-ease-out);">
+            <button type="button" class="asset-checkbox" aria-label="Select" style="position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border: 1.5px solid var(--jk-line-3); background: var(--jk-bg-1); border-radius: 3px; z-index: 2; display: flex; align-items: center; justify-content: center; color: var(--jk-bg-1); font-size: 12px; cursor: pointer;"></button>
+
+            <div style="aspect-ratio: 4/3; background: var(--jk-bg-3); position: relative; border-bottom: 1px solid var(--jk-line-1); overflow: hidden;">
+                {% if a.is_image and a.file %}
+                <img src="{{ a.file.url }}" alt="{{ a.alt_text|default:a.name }}" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+                    <span class="jk-numeral" style="font-size: 60px; color: var(--jk-fg-4);">{{ a.format|slice:":1"|default:"?" }}</span>
+                </div>
+                {% endif %}
+                <span class="jk-tag" style="position: absolute; top: 10px; right: 10px; background: var(--jk-bg-1); font-size: 9px;">{{ a.format }}</span>
+            </div>
+            <div style="padding: 14px;">
+                <div style="font-size: 13px; color: var(--jk-fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.name }}.{{ a.format|lower }}</div>
+                <div class="flex items-center justify-between" style="margin-top: 6px;">
+                    <span class="jk-mono" style="font-size: 10px; color: var(--jk-fg-3);">{{ a.size_human }}</span>
+                    <span class="jk-mono" style="font-size: 10px; color: var(--jk-fg-4);">{{ a.get_folder_display|upper }}</span>
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <div style="grid-column: 1 / -1; padding: 80px 0; text-align: center;">
+            <span class="jk-numeral" style="font-size: 120px; color: var(--jk-fg-4); font-style: italic; display: block; line-height: 1;">∅</span>
+            <span class="jk-mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--jk-fg-3); margin-top: 24px; display: block;">No assets in this folder</span>
+            <p style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300; font-size: 24px; color: var(--jk-fg-1); margin-top: 12px;">Drop files above to start the library.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {# ========================== PREVIEW MODAL ========================== #}
+    <div id="preview-modal" style="display: none; position: fixed; inset: 0; background: rgba(20,18,14,0.7); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center; padding: 32px;">
+        <div id="preview-content" class="jk-brackets" style="background: var(--jk-bg-2); border: 1px solid var(--jk-line-2); max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1fr 320px; max-height: 90vh; overflow: hidden;">
+            <div id="preview-media" style="aspect-ratio: 4/3; background: var(--jk-bg-3); position: relative; border-right: 1px solid var(--jk-line-2); display: flex; align-items: center; justify-content: center;">
+                <button type="button" id="preview-close" class="jk-mono" style="position: absolute; top: 16px; right: 16px; font-size: 11px; color: var(--jk-fg-2); letter-spacing: 0.18em;">✕ CLOSE</button>
+            </div>
+            <div class="flex flex-col" style="padding: 32px; gap: 20px; overflow: auto;">
+                <div>
+                    <span class="jk-tile-label">File</span>
+                    <h3 id="preview-name" class="jk-display-sm" style="font-style: italic; margin-top: 6px;"></h3>
+                </div>
+                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
+                    <span class="jk-tile-label">Format</span>
+                    <span id="preview-format" style="font-size: 13px; color: var(--jk-fg-1);"></span>
+                </div>
+                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
+                    <span class="jk-tile-label">Dimensions</span>
+                    <span id="preview-dimensions" style="font-size: 13px; color: var(--jk-fg-1);"></span>
+                </div>
+                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
+                    <span class="jk-tile-label">Size</span>
+                    <span id="preview-size" style="font-size: 13px; color: var(--jk-fg-1);"></span>
+                </div>
+                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
+                    <span class="jk-tile-label">Folder</span>
+                    <span id="preview-folder" style="font-size: 13px; color: var(--jk-fg-1);"></span>
+                </div>
+                <div class="flex flex-col" style="gap: 8px; margin-top: 8px;">
+                    <a id="preview-download" href="#" download class="jk-btn jk-btn-primary" style="justify-content: center;">↓ Download</a>
+                    <a id="preview-edit" href="#" class="jk-btn" style="justify-content: center;">⚙ Edit metadata</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    var csrf = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+    var dropzone = document.getElementById('dropzone');
+    var fileInput = document.getElementById('file-input');
+    var grid = document.getElementById('asset-grid');
+    var bulkBar = document.getElementById('bulk-bar');
+    var bulkCount = document.getElementById('bulk-count');
+    var selected = new Set();
+
+    // ── Upload (click + drag) ─────────────────────────────────────────
+    document.getElementById('btn-trigger-upload').addEventListener('click', function() { fileInput.click(); });
+    dropzone.addEventListener('click', function() { fileInput.click(); });
+
+    dropzone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--jk-accent)';
+        dropzone.style.background = 'var(--jk-bg-3)';
+    });
+    dropzone.addEventListener('dragleave', function() {
+        dropzone.style.borderColor = 'var(--jk-line-3)';
+        dropzone.style.background = 'var(--jk-bg-2)';
+    });
+    dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--jk-line-3)';
+        dropzone.style.background = 'var(--jk-bg-2)';
+        if (e.dataTransfer.files && e.dataTransfer.files.length) upload(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files && fileInput.files.length) upload(fileInput.files);
+    });
+
+    function upload(files) {
+        var fd = new FormData();
+        for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
+        fd.append('folder', document.getElementById('upload-folder').value);
+        var label = dropzone.querySelector('span:first-child');
+        var orig = label.textContent;
+        label.textContent = 'Uploading…';
+        fetch("{% url 'admin:core_asset_upload' %}", {
+            method: 'POST', body: fd,
+            headers: { 'X-CSRFToken': csrf },
+            credentials: 'same-origin',
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            label.textContent = orig;
+            if (data.status === 'ok') {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Upload failed');
+            }
+        })
+        .catch(function(err) {
+            label.textContent = orig;
+            alert('Upload failed: ' + err);
+        });
+    }
+
+    // ── Selection ──────────────────────────────────────────────────────
+    function refreshBulk() {
+        bulkCount.textContent = selected.size;
+        bulkBar.style.display = selected.size > 0 ? 'flex' : 'none';
+    }
+
+    function toggle(id, btn) {
+        if (selected.has(id)) {
+            selected.delete(id);
+            btn.style.background = 'var(--jk-bg-1)';
+            btn.style.borderColor = 'var(--jk-line-3)';
+            btn.textContent = '';
+        } else {
+            selected.add(id);
+            btn.style.background = 'var(--jk-accent)';
+            btn.style.borderColor = 'var(--jk-accent)';
+            btn.textContent = '✓';
+        }
+        refreshBulk();
+    }
+
+    grid.querySelectorAll('.asset-card').forEach(function(card) {
+        var id = card.getAttribute('data-id');
+        var checkbox = card.querySelector('.asset-checkbox');
+        checkbox.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggle(id, checkbox);
+        });
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.asset-checkbox')) return;
+            openPreview(card);
+        });
+    });
+
+    // ── Preview modal ─────────────────────────────────────────────────
+    var modal = document.getElementById('preview-modal');
+    var closeBtn = document.getElementById('preview-close');
+
+    function openPreview(card) {
+        var url = card.getAttribute('data-url');
+        var name = card.getAttribute('data-name');
+        var fmt = card.getAttribute('data-format');
+        var dims = card.getAttribute('data-dimensions');
+        var size = card.getAttribute('data-size');
+        var folder = card.getAttribute('data-folder-label');
+        var isImage = card.getAttribute('data-image') === '1';
+        var id = card.getAttribute('data-id');
+
+        var media = document.getElementById('preview-media');
+        // Reset, keep close button
+        var keep = closeBtn;
+        media.innerHTML = '';
+        media.appendChild(keep);
+        if (isImage) {
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = name;
+            img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;';
+            media.appendChild(img);
+        } else {
+            var span = document.createElement('span');
+            span.className = 'jk-numeral';
+            span.style.cssText = 'font-size:200px;color:var(--jk-accent);';
+            span.textContent = (fmt || '?').slice(0, 1);
+            media.appendChild(span);
+        }
+        document.getElementById('preview-name').textContent = name;
+        document.getElementById('preview-format').textContent = fmt;
+        document.getElementById('preview-dimensions').textContent = dims;
+        document.getElementById('preview-size').textContent = size;
+        document.getElementById('preview-folder').textContent = folder;
+        document.getElementById('preview-download').href = url;
+        document.getElementById('preview-edit').href = '../' + id + '/change/';
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePreview() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    closeBtn.addEventListener('click', closePreview);
+    modal.addEventListener('click', function(e) { if (e.target === modal) closePreview(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.style.display === 'flex') closePreview(); });
+
+    // ── Bulk actions ──────────────────────────────────────────────────
+    document.getElementById('btn-bulk-cancel').addEventListener('click', function() {
+        selected.clear();
+        grid.querySelectorAll('.asset-checkbox').forEach(function(b) {
+            b.style.background = 'var(--jk-bg-1)';
+            b.style.borderColor = 'var(--jk-line-3)';
+            b.textContent = '';
+        });
+        refreshBulk();
+    });
+
+    document.getElementById('btn-bulk-delete').addEventListener('click', function() {
+        if (!selected.size) return;
+        if (!confirm('Delete ' + selected.size + ' asset(s)? This cannot be undone.')) return;
+        bulk('delete', {});
+    });
+
+    document.getElementById('btn-bulk-move').addEventListener('click', function() {
+        if (!selected.size) return;
+        bulk('move', { folder: document.getElementById('bulk-move-folder').value });
+    });
+
+    function bulk(action, extra) {
+        var fd = new FormData();
+        fd.append('action', action);
+        Array.from(selected).forEach(function(id) { fd.append('ids', id); });
+        Object.keys(extra).forEach(function(k) { fd.append(k, extra[k]); });
+        fetch("{% url 'admin:core_asset_bulk' %}", {
+            method: 'POST', body: fd,
+            headers: { 'X-CSRFToken': csrf },
+            credentials: 'same-origin',
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') window.location.reload();
+            else alert(data.error || 'Failed');
+        });
+    }
+})();
+</script>
+{% endblock %}

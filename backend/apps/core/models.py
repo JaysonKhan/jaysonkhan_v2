@@ -733,3 +733,84 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"Visitor {self.visitor_id} ({self.ip_address}) — {self.created_at:%Y-%m-%d %H:%M}"
+
+
+# ── Asset Manager ────────────────────────────────────────────────────────────
+class Asset(models.Model):
+    """Editorial Asset Manager — uploaded media with auto-extracted metadata."""
+
+    FOLDER_CHOICES = [
+        ('hero', 'Hero'),
+        ('apps', 'Apps'),
+        ('team', 'Team'),
+        ('journal', 'Journal'),
+        ('brand', 'Brand'),
+        ('product', 'Product'),
+        ('misc', 'Misc'),
+    ]
+
+    file = models.FileField(upload_to='assets/%Y/%m/')
+    name = models.CharField(max_length=200, blank=True, help_text="Auto-derived from filename if blank")
+    folder = models.CharField(max_length=24, choices=FOLDER_CHOICES, default='misc', db_index=True)
+    alt_text = models.CharField(max_length=240, blank=True, help_text="Optional accessibility description")
+
+    # Auto-extracted metadata (populated on save)
+    format = models.CharField(max_length=10, blank=True, help_text="JPG, PNG, SVG, WEBP, MP4, etc.")
+    size_bytes = models.PositiveIntegerField(default=0)
+    width = models.PositiveIntegerField(default=0, help_text="0 if not an image")
+    height = models.PositiveIntegerField(default=0)
+
+    uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = 'Asset'
+        verbose_name_plural = 'Assets'
+
+    def __str__(self):
+        return self.name or self.file.name.split('/')[-1]
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            if not self.name:
+                self.name = self.file.name.split('/')[-1].rsplit('.', 1)[0][:200]
+            ext = self.file.name.rsplit('.', 1)[-1].upper() if '.' in self.file.name else ''
+            self.format = ext[:10]
+            try:
+                self.size_bytes = self.file.size
+            except (FileNotFoundError, OSError, ValueError):
+                pass
+            if ext in {'JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'BMP'}:
+                try:
+                    from PIL import Image
+                    self.file.seek(0)
+                    with Image.open(self.file) as img:
+                        self.width, self.height = img.size
+                    self.file.seek(0)
+                except Exception:
+                    pass
+        super().save(*args, **kwargs)
+
+    @property
+    def size_human(self):
+        n = self.size_bytes
+        if n < 1024:
+            return f"{n} B"
+        if n < 1024 * 1024:
+            return f"{n / 1024:.1f} KB"
+        return f"{n / 1024 / 1024:.2f} MB"
+
+    @property
+    def dimensions(self):
+        if self.width and self.height:
+            return f"{self.width}×{self.height}"
+        return "—"
+
+    @property
+    def is_image(self):
+        return self.format.upper() in {'JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'SVG', 'BMP'}
+
+    @property
+    def asset_id(self):
+        return f"AST-{self.pk:04d}"
