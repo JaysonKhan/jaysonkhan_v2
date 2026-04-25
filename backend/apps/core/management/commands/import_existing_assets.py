@@ -207,8 +207,8 @@ class Command(BaseCommand):
             usage_count=usage_count,
             usage_summary=usage_summary,
         )
-        # Bypass the auto-derive in save() by passing via .save() — we want our own values
-        super(Asset, asset).save()  # invoke Model.save() directly (skip Asset.save extraction)
+        # Asset.save() auto-skips extraction because format + size_bytes are already populated
+        asset.save()
         self.created += 1
         self.stdout.write(self.style.SUCCESS(f"  + {source_path} → folder={folder} usages={usage_count}"))
 

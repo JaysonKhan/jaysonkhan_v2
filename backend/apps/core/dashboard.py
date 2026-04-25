@@ -10,7 +10,7 @@ def dashboard_callback(request, context):
     from portfolio.models import Project, TeamMember
     from blog.models import Post
     from contact.models import ContactMessage
-    from core.models import PageView, SiteSettings
+    from core.models import PageView, SiteSettings, Asset
     from interactions.models import Comment
 
     now = timezone.now()
@@ -22,14 +22,9 @@ def dashboard_callback(request, context):
     inbox_unread = ContactMessage.objects.filter(is_read=False).count()
     inbox_total = ContactMessage.objects.count()
 
-    try:
-        from .assets_models import Asset
-        assets_count = Asset.objects.count()
-        size_total = Asset.objects.aggregate(total=Sum('size_bytes'))['total'] or 0
-        assets_size_mb = round(size_total / 1024 / 1024, 1)
-    except Exception:
-        assets_count = 0
-        assets_size_mb = 0
+    assets_count = Asset.objects.count()
+    size_total = Asset.objects.aggregate(total=Sum('size_bytes'))['total'] or 0
+    assets_size_mb = round(size_total / 1024 / 1024, 1)
 
     posts_count = Post.objects.filter(is_published=True).count()
     projects_count = Project.objects.filter(is_visible=True).count()

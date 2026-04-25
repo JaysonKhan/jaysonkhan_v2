@@ -657,7 +657,11 @@ class EditorialContentMixin(models.Model):
 
     # Metrics section
     metrics_eyebrow = models.CharField(max_length=80, blank=True, default="03 — By the numbers")
-    metrics_title = models.CharField(max_length=160, blank=True, default="A track record, measured.")
+    metrics_title = models.CharField(
+        max_length=240, blank=True,
+        default='A track record,<br><em style="font-weight: 300;">measured.</em>',
+        help_text="HTML allowed. Use <br> for line breaks and <em> for italic emphasis.",
+    )
     metrics_description = models.TextField(
         blank=True,
         default="Numbers from live production apps over the last four years. Pulled from dashboards, not pitch decks.",
@@ -665,7 +669,11 @@ class EditorialContentMixin(models.Model):
 
     # Process / How I work
     process_eyebrow = models.CharField(max_length=80, blank=True, default="05 — How I work")
-    process_title = models.CharField(max_length=160, blank=True, default="Five steps, no surprises.")
+    process_title = models.CharField(
+        max_length=240, blank=True,
+        default='Five steps,<br><em style="font-weight: 300;">no surprises.</em>',
+        help_text="HTML allowed. Use <br> for line breaks and <em> for italic emphasis.",
+    )
     process_steps = models.JSONField(
         blank=True, default=list,
         help_text="List of {n, title, description} dicts.",
@@ -673,7 +681,11 @@ class EditorialContentMixin(models.Model):
 
     # CTA section
     cta_eyebrow = models.CharField(max_length=80, blank=True, default="07 — Open channel")
-    cta_title_pre = models.CharField(max_length=120, blank=True, default="Bring the brief.")
+    cta_title_pre = models.CharField(
+        max_length=240, blank=True,
+        default="Bring the<br>brief.",
+        help_text="HTML allowed. Use <br> for line breaks.",
+    )
     cta_title_em = models.CharField(max_length=120, blank=True, default="I'll bring the team.")
     cta_description = models.TextField(
         blank=True,
@@ -700,7 +712,11 @@ class EditorialContentMixin(models.Model):
         default="A small studio of mobile engineers, designers, and operators. We combine technical execution, product thinking, and production experience to ship real apps for real users.",
     )
     team_values_eyebrow = models.CharField(max_length=80, blank=True, default="Operating principles")
-    team_values_title = models.CharField(max_length=160, blank=True, default="How we think.")
+    team_values_title = models.CharField(
+        max_length=240, blank=True,
+        default='How we<br>think.',
+        help_text="HTML allowed. Use <br> for line breaks.",
+    )
     team_values_intro = models.CharField(
         max_length=300, blank=True,
         default="Six values, four years together. These aren't slogans on a wall — they're the trade-offs we keep landing on.",
@@ -954,7 +970,9 @@ class Asset(models.Model):
         return self.name or self.file.name.split('/')[-1]
 
     def save(self, *args, **kwargs):
-        if self.file:
+        # Skip auto-extraction if metadata is already set (e.g. import command pre-populates it)
+        skip_extraction = kwargs.pop('skip_extraction', False) or (self.format and self.size_bytes)
+        if self.file and not skip_extraction:
             if not self.name:
                 self.name = self.file.name.split('/')[-1].rsplit('.', 1)[0][:200]
             ext = self.file.name.rsplit('.', 1)[-1].upper() if '.' in self.file.name else ''

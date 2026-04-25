@@ -109,7 +109,7 @@
             <div class="between reveal" style="margin-bottom: 80px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
                     <span class="eyebrow">{{ site_settings.metrics_eyebrow }}</span>
-                    <h2 class="display-md serif">{{ site_settings.metrics_title|linebreaksbr|safe }}</h2>
+                    <h2 class="display-md serif">{{ site_settings.metrics_title|safe }}</h2>
                 </div>
                 <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">{{ site_settings.metrics_description }}</p>
             </div>
@@ -300,7 +300,7 @@
         <div class="container">
             <div class="reveal" style="margin-bottom: 80px; max-width: 720px;">
                 <span class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.process_eyebrow }}</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.process_title|linebreaksbr|safe }}</h2>
+                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.process_title|safe }}</h2>
             </div>
             <div style="display: grid; grid-template-columns: repeat({{ steps|length }}, 1fr); gap: 0;" class="grid-3-mobile-1">
                 {% for s in steps %}
@@ -358,7 +358,7 @@
                 <div class="col gap-6">
                     <span class="eyebrow">{{ site_settings.cta_eyebrow }}</span>
                     <h2 class="display-lg serif">
-                        {{ site_settings.cta_title_pre|linebreaksbr|safe }}<br>
+                        {{ site_settings.cta_title_pre|safe }}
                         <em style="font-weight: 300; color: var(--accent);">{{ site_settings.cta_title_em }}</em>
                     </h2>
                     <p style="color: var(--fg-2); font-size: 18px; max-width: 540px; line-height: 1.5;">{{ site_settings.cta_description }}</p>
