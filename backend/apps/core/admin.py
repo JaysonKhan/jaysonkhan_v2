@@ -266,6 +266,18 @@ class SiteSettingsAdmin(ModelAdmin):
                 'fields': tuple(footer_fields),
             }),
 
+            # ── Tab v3: Editorial content ──────────────────────────────────────
+            ('v3 · Editorial', {
+                'classes': ('tab',),
+                'description': (
+                    'All v3 (cream+black editorial) site copy. JSON fields accept lists '
+                    'of {n, title, description} dicts (manifesto/process) or {title, description} '
+                    'dicts (team_values), or simple string lists (ticker_items). Leave a JSON '
+                    'field empty to use seed defaults.'
+                ),
+                'fields': tuple(self._editorial_fields(columns)),
+            }),
+
             # ── Tab 8: System ──────────────────────────────────────────────────
             # Telegram settings managed at /admin/telegram/settings/
             ('System', {
@@ -276,6 +288,27 @@ class SiteSettingsAdmin(ModelAdmin):
                 ),
             }),
         ]
+
+    @staticmethod
+    def _editorial_fields(columns):
+        """Return v3 editorial fields that exist in the DB schema (graceful migration)."""
+        candidates = [
+            'availability_badge',
+            'hero_eyebrow', 'hero_volume_label', 'hero_location',
+            'hero_scroll_label', 'hero_section_count',
+            'brand_tagline', 'footer_volume',
+            'ticker_items',
+            'manifesto_eyebrow', 'manifesto_title', 'manifesto_label', 'manifesto_principles',
+            'metrics_eyebrow', 'metrics_title', 'metrics_description',
+            'process_eyebrow', 'process_title', 'process_steps',
+            'cta_eyebrow', 'cta_title_pre', 'cta_title_em', 'cta_description',
+            'cta_button_text', 'cta_response_label',
+            'contact_form_label', 'contact_form_title',
+            'contact_availability_status', 'contact_availability_note',
+            'team_hero_eyebrow', 'team_section_label', 'team_studio_label', 'team_intro',
+            'team_values_eyebrow', 'team_values_title', 'team_values_intro', 'team_values',
+        ]
+        return [f for f in candidates if not columns or f in columns]
 
     # ── Image / file preview helpers ───────────────────────────────────────────
 

@@ -622,6 +622,148 @@ class FooterMixin(models.Model):
         abstract = True
 
 
+# ── Editorial v3 dynamic content (manifesto, process, ticker, values, badges) ──
+class EditorialContentMixin(models.Model):
+    """All copy/content for the v3 editorial site that should be admin-editable."""
+
+    # Hero meta-line items
+    hero_volume_label = models.CharField(max_length=80, blank=True, default="Vol. 03 · Issue 01")
+    hero_location = models.CharField(max_length=80, blank=True, default="Tashkent · 41.2995° N")
+    hero_scroll_label = models.CharField(max_length=80, blank=True, default="Scroll · Begin transmission")
+    hero_section_count = models.CharField(max_length=24, blank=True, default="01 / 07")
+    hero_eyebrow = models.CharField(
+        max_length=160, blank=True,
+        default="Personal · Build Studio · Mobile Engineering",
+    )
+
+    # Brand line under wordmark
+    brand_tagline = models.CharField(max_length=80, blank=True, default="Build Studio · Est. 2022")
+    footer_volume = models.CharField(max_length=80, blank=True, default="VOL. 03 · ISSUE 01")
+
+    # Ticker (JSON array of strings)
+    ticker_items = models.JSONField(
+        blank=True, default=list,  # populated by SiteSettings.load() if empty
+        help_text="Marquee ticker items, e.g. ['Flutter mobile engineering', 'Production apps', ...]",
+    )
+
+    # Manifesto section
+    manifesto_eyebrow = models.CharField(max_length=80, blank=True, default="02 — Philosophy")
+    manifesto_title = models.CharField(max_length=160, blank=True, default="Manifesto.")
+    manifesto_label = models.CharField(max_length=80, blank=True, default="03 PRINCIPLES · ON BUILDING")
+    manifesto_principles = models.JSONField(
+        blank=True, default=list,
+        help_text="List of {n, title, description} dicts. n is shown as a giant numeral (e.g. '01').",
+    )
+
+    # Metrics section
+    metrics_eyebrow = models.CharField(max_length=80, blank=True, default="03 — By the numbers")
+    metrics_title = models.CharField(max_length=160, blank=True, default="A track record, measured.")
+    metrics_description = models.TextField(
+        blank=True,
+        default="Numbers from live production apps over the last four years. Pulled from dashboards, not pitch decks.",
+    )
+
+    # Process / How I work
+    process_eyebrow = models.CharField(max_length=80, blank=True, default="05 — How I work")
+    process_title = models.CharField(max_length=160, blank=True, default="Five steps, no surprises.")
+    process_steps = models.JSONField(
+        blank=True, default=list,
+        help_text="List of {n, title, description} dicts.",
+    )
+
+    # CTA section
+    cta_eyebrow = models.CharField(max_length=80, blank=True, default="07 — Open channel")
+    cta_title_pre = models.CharField(max_length=120, blank=True, default="Bring the brief.")
+    cta_title_em = models.CharField(max_length=120, blank=True, default="I'll bring the team.")
+    cta_description = models.TextField(
+        blank=True,
+        default="Two slots opening for Q2 2026. Best fit: ambitious mobile-first products with a 12+ week runway and a real user base in mind.",
+    )
+    cta_button_text = models.CharField(max_length=80, blank=True, default="Start a conversation")
+    cta_response_label = models.CharField(max_length=80, blank=True, default="Avg. response · 4–6h")
+
+    # Contact page
+    contact_form_label = models.CharField(max_length=80, blank=True, default="Brief / Form 7741")
+    contact_form_title = models.CharField(max_length=160, blank=True, default="Tell me what you're building.")
+    contact_availability_status = models.CharField(max_length=80, blank=True, default="Available · Q2 2026")
+    contact_availability_note = models.CharField(
+        max_length=240, blank=True,
+        default="Two engagement slots open. Tashkent, UTC+5.",
+    )
+
+    # Studio (Team) page
+    team_hero_eyebrow = models.CharField(max_length=80, blank=True, default="Studio · Crew Manifest")
+    team_section_label = models.CharField(max_length=80, blank=True, default="Section · 03")
+    team_studio_label = models.CharField(max_length=80, blank=True, default="Studio open · Tashkent")
+    team_intro = models.TextField(
+        blank=True,
+        default="A small studio of mobile engineers, designers, and operators. We combine technical execution, product thinking, and production experience to ship real apps for real users.",
+    )
+    team_values_eyebrow = models.CharField(max_length=80, blank=True, default="Operating principles")
+    team_values_title = models.CharField(max_length=160, blank=True, default="How we think.")
+    team_values_intro = models.CharField(
+        max_length=300, blank=True,
+        default="Six values, four years together. These aren't slogans on a wall — they're the trade-offs we keep landing on.",
+    )
+    team_values = models.JSONField(
+        blank=True, default=list,
+        help_text="List of {title, description} dicts.",
+    )
+
+    # Availability badge (used on hero + footer)
+    availability_badge = models.CharField(max_length=120, blank=True, default="Now booking · Q2 2026")
+
+    class Meta:
+        abstract = True
+
+
+def _default_ticker():
+    return [
+        "Flutter mobile engineering",
+        "Production apps",
+        "Fintech · Logistics · Consumer",
+        "Tashkent — worldwide remote",
+        "Built for scale, not for demos",
+    ]
+
+
+def _default_manifesto():
+    return [
+        {"n": "01", "title": "Code is a side effect of thinking clearly.",
+         "description": "A clean codebase is the residue of a clear understanding of the problem. I don't ship spaghetti and call it pragmatic."},
+        {"n": "02", "title": "Production is the only opinion that matters.",
+         "description": "Demos are theatre. I measure my work by App Store reviews, crash-free sessions, and revenue clients can count."},
+        {"n": "03", "title": "Boring infrastructure is high craft.",
+         "description": "CI that never fails. Migrations that never lose data. Observability you actually use. The unglamorous parts are where senior engineers earn their fee."},
+    ]
+
+
+def _default_process():
+    return [
+        {"n": "01", "title": "Diagnose",
+         "description": "A 60-minute call. We map the actual problem behind the brief — not the symptom."},
+        {"n": "02", "title": "Architect",
+         "description": "A 1-week sprint to lay out the data model, state shape, integration surfaces. No code yet."},
+        {"n": "03", "title": "Build in slices",
+         "description": "End-to-end working features each week. You can run it on your phone from day 7."},
+        {"n": "04", "title": "Harden + ship",
+         "description": "Beta with real users, telemetry wired, rollout plan agreed. Then App Store + Play Store on the same day."},
+        {"n": "05", "title": "Operate",
+         "description": "Optional retainer. Crash triage, telemetry reviews — the boring middle that keeps things alive."},
+    ]
+
+
+def _default_team_values():
+    return [
+        {"title": "Clean code", "description": "Code that the next engineer can read without a meeting."},
+        {"title": "Scalable architecture", "description": "Built for v3 — not just v1."},
+        {"title": "Product thinking", "description": "We ask 'why' before 'how'."},
+        {"title": "Fast delivery", "description": "Two-week sprints, Friday demos, no surprises."},
+        {"title": "Long-term support", "description": "We don't hand off and disappear."},
+        {"title": "Production-first", "description": "Real users, real reviews, real revenue."},
+    ]
+
+
 # ── Concrete Model ───────────────────────────────────────────────────────────────
 
 
@@ -634,6 +776,7 @@ class SiteSettings(
     ContactSocialsMixin,
     TelegramMixin,
     FooterMixin,
+    EditorialContentMixin,
     models.Model,
 ):
     """
@@ -697,6 +840,24 @@ class SiteSettings(
         """Always uses main email."""
         return self.email
 
+    # ── Editorial v3 content resolvers (return field if set, else seed defaults) ──
+
+    @property
+    def ticker_items_resolved(self):
+        return self.ticker_items if self.ticker_items else _default_ticker()
+
+    @property
+    def manifesto_principles_resolved(self):
+        return self.manifesto_principles if self.manifesto_principles else _default_manifesto()
+
+    @property
+    def process_steps_resolved(self):
+        return self.process_steps if self.process_steps else _default_process()
+
+    @property
+    def team_values_resolved(self):
+        return self.team_values if self.team_values else _default_team_values()
+
     @property
     def footer_display_github(self):
         return self.footer_social_github or self.github_url
@@ -746,7 +907,14 @@ class Asset(models.Model):
         ('journal', 'Journal'),
         ('brand', 'Brand'),
         ('product', 'Product'),
+        ('experience', 'Experience'),
         ('misc', 'Misc'),
+    ]
+
+    SOURCE_CHOICES = [
+        ('upload', 'Manual upload'),
+        ('imported', 'Imported from media'),
+        ('linked', 'Linked from model'),
     ]
 
     file = models.FileField(upload_to='assets/%Y/%m/')
@@ -754,11 +922,25 @@ class Asset(models.Model):
     folder = models.CharField(max_length=24, choices=FOLDER_CHOICES, default='misc', db_index=True)
     alt_text = models.CharField(max_length=240, blank=True, help_text="Optional accessibility description")
 
+    # Source tracking — used by the import command to dedupe
+    source = models.CharField(max_length=12, choices=SOURCE_CHOICES, default='upload')
+    source_path = models.CharField(
+        max_length=500, blank=True, db_index=True,
+        help_text="Original media-relative path (used to dedupe imports)",
+    )
+
     # Auto-extracted metadata (populated on save)
     format = models.CharField(max_length=10, blank=True, help_text="JPG, PNG, SVG, WEBP, MP4, etc.")
     size_bytes = models.PositiveIntegerField(default=0)
     width = models.PositiveIntegerField(default=0, help_text="0 if not an image")
     height = models.PositiveIntegerField(default=0)
+
+    # Usage tracking (denormalized count refreshed by signal/import)
+    usage_count = models.PositiveIntegerField(default=0, help_text="How many model fields reference this file")
+    usage_summary = models.CharField(
+        max_length=500, blank=True,
+        help_text="Comma-separated list of where this asset is used, e.g. 'Project: Halyk Pay, SiteSettings: hero_image'",
+    )
 
     uploaded_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

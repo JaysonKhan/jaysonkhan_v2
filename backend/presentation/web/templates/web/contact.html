@@ -37,8 +37,8 @@
                     {% csrf_token %}
 
                     <div>
-                        <span class="eyebrow">Brief / Form 7741</span>
-                        <h2 class="display-md serif" style="margin-top: 16px;"><em style="font-weight: 300;">Tell me what you're building.</em></h2>
+                        <span class="eyebrow">{{ site_settings.contact_form_label }}</span>
+                        <h2 class="display-md serif" style="margin-top: 16px;"><em style="font-weight: 300;">{{ site_settings.contact_form_title }}</em></h2>
                     </div>
 
                     {% if success %}
@@ -148,8 +148,8 @@
 
                     <div style="padding: 24px; background: var(--bg-3); border: 1px solid var(--line-2);">
                         <span class="mono" style="font-size: 10px; letter-spacing: 0.18em; color: var(--accent);">● CURRENT STATUS</span>
-                        <p class="display-sm serif" style="margin-top: 12px;"><em>Available · Q2 2026</em></p>
-                        <p style="font-size: 13px; color: var(--fg-3); margin-top: 8px;">Two engagement slots open. Tashkent, UTC+5.</p>
+                        <p class="display-sm serif" style="margin-top: 12px;"><em>{{ site_settings.contact_availability_status }}</em></p>
+                        <p style="font-size: 13px; color: var(--fg-3); margin-top: 8px;">{{ site_settings.contact_availability_note }}</p>
                     </div>
                 </aside>
             </div>

@@ -2,27 +2,28 @@
 
 <style>
     /* ══════════════════════════════════════════════════════════════
-       INTERACTIONS / COMMENTS — Premium UI  (indigo × slate theme)
+       INTERACTIONS / COMMENTS — Editorial v3 (cream+black, terracotta)
        ══════════════════════════════════════════════════════════════ */
     .interactions-panel {
         position: relative;
-        /* Design tokens aligned with site primary colours */
-        --bubble-in-bg:      rgba(30, 41, 59, 0.85);     /* slate-800 glass */
-        --bubble-in-border:  rgba(99, 102, 241, 0.14);
-        --bubble-out-from:   #5a5fd1;                     /* indigo-600 */
-        --bubble-out-to:     #7c5cbf;                     /* purple-500 */
-        --bubble-out-border: rgba(139, 92, 246, 0.28);
-        --name-color:        #a5b4fc;                     /* indigo-300 */
-        --time-in:           rgba(203, 213, 225, 0.5);
-        --time-out:          rgba(224, 231, 255, 0.6);
-        --reply-line:        rgba(99, 102, 241, 0.22);
-        --action-color:      #818cf8;
+        color: var(--fg-1);
+        /* Editorial tokens replace the old indigo/pink design system */
+        --bubble-in-bg:      var(--bg-2);
+        --bubble-in-border:  var(--line-1);
+        --bubble-out-from:   var(--fg-0);
+        --bubble-out-to:     var(--fg-0);
+        --bubble-out-border: var(--fg-0);
+        --name-color:        var(--fg-0);
+        --time-in:           var(--fg-3);
+        --time-out:          rgba(243,239,230,0.7);
+        --reply-line:        var(--line-2);
+        --action-color:      var(--accent);
     }
 
     /* ── Section Divider ── */
     .interactions-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(236,72,153,0.15), transparent);
+        background: var(--line-1);
     }
 
     /* ── Chat Container ── */
@@ -36,12 +37,11 @@
 
     /* ── Empty State ── */
     #comments-empty {
-        border-radius: 16px;
         padding: 20px;
         text-align: center;
-        color: rgba(148, 163, 184, 0.7);
-        background: rgba(255,255,255,0.02);
-        border: 1px dashed rgba(99,102,241,0.2);
+        color: var(--fg-3);
+        background: var(--bg-2);
+        border: 1px dashed var(--line-2);
         font-size: 0.875rem;
     }
 
@@ -63,11 +63,10 @@
         flex-shrink: 0;
         border-radius: 50%;
         overflow: hidden;
-        border: 1.5px solid rgba(99,102,241,0.25);
-        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        border: 1px solid var(--line-2);
     }
     .message--own .message-avatar {
-        border-color: rgba(139,92,246,0.35);
+        border-color: var(--accent);
     }
     .message-avatar img { width:100%; height:100%; object-fit:cover; }
 
@@ -120,40 +119,40 @@
     .message--other .tg-bubble {
         background: var(--bubble-in-bg);
         border: 1px solid var(--bubble-in-border);
-        border-radius: 18px;
-        color: #e2e8f0;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.04);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        border-radius: 4px;
+        color: var(--fg-1);
     }
     .message--other .tg-bubble:hover {
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(99,102,241,0.12);
+        border-color: var(--line-3);
     }
 
-    /* ── Outgoing Bubble ── */
+    /* ── Outgoing Bubble (inverted ink) ── */
     .message--own .tg-bubble {
-        background: linear-gradient(135deg, var(--bubble-out-from) 0%, var(--bubble-out-to) 100%);
+        background: var(--bubble-out-from);
         border: 1px solid var(--bubble-out-border);
-        border-radius: 18px;
-        color: #fff;
-        box-shadow: 0 3px 14px rgba(99,102,241,0.25), 0 1px 4px rgba(0,0,0,0.3);
+        border-radius: 4px;
+        color: var(--bg-1);
     }
     .message--own .tg-bubble:hover {
-        box-shadow: 0 5px 22px rgba(99,102,241,0.35), 0 2px 8px rgba(0,0,0,0.3);
+        background: var(--accent);
+        border-color: var(--accent);
     }
 
     /* ── Author Name (inline with avatar) ── */
     .tg-author-name {
         display: inline;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 500;
         color: var(--name-color);
-        letter-spacing: 0.02em;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         line-height: 1;
     }
+    .message--own .tg-author-name { color: rgba(243,239,230,0.8); }
 
     /* ── Bubble Text ── */
     .tg-bubble-text {
@@ -203,27 +202,26 @@
     .message--own .tg-reaction-bar { justify-content: flex-end; }
 
     .tg-reaction-btn {
-        border: 1px solid rgba(99,102,241,0.22);
-        background: rgba(15,23,42,0.6);
+        border: 1px solid var(--line-2);
+        background: var(--bg-2);
         border-radius: 9999px;
-        padding: 3px 9px;
-        font-size: 0.7rem;
+        padding: 3px 10px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.06em;
         line-height: 1.3;
-        color: #c7d2fe;
+        color: var(--fg-2);
         transition: all 0.18s ease;
-        backdrop-filter: blur(4px);
     }
     .tg-reaction-btn:hover {
-        border-color: rgba(99,102,241,0.5);
-        background: rgba(99,102,241,0.18);
-        color: #fff;
-        transform: scale(1.05);
+        border-color: var(--line-3);
+        background: var(--bg-3);
+        color: var(--fg-0);
     }
     .tg-reaction-btn.active {
-        border-color: rgba(139,92,246,0.6);
-        background: rgba(99,102,241,0.28);
-        color: #e0e7ff;
-        box-shadow: 0 0 8px rgba(99,102,241,0.25);
+        border-color: var(--accent);
+        background: rgba(var(--accent-rgb), 0.10);
+        color: var(--accent);
     }
     .tg-reaction-btn .count { opacity: 0.85; }
     .tg-reaction-trigger {
@@ -241,22 +239,19 @@
     /* ── Emoji Menu ── */
     .tg-emoji-menu {
         position: absolute; bottom: 120%;
-        background: rgba(15,23,42,0.96);
-        border: 1px solid rgba(99,102,241,0.25);
-        border-radius: 14px; padding: 6px;
+        background: var(--bg-2);
+        border: 1px solid var(--line-2);
+        border-radius: 4px; padding: 6px;
         display: none; grid-template-columns: repeat(4,1fr); gap: 4px;
         z-index: 100;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(99,102,241,0.1);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
     }
     .tg-emoji-menu.show { display: grid; }
     .tg-emoji-item {
         font-size: 1.2rem; cursor: pointer; padding: 5px;
-        border-radius: 8px; transition: background 0.15s, transform 0.15s;
+        border-radius: 4px; transition: background 0.15s, transform 0.15s;
         text-align: center; display: flex; align-items: center; justify-content: center;
     }
-    .tg-emoji-item:hover { background: rgba(99,102,241,0.18); transform: scale(1.18); }
+    .tg-emoji-item:hover { background: var(--bg-3); transform: scale(1.15); }
 
     /* ── Reply Thread Lines (Slack-style bordered) ── */
     .tg-replies-container {
@@ -312,27 +307,33 @@
     .tg-view-replies {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 4px 0; border: 0; background: transparent;
-        font-size: 0.74rem; font-weight: 700;
+        font-family: var(--font-mono);
+        font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+        font-weight: 500;
         color: var(--action-color);
         transition: color 0.2s ease;
     }
-    .tg-view-replies:hover { color: #c7d2fe; text-decoration: underline; }
+    .tg-view-replies:hover { color: var(--fg-0); text-decoration: underline; }
 
     /* ── Reply / Action Links ── */
     .tg-reply-link {
-        font-size: 0.72rem; font-weight: 700;
+        font-family: var(--font-mono);
+        font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+        font-weight: 500;
         color: var(--action-color); cursor: pointer;
         transition: color 0.2s ease;
     }
-    .tg-reply-link:hover { color: #c7d2fe; text-decoration: underline; }
+    .tg-reply-link:hover { color: var(--fg-0); text-decoration: underline; }
 
     .tg-action-link {
-        font-size: 0.72rem; color: var(--action-color);
-        font-weight: 600; opacity: 0;
-        transition: opacity 0.2s; cursor: pointer; margin-right: 8px;
+        font-family: var(--font-mono);
+        font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--fg-3);
+        font-weight: 500; opacity: 0;
+        transition: opacity 0.2s, color 0.2s; cursor: pointer; margin-right: 8px;
     }
     .comment-wrapper:hover .tg-action-link { opacity: 0.8; }
-    .tg-action-link:hover { opacity: 1 !important; text-decoration: underline; }
+    .tg-action-link:hover { opacity: 1 !important; color: var(--accent); }
 
     /* ── Compose Shell ── */
     #comment-text {
@@ -345,18 +346,15 @@
 
     .tg-compose-shell {
         width: 100%;
-        border: 1px solid rgba(99,102,241,0.28);
-        border-radius: 22px;
-        background: rgba(15,23,42,0.85);
-        padding: 5px 6px;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
-        transition: border-color 0.25s ease, box-shadow 0.25s ease;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--line-2);
+        border-radius: 4px;
+        background: var(--bg-2);
+        padding: 6px 8px;
+        transition: border-color 0.25s ease;
     }
     .tg-compose-shell:focus-within {
-        border-color: rgba(99,102,241,0.55);
-        box-shadow: 0 4px 20px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.10);
     }
     .tg-compose-grid {
         display: grid;
@@ -365,35 +363,35 @@
     }
 
     .tg-compose-attach {
-        width: 36px; height: 36px; border-radius: 12px;
-        border: 1px solid rgba(99,102,241,0.2);
-        background: rgba(99,102,241,0.08);
-        color: #a5b4fc;
+        width: 36px; height: 36px; border-radius: 4px;
+        border: 1px solid var(--line-2);
+        background: var(--bg-3);
+        color: var(--fg-2);
         display: flex; align-items: center; justify-content: center;
         cursor: pointer; transition: all 0.2s ease;
     }
     .tg-compose-attach:hover {
-        background: rgba(99,102,241,0.18);
-        border-color: rgba(99,102,241,0.45);
-        color: #e0e7ff;
+        background: var(--fg-0);
+        border-color: var(--fg-0);
+        color: var(--bg-1);
     }
 
     .tg-compose-send {
         width: 36px; height: 36px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-        color: #fff;
-        box-shadow: 0 3px 12px rgba(99,102,241,0.4);
+        background: var(--fg-0);
+        color: var(--bg-1);
         transition: all 0.2s ease;
     }
     .tg-compose-send:hover {
-        box-shadow: 0 5px 18px rgba(99,102,241,0.55);
+        background: var(--accent);
         transform: scale(1.05);
     }
     .tg-compose-send:active { transform: scale(0.96); }
     .tg-compose-send:disabled {
-        opacity: 0.38; filter: saturate(0.15); cursor: not-allowed;
-        transform: none; box-shadow: none;
+        background: var(--bg-3); color: var(--fg-4);
+        opacity: 0.6; cursor: not-allowed;
+        transform: none;
     }
 
     .tg-compose-meta {
@@ -404,19 +402,29 @@
 
     /* ── Login Card ── */
     .tg-login-card {
-        border: 1px solid rgba(99,102,241,0.18);
-        border-radius: 20px;
-        background: rgba(99,102,241,0.05);
-        padding: 20px 16px; text-align: center; margin-bottom: 12px;
+        position: relative;
+        border: 1px solid var(--line-1);
+        background: var(--bg-2);
+        padding: 24px 20px; text-align: center; margin-bottom: 12px;
         max-width: 460px; margin-left: auto; margin-right: auto;
     }
-    .tg-login-title  { font-size:1rem; font-weight:700; color:#e2e8f0; margin-bottom:4px; }
-    .tg-login-subtitle { font-size:0.82rem; color:#94a3b8; margin-bottom:12px; }
+    .tg-login-card::before, .tg-login-card::after {
+        content: ""; position: absolute; width: 12px; height: 12px;
+        border: 1px solid var(--line-3); pointer-events: none;
+    }
+    .tg-login-card::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+    .tg-login-card::after  { bottom: 0; right: 0; border-left: none; border-top: none; }
+    .tg-login-title  {
+        font-family: var(--font-display); font-size: 22px; font-weight: 400;
+        font-style: italic; color: var(--fg-0); margin-bottom: 4px; letter-spacing: -0.01em;
+    }
+    .tg-login-subtitle { font-size: 13px; color: var(--fg-3); margin-bottom: 16px; }
     .tg-login-badge {
-        width:42px; height:42px; margin:0 auto 10px;
-        border-radius:50%; display:flex; align-items:center; justify-content:center;
-        color:#a5b4fc; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.35);
-        font-size:1.2rem;
+        width: 42px; height: 42px; margin: 0 auto 12px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: var(--accent); background: rgba(var(--accent-rgb), 0.10);
+        border: 1px solid var(--accent);
+        font-size: 1.2rem;
     }
     /* ── Telegram widget iframe fix ── */
     .tg-widget-wrap {
@@ -458,46 +466,115 @@
     }
 </style>
 
-<section class="interactions-panel max-w-4xl mx-auto px-6 mt-8 pt-6 border-t border-white/10" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
+<style>
+    /* ── Editorial Like button ── */
+    .like-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 22px;
+        font-family: var(--font-mono);
+        font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+        border: 1px solid var(--line-3);
+        background: transparent;
+        color: var(--fg-2);
+        border-radius: 9999px;
+        transition: all .35s var(--ease-out);
+        cursor: pointer;
+    }
+    .like-btn:hover {
+        background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0);
+    }
+    .like-btn.liked {
+        background: var(--accent); color: var(--bg-1); border-color: var(--accent);
+    }
+    .like-btn.disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
+    .like-btn .like-count { font-weight: 600; }
+
+    /* ── Comments header ── */
+    .comments-h3 {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 400;
+        font-style: italic;
+        color: var(--fg-0);
+        letter-spacing: -0.01em;
+        line-height: 1;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+    }
+    .comments-counter {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--fg-3);
+        font-weight: 500;
+    }
+    .sort-toggle {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 500;
+    }
+    .sort-dropdown {
+        background: var(--bg-2);
+        border: 1px solid var(--line-2);
+    }
+    .sort-dropdown button { color: var(--fg-1); font-size: 13px; }
+    .sort-dropdown button:hover { background: var(--bg-3); color: var(--fg-0); }
+
+    /* Reply context strip */
+    .reply-context {
+        background: var(--bg-2);
+        border: 1px solid var(--line-1);
+        padding: 12px 14px;
+    }
+    .reply-context .reply-author { color: var(--accent); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+    .reply-context .reply-preview { color: var(--fg-3); font-size: 13px; }
+</style>
+
+<section class="interactions-panel max-w-4xl mx-auto px-6 mt-8 pt-6" style="border-top: 1px solid var(--line-1);" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
 
     {# ── Like Header ─────────────────────────────────────────────────────────── #}
     <div class="flex items-center gap-4 mb-4">
         {% if tg_profile %}
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
             data-liked="{{ user_liked|yesno:'true,false' }}"
-            class="like-btn flex items-center gap-2 px-6 py-2.5 rounded-full border transition-all duration-300 transform active:scale-95
-                     {% if user_liked %}liked border-pink-500/60 bg-pink-500/10 text-pink-400
-                     {% else %}border-white/10 bg-white/5 text-slate-400 hover:border-pink-500/40 hover:text-pink-400{% endif %}">
+            class="like-btn{% if user_liked %} liked{% endif %}">
             <i class="fa-{% if user_liked %}solid{% else %}regular{% endif %} fa-heart text-sm" id="like-icon"></i>
-            <span id="like-count" class="text-sm font-semibold">{{ like_count }}</span>
-            <span class="text-xs opacity-70 ml-0.5">likes</span>
+            <span id="like-count" class="like-count">{{ like_count }}</span>
+            <span style="opacity: 0.7;">likes</span>
         </button>
         {% else %}
-        <div class="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/10 bg-white/5 text-slate-500">
+        <div class="like-btn disabled">
             <i class="fa-regular fa-heart text-sm"></i>
-            <span class="text-sm font-semibold">{{ like_count }}</span>
-            <span class="text-xs opacity-70 ml-0.5">likes</span>
+            <span class="like-count">{{ like_count }}</span>
+            <span style="opacity: 0.7;">likes</span>
         </div>
         {% endif %}
     </div>
 
     <div class="flex items-center justify-between mb-2">
-        <h3 class="text-lg font-bold flex items-center gap-2">
+        <h3 class="comments-h3">
             Comments
-            <span id="comments-counter" class="text-slate-500 font-normal">0</span>
+            <span id="comments-counter" class="comments-counter">0</span>
         </h3>
-        
-        <!-- Sorting dropdown more compact toggle style -->
+
+        <!-- Sorting dropdown -->
         <div id="sort-wrap" class="relative">
-            <button id="sort-toggle" type="button"
-                class="inline-flex items-center gap-1 text-[12px] text-[#818cf8] font-semibold"
+            <button id="sort-toggle" type="button" class="sort-toggle inline-flex items-center gap-1"
                 onclick="toggleSortDropdown(event)">
                 <span id="active-sort">Top Comments</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-[#818cf8]/60"></i>
+                <i class="fa-solid fa-chevron-down text-[9px]" style="opacity: 0.6;"></i>
             </button>
-            <div id="sort-dropdown" class="hidden absolute top-full mt-2 right-0 bg-[#1e293b] border border-white/10 rounded-xl py-2 w-44 z-50 shadow-2xl">
-                <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
-                <button type="button" class="w-full text-left px-4 py-1.5 hover:bg-white/5 text-[12px] text-white" onclick="selectSort('newest', 'Newest First', event)">Newest First</button>
+            <div id="sort-dropdown" class="sort-dropdown hidden absolute top-full mt-2 right-0 py-2 w-44 z-50">
+                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
+                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('newest', 'Newest First', event)">Newest First</button>
             </div>
             <select id="sort-selector" class="hidden"><option value="top"></option><option value="newest"></option></select>
         </div>
@@ -508,23 +585,22 @@
     {% if tg_profile %}
     <div class="mb-8" id="comment-form-container">
         <!-- Reply Context -->
-        <div id="reply-context"
-             class="hidden items-center justify-between mb-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+        <div id="reply-context" class="reply-context hidden items-center justify-between mb-3">
             <div class="min-w-0">
-                <p class="text-xs font-semibold text-[#818cf8]" id="reply-author-name"></p>
-                <p class="text-xs text-slate-400 truncate" id="reply-text-preview"></p>
+                <p class="reply-author" id="reply-author-name"></p>
+                <p class="reply-preview truncate" id="reply-text-preview"></p>
             </div>
-            <button onclick="clearReply()" 
-                    class="text-slate-400 hover:text-white transition"
+            <button onclick="clearReply()"
+                    class="hover:opacity-100 transition" style="color: var(--fg-3); opacity: 0.7;"
                     aria-label="Cancel reply">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <!-- Image Preview -->
-        <div id="image-preview-container" class="hidden relative inline-block mb-3 p-1 bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-            <img id="image-preview" src="" class="rounded-lg max-h-40 object-contain" alt="">
-            <button onclick="clearImage()" class="absolute top-2 left-2 bg-black/60 w-8 h-8 rounded-full flex items-center justify-center text-white hover:bg-red-500/80 transition shadow-lg">
+        <div id="image-preview-container" class="hidden relative inline-block mb-3 p-1 overflow-hidden" style="background: var(--bg-2); border: 1px solid var(--line-2);">
+            <img id="image-preview" src="" class="max-h-40 object-contain" alt="">
+            <button onclick="clearImage()" class="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition" style="background: var(--fg-0); color: var(--bg-1);" aria-label="Remove image">
                 <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
         </div>
@@ -547,7 +623,8 @@
                           wrap="soft"
                           spellcheck="false"
                           placeholder="Message"
-                          class="bg-transparent border-none text-white text-[16px] placeholder:text-slate-500 resize-none outline-none py-0 focus:ring-0"
+                          class="bg-transparent border-none text-[16px] resize-none outline-none py-0 focus:ring-0"
+                          style="color: var(--fg-0); font-family: var(--font-sans);"
                           aria-label="Write a comment"
                           oninput="onCommentInput(this)"></textarea>
 
@@ -564,25 +641,20 @@
 
         <!-- Footer -->
         <div class="tg-compose-meta">
-            <span id="char-counter" class="text-[11px] text-slate-500 whitespace-nowrap">0 / 1000</span>
-            <div class="text-[11px] text-slate-500">
-                Logged in as 
-                <span class="text-slate-300 font-semibold mr-1">
-                    {{ tg_profile.display_name }}
-                </span>
+            <span id="char-counter" class="whitespace-nowrap" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3);">0 / 1000</span>
+            <div style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
+                Logged in as
+                <span style="color: var(--fg-0); font-weight: 500;">{{ tg_profile.display_name }}</span>
                 <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit"
-                            class="text-[#818cf8] hover:underline font-bold">
-                        Logout
-                    </button>
+                    <button type="submit" style="color: var(--accent); font-weight: 500;">Logout</button>
                 </form>
             </div>
         </div>
 
         <!-- Error feedback -->
-        <p id="comment-error" class="hidden text-[11px] text-red-400 mt-1 px-1"></p>
+        <p id="comment-error" class="hidden mt-1 px-1" style="font-size: 11px; color: var(--danger);"></p>
     </div>
     {% else %}
     <div class="tg-login-card">
@@ -597,7 +669,7 @@
             <script>
             window.onTelegramAuth = function(user) {
                 var btn = document.getElementById('tg-login-btn-wrap');
-                if (btn) btn.innerHTML = '<span class="text-sm text-[#818cf8]"><i class="fa-solid fa-circle-notch fa-spin mr-1"></i>Logging in…</span>';
+                if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--accent);"><i class="fa-solid fa-circle-notch fa-spin mr-1"></i>Logging in…</span>';
 
                 // Convert all values to strings (widget may send integers for id/auth_date)
                 var payload = {};
@@ -615,12 +687,12 @@
                         window.location.reload();
                     } else {
                         var msg = (res.data && res.data.error) ? res.data.error : 'Unknown error';
-                        if (btn) btn.innerHTML = '<span class="text-sm text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + msg + '</span>';
+                        if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + msg + '</span>';
                         console.error('[TelegramAuth] Failed:', msg);
                     }
                 })
                 .catch(function(err) {
-                    if (btn) btn.innerHTML = '<span class="text-sm text-red-400">Network error. Please try again.</span>';
+                    if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);">Network error. Please try again.</span>';
                     console.error('[TelegramAuth] Network error:', err);
                 });
             };
@@ -635,7 +707,7 @@
                     data-radius="12"></script>
             </div>
             {% else %}
-            <span class="text-sm text-slate-400">Telegram login hozircha mavjud emas.</span>
+            <span class="text-sm" style="color: var(--fg-3);">Telegram login hozircha mavjud emas.</span>
             {% endif %}
         </div>
     </div>
@@ -643,7 +715,7 @@
 
     {# ── Render Area ── #}
     <div id="tg-chat-container"></div>
-    <div id="loading-spinner" class="text-center text-slate-500 py-6 hidden"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></div>
+    <div id="loading-spinner" class="text-center py-6 hidden" style="color: var(--fg-3);"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></div>
 </section>
 
 <script>
@@ -687,16 +759,10 @@
                     const icon = document.getElementById('like-icon');
                     
                     if (data.liked) {
-                        this.classList.replace('border-white/10', 'border-pink-500/60');
-                        this.classList.replace('bg-white/5', 'bg-pink-500/10');
-                        this.classList.replace('text-slate-400', 'text-pink-400');
-                        this.classList.remove('hover:border-pink-500/40', 'hover:text-pink-400');
+                        this.classList.add('liked');
                         icon.classList.replace('fa-regular', 'fa-solid');
                     } else {
-                        this.classList.replace('border-pink-500/60', 'border-white/10');
-                        this.classList.replace('bg-pink-500/10', 'bg-white/5');
-                        this.classList.replace('text-pink-400', 'text-slate-400');
-                        this.classList.add('hover:border-pink-500/40', 'hover:text-pink-400');
+                        this.classList.remove('liked');
                         icon.classList.replace('fa-solid', 'fa-regular');
                     }
                 } catch (e) {
@@ -788,7 +854,7 @@
 
         const avatarInner = comment.author.photo_url
             ? `<img src="${comment.author.photo_url}" alt="">`
-            : `<div class="w-full h-full flex items-center justify-center font-bold text-[10px] text-indigo-300 bg-indigo-900/60">${comment.author.initial}</div>`;
+            : `<div class="w-full h-full flex items-center justify-center text-[10px]" style="font-family: var(--font-display); font-style: italic; color: var(--accent); background: var(--bg-3);">${comment.author.initial}</div>`;
 
         const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
 
@@ -820,7 +886,7 @@
                         ${authorLabel}
                     </div>
                     ${imgHtml}
-                    <div class="tg-bubble-text text-white/95">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${timeAgo(comment.created_at)}</span></div>
+                    <div class="tg-bubble-text">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${timeAgo(comment.created_at)}</span></div>
                 </div>
 
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">
@@ -967,14 +1033,11 @@
         counter.textContent = `${len} / 1000`;
         
         if (len >= 1000) {
-            counter.classList.replace('text-slate-500', 'text-red-400');
-            counter.classList.remove('text-yellow-400');
+            counter.style.color = 'var(--danger)';
         } else if (len >= 900) {
-            counter.classList.replace('text-slate-500', 'text-yellow-400');
-            counter.classList.remove('text-red-400');
+            counter.style.color = 'var(--warning)';
         } else {
-            counter.classList.remove('text-red-400', 'text-yellow-400');
-            counter.classList.add('text-slate-500');
+            counter.style.color = 'var(--fg-3)';
         }
 
         // Validation & Error state

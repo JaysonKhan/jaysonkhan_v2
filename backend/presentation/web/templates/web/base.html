@@ -145,7 +145,7 @@
                 </svg>
                 <span class="col" style="line-height: 1; gap: 2px;">
                     <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
-                    <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; color: var(--fg-3); text-transform: uppercase;">Build Studio · Est. 2022</span>
+                    <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.brand_tagline }}</span>
                 </span>
             </a>
 
@@ -225,7 +225,7 @@
                         </svg>
                         <span class="col" style="line-height: 1; gap: 2px;">
                             <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
-                            <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; opacity: 0.5; text-transform: uppercase;">Build Studio · Est. 2022</span>
+                            <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; opacity: 0.5; text-transform: uppercase;">{{ site_settings.brand_tagline }}</span>
                         </span>
                     </div>
                     <p style="opacity: 0.7; max-width: 380px; font-size: 14px; line-height: 1.6;">
@@ -266,7 +266,7 @@
 
             <div class="between" style="margin-top: 60px; padding-top: 24px; border-top: 1px solid rgba(243,239,230,0.12); flex-wrap: wrap; gap: 16px;">
                 <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em; text-transform: uppercase;">{{ site_settings.footer_text|default:"© 2026 Jaysonkhan Studio · Tashkent, UZ · All rights reserved" }}</span>
-                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em;">VOL. 03 · ISSUE 01</span>
+                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em;">{{ site_settings.footer_volume }}</span>
             </div>
         </div>
     </footer>

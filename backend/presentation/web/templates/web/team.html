@@ -13,20 +13,18 @@
         <div class="container">
             <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
                 <div class="row gap-3">
-                    <span class="tag">Section · 03</span>
+                    <span class="tag">{{ site_settings.team_section_label }}</span>
                     <span class="tag">{{ team_members|length }} operators · Est. 2022</span>
                 </div>
-                <span class="tag"><span class="dot-live"></span> Studio open · Tashkent</span>
+                <span class="tag"><span class="dot-live"></span> {{ site_settings.team_studio_label }}</span>
             </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">Studio · Crew Manifest</div>
+            <div class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.team_hero_eyebrow }}</div>
             <h1 class="display-xl">
                 Behind every<br>
                 strong product is a<br>
                 <em style="font-weight: 300; font-style: italic;">focused</em> team.
             </h1>
-            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">
-                A small studio of mobile engineers, designers, and operators. We combine technical execution, product thinking, and production experience to ship real apps for real users.
-            </p>
+            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">{{ site_settings.team_intro }}</p>
         </div>
     </section>
 
@@ -81,52 +79,30 @@
     {% endif %}
 
     {# ========================== VALUES (ink) ========================== #}
+    {% with values=site_settings.team_values_resolved %}
+    {% if values %}
     <section class="surface-ink section">
         <div class="container">
             <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
-                    <span class="eyebrow">Operating principles</span>
-                    <h2 class="display-md serif">How we<br>think.</h2>
+                    <span class="eyebrow">{{ site_settings.team_values_eyebrow }}</span>
+                    <h2 class="display-md serif">{{ site_settings.team_values_title|linebreaksbr|safe }}</h2>
                 </div>
-                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">
-                    Six values, four years together. These aren't slogans on a wall — they're the trade-offs we keep landing on.
-                </p>
+                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">{{ site_settings.team_values_intro }}</p>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-3-mobile-1">
-                {% for v in values %}{% endfor %}
-                <div class="reveal" style="padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12); border-bottom: 1px solid rgba(243,239,230,0.12);">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">01</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Clean code</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Code that the next engineer can read without a meeting.</p>
+                {% for v in values %}
+                <div class="reveal" style="transition-delay: {{ forloop.counter0 }}50ms; padding: 40px 32px 40px 0; {% if not forloop.counter|divisibleby:3 %}border-right: 1px solid rgba(243,239,230,0.12);{% endif %} {% if forloop.counter <= values|length|add:'-3' %}border-bottom: 1px solid rgba(243,239,230,0.12);{% endif %}">
+                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>{{ v.title }}</em></h4>
+                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">{{ v.description }}</p>
                 </div>
-                <div class="reveal" style="transition-delay: 0.06s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12); border-bottom: 1px solid rgba(243,239,230,0.12);">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">02</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Scalable architecture</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Built for v3 — not just v1.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.12s; padding: 40px 32px 40px 0; border-bottom: 1px solid rgba(243,239,230,0.12);">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">03</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Product thinking</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">We ask "why" before "how".</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.18s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">04</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Fast delivery</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Two-week sprints, Friday demos, no surprises.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.24s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">05</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Long-term support</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">We don't hand off and disappear.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.30s; padding: 40px 32px 40px 0;">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">06</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>Production-first</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">Real users, real reviews, real revenue.</p>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </section>
+    {% endif %}
+    {% endwith %}
 
     {# ========================== CTA ========================== #}
     <section class="section">

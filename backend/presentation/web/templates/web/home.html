@@ -10,18 +10,18 @@
         <div class="container hud-only" style="padding-top: 24px; padding-bottom: 24px;">
             <div class="between" style="flex-wrap: wrap; gap: 16px;">
                 <div class="row gap-3" style="flex-wrap: wrap;">
-                    <span class="tag">Vol. 03 · Issue 01</span>
-                    <span class="tag">Tashkent · 41.2995° N</span>
+                    <span class="tag">{{ site_settings.hero_volume_label }}</span>
+                    <span class="tag">{{ site_settings.hero_location }}</span>
                     <span class="tag mono" id="hero-clock">— UTC+5</span>
                 </div>
                 <div class="row gap-3">
-                    <span class="tag"><span class="dot-live"></span> {{ site_settings.hero_availability_badge|default:"Now booking · Q2 2026" }}</span>
+                    <span class="tag"><span class="dot-live"></span> {{ site_settings.availability_badge|default:site_settings.hero_availability_badge }}</span>
                 </div>
             </div>
         </div>
 
         <div class="container flex-1" style="display: flex; flex-direction: column; justify-content: center; padding-top: 60px; padding-bottom: 80px;">
-            <div class="eyebrow fade-up" style="margin-bottom: 32px; animation-delay: 0.1s;">Personal · Build Studio · Mobile Engineering</div>
+            <div class="eyebrow fade-up" style="margin-bottom: 32px; animation-delay: 0.1s;">{{ site_settings.hero_eyebrow }}</div>
             <h1 class="display-xl fade-up" style="animation-delay: 0.2s; max-width: 95%;">
                 {% if site_settings.hero_title %}{{ site_settings.hero_title|safe }}{% else %}Mobile experiences,<br>engineered with<br><span style="font-style: italic; font-weight: 300; position: relative; display: inline-block;">intent.<svg style="position: absolute; left: -8%; bottom: -8%; width: 116%; height: 60%; pointer-events: none;" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M2,18 Q 30,2 60,16 T 98,12" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-linecap="round" pathLength="1" style="stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.6s var(--ease-out) 0.8s forwards;"/></svg></span>{% endif %}
             </h1>
@@ -52,78 +52,66 @@
 
         <div class="container hud-only" style="padding-bottom: 40px;">
             <div class="between" style="padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">Scroll · Begin transmission</span>
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">01 / 07</span>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.hero_scroll_label }}</span>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.hero_section_count }}</span>
             </div>
         </div>
     </section>
 
     {# ========================== TICKER ========================== #}
+    {% with ticker=site_settings.ticker_items_resolved %}
+    {% if ticker %}
     <div class="ticker hud-only" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1); padding: 14px 0; background: var(--bg-0);">
         <div class="ticker-track mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3);">
             {% for _ in "12" %}
-                <span style="display: inline-flex; align-items: center; gap: 60px;">Flutter mobile engineering<span style="color: var(--accent);">✦</span></span>
-                <span style="display: inline-flex; align-items: center; gap: 60px;">Production apps<span style="color: var(--accent);">✦</span></span>
-                <span style="display: inline-flex; align-items: center; gap: 60px;">Fintech · Logistics · Consumer<span style="color: var(--accent);">✦</span></span>
-                <span style="display: inline-flex; align-items: center; gap: 60px;">Tashkent — worldwide remote<span style="color: var(--accent);">✦</span></span>
-                <span style="display: inline-flex; align-items: center; gap: 60px;">Built for scale, not for demos<span style="color: var(--accent);">✦</span></span>
+                {% for item in ticker %}
+                <span style="display: inline-flex; align-items: center; gap: 60px;">{{ item }}<span style="color: var(--accent);">✦</span></span>
+                {% endfor %}
             {% endfor %}
         </div>
     </div>
+    {% endif %}
+    {% endwith %}
 
     {# ========================== MANIFESTO ========================== #}
+    {% with principles=site_settings.manifesto_principles_resolved %}
+    {% if principles %}
     <section class="section" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
         <div class="container">
             <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 80px;" class="grid-2-mobile-1">
                 <div class="col gap-4 reveal">
-                    <span class="eyebrow">02 — Philosophy</span>
-                    <h2 class="display-md serif">Manifesto.</h2>
-                    <p class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-4); text-transform: uppercase; margin-top: 16px;">03 PRINCIPLES · ON BUILDING</p>
+                    <span class="eyebrow">{{ site_settings.manifesto_eyebrow }}</span>
+                    <h2 class="display-md serif">{{ site_settings.manifesto_title }}</h2>
+                    <p class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-4); text-transform: uppercase; margin-top: 16px;">{{ site_settings.manifesto_label }}</p>
                 </div>
                 <div class="col gap-10">
-                    <div class="reveal" style="padding-bottom: 40px; border-bottom: 1px solid var(--line-1);">
+                    {% for p in principles %}
+                    <div class="reveal" style="{% if not forloop.last %}padding-bottom: 40px; border-bottom: 1px solid var(--line-1);{% endif %} transition-delay: {{ forloop.counter0 }}00ms;">
                         <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
-                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">01</span>
+                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">{{ p.n }}</span>
                             <div class="col gap-3 flex-1">
-                                <h3 class="display-sm serif"><em style="font-weight: 300;">Code is a side effect of thinking clearly.</em></h3>
-                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">A clean codebase is the residue of a clear understanding of the problem. I don't ship spaghetti and call it pragmatic.</p>
+                                <h3 class="display-sm serif"><em style="font-weight: 300;">{{ p.title }}</em></h3>
+                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">{{ p.description }}</p>
                             </div>
                         </div>
                     </div>
-                    <div class="reveal" style="padding-bottom: 40px; border-bottom: 1px solid var(--line-1); transition-delay: 0.08s;">
-                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
-                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">02</span>
-                            <div class="col gap-3 flex-1">
-                                <h3 class="display-sm serif"><em style="font-weight: 300;">Production is the only opinion that matters.</em></h3>
-                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">Demos are theatre. I measure my work by App Store reviews, crash-free sessions, and revenue clients can count.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="reveal" style="transition-delay: 0.16s;">
-                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
-                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">03</span>
-                            <div class="col gap-3 flex-1">
-                                <h3 class="display-sm serif"><em style="font-weight: 300;">Boring infrastructure is high craft.</em></h3>
-                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">CI that never fails. Migrations that never lose data. Observability you actually use. The unglamorous parts are where senior engineers earn their fee.</p>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </section>
+    {% endif %}
+    {% endwith %}
 
     {# ========================== METRICS (ink) ========================== #}
     <section class="surface-ink section">
         <div class="container">
             <div class="between reveal" style="margin-bottom: 80px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
-                    <span class="eyebrow">03 — By the numbers</span>
-                    <h2 class="display-md serif">A track record,<br><em style="font-weight: 300;">measured.</em></h2>
+                    <span class="eyebrow">{{ site_settings.metrics_eyebrow }}</span>
+                    <h2 class="display-md serif">{{ site_settings.metrics_title|linebreaksbr|safe }}</h2>
                 </div>
-                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">
-                    Numbers from live production apps over the last four years. Pulled from dashboards, not pitch decks.
-                </p>
+                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">{{ site_settings.metrics_description }}</p>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-4-mobile-2">
                 {% if site_settings.stat_1_count %}
@@ -306,41 +294,27 @@
     {% endif %}
 
     {# ========================== PROCESS ========================== #}
+    {% with steps=site_settings.process_steps_resolved %}
+    {% if steps %}
     <section class="section" style="border-bottom: 1px solid var(--line-1);">
         <div class="container">
             <div class="reveal" style="margin-bottom: 80px; max-width: 720px;">
-                <span class="eyebrow" style="margin-bottom: 24px;">05 — How I work</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">Five steps,<br><em style="font-weight: 300;">no surprises.</em></h2>
+                <span class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.process_eyebrow }}</span>
+                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.process_title|linebreaksbr|safe }}</h2>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;" class="grid-3-mobile-1">
-                <div class="reveal" style="padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">01</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Diagnose</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">A 60-minute call. We map the actual problem behind the brief — not the symptom.</p>
+            <div style="display: grid; grid-template-columns: repeat({{ steps|length }}, 1fr); gap: 0;" class="grid-3-mobile-1">
+                {% for s in steps %}
+                <div class="reveal" style="transition-delay: {{ forloop.counter0 }}00ms; padding: 24px; border-left: 1px solid var(--line-1); {% if forloop.last %}border-right: 1px solid var(--line-1);{% endif %} position: relative; min-height: 280px;">
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">{{ s.n }}</span>
+                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>{{ s.title }}</em></h4>
+                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">{{ s.description }}</p>
                 </div>
-                <div class="reveal" style="transition-delay: 0.08s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">02</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Architect</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">A 1-week sprint to lay out the data model, state shape, integration surfaces. No code yet.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.16s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">03</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Build in slices</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">End-to-end working features each week. You can run it on your phone from day 7.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.24s; padding: 24px; border-left: 1px solid var(--line-1); position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">04</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Harden + ship</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">Beta with real users, telemetry wired, rollout plan agreed. Then App Store + Play Store on the same day.</p>
-                </div>
-                <div class="reveal" style="transition-delay: 0.32s; padding: 24px; border-left: 1px solid var(--line-1); border-right: 1px solid var(--line-1); position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">05</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>Operate</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">Optional retainer. Crash triage, telemetry reviews — the boring middle that keeps things alive.</p>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </section>
+    {% endif %}
+    {% endwith %}
 
     {# ========================== JOURNAL TEASER ========================== #}
     {% if latest_posts %}
@@ -382,21 +356,19 @@
         <div class="container">
             <div class="reveal" style="display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;" class="grid-2-mobile-1">
                 <div class="col gap-6">
-                    <span class="eyebrow">07 — Open channel</span>
+                    <span class="eyebrow">{{ site_settings.cta_eyebrow }}</span>
                     <h2 class="display-lg serif">
-                        Bring the<br>brief.<br>
-                        <em style="font-weight: 300; color: var(--accent);">I'll bring the team.</em>
+                        {{ site_settings.cta_title_pre|linebreaksbr|safe }}<br>
+                        <em style="font-weight: 300; color: var(--accent);">{{ site_settings.cta_title_em }}</em>
                     </h2>
-                    <p style="color: var(--fg-2); font-size: 18px; max-width: 540px; line-height: 1.5;">
-                        Two slots opening for Q2 2026. Best fit: ambitious mobile-first products with a 12+ week runway and a real user base in mind.
-                    </p>
+                    <p style="color: var(--fg-2); font-size: 18px; max-width: 540px; line-height: 1.5;">{{ site_settings.cta_description }}</p>
                 </div>
                 <div class="col gap-3" style="align-items: flex-end;">
                     <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 20px; --pad-x: 32px; font-size: 13px;">
-                        Start a conversation
+                        {{ site_settings.cta_button_text }}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
-                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">Avg. response · 4–6h</span>
+                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ site_settings.cta_response_label }}</span>
                 </div>
             </div>
         </div>
