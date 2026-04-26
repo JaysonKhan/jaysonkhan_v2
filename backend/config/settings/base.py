@@ -159,6 +159,8 @@ _original_get_language_info = _translation.get_language_info
 
 
 def _patched_get_language_info(lang_code):
+    import sys as __sys
+    __sys.stderr.write(f"[patched] get_language_info called with {lang_code!r}\n")
     if lang_code == 'xo':
         info = dict(_XO_LANG_INFO)
         info['name_translated'] = info['name']
@@ -168,7 +170,7 @@ def _patched_get_language_info(lang_code):
 
 _translation.get_language_info = _patched_get_language_info
 import sys as _sys  # noqa: E402
-_sys.stderr.write(f"[base.py] Monkey-patched get_language_info: {_translation.get_language_info.__name__}\n")
+_sys.stderr.write(f"[base.py] Monkey-patched get_language_info: id={id(_translation.get_language_info)} name={_translation.get_language_info.__name__}\n")
 LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
