@@ -389,6 +389,12 @@ UNFOLD = {
                         "permission": lambda r: r.user.has_perm("portfolio.view_project"),
                     },
                     {
+                        "title": "Team members",
+                        "icon": "groups",
+                        "link": f"{_A}portfolio/teammember/",
+                        "permission": lambda r: r.user.has_perm("portfolio.view_teammember"),
+                    },
+                    {
                         "title": "Skills",
                         "icon": "star",
                         "link": f"{_A}portfolio/skill/",
