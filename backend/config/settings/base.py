@@ -139,6 +139,19 @@ LANGUAGES = [
     ('ru', "Русский"),         # Russian
     ('en', "English"),         # English
 ]
+# 'xo' is not in Django's built-in LANG_INFO; without this patch, any call to
+# django.utils.translation.get_language_info('xo') raises KeyError, which the
+# Unfold admin's language widget hits on every admin page render.
+import django.conf.locale  # noqa: E402
+django.conf.locale.LANG_INFO = {
+    **django.conf.locale.LANG_INFO,
+    'xo': {
+        'bidi': False,
+        'code': 'xo',
+        'name': 'Khorezm Uzbek',
+        'name_local': 'Xorazmcha',
+    },
+}
 LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True

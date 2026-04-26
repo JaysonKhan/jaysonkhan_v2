@@ -1,0 +1,546 @@
+/**
+ * OSINT Profile — branch tree, drawer, renderers
+ * Requires: osint-core.js (escapeHtml, formatDate, formatKey)
+ *           osint-photos.js (initLazyPhotos)
+ * Config globals: BRANCH_URLS, PROFILE_URL_TPL, PHOTO_URL_TPL, ENTITY_URL_TPL
+ */
+
+/* ── Branch tree toggle / load ───────────────────────────────────── */
+
+function toggleBranch(header) {
+    var node = header.closest('.rb-tree-node');
+    if (node.classList.contains('open')) {
+        node.classList.remove('open');
+        node.setAttribute('aria-expanded', 'false');
+        return;
+    }
+    node.classList.add('open');
+    node.setAttribute('aria-expanded', 'true');
+    var body = node.querySelector('.rb-tree-body');
+    if (body.dataset.loaded === '1') return;
+    loadBranch(node, false);
+}
+
+function loadBranch(node, refresh, confirmed) {
+    var branch = node.dataset.branch;
+    var body = node.querySelector('.rb-tree-body');
+    body.innerHTML = '<div class="loading"><span class="material-symbols-outlined spin" style="font-size:24px;">autorenew</span><p>Yuklanmoqda...</p></div>';
+
+    var url = BRANCH_URLS[branch];
+    if (!url) { body.innerHTML = buildErrorCard('URL topilmadi'); return; }
+    var params = [];
+    if (refresh) params.push('refresh=1');
+    if (confirmed) params.push('confirmed=1');
+    if (params.length) url += '?' + params.join('&');
+
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            // Balance confirmation dialog
+            if (d.requires_confirmation) {
+                body.innerHTML = '<div class="rb-muted" style="padding:1rem; text-align:center; font-size:0.875rem;">Tasdiqlash kutilmoqda...</div>';
+                ConfirmDialog.show({
+                    title: 'Balans past',
+                    message: 'Bu operatsiya kredit sarflaydi. Davom etasizmi?',
+                    balance: d.balance,
+                    confirmText: 'Davom etish',
+                    cancelText: 'Bekor qilish'
+                }).then(function(ok) {
+                    if (ok) {
+                        loadBranch(node, refresh, true);
+                    } else {
+                        node.classList.remove('open');
+                        body.innerHTML = '';
+                    }
+                });
+                return;
+            }
+
+            if (d.error) {
+                var retryFn = "refreshBranch('" + branch + "')";
+                body.innerHTML = buildErrorCard(d.error, retryFn);
+                return;
+            }
+            body.dataset.loaded = '1';
+            body.innerHTML = renderBranchData(branch, d);
+            // Rasmlarni ketma-ket yuklash (serverga ortiqcha yuk tushmaslik uchun)
+            initLazyPhotos(body);
+            // Update balance display
+            if (d.tech && d.tech.current_ballance != null) {
+                var bal = document.getElementById('balance-amount');
+                if (bal) bal.textContent = parseFloat(d.tech.current_ballance).toFixed(2);
+            }
+        })
+        .catch(function() {
+            var retryFn = "refreshBranch('" + branch + "')";
+            body.innerHTML = buildErrorCard('Ulanish xatosi (0)', retryFn);
+        });
+}
+
+function refreshBranch(branch) {
+    var node = document.querySelector('.rb-tree-node[data-branch="' + branch + '"]');
+    if (!node) return;
+    node.querySelector('.rb-tree-body').dataset.loaded = '';
+    node.classList.add('open');
+    loadBranch(node, true);
+}
+
+/* ── Branch data renderer ────────────────────────────────────────── */
+
+function renderBranchData(branch, response) {
+    var data = response.data;
+    var tech = response.tech || {};
+    var html = '';
+
+    // Cache info bar
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">';
+    html += '<span class="rb-cache-badge ' + (response.cached ? 'fresh' : 'stale') + '">' +
+        '<span class="material-symbols-outlined" style="font-size:12px;">' + (response.cached ? 'cached' : 'sync') + '</span> ' +
+        (response.cached ? 'Keshdan' : 'API dan yangi') + '</span>';
+    html += '<div style="display:flex; gap:0.5rem; align-items:center;">';
+    if (tech.request_cost !== undefined && !response.cached) {
+        html += '<span class="rb-muted" style="font-size:0.6875rem;">Narxi: ' + tech.request_cost + '</span>';
+    }
+    if (response.cached_at) {
+        html += '<span class="rb-muted" style="font-size:0.6875rem;">' + response.cached_at.substring(0, 19).replace('T', ' ') + '</span>';
+    }
+    html += '<button class="rb-btn rb-btn-ghost rb-btn-sm" onclick="refreshBranch(\'' + branch + '\')">' +
+        '<span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Yangilash</button>';
+    html += '</div></div>';
+
+    // Empty check
+    if (!data || (Array.isArray(data) && data.length === 0) ||
+        (typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0)) {
+        html += '<div class="rb-muted" style="padding:0.5rem;">Ma\'lumot topilmadi</div>';
+        return html;
+    }
+
+    // Object → key-value table
+    if (typeof data === 'object' && !Array.isArray(data)) {
+        html += renderKeyValueTable(data);
+    }
+
+    // Array → specialized renders for groups, common_groups_stat, messages
+    if (Array.isArray(data) && data.length > 0) {
+        if (branch === 'groups' && data[0] && data[0].chat) {
+            html += renderGroupsList(data);
+        } else if (branch === 'common_groups_stat') {
+            html += renderCommonGroupsStat(data);
+        } else if (branch === 'messages') {
+            html += renderUserMessages(data);
+        } else {
+            html += renderArrayTable(data, branch);
+        }
+    }
+
+    return html;
+}
+
+/* ── Smart cell renderer ─────────────────────────────────────────── */
+
+function renderCellValue(val, key) {
+    if (val === null || val === undefined) return '<span class="rb-muted">\u2014</span>';
+    if (typeof val === 'boolean') {
+        return val ? '<span class="rb-badge rb-badge-open">Ha</span>' : '<span class="rb-badge rb-badge-closed">Yo\'q</span>';
+    }
+    // Nested object with title (group/chat) → show as Telegram link + mini photo
+    if (typeof val === 'object' && !Array.isArray(val)) {
+        if (val.title) {
+            var link = val.username ? 'https://t.me/' + val.username : null;
+            var name = escapeHtml(val.title);
+            // Mini profile photo (lazy)
+            var photoHtml = '';
+            if (val.id) {
+                var photoUrl = PHOTO_URL_TPL.replace('__EID__', val.id);
+                photoHtml = '<img data-lazy-src="' + photoUrl + '" ' +
+                    'style="display:none;width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);">';
+            }
+            if (link) {
+                return photoHtml + '<a href="' + link + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">' +
+                    name + '</a>';
+            }
+            return photoHtml + name;
+        }
+        // Array like media_usage → comma join
+        if (Array.isArray(val)) return val.join(', ');
+        // Generic object → compact pre
+        return '<pre style="margin:0;font-size:0.7rem;white-space:pre-wrap;max-width:300px;overflow-x:auto;">' +
+            JSON.stringify(val, null, 1) + '</pre>';
+    }
+    if (Array.isArray(val)) return val.join(', ');
+    var s = String(val);
+    // Date-like strings → nice format
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return formatDate(s);
+    // Username fields → Telegram link
+    var kl = key ? key.toLowerCase() : '';
+    if ((kl.indexOf('username') !== -1 || kl === 'mainusername' || kl === 'main_username') && s && s !== 'null') {
+        return '<a href="https://t.me/' + escapeHtml(s) + '" target="_blank" style="color:var(--rb-primary);text-decoration:none;">@' + escapeHtml(s) + '</a>';
+    }
+    // User ID fields → OSINT profile link + mini photo (lazy)
+    if ((kl === 'user_id' || kl === 'from_user_id' || kl === 'to_user_id' || kl === 'id') && /^\d+$/.test(s) && s.length > 5) {
+        var userPhotoUrl = PHOTO_URL_TPL.replace('__EID__', s);
+        var userPhoto = '<img data-lazy-src="' + userPhotoUrl + '" ' +
+            'style="display:none;width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;border:1px solid var(--rb-border);background:var(--rb-bg-muted);">';
+        return userPhoto + '<a href="' + PROFILE_URL_TPL.replace('99999', s) + '" style="color:var(--rb-primary);text-decoration:none;">' + s + '</a>';
+    }
+    return escapeHtml(s);
+}
+
+/* ── Key-value table ─────────────────────────────────────────────── */
+
+function renderKeyValueTable(data) {
+    var html = '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        html += '<tr><td class="rb-muted" style="width:220px;font-weight:600;">' + formatKey(key) + '</td>' +
+            '<td>' + renderCellValue(data[key], key) + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    return html;
+}
+
+/* ── Array table ─────────────────────────────────────────────────── */
+
+function renderArrayTable(data, branch) {
+    // Flatten nested objects: if a column has object values with known keys, expand them
+    var hasNestedObj = false;
+    // Detect nested object columns
+    var nestedCols = {};
+    var firstItem = data[0];
+    var origCols = Object.keys(firstItem);
+    for (var ci = 0; ci < origCols.length; ci++) {
+        var cv = firstItem[origCols[ci]];
+        if (cv && typeof cv === 'object' && !Array.isArray(cv) && cv.title) {
+            nestedCols[origCols[ci]] = true;
+            hasNestedObj = true;
+        }
+    }
+
+    // Build flat column list
+    var cols = [];
+    for (var ci2 = 0; ci2 < origCols.length; ci2++) {
+        if (nestedCols[origCols[ci2]]) {
+            // Replace e.g. "chat" with "chat.title", "chat.username"
+            var prefix = origCols[ci2];
+            var nestedKeys = Object.keys(firstItem[prefix]);
+            // Pick important keys: title, username, isPrivate
+            var pick = ['title', 'username', 'isPrivate'];
+            for (var nk = 0; nk < pick.length; nk++) {
+                if (nestedKeys.indexOf(pick[nk]) !== -1) {
+                    cols.push({key: prefix + '.' + pick[nk], nested: prefix, sub: pick[nk]});
+                }
+            }
+        } else {
+            cols.push({key: origCols[ci2], nested: null, sub: null});
+        }
+    }
+
+    var html = '<div class="rb-table-wrap"><table class="rb-table"><thead><tr>';
+    for (var c = 0; c < cols.length; c++) {
+        html += '<th>' + formatKey(cols[c].sub || cols[c].key) + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+    var limit = Math.min(data.length, 100);
+    for (var r = 0; r < limit; r++) {
+        html += '<tr>';
+        for (var c2 = 0; c2 < cols.length; c2++) {
+            var col = cols[c2];
+            var v;
+            if (col.nested) {
+                var parent = data[r][col.nested];
+                v = parent ? parent[col.sub] : null;
+                // For title column, render as Telegram link using parent object
+                if (col.sub === 'title' && parent) {
+                    var cell = renderCellValue(parent, col.nested);
+                    html += '<td style="max-width:300px;word-break:break-word;">' + cell + '</td>';
+                    continue;
+                }
+            } else {
+                v = data[r][col.key];
+            }
+            html += '<td style="max-width:250px; overflow:hidden; text-overflow:ellipsis;">' +
+                renderCellValue(v, col.sub || col.key) + '</td>';
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+    if (data.length > 100) {
+        html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
+    }
+    return html;
+}
+
+/* ── Groups card list + drawer ───────────────────────────────────── */
+
+var _groupsData = [];
+
+function renderGroupsList(data) {
+    _groupsData = data;
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+        var g = data[i];
+        var chat = g.chat || {};
+        var title = escapeHtml(chat.title || 'Nomsiz');
+        var initial = (chat.title || '?').charAt(0).toUpperCase();
+        var photoUrl = chat.id ? PHOTO_URL_TPL.replace('__EID__', chat.id) : '';
+
+        // Photo or fallback (data-lazy-src → ketma-ket yuklanadi)
+        var avatarHtml = photoUrl
+            ? '<img class="grp-avatar" data-lazy-src="' + photoUrl + '" alt="">' +
+              '<div class="grp-avatar-fallback" style="display:none">' + initial + '</div>'
+            : '<div class="grp-avatar-fallback">' + initial + '</div>';
+
+        // Badges
+        var badges = '';
+        if (g.isAdmin) badges += '<span class="rb-badge rb-badge-open" style="font-size:0.5625rem;">Admin</span>';
+        if (g.isLeft) badges += '<span class="rb-badge rb-badge-closed" style="font-size:0.5625rem;">Chiqib ketgan</span>';
+        if (chat.isPrivate) badges += '<span class="rb-badge rb-badge-info" style="font-size:0.5625rem;">Yopiq</span>';
+
+        // Sub-info
+        var subInfo = '';
+        if (chat.username) subInfo += '@' + escapeHtml(chat.username);
+        if (g.messagesCount) subInfo += (subInfo ? ' \u00b7 ' : '') + g.messagesCount + ' xabar';
+
+        html += '<div class="grp-card" onclick="openGroupDrawer(' + i + ')">' +
+            avatarHtml +
+            '<div class="grp-info">' +
+                '<div class="grp-name">' + title + '</div>' +
+                (subInfo ? '<div class="grp-username">' + subInfo + '</div>' : '') +
+            '</div>' +
+            '<div class="grp-badges">' + badges + '</div>' +
+            '<span class="material-symbols-outlined" style="font-size:18px;color:var(--rb-fg-muted);flex-shrink:0;">chevron_right</span>' +
+        '</div>';
+    }
+    return html;
+}
+
+function openGroupDrawer(idx) {
+    var g = _groupsData[idx];
+    if (!g) return;
+    var chat = g.chat || {};
+    var title = escapeHtml(chat.title || 'Nomsiz');
+    var initial = (chat.title || '?').charAt(0).toUpperCase();
+    var photoUrl = chat.id ? PHOTO_URL_TPL.replace('__EID__', chat.id) : '';
+
+    document.getElementById('drawer-title').textContent = chat.title || 'Guruh';
+
+    var html = '<div class="drawer-profile">';
+    if (photoUrl) {
+        html += '<img class="drawer-avatar" src="' + photoUrl + '" alt="" ' +
+            'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
+        html += '<div class="drawer-avatar-fallback" style="display:none">' + initial + '</div>';
+    } else {
+        html += '<div class="drawer-avatar-fallback">' + initial + '</div>';
+    }
+    html += '<h2 style="margin:0.75rem 0 0.25rem; font-size:1.125rem; font-weight:700;">' + title + '</h2>';
+    if (chat.username) {
+        html += '<a href="https://t.me/' + escapeHtml(chat.username) + '" target="_blank" ' +
+            'style="color:var(--rb-primary); text-decoration:none; font-size:0.8125rem;">@' +
+            escapeHtml(chat.username) + '</a>';
+    }
+    if (chat.id) {
+        html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.25rem;">ID: <span class="rb-code">' + chat.id + '</span></div>';
+    }
+    html += '</div>';
+
+    // Stats grid
+    html += '<div class="drawer-stats">';
+    html += '<div class="drawer-stat"><div class="val">' + (g.messagesCount || 0) + '</div><div class="lbl">Xabarlar</div></div>';
+    html += '<div class="drawer-stat"><div class="val">' + (g.isAdmin ? '<span style="color:#22c55e;">Ha</span>' : 'Yo\'q') + '</div><div class="lbl">Admin</div></div>';
+    html += '<div class="drawer-stat"><div class="val">' + (chat.isPrivate ? 'Yopiq' : 'Ochiq') + '</div><div class="lbl">Turi</div></div>';
+    html += '<div class="drawer-stat"><div class="val">' + (g.isLeft ? '<span style="color:#ef4444;">Ha</span>' : 'Yo\'q') + '</div><div class="lbl">Chiqib ketgan</div></div>';
+    html += '</div>';
+
+    // Extra data
+    var detailHtml = '<div class="rb-table-wrap"><table class="rb-table"><tbody>';
+    if (g.firstMessage) detailHtml += '<tr><td class="rb-muted" style="width:140px;font-weight:600;">Birinchi xabar</td><td>' + formatDate(g.firstMessage) + '</td></tr>';
+    if (g.lastMessage) detailHtml += '<tr><td class="rb-muted" style="width:140px;font-weight:600;">Oxirgi xabar</td><td>' + formatDate(g.lastMessage) + '</td></tr>';
+    if (g.lastMessageId) detailHtml += '<tr><td class="rb-muted" style="width:140px;font-weight:600;">Oxirgi xabar ID</td><td>' + g.lastMessageId + '</td></tr>';
+    detailHtml += '</tbody></table></div>';
+    html += detailHtml;
+
+    // Action buttons
+    html += '<div style="margin-top:1.25rem; display:flex; flex-direction:column; gap:0.5rem;">';
+    if (chat.id) {
+        html += '<a href="' + ENTITY_URL_TPL.replace('77777', chat.id) + '" class="rb-btn rb-btn-primary" style="text-align:center; text-decoration:none;">' +
+            '<span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">groups</span> ' +
+            'Entity profili</a>';
+    }
+    if (chat.username) {
+        html += '<a href="https://t.me/' + escapeHtml(chat.username) + '" target="_blank" ' +
+            'class="rb-btn rb-btn-outline" style="text-align:center; text-decoration:none;">' +
+            '<span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">open_in_new</span> ' +
+            'Telegram da ochish</a>';
+    }
+    // Oxirgi xabarga o'tish (deep link)
+    if (g.lastMessageId && chat.username) {
+        html += '<a href="https://t.me/' + escapeHtml(chat.username) + '/' + g.lastMessageId + '" target="_blank" ' +
+            'class="rb-btn rb-btn-outline" style="text-align:center; text-decoration:none;">' +
+            '<span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle;">forum</span> ' +
+            'Oxirgi xabarga o\'tish (#' + g.lastMessageId + ')</a>';
+    }
+    html += '</div>';
+
+    document.getElementById('drawer-body').innerHTML = html;
+    var drawer = document.getElementById('group-drawer');
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    // Focus trap: focus the close button
+    var closeBtn = drawer.querySelector('.osint-drawer-header button');
+    if (closeBtn) closeBtn.focus();
+}
+
+function closeDrawer() {
+    var drawer = document.getElementById('group-drawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+// ESC key closes drawer
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDrawer();
+});
+
+/* ── Common Groups Stat — card list ──────────────────────────────── */
+
+function renderCommonGroupsStat(data) {
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+        var u = data[i];
+        var uid = u.user_id || u.id || '';
+        var firstName = escapeHtml(u.first_name || '');
+        var lastName = escapeHtml(u.last_name || '');
+        var name = (firstName + ' ' + lastName).trim() || 'ID: ' + uid;
+        var initial = (firstName || String(uid)).charAt(0).toUpperCase();
+        var username = u.username || u.mainUsername || '';
+        var commonCount = u.common_groups || u.commonGroups || 0;
+        var isActive = u.is_user_active;
+        var photoUrl = uid ? PHOTO_URL_TPL.replace('__EID__', uid) : '';
+        if (photoUrl && username) photoUrl += '?u=' + encodeURIComponent(username);
+        var profileUrl = uid ? PROFILE_URL_TPL.replace('99999', uid) : '#';
+
+        var avatarHtml = photoUrl
+            ? '<img class="cgs-avatar" data-lazy-src="' + photoUrl + '" alt="">' +
+              '<div class="cgs-avatar-fallback" style="display:none">' + initial + '</div>'
+            : '<div class="cgs-avatar-fallback">' + initial + '</div>';
+
+        var subParts = [];
+        if (username) subParts.push('@' + escapeHtml(username));
+        subParts.push('ID: ' + uid);
+
+        var activeBadge = '';
+        if (isActive === true) activeBadge = '<span class="rb-badge rb-badge-open" style="font-size:0.5625rem;">Faol</span>';
+        else if (isActive === false) activeBadge = '<span class="rb-badge rb-badge-closed" style="font-size:0.5625rem;">Nofaol</span>';
+
+        html += '<a class="cgs-card" href="' + profileUrl + '">' +
+            avatarHtml +
+            '<div class="cgs-info">' +
+                '<div class="cgs-name">' + name + ' ' + activeBadge + '</div>' +
+                '<div class="cgs-sub">' + subParts.join(' \u00b7 ') + '</div>' +
+            '</div>' +
+            '<div class="cgs-count">' + commonCount + ' guruh</div>' +
+            '<span class="material-symbols-outlined" style="font-size:16px;color:var(--rb-fg-muted);flex-shrink:0;">chevron_right</span>' +
+        '</a>';
+    }
+    return html;
+}
+
+/* ── User Messages — clean card layout ───────────────────────────── */
+
+function renderUserMessages(data) {
+    var mediaIcons = {
+        'Image': 'image', 'Video': 'videocam', 'Sticker': 'emoji_emotions',
+        'Document': 'description', 'Voice': 'mic', 'Audio': 'music_note',
+        'Animation': 'gif', 'Contact': 'person', 'Location': 'location_on',
+        'Poll': 'poll', 'Dice': 'casino', 'Game': 'sports_esports'
+    };
+
+    var html = '';
+    var limit = Math.min(data.length, 100);
+    for (var i = 0; i < limit; i++) {
+        var m = data[i];
+        var groupTitle = escapeHtml(m.title || 'Noma\'lum guruh');
+        var groupUsername = m.username || '';
+        var msgId = m.messageId || m.messageid || m.message_id || '';
+        var isPrivate = m.isPrivate || m.isprivate || false;
+
+        // Date
+        var date = m.date || '';
+        if (date.indexOf('T') > -1) date = date.substring(0, 10) + ' ' + date.substring(11, 16);
+        else if (date.length > 16) date = date.substring(0, 16);
+
+        // Group name — link to Telegram if username available
+        var groupNameTag = '';
+        if (groupUsername) {
+            groupNameTag = '<a class="umsg-group-name" href="https://t.me/' + escapeHtml(groupUsername) +
+                '" target="_blank">' +
+                '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;opacity:0.6;">group</span> ' +
+                groupTitle + '</a>';
+        } else {
+            groupNameTag = '<span class="umsg-group-name">' +
+                '<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;opacity:0.6;">' +
+                (isPrivate ? 'lock' : 'group') + '</span> ' +
+                groupTitle + '</span>';
+        }
+
+        // Private badge
+        var privHtml = isPrivate ? '<span class="umsg-private">Yopiq</span>' : '';
+
+        // Text
+        var text = escapeHtml(m.text || '');
+        if (text.length > 300) text = text.substring(0, 300) + '...';
+
+        // Media badge
+        var mediaBadge = '';
+        var mediaName = m.mediaName || m.medianame || '';
+        if (mediaName) {
+            var icon = mediaIcons[mediaName] || 'attachment';
+            mediaBadge = '<span class="umsg-media-badge">' +
+                '<span class="material-symbols-outlined" style="font-size:12px;">' + icon + '</span> ' +
+                escapeHtml(mediaName) + '</span>';
+        }
+
+        // Deep link: t.me/username/msgId or t.me/c/channelId/msgId
+        var deepLinkHtml = '';
+        if (msgId) {
+            var tgUrl = '';
+            if (groupUsername) {
+                tgUrl = 'https://t.me/' + encodeURIComponent(groupUsername) + '/' + msgId;
+            }
+            if (tgUrl) {
+                deepLinkHtml = '<a href="' + tgUrl + '" target="_blank" class="umsg-deeplink">' +
+                    '<span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span> Xabarga o\'tish</a>';
+            }
+        }
+
+        // Card
+        html += '<div class="umsg-card">' +
+            '<div class="umsg-card-top">' +
+                groupNameTag + privHtml +
+                '<span class="umsg-date">' + date + '</span>' +
+            '</div>' +
+            (text ? '<div class="umsg-card-body"><div class="umsg-text">' + text + '</div></div>' : '') +
+            '<div class="umsg-card-footer">' +
+                mediaBadge +
+                (msgId ? '<span style="opacity:0.4;font-family:var(--rb-mono,monospace);font-size:0.5625rem;">#' + msgId + '</span>' : '') +
+                deepLinkHtml +
+            '</div>' +
+        '</div>';
+    }
+    if (data.length > 100) {
+        html += '<div class="rb-muted" style="font-size:0.75rem; margin-top:0.5rem;">Faqat birinchi 100 ta ko\'rsatilgan (' + data.length + ' ta jami)</div>';
+    }
+    return html;
+}
+
+/* ── Auto-load branches that have cache ──────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.rb-tree-node.open').forEach(function(node) {
+        loadBranch(node, false);
+    });
+});
