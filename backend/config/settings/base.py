@@ -437,15 +437,63 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Sozlamalar",
+                "title": "Sayt konfiguratsiyasi",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Sayt sozlamalari",
-                        "icon": "settings",
-                        "link": f"{_A}core/sitesettings/",
+                        "title": "Brending",
+                        "icon": "palette",
+                        "link": f"{_A}core/sitesettingsbranding/",
                         "permission": lambda r: r.user.is_superuser,
                     },
+                    {
+                        "title": "SEO & Analitika",
+                        "icon": "search",
+                        "link": f"{_A}core/sitesettingsseo/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Navigatsiya & Footer",
+                        "icon": "menu",
+                        "link": f"{_A}core/sitesettingsnavigation/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Bosh sahifa",
+                        "icon": "home",
+                        "link": f"{_A}core/sitesettingshomepage/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Aloqa & Ijtimoiy",
+                        "icon": "contact_page",
+                        "link": f"{_A}core/sitesettingscontact/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Telegram Bot",
+                        "icon": "smart_toy",
+                        "link": f"{_A}core/sitesettingstelegram/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Emoji sozlamalari",
+                        "icon": "emoji_emotions",
+                        "link": f"{_A}core/sitesettingsemoji/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Editorial v3",
+                        "icon": "article",
+                        "link": f"{_A}core/sitesettingseditorial/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                ],
+            },
+            {
+                "title": "Sozlamalar",
+                "separator": True,
+                "items": [
                     {
                         "title": "Skill",
                         "icon": "star",

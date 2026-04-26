@@ -1,26 +1,27 @@
 import logging
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.db import connection
 from django.db.models import Sum
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
-from django.urls import path, reverse
+from django.urls import path
 from django.utils.html import format_html
-from django.views.decorators.http import require_POST
 from unfold.admin import ModelAdmin
 from modeltranslation.admin import TranslationAdmin
 
-from .models import SiteSettings, PageView, Asset
+from .models import (
+    SiteSettings,
+    SiteSettingsBranding, SiteSettingsSEO, SiteSettingsNavigation,
+    SiteSettingsHomepage, SiteSettingsContact, SiteSettingsTelegram,
+    SiteSettingsEmoji, SiteSettingsEditorial,
+    PageView, Asset,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def _table_columns() -> set:
-    """
-    Return column names that exist in core_sitesettings.
-    Used to gracefully skip fields whose migration hasn't run yet.
-    Falls back to an empty set so the admin still loads without crashing.
-    """
+    """Return column names from core_sitesettings — graceful fallback."""
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM core_sitesettings LIMIT 0")
@@ -30,289 +31,9 @@ def _table_columns() -> set:
         return set()
 
 
-@admin.register(SiteSettings)
-class SiteSettingsAdmin(TranslationAdmin, ModelAdmin):
-    """
-    Singleton admin for SiteSettings — tab-based layout.
+# ── Shared image preview helpers ─────────────────────────────────────────────
 
-    Tabs:
-      1. Branding         — site identity, logo, favicon
-      2. SEO & Meta       — meta tags, OG image, Twitter card
-      3. Navigation       — header links and CTA button
-      4. Homepage         — hero, about, section headings, visibility
-      5. Pages            — per-page titles/subtitles
-      6. Contact & Socials — email, social URLs, CV/resume
-      7. Footer           — footer overrides
-      8. System           — timestamps (read-only)
-    """
-
-    # ── Permissions ────────────────────────────────────────────────────────────
-    def has_add_permission(self, request):
-        try:
-            return not SiteSettings.objects.exists()
-        except Exception:
-            return True
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def changelist_view(self, request, extra_context=None):
-        try:
-            obj = SiteSettings.objects.first()
-            if obj:
-                return redirect('admin:core_sitesettings_change', obj.pk)
-        except Exception:
-            pass
-        return super().changelist_view(request, extra_context)
-
-    # ── Read-only fields ───────────────────────────────────────────────────────
-    readonly_fields = (
-        'created_at',
-        'updated_at',
-        'favicon_preview',
-        'logo_preview',
-        'og_image_preview',
-        'hero_image_preview',
-        'about_image_preview',
-        'resume_preview',
-    )
-
-    # ── Tab fieldsets ──────────────────────────────────────────────────────────
-    def get_fieldsets(self, request, obj=None):
-        columns = _table_columns()
-
-        # Navigation tab: add optional columns if migration applied
-        nav_fields = ['nav_cta_text', 'nav_cta_url']
-        if 'logo_text' in columns:
-            nav_fields.insert(0, 'logo_text')
-        if 'nav_links_json' in columns:
-            nav_fields.append('nav_links_json')
-
-        # Footer tab: add optional columns if migration applied
-        footer_fields = []
-        for fname in (
-            'footer_description', 'footer_email',
-            'footer_social_github', 'footer_social_linkedin',
-            'footer_social_twitter', 'footer_social_telegram',
-        ):
-            if fname in columns:
-                footer_fields.append(fname)
-        footer_fields.append('footer_text')   # always exists
-
-        fieldsets = [
-
-            # ── Tab 1: Branding ────────────────────────────────────────────────
-            ('Branding', {
-                'classes': ('tab',),
-                'description': (
-                    'Core site identity — name, author, tagline, logo and favicon.'
-                ),
-                'fields': (
-                    'site_title',
-                    'site_author',
-                    'site_author_initials',
-                    'site_tagline',
-                    'favicon',
-                    'favicon_preview',
-                    'logo',
-                    'logo_preview',
-                ),
-            }),
-
-            # ── Tab 2: SEO & Meta ──────────────────────────────────────────────
-            ('SEO & Meta', {
-                'classes': ('tab',),
-                'description': (
-                    'Controls Google snippet, Open Graph preview and Twitter card.'
-                ),
-                'fields': (
-                    'meta_description',
-                    'meta_keywords',
-                    'og_url',
-                    'og_image',
-                    'og_image_preview',
-                    'twitter_handle',
-                ),
-            }),
-
-            # ── Tab 2b: Analytics ──────────────────────────────────────────────
-            ('Analytics', {
-                'classes': ('tab',),
-                'description': (
-                    'Tracking snippets — Google Analytics 4 and Yandex Metrica. '
-                    'Leave empty to disable the tracker.'
-                ),
-                'fields': (
-                    'google_analytics_id',
-                    'yandex_metrika_id',
-                ),
-            }),
-
-            # ── Tab 2c: Search Console Verification ────────────────────────────
-            ('Search Console verification', {
-                'classes': ('tab',),
-                'description': (
-                    'Verification tokens for Google Search Console, Yandex Webmaster '
-                    'and Bing Webmaster. Paste only the content= value of the meta tag.'
-                ),
-                'fields': (
-                    'google_site_verification',
-                    'yandex_verification',
-                    'bing_verification',
-                ),
-            }),
-
-            # ── Tab 3: Navigation ──────────────────────────────────────────────
-            ('Navigation', {
-                'classes': ('tab',),
-                'description': (
-                    'Header bar settings. '
-                    '"Logo text" overrides the author name in the navbar. '
-                    '"Extra nav links" accepts a JSON list, '
-                    'e.g. [{"label":"Resume","url":"/resume/"}].'
-                ),
-                'fields': tuple(nav_fields),
-            }),
-
-            # ── Tab 4: Homepage ────────────────────────────────────────────────
-            ('Homepage', {
-                'classes': ('tab',),
-                'description': (
-                    'Hero banner, About section, section headings, and '
-                    'visibility toggles for homepage blocks.'
-                ),
-                'fields': (
-                    # — Hero ——————————————————————————————————————————————————
-                    'hero_title',
-                    'hero_subtitle',
-                    'hero_image',
-                    'hero_image_preview',
-                    # — About ——————————————————————————————————————————————————
-                    'about_title',
-                    'about_description',
-                    'about_image',
-                    'about_image_preview',
-                    # — Stats Bar ——————————————————————————————————————————————
-                    'stat_1_count', 'stat_1_suffix', 'stat_1_label',
-                    'stat_2_count', 'stat_2_suffix', 'stat_2_label',
-                    'stat_3_count', 'stat_3_suffix', 'stat_3_label',
-                    'stat_4_count', 'stat_4_suffix', 'stat_4_label',
-                    # — Section headings ——————————————————————————————————————
-                    'featured_projects_title',
-                    # — Visibility ————————————————————————————————————————————
-                    'apps_section_visible',
-                ),
-            }),
-
-            # ── Tab 5: Pages ───────────────────────────────────────────────────
-            ('Pages', {
-                'classes': ('tab',),
-                'description': (
-                    'Per-page <h1> headings and sub-headings for Apps, Blog '
-                    'and Contact pages.'
-                ),
-                'fields': (
-                    # — Apps / Projects ———————————————————————————————————————
-                    'projects_page_title',
-                    'projects_page_subtitle',
-                    # — Blog ———————————————————————————————————————————————————
-                    'blog_page_title',
-                    'blog_page_subtitle',
-                    # — Contact ————————————————————————————————————————————————
-                    'contact_page_title',
-                    'contact_page_subtitle',
-                ),
-            }),
-
-            # ── Tab 6: Contact & Socials ────────────────────────────────────────
-            ('Contact & Socials', {
-                'classes': ('tab',),
-                'description': (
-                    'Primary email, phone, social profile URLs, and '
-                    'CV/resume file used across the whole site.'
-                ),
-                'fields': (
-                    'email',
-                    'phone',
-                    'github_url',
-                    'linkedin_url',
-                    'twitter_url',
-                    'telegram_url',
-                    'resume_file',
-                    'resume_preview',
-                    'resume_button_text',
-                ),
-            }),
-
-            # ── Tab 7: Footer ──────────────────────────────────────────────────
-            ('Footer', {
-                'classes': ('tab',),
-                'description': (
-                    'Footer-specific overrides. '
-                    'Leave any field blank to inherit from Contact & Socials.'
-                ),
-                'fields': tuple(footer_fields),
-            }),
-
-            # ── Tab v3: Editorial content ──────────────────────────────────────
-            ('v3 · Editorial', {
-                'classes': ('tab',),
-                'description': (
-                    'All v3 (cream+black editorial) site copy. JSON fields accept lists '
-                    'of {n, title, description} dicts (manifesto/process) or {title, description} '
-                    'dicts (team_values), or simple string lists (ticker_items). Leave a JSON '
-                    'field empty to use seed defaults.'
-                ),
-                'fields': tuple(self._editorial_fields(columns)),
-            }),
-
-            # ── Tab 8: System ──────────────────────────────────────────────────
-            # Telegram settings managed at /admin/telegram/settings/
-            ('System', {
-                'classes': ('tab',),
-                'fields': (
-                    'created_at',
-                    'updated_at',
-                ),
-            }),
-        ]
-        # TranslationAdmin.get_form() replaces base field names (e.g. 'site_title')
-        # with language variants ('site_title_xo', 'site_title_uz', ...) in the form.
-        # _patch_fieldsets() does the same for fieldsets so they stay in sync.
-        return self._patch_fieldsets(fieldsets)
-
-    @staticmethod
-    def _editorial_fields(columns):
-        """Return v3 editorial fields that exist in the DB schema (graceful migration)."""
-        candidates = [
-            'availability_badge',
-            'hero_eyebrow', 'hero_volume_label', 'hero_location',
-            'hero_scroll_label', 'hero_section_count',
-            'brand_tagline', 'footer_volume',
-            'ticker_items',
-            'about_section_eyebrow',
-            'manifesto_eyebrow', 'manifesto_title', 'manifesto_label', 'manifesto_principles',
-            'metrics_eyebrow', 'metrics_title', 'metrics_description',
-            'process_eyebrow', 'process_title', 'process_steps',
-            'cta_eyebrow', 'cta_title_pre', 'cta_title_em', 'cta_description',
-            'cta_button_text', 'cta_response_label',
-            'projects_section_label',
-            'blog_section_label', 'blog_section_status',
-            'contact_section_label', 'contact_section_channels',
-            'contact_form_label', 'contact_form_title',
-            'contact_availability_status', 'contact_availability_note',
-            'team_hero_eyebrow', 'team_hero_headline',
-            'team_section_label', 'team_studio_label', 'team_intro',
-            'team_values_eyebrow', 'team_values_title', 'team_values_intro', 'team_values',
-            'footer_cta_eyebrow', 'footer_cta_headline', 'footer_practice_items',
-            'error_404_headline', 'error_404_description',
-            'error_500_headline', 'error_500_description',
-            'error_unavailable_headline', 'error_unavailable_description',
-        ]
-        return [f for f in candidates if not columns or f in columns]
-
-    # ── Image / file preview helpers ───────────────────────────────────────────
-
+class _ImagePreviewMixin:
     def favicon_preview(self, obj):
         if obj.pk and obj.favicon:
             return format_html(
@@ -365,13 +86,410 @@ class SiteSettingsAdmin(TranslationAdmin, ModelAdmin):
     def resume_preview(self, obj):
         if obj.pk and obj.resume_file:
             return format_html(
-                '<a href="{}" target="_blank" rel="noopener" '
-                'class="button">Open CV</a>',
+                '<a href="{}" target="_blank" rel="noopener" class="button">Open CV</a>',
                 obj.resume_file.url,
             )
         return '—'
     resume_preview.short_description = 'File'
 
+
+# ── Common proxy admin mixin ─────────────────────────────────────────────────
+
+class _ProxySettingsMixin:
+    """Singleton redirect + no-add / no-delete for all SiteSettings proxy admins."""
+
+    def has_add_permission(self, request):
+        try:
+            return not SiteSettings.objects.exists()
+        except Exception:
+            return True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj = SiteSettings.objects.first()
+        if obj:
+            model_name = self.model._meta.model_name
+            return redirect(f'admin:core_{model_name}_change', obj.pk)
+        return super().changelist_view(request, extra_context)
+
+
+# ── 1. Brending ──────────────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsBranding)
+class SiteSettingsBrandingAdmin(
+    _ProxySettingsMixin, _ImagePreviewMixin, TranslationAdmin, ModelAdmin
+):
+    readonly_fields = ('favicon_preview', 'logo_preview')
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Brending — sayt identifikatsiyasi', {
+                'classes': ('tab',),
+                'description': 'Sayt nomi, muallif, taglayn, logo va favicon.',
+                'fields': (
+                    'site_title',
+                    'site_author',
+                    'site_author_initials',
+                    'site_tagline',
+                    'favicon', 'favicon_preview',
+                    'logo', 'logo_preview',
+                ),
+            }),
+        ]
+        return self._patch_fieldsets(fieldsets)
+
+
+# ── 2. SEO & Analitika ───────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsSEO)
+class SiteSettingsSEOAdmin(
+    _ProxySettingsMixin, _ImagePreviewMixin, TranslationAdmin, ModelAdmin
+):
+    readonly_fields = ('og_image_preview',)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('SEO & Meta teglari', {
+                'classes': ('tab',),
+                'description': 'Google snippet, Open Graph preview va Twitter card.',
+                'fields': (
+                    'meta_description',
+                    'meta_keywords',
+                    'og_url',
+                    'og_image', 'og_image_preview',
+                    'twitter_handle',
+                ),
+            }),
+            ('Analitika', {
+                'classes': ('tab',),
+                'description': "GA4 va Yandex Metrica. Bo'sh qoldirish — o'chirib qo'yadi.",
+                'fields': (
+                    'google_analytics_id',
+                    'yandex_metrika_id',
+                ),
+            }),
+            ('Search Console tekshiruvi', {
+                'classes': ('tab',),
+                'description': 'Faqat content= qiymatini kiriting (to\'liq meta teg emas).',
+                'fields': (
+                    'google_site_verification',
+                    'yandex_verification',
+                    'bing_verification',
+                ),
+            }),
+        ]
+        return self._patch_fieldsets(fieldsets)
+
+
+# ── 3. Navigatsiya & Footer ──────────────────────────────────────────────────
+
+@admin.register(SiteSettingsNavigation)
+class SiteSettingsNavigationAdmin(
+    _ProxySettingsMixin, TranslationAdmin, ModelAdmin
+):
+    def get_fieldsets(self, request, obj=None):
+        columns = _table_columns()
+        nav_fields = ['nav_cta_text', 'nav_cta_url']
+        if not columns or 'logo_text' in columns:
+            nav_fields.insert(0, 'logo_text')
+        if not columns or 'nav_links_json' in columns:
+            nav_fields.append('nav_links_json')
+
+        footer_fields = []
+        for fname in (
+            'footer_description', 'footer_social_github', 'footer_social_linkedin',
+            'footer_social_twitter', 'footer_social_telegram',
+        ):
+            if not columns or fname in columns:
+                footer_fields.append(fname)
+        footer_fields.append('footer_text')
+
+        fieldsets = [
+            ('Navigatsiya', {
+                'classes': ('tab',),
+                'description': 'Header — logo matni, CTA tugmasi, qo\'shimcha havolalar.',
+                'fields': tuple(nav_fields),
+            }),
+            ('Footer', {
+                'classes': ('tab',),
+                "description": "Footer-ga xos sozlamalar. Bo'sh qoldirish — Aloqa bo'limidan meros oladi.",
+                'fields': tuple(footer_fields),
+            }),
+        ]
+        return self._patch_fieldsets(fieldsets)
+
+
+# ── 4. Bosh sahifa ───────────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsHomepage)
+class SiteSettingsHomepageAdmin(
+    _ProxySettingsMixin, _ImagePreviewMixin, TranslationAdmin, ModelAdmin
+):
+    readonly_fields = ('hero_image_preview', 'about_image_preview', 'resume_preview')
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Hero banneri', {
+                'classes': ('tab',),
+                'fields': (
+                    'hero_title',
+                    'hero_subtitle',
+                    'hero_image', 'hero_image_preview',
+                ),
+            }),
+            ("About bo'limi", {
+                'classes': ('tab',),
+                'fields': (
+                    'about_title',
+                    'about_description',
+                    'about_image', 'about_image_preview',
+                ),
+            }),
+            ('Statistika paneli', {
+                'classes': ('tab',),
+                'description': '4 ta statistika — counter animatsiyasi bilan ko\'rsatiladi.',
+                'fields': (
+                    'stat_1_count', 'stat_1_suffix', 'stat_1_label',
+                    'stat_2_count', 'stat_2_suffix', 'stat_2_label',
+                    'stat_3_count', 'stat_3_suffix', 'stat_3_label',
+                    'stat_4_count', 'stat_4_suffix', 'stat_4_label',
+                ),
+            }),
+            ("Bo'lim sarlavhalari", {
+                'classes': ('tab',),
+                'fields': (
+                    'featured_projects_title',
+                    'apps_section_visible',
+                ),
+            }),
+            ('Sahifa sarlavhalari', {
+                'classes': ('tab',),
+                'description': 'Apps, Blog va Aloqa sahifalarining <h1> sarlavhalari.',
+                'fields': (
+                    'projects_page_title', 'projects_page_subtitle',
+                    'blog_page_title', 'blog_page_subtitle',
+                    'contact_page_title', 'contact_page_subtitle',
+                    'resume_file', 'resume_preview', 'resume_button_text',
+                ),
+            }),
+        ]
+        return self._patch_fieldsets(fieldsets)
+
+
+# ── 5. Aloqa & Ijtimoiy ──────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsContact)
+class SiteSettingsContactAdmin(_ProxySettingsMixin, ModelAdmin):
+    fieldsets = (
+        ("Aloqa ma'lumotlari", {
+            'fields': ('email', 'phone'),
+        }),
+        ('Ijtimoiy tarmoqlar', {
+            'fields': ('github_url', 'linkedin_url', 'twitter_url', 'telegram_url'),
+        }),
+    )
+
+
+# ── 6. Telegram Bot ──────────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsTelegram)
+class SiteSettingsTelegramAdmin(_ProxySettingsMixin, ModelAdmin):
+    fieldsets = (
+        ('Bot konfiguratsiyasi', {
+            'description': 'Owner ID va guruh ID — /id buyrug\'i bilan aniqlash mumkin.',
+            'fields': (
+                'telegram_owner_id',
+                'telegram_admin_group_id',
+                'telegram_channel_id',
+            ),
+        }),
+        ('Bildirishnomalar', {
+            'description': 'Qaysi hodisalar admin guruhiga yuborilsin.',
+            'fields': (
+                'admin_notify_new_users',
+                'admin_notify_comments',
+                'admin_notify_replies',
+                'admin_notify_reactions',
+                'admin_notify_likes',
+                'admin_notify_contacts',
+            ),
+        }),
+    )
+
+
+# ── 7. Emoji sozlamalari ─────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsEmoji)
+class SiteSettingsEmojiAdmin(_ProxySettingsMixin, ModelAdmin):
+    fieldsets = (
+        ('Asosiy havolalar', {
+            'description': 'Blog post va loyiha xabarlari uchun tugma emojilari.',
+            'fields': (
+                'tg_emoji_read_more', 'tg_emoji_google_play', 'tg_emoji_app_store',
+                'tg_emoji_web', 'tg_emoji_bot', 'tg_emoji_github', 'tg_emoji_comment',
+            ),
+        }),
+        ('Server Monitor', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_server', 'tg_emoji_cpu', 'tg_emoji_ram', 'tg_emoji_disk',
+                'tg_emoji_ok', 'tg_emoji_warn', 'tg_emoji_critical',
+                'tg_emoji_chart', 'tg_emoji_alert', 'tg_emoji_money', 'tg_emoji_clock',
+                'tg_emoji_uptime', 'tg_emoji_load', 'tg_emoji_swap',
+                'tg_emoji_services_icon', 'tg_emoji_trophy',
+                'tg_emoji_nginx', 'tg_emoji_postgresql',
+                'tg_emoji_package', 'tg_emoji_upgrade', 'tg_emoji_downgrade',
+            ),
+        }),
+        ('Bildirishnomalar', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_reply', 'tg_emoji_like', 'tg_emoji_unlike',
+                'tg_emoji_contact_msg', 'tg_emoji_user', 'tg_emoji_returning',
+                'tg_emoji_premium', 'tg_emoji_osint', 'tg_emoji_education', 'tg_emoji_group',
+            ),
+        }),
+        ('OSINT', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_channel_icon', 'tg_emoji_id_badge', 'tg_emoji_phone',
+                'tg_emoji_sources', 'tg_emoji_crown', 'tg_emoji_verified',
+                'tg_emoji_scam_warn', 'tg_emoji_history', 'tg_emoji_pencil', 'tg_emoji_calendar',
+            ),
+        }),
+        ('Buyruqlar', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_greeting', 'tg_emoji_ban', 'tg_emoji_mute', 'tg_emoji_lock',
+                'tg_emoji_notifications_icon', 'tg_emoji_config_icon',
+                'tg_emoji_error', 'tg_emoji_success',
+                'tg_emoji_backup_icon', 'tg_emoji_logs_icon',
+            ),
+        }),
+        ('Kanal ulashish', {
+            'classes': ('collapse',),
+            'fields': ('tg_emoji_post', 'tg_emoji_project', 'tg_emoji_tech'),
+        }),
+        ('Bot holati & Harakatlar', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_warning', 'tg_emoji_red_dot', 'tg_emoji_green_dot', 'tg_emoji_blocked',
+                'tg_emoji_plus', 'tg_emoji_minus', 'tg_emoji_edit', 'tg_emoji_right_arrow',
+            ),
+        }),
+        ('Bot navigatsiya & Mukofotlar', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_point_right', 'tg_emoji_point_down', 'tg_emoji_back', 'tg_emoji_home',
+                'tg_emoji_gold', 'tg_emoji_silver', 'tg_emoji_bronze',
+            ),
+        }),
+        ("Odamlar & Muloqot", {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_person', 'tg_emoji_people', 'tg_emoji_teacher',
+                'tg_emoji_crown_icon', 'tg_emoji_eye',
+                'tg_emoji_mail', 'tg_emoji_upload', 'tg_emoji_email_icon',
+                'tg_emoji_phone_icon', 'tg_emoji_thought', 'tg_emoji_speech',
+            ),
+        }),
+        ("Ma'lumot & Tizim", {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_stats', 'tg_emoji_growth', 'tg_emoji_document',
+                'tg_emoji_name_badge', 'tg_emoji_mobile', 'tg_emoji_device', 'tg_emoji_numbers',
+                'tg_emoji_settings', 'tg_emoji_secure', 'tg_emoji_locked',
+                'tg_emoji_key', 'tg_emoji_shield', 'tg_emoji_cloud',
+            ),
+        }),
+        ('Turli', {
+            'classes': ('collapse',),
+            'fields': (
+                'tg_emoji_globe', 'tg_emoji_moon', 'tg_emoji_clover', 'tg_emoji_target',
+                'tg_emoji_diamond', 'tg_emoji_control', 'tg_emoji_fire', 'tg_emoji_triangle',
+                'tg_emoji_graduation', 'tg_emoji_pray', 'tg_emoji_school', 'tg_emoji_ballot',
+                'tg_emoji_blue_square', 'tg_emoji_lightning', 'tg_emoji_celebration',
+                'tg_emoji_memo', 'tg_emoji_pin', 'tg_emoji_undo', 'tg_emoji_skip',
+            ),
+        }),
+        ("Qo'shimcha (JSON)", {
+            'classes': ('collapse',),
+            'fields': ('tg_emoji_extra',),
+        }),
+    )
+
+
+# ── 8. Editorial v3 ──────────────────────────────────────────────────────────
+
+@admin.register(SiteSettingsEditorial)
+class SiteSettingsEditorialAdmin(
+    _ProxySettingsMixin, TranslationAdmin, ModelAdmin
+):
+    def get_fieldsets(self, request, obj=None):
+        columns = _table_columns()
+        ok = lambda f: not columns or f in columns
+
+        def tab(title, *fields, description=None):
+            visible = tuple(f for f in fields if ok(f))
+            if not visible:
+                return None
+            opts = {'classes': ('tab',), 'fields': visible}
+            if description:
+                opts['description'] = description
+            return (title, opts)
+
+        fieldsets = [
+            tab('Hero & Brend',
+                'availability_badge',
+                'hero_eyebrow', 'hero_volume_label', 'hero_location',
+                'hero_scroll_label', 'hero_section_count',
+                'brand_tagline', 'footer_volume',
+                'ticker_items',
+            ),
+            tab('Manifesto',
+                'manifesto_eyebrow', 'manifesto_title', 'manifesto_label', 'manifesto_principles',
+            ),
+            tab('Metriks',
+                'metrics_eyebrow', 'metrics_title', 'metrics_description',
+            ),
+            tab('Jarayon',
+                'process_eyebrow', 'process_title', 'process_steps',
+            ),
+            tab('CTA',
+                'cta_eyebrow', 'cta_title_pre', 'cta_title_em',
+                'cta_description', 'cta_button_text', 'cta_response_label',
+            ),
+            tab("Aloqa bo'limi",
+                'contact_form_label', 'contact_form_title',
+                'contact_availability_status', 'contact_availability_note',
+                'contact_section_label', 'contact_section_channels',
+            ),
+            tab("Jamoa bo'limi",
+                'team_hero_eyebrow', 'team_hero_headline',
+                'team_section_label', 'team_studio_label', 'team_intro',
+                'team_values_eyebrow', 'team_values_title', 'team_values_intro', 'team_values',
+            ),
+            tab('Footer CTA',
+                'footer_cta_eyebrow', 'footer_cta_headline', 'footer_practice_items',
+            ),
+            tab('Xato sahifalari',
+                'error_404_headline', 'error_404_description',
+                'error_500_headline', 'error_500_description',
+                'error_unavailable_headline', 'error_unavailable_description',
+            ),
+            tab("Bo'lim teglari",
+                'about_section_eyebrow',
+                'projects_section_label',
+                'blog_section_label', 'blog_section_status',
+            ),
+        ]
+        fieldsets = [fs for fs in fieldsets if fs is not None]
+        return self._patch_fieldsets(fieldsets)
+
+
+# ── PageView ─────────────────────────────────────────────────────────────────
 
 @admin.register(PageView)
 class PageViewAdmin(ModelAdmin):
@@ -386,6 +504,8 @@ class PageViewAdmin(ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+
+# ── Asset ─────────────────────────────────────────────────────────────────────
 
 @admin.register(Asset)
 class AssetAdmin(TranslationAdmin, ModelAdmin):
@@ -427,7 +547,6 @@ class AssetAdmin(TranslationAdmin, ModelAdmin):
         ] + super().get_urls()
 
     def asset_manager_view(self, request):
-        """Editorial Asset Manager — the visual replacement for the changelist."""
         folder = request.GET.get('folder', 'all')
         qs = Asset.objects.all()
         if folder != 'all':
@@ -463,7 +582,6 @@ class AssetAdmin(TranslationAdmin, ModelAdmin):
         return render(request, 'admin/core/asset_manager.html', context)
 
     def asset_upload(self, request):
-        """Drag-drop upload endpoint — returns JSON with new asset metadata."""
         if request.method != 'POST':
             return HttpResponseBadRequest("POST only")
         if not (request.user.is_staff and request.user.is_active):
@@ -495,7 +613,6 @@ class AssetAdmin(TranslationAdmin, ModelAdmin):
         return JsonResponse({'status': 'ok', 'created': created})
 
     def asset_bulk(self, request):
-        """Bulk delete / move endpoint."""
         if request.method != 'POST':
             return HttpResponseBadRequest("POST only")
         if not (request.user.is_staff and request.user.is_active):

@@ -905,6 +905,66 @@ class SiteSettings(
         return self.footer_social_telegram or self.telegram_url
 
 
+# ── Proxy models for sectioned admin ────────────────────────────────────────
+# Each proxy presents a focused subset of SiteSettings fields as a separate
+# admin entry. Same DB table — no data migration needed.
+
+class SiteSettingsBranding(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Brending"
+        verbose_name_plural = "Brending sozlamalari"
+
+
+class SiteSettingsSEO(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "SEO & Analitika"
+        verbose_name_plural = "SEO & Analitika sozlamalari"
+
+
+class SiteSettingsNavigation(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Navigatsiya & Footer"
+        verbose_name_plural = "Navigatsiya & Footer"
+
+
+class SiteSettingsHomepage(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Bosh sahifa"
+        verbose_name_plural = "Bosh sahifa mazmuni"
+
+
+class SiteSettingsContact(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Aloqa & Ijtimoiy"
+        verbose_name_plural = "Aloqa & Ijtimoiy"
+
+
+class SiteSettingsTelegram(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Telegram Bot"
+        verbose_name_plural = "Telegram Bot sozlamalari"
+
+
+class SiteSettingsEmoji(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Emoji sozlamalari"
+        verbose_name_plural = "Emoji sozlamalari"
+
+
+class SiteSettingsEditorial(SiteSettings):
+    class Meta:
+        proxy = True
+        verbose_name = "Editorial v3"
+        verbose_name_plural = "Editorial v3 mazmuni"
+
+
 class PageView(models.Model):
     """
     Tracks unique site visitors via cookie + IP deduplication.
