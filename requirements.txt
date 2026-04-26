@@ -44,3 +44,4 @@ psutil>=5.9
 tzdata==2025.3
 typing_extensions==4.15.0
 django-modeltranslation>=0.18,<1.0
+django-rosetta>=0.10,<1.0

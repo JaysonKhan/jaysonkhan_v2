@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
 
     # Third party
+    'rosetta',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -146,6 +147,13 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
+
+# django-rosetta — admin UI for .po file management
+ROSETTA_SHOW_AT_ADMIN_PANEL = True
+ROSETTA_STORAGE_CLASS = 'rosetta.storage.CacheRosettaStorage'
+ROSETTA_AUTO_COMPILE = True          # .mo auto-compile on save (no restart needed)
+ROSETTA_ENABLE_TRANSLATION_SUGGESTIONS = False  # no Google Translate API needed
+ROSETTA_REQUIRES_AUTH = True
 
 # django-modeltranslation — translate model fields per language
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'xo'
