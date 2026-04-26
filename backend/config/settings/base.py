@@ -31,6 +31,7 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.
 
 # Application definition
 INSTALLED_APPS = [
+    'modeltranslation',  # Must come BEFORE django.contrib.admin (registers tabbed admin)
     'unfold',
     'unfold.contrib.filters',
     'unfold.contrib.forms',
@@ -67,6 +68,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'core.security_middleware.SecurityHeadersMiddleware',  # Additional security headers
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # i18n: must come AFTER session, BEFORE common
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -128,10 +130,29 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
+# Default = Khorezm dialect ('xo' — custom code, not ISO 639).
+# Languages: Khorezm dialect (xo), standard Uzbek (uz), Russian (ru), English (en).
+LANGUAGE_CODE = 'xo'
+LANGUAGES = [
+    ('xo', "Xorazmcha"),       # Khorezm dialect — DEFAULT
+    ('uz', "O'zbekcha"),       # Standard Uzbek (Latin)
+    ('ru', "Русский"),         # Russian
+    ('en', "English"),         # English
+]
+LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
+
+# django-modeltranslation — translate model fields per language
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'xo'
+MODELTRANSLATION_LANGUAGES = ('xo', 'uz', 'ru', 'en')
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('xo', 'uz', 'ru', 'en')
+MODELTRANSLATION_TRANSLATION_FILES = (
+    'core.translations',
+    'portfolio.translations',
+    'blog.translations',
+)
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'

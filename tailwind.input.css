@@ -425,6 +425,27 @@ body::before {
     transition: all .35s var(--ease-out);
     background: transparent;
 }
+
+/* Language switcher pills (XO · UZ · RU · EN) */
+.lang-pill {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-3);
+    padding: 6px 9px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .25s var(--ease-out);
+}
+.lang-pill:hover { color: var(--fg-1); border-color: var(--line-1); }
+.lang-pill.active {
+    color: var(--fg-0);
+    border-color: var(--fg-0);
+    background: transparent;
+}
 .theme-toggle:hover { border-color: var(--line-3); color: var(--fg-0); }
 .theme-toggle .icon-sun { display: none; }
 .theme-toggle .icon-moon { display: block; }

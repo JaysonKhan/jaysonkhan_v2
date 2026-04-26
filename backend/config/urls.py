@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
@@ -28,6 +29,7 @@ sitemaps = {
     'posts': PostSitemap,
 }
 
+# Non-localized URLs (admin, API, sitemap, webhooks)
 urlpatterns = [
     path(ADMIN_URL + 'telegram/settings/', emoji_manager, name='telegram_settings'),
     path(ADMIN_URL + 'bot/', include('botproxy.urls')),
@@ -35,12 +37,15 @@ urlpatterns = [
     path(ADMIN_URL, admin.site.urls),
     path('api/admin/media-upload/', upload_media_view, name='admin_media_upload'),
 
+    # ── i18n language switcher (POST to /i18n/setlang/) ──────────────────────
+    path('i18n/', include('django.conf.urls.i18n')),
+
     # ── API ───────────────────────────────────────────────────────────────────
     path('api/', include('presentation.api.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # ── SEO & Feeds ────────────────────────────────────────────────────────────
+    # ── SEO ────────────────────────────────────────────────────────────────────
     # robots.txt cached 1 day (rarely changes, served on every crawl)
     path('robots.txt', cache_page(86400)(robots_txt), name='robots_txt'),
     # sitemap.xml cached 1 hour (fresh enough for crawlers, saves DB queries)
@@ -48,8 +53,6 @@ urlpatterns = [
          cache_page(3600)(sitemap),
          {'sitemaps': sitemaps},
          name='django.contrib.sitemaps.views.sitemap'),
-    path('blog/feed/', LatestPostsFeed(), name='blog_rss_feed'),
-    path('blog/feed/atom/', LatestPostsAtomFeed(), name='blog_atom_feed'),
 
     # ── Service Worker — emoji cache (root scope majburiy) ─────────────────
     path('sw.js', TemplateView.as_view(
@@ -66,13 +69,24 @@ urlpatterns = [
         TelegramWebhookView.as_view(),
         name='telegram_webhook',
     ),
+]
 
-    # ── Interactions (Telegram auth, comments, likes) — included at root ─────
+# Localized URLs — prefixed with /xo/, /uz/, /ru/, /en/. Default `xo` is also
+# served at /xo/ (prefix_default_language=True), so existing /projects/ etc.
+# now redirect to /xo/projects/.
+urlpatterns += i18n_patterns(
+    # Feeds (per-language RSS/Atom)
+    path('blog/feed/', LatestPostsFeed(), name='blog_rss_feed'),
+    path('blog/feed/atom/', LatestPostsAtomFeed(), name='blog_atom_feed'),
+
+    # Interactions (Telegram auth, comments, likes) — language-aware
     path('', include('interactions.urls')),
 
-    # ── Web (SSR) ─────────────────────────────────────────────────────────────
+    # Web (SSR) — home, projects, blog, contact, team, etc.
     path('', include('presentation.web.urls')),
-]
+
+    prefix_default_language=True,
+)
 
 # ── Custom error handlers ─────────────────────────────────────────────────────
 # MUST be in ROOT_URLCONF — Django ignores these in included urlconfs.

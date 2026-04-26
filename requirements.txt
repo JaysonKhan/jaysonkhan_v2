@@ -43,3 +43,4 @@ psutil>=5.9
 # Timezone
 tzdata==2025.3
 typing_extensions==4.15.0
+django-modeltranslation>=0.18,<1.0

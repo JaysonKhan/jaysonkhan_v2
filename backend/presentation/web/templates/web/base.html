@@ -1,5 +1,5 @@
-{% load static %}<!DOCTYPE html>
-<html lang="en" data-theme="light" data-density="comfortable" data-hud="on" data-noise="on" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
+{% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% get_available_languages as LANGUAGES %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'xo' }}" data-theme="light" data-density="comfortable" data-hud="on" data-noise="on" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,6 +36,13 @@
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     <meta name="author" content="{{ site_settings.site_author }}">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    {# i18n hreflang — tells search engines about other language variants #}
+    {% load i18n %}{% get_available_languages as ALL_LANGS %}
+    {% for code, name in ALL_LANGS %}
+    <link rel="alternate" hreflang="{{ code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ code }}{{ request.path|slice:'4:' }}">
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/xo{{ request.path|slice:'4:' }}">
 
     {% if site_settings.google_site_verification %}
     <meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">
@@ -150,17 +157,29 @@
             </a>
 
             <nav class="row gap-8 desktop-nav" style="align-items: center;">
-                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Index</a>
+                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Index" %}</a>
                 {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
+                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                 {% endif %}
-                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Studio</a>
-                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
-                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Studio" %}</a>
+                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
+                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
             </nav>
 
             <div class="row gap-3" style="align-items: center;">
                 <span class="tag hud-only hide-mobile"><span class="dot-live"></span> Available · Q2</span>
+
+                {# ── Language switcher (XO · UZ · RU · EN) ── #}
+                <form action="{% url 'set_language' %}" method="post" class="row" style="gap: 4px; align-items: center; margin: 0;">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.path }}">
+                    {% for code, name in LANGUAGES %}
+                    <button type="submit" name="language" value="{{ code }}"
+                            class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
+                            aria-label="{{ name }}">{{ code|upper }}</button>
+                    {% endfor %}
+                </form>
+
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" type="button">
                     <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -183,13 +202,13 @@
 
         <div class="container">
             <div class="mobile-nav" id="mobile-nav">
-                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Index</a>
+                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Index" %}</a>
                 {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">Work</a>
+                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                 {% endif %}
-                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">Studio</a>
-                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">Journal</a>
-                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Studio" %}</a>
+                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
+                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
                 {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
                 <a href="{{ site_settings.nav_cta_url }}" class="btn btn-primary" style="margin-top: 16px; align-self: flex-start;">{{ site_settings.nav_cta_text }}</a>
                 {% endif %}
@@ -240,23 +259,23 @@
                 </div>
 
                 <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Index</div>
-                    <a href="{% url 'home' %}" style="opacity: 0.85; font-size: 14px;">Home</a>
-                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" style="opacity: 0.85; font-size: 14px;">Work</a>{% endif %}
-                    <a href="{% url 'team' %}" style="opacity: 0.85; font-size: 14px;">Studio</a>
-                    <a href="{% url 'blog_list' %}" style="opacity: 0.85; font-size: 14px;">Journal</a>
-                    <a href="{% url 'contact' %}" style="opacity: 0.85; font-size: 14px;">Contact</a>
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Index" %}</div>
+                    <a href="{% url 'home' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Home" %}</a>
+                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Work" %}</a>{% endif %}
+                    <a href="{% url 'team' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Studio" %}</a>
+                    <a href="{% url 'blog_list' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Journal" %}</a>
+                    <a href="{% url 'contact' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Contact" %}</a>
                 </div>
 
                 <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Practice</div>
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Practice" %}</div>
                     {% for item in site_settings.footer_practice_items_resolved %}
                     <span style="opacity: 0.85; font-size: 14px;">{{ item }}</span>
                     {% endfor %}
                 </div>
 
                 <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Channels</div>
+                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Channels" %}</div>
                     {% if site_settings.footer_display_email %}<a href="mailto:{{ site_settings.footer_display_email }}" style="opacity: 0.85; font-size: 14px;">{{ site_settings.footer_display_email }}</a>{% endif %}
                     {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">t.me/jaysonkhan</a>{% endif %}
                     {% if site_settings.footer_display_github %}<a href="{{ site_settings.footer_display_github }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">github/jaysonkhan</a>{% endif %}

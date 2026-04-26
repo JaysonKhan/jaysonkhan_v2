@@ -1,0 +1,75 @@
+msgid ""
+msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-26 09:25+0500\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: backend/apps/core/templates/admin/core/asset_manager.html:4
+#: backend/presentation/web/templates/admin/index.html:4
+msgid "JK-DinAdmin"
+msgstr ""
+
+#: backend/presentation/web/templates/admin/login.html:6
+#: backend/presentation/web/templates/admin/login.html:235
+msgid "Log in"
+msgstr ""
+
+#: backend/presentation/web/templates/admin/login.html:205
+msgid ""
+"Please enter the correct username and password. Note that both fields may be "
+"case-sensitive."
+msgstr ""
+
+#: backend/presentation/web/templates/admin/login.html:213
+#, python-format
+msgid ""
+"You are authenticated as %(username)s, but are not authorized to access this "
+"page."
+msgstr ""
+
+#: backend/presentation/web/templates/admin/login.html:242
+msgid "Forgotten your password or username?"
+msgstr ""
+
+#: backend/presentation/web/templates/web/base.html:160
+#: backend/presentation/web/templates/web/base.html:205
+#: backend/presentation/web/templates/web/base.html:262
+msgid "Index"
+msgstr "Главная"
+
+#: backend/presentation/web/templates/web/base.html:162
+#: backend/presentation/web/templates/web/base.html:207
+#: backend/presentation/web/templates/web/base.html:264
+msgid "Work"
+msgstr "Работы"
+
+#: backend/presentation/web/templates/web/base.html:164
+#: backend/presentation/web/templates/web/base.html:209
+#: backend/presentation/web/templates/web/base.html:265
+msgid "Studio"
+msgstr "Студия"
+
+#: backend/presentation/web/templates/web/base.html:165
+#: backend/presentation/web/templates/web/base.html:210
+#: backend/presentation/web/templates/web/base.html:266
+msgid "Journal"
+msgstr "Журнал"
+
+#: backend/presentation/web/templates/web/base.html:166
+#: backend/presentation/web/templates/web/base.html:211
+#: backend/presentation/web/templates/web/base.html:267
+msgid "Contact"
+msgstr "Контакт"
+
+#: backend/presentation/web/templates/web/base.html:263
+msgid "Home"
+msgstr "Главная"
+
+#: backend/presentation/web/templates/web/base.html:271
+msgid "Practice"
+msgstr "Практика"
+
+#: backend/presentation/web/templates/web/base.html:278
+msgid "Channels"
+msgstr "Каналы"
