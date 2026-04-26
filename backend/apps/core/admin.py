@@ -8,6 +8,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from unfold.admin import ModelAdmin
+from modeltranslation.admin import TranslationAdmin
 
 from .models import SiteSettings, PageView, Asset
 
@@ -30,7 +31,7 @@ def _table_columns() -> set:
 
 
 @admin.register(SiteSettings)
-class SiteSettingsAdmin(ModelAdmin):
+class SiteSettingsAdmin(TranslationAdmin, ModelAdmin):
     """
     Singleton admin for SiteSettings — tab-based layout.
 
@@ -383,7 +384,7 @@ class PageViewAdmin(ModelAdmin):
 
 
 @admin.register(Asset)
-class AssetAdmin(ModelAdmin):
+class AssetAdmin(TranslationAdmin, ModelAdmin):
     """Editorial Asset Manager — replaces standard changelist with grid + drag-drop."""
 
     list_display = ('thumbnail', 'name', 'folder', 'format', 'size_human_col', 'dimensions', 'uploaded_at')

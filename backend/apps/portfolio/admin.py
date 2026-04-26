@@ -2,13 +2,14 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.text import Truncator
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
+from modeltranslation.admin import TranslationAdmin
 from .models import Skill, Project, Experience, TeamMember
 from django import forms
 from core.widgets import RichTextWidget
 from django.utils.safestring import mark_safe
 
 @admin.register(Skill)
-class SkillAdmin(UnfoldModelAdmin):
+class SkillAdmin(TranslationAdmin, UnfoldModelAdmin):
     list_per_page = 10
     list_display = ('name', 'category', 'order')
     list_editable = ('category', 'order')
@@ -26,18 +27,21 @@ class ProjectAdminForm(forms.ModelForm):
         model = Project
         fields = '__all__'
         widgets = {
-            'description_rich': RichTextWidget(),
+            'description_rich_xo': RichTextWidget(),
+            'description_rich_uz': RichTextWidget(),
+            'description_rich_ru': RichTextWidget(),
+            'description_rich_en': RichTextWidget(),
         }
 
 @admin.register(Project)
-class ProjectAdmin(UnfoldModelAdmin):
+class ProjectAdmin(TranslationAdmin, UnfoldModelAdmin):
     form = ProjectAdminForm
     list_per_page = 10
     list_display = ('thumbnail', 'title', 'short_desc', 'is_bot', 'is_featured', 'is_visible', 'order')
     list_display_links = ('thumbnail', 'title')
     list_editable = ('order', 'is_featured', 'is_bot', 'is_visible')
     list_filter = ('is_featured', 'is_bot', 'is_visible', 'created_at')
-    prepopulated_fields = {'slug': ('title',)}
+    prepopulated_fields = {'slug': ('title_xo',)}
     search_fields = ('title', 'description_rich')
     filter_horizontal = ('technologies',)
 
@@ -99,7 +103,7 @@ class ProjectAdmin(UnfoldModelAdmin):
 
 
 @admin.register(Experience)
-class ExperienceAdmin(UnfoldModelAdmin):
+class ExperienceAdmin(TranslationAdmin, UnfoldModelAdmin):
     list_per_page = 10
     list_display = ('position', 'company', 'location', 'start_date', 'end_date', 'is_current')
     list_filter = ('is_current',)
@@ -118,7 +122,7 @@ class ExperienceAdmin(UnfoldModelAdmin):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(UnfoldModelAdmin):
+class TeamMemberAdmin(TranslationAdmin, UnfoldModelAdmin):
     list_per_page = 20
     list_display = ('thumbnail', 'name', 'role', 'years_experience', 'order', 'is_visible')
     list_display_links = ('thumbnail', 'name')
