@@ -1,52 +1,46 @@
 from django.apps import AppConfig
 
 
-class _LangInfoDict(dict):
-    """Dict subclass that auto-resolves 'xo' to our Khorezm metadata.
-
-    Works regardless of which module holds a reference to the original dict —
-    every lookup goes through __missing__ when the key is absent, including
-    the module-level `from django.conf.locale import LANG_INFO` import in
-    trans_real.py and the function-local import in translation/__init__.py.
-    """
-
-    _XO = {
-        'bidi': False,
-        'code': 'xo',
-        'name': 'Khorezm Uzbek',
-        'name_local': 'Xorazmcha',
-    }
-
-    def __missing__(self, key):
-        if key == 'xo':
-            return dict(self._XO)
-        raise KeyError(key)
+_XO_LANG_INFO = {
+    'bidi': False,
+    'code': 'xo',
+    'name': 'Khorezm Uzbek',
+    'name_local': 'Xorazmcha',
+    'name_translated': 'Khorezm Uzbek',
+}
 
 
 class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
-        # 'xo' isn't in Django's built-in LANG_INFO. Replace the dict with
-        # one that auto-resolves 'xo' on missing-key access. Done via __missing__
-        # rather than mutation because some module-level references in Django
-        # internals hold a copy of the original dict.
-        import django.conf.locale as _locale
-        from django.utils.translation import trans_real as _trans_real
-
-        if not isinstance(_locale.LANG_INFO, _LangInfoDict):
-            new = _LangInfoDict(_locale.LANG_INFO)
-            _locale.LANG_INFO = new
-            _trans_real.LANG_INFO = new
-            import sys as __sys
-            __sys.stderr.write(f"[ready] After replace: locale.LANG_INFO id={id(_locale.LANG_INFO)} type={type(_locale.LANG_INFO).__name__}\n")
-
-        # Wrap get_language_info to log at request time which dict is seen.
+        # Override Django's i18n template-tag node so that 'xo' resolves to
+        # our Khorezm metadata instead of raising KeyError. We patch the
+        # static method on the Node class because patching either the
+        # `LANG_INFO` dict or `translation.get_language_info` from settings
+        # or ready() didn't survive worker init for reasons that aren't
+        # worth chasing further — this is the path the actual call takes
+        # at template-render time, so a class-level override is bulletproof.
+        from django.templatetags import i18n as _i18n
         from django.utils import translation as _t
-        _orig_gli = _t.get_language_info
-        def _logging_gli(lang_code):
-            import sys as ___s
-            import django.conf.locale as ___L
-            ___s.stderr.write(f"[gli-call] {lang_code!r} locale.LANG_INFO id={id(___L.LANG_INFO)} type={type(___L.LANG_INFO).__name__} has_xo={('xo' in ___L.LANG_INFO)}\n")
-            return _orig_gli(lang_code)
-        _t.get_language_info = _logging_gli
+
+        _orig_static = _i18n.GetLanguageInfoListNode.get_language_info
+
+        @staticmethod
+        def _xo_aware_get_language_info(language):
+            code = language[0] if (language and len(language[0]) > 1) else str(language)
+            if code == 'xo':
+                return dict(_XO_LANG_INFO)
+            return _orig_static(language)
+
+        _i18n.GetLanguageInfoListNode.get_language_info = _xo_aware_get_language_info
+
+        # Same fix for the single-language template filter helpers.
+        _orig_lookup = _t.get_language_info
+
+        def _xo_aware_translation_get_language_info(lang_code):
+            if lang_code == 'xo':
+                return dict(_XO_LANG_INFO)
+            return _orig_lookup(lang_code)
+
+        _t.get_language_info = _xo_aware_translation_get_language_info
