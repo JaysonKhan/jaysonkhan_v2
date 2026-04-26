@@ -5,6 +5,7 @@ from .models import Project, Skill, Experience, TeamMember
 
 @register(Project)
 class ProjectTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = (
         'title',
         'short_description',
@@ -17,14 +18,17 @@ class ProjectTranslation(TranslationOptions):
 
 @register(Skill)
 class SkillTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('name',)
 
 
 @register(Experience)
 class ExperienceTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('company', 'position', 'description', 'location')
 
 
 @register(TeamMember)
 class TeamMemberTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('name', 'role', 'bio', 'quote', 'skills')

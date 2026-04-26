@@ -147,7 +147,11 @@ USE_TZ = True
 # django-modeltranslation — translate model fields per language
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'xo'
 MODELTRANSLATION_LANGUAGES = ('xo', 'uz', 'ru', 'en')
-MODELTRANSLATION_FALLBACK_LANGUAGES = ('xo', 'uz', 'ru', 'en')
+# Active-language column is ALWAYS tried first; fall back only if empty.
+# (Tuple form would force `xo` to win for ALL active languages — bug.)
+MODELTRANSLATION_FALLBACK_LANGUAGES = {
+    'default': ('xo',),  # for any active lang: if empty, fall back to xo
+}
 MODELTRANSLATION_TRANSLATION_FILES = (
     'core.translations',
     'portfolio.translations',

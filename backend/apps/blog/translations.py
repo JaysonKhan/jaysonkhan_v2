@@ -5,6 +5,7 @@ from .models import Post, Category, Tag
 
 @register(Post)
 class PostTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = (
         'title',
         'excerpt',
@@ -14,9 +15,11 @@ class PostTranslation(TranslationOptions):
 
 @register(Category)
 class CategoryTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('name',)
 
 
 @register(Tag)
 class TagTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('name',)

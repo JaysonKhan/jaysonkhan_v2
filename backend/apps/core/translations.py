@@ -13,6 +13,11 @@ from .models import SiteSettings, Asset
 
 @register(SiteSettings)
 class SiteSettingsTranslation(TranslationOptions):
+    # Treat only empty string (not the field's default) as "undefined" — otherwise
+    # any translated value that happens to equal the field default is skipped
+    # during fallback resolution, returning the wrong language.
+    fallback_undefined = ''
+
     fields = (
         # ── Branding ────────────────────────────────────────────────────────
         'site_title',
@@ -77,4 +82,5 @@ class SiteSettingsTranslation(TranslationOptions):
 
 @register(Asset)
 class AssetTranslation(TranslationOptions):
+    fallback_undefined = ''
     fields = ('alt_text', 'name')
