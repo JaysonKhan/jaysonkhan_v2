@@ -26,14 +26,13 @@ class CoreConfig(AppConfig):
 
         _orig_static = _i18n.GetLanguageInfoListNode.get_language_info
 
-        @staticmethod
-        def _xo_aware_get_language_info(language):
-            import sys as ___s
-            ___s.stderr.write(f"[xo-static] called with {language!r}\n")
+        # Original is an instance method (`def get_language_info(self, language)`).
+        # Match that signature exactly so Python's auto-binding still works.
+        def _xo_aware_get_language_info(self, language):
             code = language[0] if (language and len(language[0]) > 1) else str(language)
             if code == 'xo':
                 return dict(_XO_LANG_INFO)
-            return _orig_static(language)
+            return _orig_static(self, language)
 
         _i18n.GetLanguageInfoListNode.get_language_info = _xo_aware_get_language_info
 
