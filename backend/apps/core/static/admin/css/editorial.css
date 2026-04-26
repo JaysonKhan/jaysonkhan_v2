@@ -83,7 +83,10 @@ body[data-font-set="D"] {
 }
 
 /* ============ COLOR PALETTE ============ */
-:root, [data-theme="light"] {
+/* Default = LIGHT (cream). Both Unfold's `html.dark` class and our
+   `[data-theme="dark"]` attribute trigger the dark variant — keep them
+   in sync so chrome, sidebar, and custom pages all flip together. */
+:root, [data-theme="light"], html:not(.dark) {
     --bg-0: #f3efe6;
     --bg-1: #efeadf;
     --bg-2: #faf7ef;
@@ -115,7 +118,8 @@ body[data-font-set="D"] {
     color-scheme: light;
 }
 
-[data-theme="dark"] {
+/* Dark — works with Unfold's `html.dark` AND our `data-theme="dark"` */
+[data-theme="dark"], html.dark, html.dark body {
     --bg-0: #0e0d0a;
     --bg-1: #14120e;
     --bg-2: #1c1a14;
@@ -144,6 +148,11 @@ body[data-font-set="D"] {
     color-scheme: dark;
 }
 
+/* The <html> element itself needs the same background as body so there are
+   no dark stripes when Unfold sets html.dark but our body uses light vars. */
+html { background: var(--bg-1); }
+html.dark { background: var(--bg-1); }
+
 /* ============ BASE OVERRIDE (Unfold) ============ */
 body, body.antialiased {
     background: var(--bg-1) !important;
@@ -166,8 +175,43 @@ body::before {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
     mix-blend-mode: multiply;
 }
-[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.05; }
+[data-theme="dark"] body::before, html.dark body::before { mix-blend-mode: screen; opacity: 0.05; }
 body[data-grain="off"]::before { display: none !important; }
+
+/* ============ UNFOLD DARK UTILITY OVERRIDES ============
+   Unfold uses Tailwind classes like `dark:bg-base-900`, `dark:text-font-default-dark`
+   etc. — these resolve via `html.dark` class. Our tokens already flip via the
+   `html.dark` selector above, but Unfold's utility specificity can win in some
+   cases. Force our tokens to apply across both themes. */
+html.dark .dark\:bg-base-900,
+html.dark .dark\:bg-base-800,
+html.dark [class*="dark:bg-base"] {
+    background: var(--bg-2) !important;
+}
+html.dark .dark\:bg-base-950 {
+    background: var(--bg-1) !important;
+}
+html.dark .dark\:text-font-default-dark,
+html.dark .dark\:text-font-important-dark {
+    color: var(--fg-0) !important;
+}
+html.dark .dark\:text-font-subtle-dark,
+html.dark .dark\:text-font-muted-dark {
+    color: var(--fg-3) !important;
+}
+html.dark .dark\:border-base-700,
+html.dark .dark\:border-base-800,
+html.dark [class*="dark:border-base"] {
+    border-color: var(--line-1) !important;
+}
+html.dark .dark\:bg-primary-50,
+html.dark .dark\:bg-primary-950 {
+    background: rgba(var(--accent-rgb), 0.10) !important;
+}
+html.dark .dark\:text-primary-500,
+html.dark .dark\:text-primary-400 {
+    color: var(--accent) !important;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -800,3 +844,104 @@ h1, h2, h3, h4, h5 {
     background: var(--bg-2) !important;
     border-color: var(--line-1) !important;
 }
+
+/* ============ UNFOLD TYPOGRAPHY TOKENS ============ */
+/* Unfold uses Tailwind classes like .text-font-important-light, .text-font-default-light,
+   etc. which resolve to gray shades. Map them to our editorial tokens so brand text,
+   sidebar items, and chrome are readable in both light and dark themes. */
+.text-font-important-light, .text-font-important-dark,
+.dark\:text-font-important-dark {
+    color: var(--fg-0) !important;
+}
+.text-font-default-light, .text-font-default-dark,
+.dark\:text-font-default-dark {
+    color: var(--fg-1) !important;
+}
+.text-font-subtle-light, .text-font-subtle-dark,
+.dark\:text-font-subtle-dark {
+    color: var(--fg-3) !important;
+}
+.text-font-muted-light, .text-font-muted-dark,
+.dark\:text-font-muted-dark {
+    color: var(--fg-3) !important;
+}
+
+/* Site icon square (uses bg-primary-600 — already ink via earlier override).
+   Make sure the icon glyph is on-ink (cream). */
+#site-name a, #site-name {
+    color: var(--fg-0) !important;
+    font-family: var(--font-display) !important;
+    font-variation-settings: var(--fraunces-headline);
+}
+.bg-primary-600 .material-symbols-outlined,
+a.bg-primary-600 .material-symbols-outlined {
+    color: var(--fg-on-ink) !important;
+}
+
+/* Sidebar nav items — ensure clear contrast in both themes */
+aside nav a, [data-name="sidebar"] nav a,
+aside nav ul li a, [data-name="sidebar"] ul li a {
+    color: var(--fg-2) !important;
+}
+aside nav a:hover, [data-name="sidebar"] nav a:hover {
+    color: var(--fg-0) !important;
+    background: var(--bg-3) !important;
+}
+aside nav a span, [data-name="sidebar"] nav a span {
+    color: inherit !important;
+}
+
+/* Active item — ink solid pill */
+aside a.bg-primary-50, aside li.active a, aside a[aria-current="page"],
+.bg-primary-50, .dark\:bg-primary-950 {
+    background: var(--bg-ink) !important;
+    color: var(--fg-on-ink) !important;
+}
+aside a.bg-primary-50 *, aside a[aria-current="page"] * {
+    color: var(--fg-on-ink) !important;
+}
+
+/* Search box / inputs in topbar */
+.topbar input, header input[type="search"], header input[type="text"] {
+    background: var(--bg-2) !important;
+    color: var(--fg-0) !important;
+}
+
+/* Action buttons in topbar (history, etc.) */
+header .border-base-200, header .dark\:border-base-700,
+header button[class*="bg-base-"] {
+    background: transparent !important;
+    border-color: var(--line-2) !important;
+    color: var(--fg-2) !important;
+}
+header button[class*="bg-base-"]:hover {
+    background: var(--bg-3) !important;
+    color: var(--fg-0) !important;
+}
+
+/* Selected table rows (Unfold uses bg-primary-50 for selection) */
+table tbody tr.bg-primary-50 td,
+table tbody tr[aria-selected="true"] td {
+    background: rgba(var(--accent-rgb), 0.08) !important;
+    color: var(--fg-0) !important;
+}
+html.dark table tbody tr.bg-primary-50 td,
+html.dark table tbody tr[aria-selected="true"] td {
+    background: rgba(var(--accent-rgb), 0.16) !important;
+}
+
+/* Pagination and link text */
+a.text-primary-600, a.text-primary-700 {
+    color: var(--accent) !important;
+}
+
+/* Borders that should match line tokens */
+.border-base-100, .border-base-200, .border-base-300,
+.dark\:border-base-700, .dark\:border-base-800, .dark\:border-base-900 {
+    border-color: var(--line-1) !important;
+}
+
+/* Status pills (Unfold green/red/yellow icons) — keep them but tint with our palette */
+.bg-green-50, .text-green-500, .text-green-600 { color: var(--success) !important; }
+.bg-red-50, .text-red-500, .text-red-600 { color: var(--danger) !important; }
+.bg-yellow-50, .text-yellow-500, .text-yellow-600 { color: var(--warning) !important; }

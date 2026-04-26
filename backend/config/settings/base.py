@@ -286,9 +286,9 @@ _ADMIN_URL = env('ADMIN_URL', default='admin/')
 _A = '/' + _ADMIN_URL  # e.g. '/jk-dinadmin/'
 
 UNFOLD = {
-    "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="Studio Console"),
-    "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="Studio Console"),
-    "SITE_SUBHEADER": "v3.0 · OWNER",
+    "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="JK-DinAdmin"),
+    "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="JK-DinAdmin"),
+    "SITE_SUBHEADER": "v3.2 · OWNER",
     "SITE_URL": "/",
     "SITE_SYMBOL": "auto_awesome",
     "SHOW_HISTORY": True,
@@ -297,6 +297,9 @@ UNFOLD = {
     # Editorial overlay loaded on top of Unfold's tailwind base
     "STYLES": [
         lambda request: static("admin/css/editorial.css"),
+    ],
+    "SCRIPTS": [
+        lambda request: static("admin/js/theme-bootstrap.js"),
     ],
     "DASHBOARD_CALLBACK": "core.dashboard.dashboard_callback",
     "LOGIN": {
