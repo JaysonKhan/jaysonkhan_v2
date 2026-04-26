@@ -46,7 +46,7 @@
                 <div class="row gap-3" style="flex-wrap: wrap;">
                     <span class="tag">{% if project.app_store_url and project.play_store_url %}{% trans "Cross-platform" %}{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}Telegram{% else %}{% trans "Mobile" %}{% endif %}</span>
                     <span class="tag">{{ project.created_at|date:"Y" }}</span>
-                    {% if project.is_featured %}<span class="tag" style="color: var(--accent); border-color: var(--accent);">● Featured</span>{% endif %}
+                    {% if project.is_featured %}<span class="tag" style="color: var(--accent); border-color: var(--accent);">● {% trans "Featured" %}</span>{% endif %}
                 </div>
             </div>
 

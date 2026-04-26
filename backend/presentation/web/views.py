@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from django.utils.translation import gettext as _
 from django.core.cache import cache
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.views import View
@@ -191,14 +192,6 @@ class ProjectListView(AppsGuardMixin, ListView):
     # 'ios'     = has app_store_url  (includes cross-platform)
     # 'web'     = has web_page_url
     # 'bot'     = is_bot flag is True
-    _FILTER_TABS = [
-        {'key': 'all',     'label': 'All',            'url': '/projects/'},
-        {'key': 'cross',   'label': 'Cross-platform', 'url': '/projects/?filter=cross'},
-        {'key': 'android', 'label': 'Android',        'url': '/projects/?filter=android'},
-        {'key': 'ios',     'label': 'iOS',             'url': '/projects/?filter=ios'},
-        {'key': 'web',     'label': 'Web',             'url': '/projects/?filter=web'},
-        {'key': 'bot',     'label': 'Telegram Bot',    'url': '/projects/?filter=bot'},
-    ]
 
     def get_queryset(self):
         queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies')
@@ -222,7 +215,15 @@ class ProjectListView(AppsGuardMixin, ListView):
         context = super().get_context_data(**kwargs)
         f = self.request.GET.get('filter', '')
         context['active_filter'] = f if f in ('cross', 'android', 'ios', 'web', 'bot') else 'all'
-        context['filter_tabs'] = self._FILTER_TABS
+        base = reverse('projects')
+        context['filter_tabs'] = [
+            {'key': 'all',     'label': _('All'),            'url': base},
+            {'key': 'cross',   'label': _('Cross-platform'), 'url': base + '?filter=cross'},
+            {'key': 'android', 'label': 'Android',           'url': base + '?filter=android'},
+            {'key': 'ios',     'label': 'iOS',               'url': base + '?filter=ios'},
+            {'key': 'web',     'label': _('Web'),             'url': base + '?filter=web'},
+            {'key': 'bot',     'label': 'Telegram Bot',      'url': base + '?filter=bot'},
+        ]
         return context
 
 
