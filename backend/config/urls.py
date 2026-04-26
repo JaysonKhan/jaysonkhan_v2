@@ -63,12 +63,6 @@ urlpatterns = [
     # ── Health check ──────────────────────────────────────────────────────────
     path('health/', health_check, name='health_check'),
 
-    # ── Static error pages for nginx error_page fallback ──────────────────────
-    # nginx's `error_page 404 /404.html` makes a recursive request — without
-    # these patterns it 404s in a loop and floods logs.
-    path('404.html', custom_404_view, name='static_404'),
-    path('500.html', custom_500_view, name='static_500'),
-
     # ── Telegram Bot Webhook ─────────────────────────────────────────────────
     path(
         'api/telegram/webhook/<str:secret>/',
