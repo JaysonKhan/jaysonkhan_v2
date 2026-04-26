@@ -5,6 +5,8 @@ class CoreConfig(AppConfig):
     name = 'core'
 
     def ready(self):
+        import sys as __sys
+        __sys.stderr.write("[CoreConfig.ready] Patching get_language_info for 'xo'\n")
         # Patch django.utils.translation.get_language_info to recognise our
         # custom 'xo' language code. Done in ready() so the patch runs AFTER
         # Django has finished loading translation internals — patching from
