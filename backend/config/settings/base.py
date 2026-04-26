@@ -139,38 +139,9 @@ LANGUAGES = [
     ('ru', "Русский"),         # Russian
     ('en', "English"),         # English
 ]
-# 'xo' is not in Django's built-in LANG_INFO; without this patch, any call to
-# django.utils.translation.get_language_info('xo') raises KeyError, which the
-# Unfold admin's language widget hits on every admin page render.
-# Mutating LANG_INFO at settings-load time is unreliable (some app/middleware
-# resets it later in worker init). Monkey-patching the lookup function is
-# rock-solid: each call is intercepted and returns the right metadata for 'xo'
-# before falling through to Django's default lookup.
-import django.utils.translation as _translation  # noqa: E402
-
-_XO_LANG_INFO = {
-    'bidi': False,
-    'code': 'xo',
-    'name': 'Khorezm Uzbek',
-    'name_local': 'Xorazmcha',
-}
-
-_original_get_language_info = _translation.get_language_info
-
-
-def _patched_get_language_info(lang_code):
-    import sys as __sys
-    __sys.stderr.write(f"[patched] get_language_info called with {lang_code!r}\n")
-    if lang_code == 'xo':
-        info = dict(_XO_LANG_INFO)
-        info['name_translated'] = info['name']
-        return info
-    return _original_get_language_info(lang_code)
-
-
-_translation.get_language_info = _patched_get_language_info
-import sys as _sys  # noqa: E402
-_sys.stderr.write(f"[base.py] Monkey-patched get_language_info: id={id(_translation.get_language_info)} name={_translation.get_language_info.__name__}\n")
+# 'xo' is not in Django's built-in LANG_INFO. The actual patch runs in
+# core.apps.CoreConfig.ready() — see that method for why settings-time
+# patching was unreliable.
 LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
