@@ -86,6 +86,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof InfiniteScroll === 'undefined') return;
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s != null ? String(s) : ''));
+        return d.innerHTML;
+    }
+
+    var blogBase = "{% url 'blog_list' %}";
+    var minLabel = "{% trans 'MIN' %}";
+
     InfiniteScroll.init({
         apiUrl: '/api/posts/',
         gridId: 'items-grid',
@@ -94,20 +104,21 @@ document.addEventListener('DOMContentLoaded', function() {
         renderItem: function(post) {
             var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
             var num = parseInt(idx, 10);
-            var cat = post.category_name ? '<span class="tag" style="align-self:flex-start;">' + post.category_name + '</span>' : '';
+            var cat = post.category_name ? '<span class="tag" style="align-self:flex-start;">' + esc(post.category_name) + '</span>' : '';
             var date = (post.created_at || '').slice(0, 10);
-            return '<a href="/blog/' + post.slug + '/" class="reveal in article-card" style="padding:40px;border-top:1px solid var(--line-1);' +
+            var href = blogBase + esc(post.slug) + '/';
+            return '<a href="' + href + '" class="reveal in article-card" style="padding:40px;border-top:1px solid var(--line-1);' +
                 (num % 3 !== 0 ? 'border-right:1px solid var(--line-1);' : '') +
                 'min-height:380px;display:flex;flex-direction:column;gap:20px;">' +
                 '<div class="between" style="align-items:flex-start;">' +
                 '<span class="numeral article-num" style="font-size:56px;line-height:1;color:var(--fg-4);">' + idx + '</span>' +
                 '<span class="mono" style="font-size:10px;letter-spacing:0.16em;color:var(--fg-3);text-transform:uppercase;">Vol. 03 / ' + idx + '</span>' +
                 '</div>' + cat +
-                '<h3 class="display-sm serif article-title" style="flex:1;"><em style="font-weight:300;">' + post.title + '</em></h3>' +
-                '<p style="color:var(--fg-2);font-size:14px;line-height:1.55;">' + (post.excerpt || '') + '</p>' +
+                '<h3 class="display-sm serif article-title" style="flex:1;"><em style="font-weight:300;">' + esc(post.title) + '</em></h3>' +
+                '<p style="color:var(--fg-2);font-size:14px;line-height:1.55;">' + esc(post.excerpt || '') + '</p>' +
                 '<div class="between" style="padding-top:16px;border-top:1px solid var(--line-1);">' +
-                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + date.toUpperCase() + '</span>' +
-                '<span class="mono article-meta" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + (post.reading_time || 5) + ' MIN ↗</span>' +
+                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + esc(date).toUpperCase() + '</span>' +
+                '<span class="mono article-meta" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + (post.reading_time || 5) + ' ' + minLabel + ' ↗</span>' +
                 '</div></a>';
         }
     });

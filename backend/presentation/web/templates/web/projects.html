@@ -116,6 +116,22 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof InfiniteScroll === 'undefined') return;
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(s != null ? String(s) : ''));
+        return d.innerHTML;
+    }
+
+    var projectsBase = "{% url 'projects' %}";
+    var L = {
+        cross: "{% trans 'Cross-platform' %}",
+        web:   "{% trans 'Web' %}",
+        mob:   "{% trans 'Mobile' %}",
+        feat:  "● {% trans 'Featured' %}",
+        live:  "● {% trans 'Live' %}"
+    };
+
     var urlParams = new URLSearchParams(window.location.search);
     var filterKey = urlParams.get('filter') || '';
     var extraParams = {};
@@ -130,19 +146,20 @@ document.addEventListener('DOMContentLoaded', function() {
         renderItem: function(p) {
             var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
             var year = (p.created_at || '').slice(0, 4) || '';
-            var category = p.app_store_url && p.play_store_url ? 'Cross-platform'
+            var category = p.app_store_url && p.play_store_url ? L.cross
                 : p.app_store_url ? 'iOS'
                 : p.play_store_url ? 'Android'
-                : p.web_page_url ? 'Web'
-                : p.is_bot ? 'Telegram' : 'Mobile';
-            var stack = (p.tech_tags || []).slice(0, 3).join(' · ');
-            var status = p.is_featured ? '● Featured' : '● Live';
-            return '<a href="/projects/' + p.slug + '/" class="reveal in index-row" style="display:block;border-bottom:1px solid var(--line-1);">' +
+                : p.web_page_url ? L.web
+                : p.is_bot ? 'Telegram' : L.mob;
+            var stack = esc((p.tech_tags || []).slice(0, 3).join(' · '));
+            var status = p.is_featured ? L.feat : L.live;
+            var href = projectsBase + esc(p.slug) + '/';
+            return '<a href="' + href + '" class="reveal in index-row" style="display:block;border-bottom:1px solid var(--line-1);">' +
                 '<div style="display:grid;grid-template-columns:60px 2fr 1fr 100px 1.5fr 80px 60px;gap:20px;padding:28px 0;align-items:center;" class="grid-3-mobile-1">' +
                 '<span class="numeral index-num" style="font-size:32px;color:var(--fg-3);">' + idx + '</span>' +
-                '<h3 class="serif index-title"><em style="font-weight:300;">' + p.title + '</em></h3>' +
+                '<h3 class="serif index-title"><em style="font-weight:300;">' + esc(p.title) + '</em></h3>' +
                 '<span class="mono" style="font-size:11px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;">' + category + '</span>' +
-                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + year + '</span>' +
+                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + esc(year) + '</span>' +
                 '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.12em;">' + stack + '</span>' +
                 '<span class="mono" style="font-size:10px;color:var(--accent);letter-spacing:0.14em;">' + status + '</span>' +
                 '<span class="index-arrow" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line-3);display:inline-flex;align-items:center;justify-content:center;justify-self:end;">' +

@@ -14,6 +14,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.views import View
+from django.db import transaction
 from django.db.models import Count
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -301,29 +302,29 @@ class AddCommentView(View):
             limit_mins = getattr(settings, 'COMMENT_RATE_LIMIT_MINUTES', 1)
             limit_count = getattr(settings, 'COMMENT_RATE_LIMIT_COUNT', 3)
 
-        recent_comments = Comment.objects.filter(
-            author=profile, 
-            created_at__gte=now - timedelta(minutes=limit_mins)
-        )
-        if recent_comments.count() >= limit_count:
-            logger.warning(f'[RateLimit] User {profile.telegram_id} blocked')
-            return JsonResponse({'error': 'You are posting too fast. Please wait a moment.'}, status=429)
+        # ── Setup target object (before atomic block so errors are cheap) ──
+        try:
+            ct = ContentType.objects.get(app_label=app_label, model=model_name)
+        except ContentType.DoesNotExist:
+            return JsonResponse({'error': 'Invalid content type'}, status=404)
 
-        # ── 5. Duplicate Detection ──
-        dup_window = getattr(settings, 'COMMENT_DUP_WINDOW_MINUTES', 5)
-        last_comment = Comment.objects.filter(
-            author=profile, 
-            created_at__gte=now - timedelta(minutes=dup_window)
-        ).order_by('-created_at').first()
-        
-        if last_comment and text and last_comment.text == text:
-            logger.warning(f'[Spam] Duplicate text from {profile.telegram_id}')
-            return JsonResponse({'error': 'Duplicate comment detected.'}, status=400)
+        model_cls = ct.model_class()
+        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
+            return JsonResponse({'error': 'Target object not found'}, status=404)
+
+        parent = None
+        if parent_id:
+            try:
+                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id)
+            except (ValueError, Comment.DoesNotExist):
+                return JsonResponse({'error': 'Invalid parent comment'}, status=400)
+            if parent.parent_id is not None:
+                return JsonResponse({'error': 'Replies to replies are not allowed'}, status=400)
 
         # ── 6. Content Moderation (Keywords & Links) ──
         is_approved = True
         is_reviewed = False
-        
+
         spam_keywords = getattr(settings, 'COMMENT_SPAM_KEYWORDS', [
             r'http[s]?://', r'www\.', r'\.com', r'\.ru', r'crypto', r'casino', r'viagra'
         ])
@@ -335,41 +336,41 @@ class AddCommentView(View):
                     break
 
         if is_new_user and is_approved:
-            # We want to flag new user comments as not reviewed
             is_reviewed = False
 
-        # ── Setup target object ──
-        try:
-            ct = ContentType.objects.get(app_label=app_label, model=model_name)
-        except ContentType.DoesNotExist:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
+        # ── Atomic: rate-limit check + duplicate check + save (prevents TOCTOU race) ──
+        with transaction.atomic():
+            recent_count = (
+                Comment.objects.select_for_update()
+                .filter(author=profile, created_at__gte=now - timedelta(minutes=limit_mins))
+                .count()
+            )
+            if recent_count >= limit_count:
+                logger.warning(f'[RateLimit] User {profile.telegram_id} blocked')
+                return JsonResponse({'error': 'You are posting too fast. Please wait a moment.'}, status=429)
 
-        # Verify the target object actually exists (EXISTS query, no full row load)
-        model_cls = ct.model_class()
-        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
-            return JsonResponse({'error': 'Target object not found'}, status=404)
+            # ── 5. Duplicate Detection ──
+            dup_window = getattr(settings, 'COMMENT_DUP_WINDOW_MINUTES', 5)
+            last_comment = (
+                Comment.objects.filter(author=profile, created_at__gte=now - timedelta(minutes=dup_window))
+                .order_by('-created_at')
+                .first()
+            )
+            if last_comment and text and last_comment.text == text:
+                logger.warning(f'[Spam] Duplicate text from {profile.telegram_id}')
+                return JsonResponse({'error': 'Duplicate comment detected.'}, status=400)
 
-        parent = None
-        if parent_id:
-            try:
-                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id)
-            except (ValueError, Comment.DoesNotExist):
-                return JsonResponse({'error': 'Invalid parent comment'}, status=400)
-            # Enforce max 2-level nesting: only top-level comments can have replies
-            if parent.parent_id is not None:
-                return JsonResponse({'error': 'Replies to replies are not allowed'}, status=400)
-
-        # ── Save comment ──
-        Comment.objects.create(
-            author=profile,
-            content_type=ct,
-            object_id=object_id,
-            text=text,
-            parent=parent,
-            image=image,
-            is_approved=is_approved,
-            is_reviewed=is_reviewed,
-        )
+            # ── Save comment ──
+            Comment.objects.create(
+                author=profile,
+                content_type=ct,
+                object_id=object_id,
+                text=text,
+                parent=parent,
+                image=image,
+                is_approved=is_approved,
+                is_reviewed=is_reviewed,
+            )
         
         return JsonResponse({
             'status': 'pending' if not is_approved else 'ok',
