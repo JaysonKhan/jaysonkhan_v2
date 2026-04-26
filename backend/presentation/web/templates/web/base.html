@@ -79,7 +79,7 @@
           "@id": "{{ site_settings.og_url }}#person",
           "name": "{{ site_settings.site_author }}",
           "url": "{{ site_settings.og_url }}",
-          "jobTitle": "Flutter Mobile Engineer",
+          "jobTitle": "VibeCoder · Full-Stack Builder",
           "description": "{{ site_settings.meta_description|escapejs }}",
           "email": "{{ site_settings.email }}"{% if site_settings.og_image %},
           "image": "{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}"{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
@@ -208,9 +208,9 @@
     <footer class="surface-ink" style="margin-top: 0;">
         <div class="container" style="padding-top: 100px; padding-bottom: 48px;">
             <div class="reveal" style="margin-bottom: 80px;">
-                <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">End / Transmission complete</span>
+                <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">{{ site_settings.footer_cta_eyebrow }}</span>
                 <h2 class="display-lg" style="max-width: 1100px; margin-top: 16px;">
-                    Have an ambitious mobile product to ship?<br>
+                    {{ site_settings.footer_cta_headline|safe }}<br>
                     <em style="font-weight: 300;">Let's </em><a href="{% url 'contact' %}" style="border-bottom: 2px solid var(--accent);">open a channel.</a>
                 </h2>
             </div>
@@ -250,10 +250,9 @@
 
                 <div class="col gap-3">
                     <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">Practice</div>
-                    <span style="opacity: 0.85; font-size: 14px;">Mobile · Flutter</span>
-                    <span style="opacity: 0.85; font-size: 14px;">Backend · Django</span>
-                    <span style="opacity: 0.85; font-size: 14px;">Architecture</span>
-                    <span style="opacity: 0.85; font-size: 14px;">Design systems</span>
+                    {% for item in site_settings.footer_practice_items_resolved %}
+                    <span style="opacity: 0.85; font-size: 14px;">{{ item }}</span>
+                    {% endfor %}
                 </div>
 
                 <div class="col gap-3">

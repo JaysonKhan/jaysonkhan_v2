@@ -9,10 +9,8 @@
             <div class="reveal in">
                 <span class="numeral" style="font-size: clamp(120px, 18vw, 220px); color: var(--accent); display: block; line-height: 1; font-style: italic;">∅</span>
                 <span class="eyebrow" style="margin-top: 32px; justify-content: center;">— Transmission paused</span>
-                <h1 class="display-md serif" style="margin-top: 24px;">This section is<br><em style="font-weight: 300;">temporarily offline.</em></h1>
-                <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">
-                    {% if message %}{{ message }}{% else %}This part of the site is temporarily offline. Check back soon — it should be up again shortly.{% endif %}
-                </p>
+                <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_unavailable_headline|safe }}</h1>
+                <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ message|default:site_settings.error_unavailable_description }}</p>
                 <div class="row gap-3" style="justify-content: center; margin-top: 40px; flex-wrap: wrap;">
                     <a href="{% url 'home' %}" class="btn btn-primary btn-arrow">
                         Back home

@@ -14,7 +14,7 @@ class BrandingMixin(models.Model):
     """Site identity — title, author, favicon, logo."""
 
     site_title = models.CharField(
-        max_length=255, default="Jahongir Kuziboev | Flutter Mobile Engineer",
+        max_length=255, default="Jaysonkhan | VibeCoder · Build Studio",
         help_text="Full site name — used in the page title tag and nav logo"
     )
     site_author = models.CharField(
@@ -27,7 +27,7 @@ class BrandingMixin(models.Model):
     )
     site_tagline = models.CharField(
         max_length=500,
-        default="Flutter Mobile Engineer — building high-quality Android & iOS apps.",
+        default="VibeCoder — shipping production web apps & Telegram bots via AI-augmented development.",
         help_text="One-liner description — shown in footer"
     )
     favicon = models.ImageField(
@@ -48,13 +48,13 @@ class SEOMixin(models.Model):
 
     meta_description = models.TextField(
         max_length=160,
-        default="Flutter Mobile Engineer with 2+ years of experience developing "
-                "high-quality Android & iOS apps. Clean Architecture, BLoC, Dart.",
+        default="Jaysonkhan — VibeCoder shipping production web apps & "
+                "Telegram bots via AI-augmented development. Build Studio · Tashkent.",
         help_text="Google snippet description (max 160 chars)"
     )
     meta_keywords = models.CharField(
         max_length=255,
-        default="Flutter, Dart, Mobile Developer, Android, iOS, BLoC, Clean Architecture, Portfolio",
+        default="VibeCoder, Django, Python, Telegram bots, AI development, Claude Code, full stack, build studio, Tashkent",
         help_text="Comma-separated SEO keywords"
     )
     og_image = models.ImageField(
@@ -126,13 +126,13 @@ class HeroMixin(models.Model):
     """Hero section — headline, subtitle, optional image. CTAs/typing/badge moved to EditorialContentMixin."""
 
     hero_title = models.CharField(
-        max_length=255, default="I craft pixel-perfect mobile experiences.",
+        max_length=255, default="I ship production web apps and Telegram bots.",
         help_text="Main hero headline (HTML allowed; leave blank to use v3 default)"
     )
     hero_subtitle = models.TextField(
         max_length=500,
-        default="Flutter Mobile Engineer specializing in building scalable, "
-                "performance-oriented Android & iOS applications with Clean Architecture.",
+        default="VibeCoder shipping production-grade web applications, Telegram bots, "
+                "and AI-augmented systems. Built fast with Claude Code, built to last with Django.",
         help_text="Hero sub-heading paragraph"
     )
     hero_image = models.ImageField(
@@ -153,12 +153,11 @@ class ContentSectionsMixin(models.Model):
         help_text="About section heading (template appends 'Me' with gradient)"
     )
     about_description = models.TextField(
-        default="Flutter Mobile Engineer with 2+ years of experience developing "
-                "high-quality Android and iOS applications. Specialized in building "
-                "scalable, maintainable, and performance-oriented mobile solutions "
-                "using Clean Architecture and BLoC. Developed 15+ corporate mobile "
-                "apps with complex animations, REST API integrations, and cross-platform "
-                "adaptive user interfaces.",
+        default="Full-stack VibeCoder with 3+ years shipping production systems. "
+                "I build web apps with Django, Telegram bots with Aiogram, and "
+                "design systems with Tailwind — all augmented by Claude Code and a "
+                "sane workflow. Background in mobile (Flutter, Android, iOS), but the "
+                "studio's center of gravity has moved to web + bots + AI.",
         help_text="About section body text"
     )
     about_image = models.ImageField(
@@ -221,7 +220,7 @@ class ContentSectionsMixin(models.Model):
     )
     blog_page_subtitle = models.CharField(
         max_length=255,
-        default="Insights on mobile development, Flutter, and building production-ready apps.",
+        default="Notes on AI-augmented development, full-stack delivery, and shipping production systems that actually run.",
         help_text="Blog list page sub-heading"
     )
     contact_page_title = models.CharField(
@@ -230,7 +229,7 @@ class ContentSectionsMixin(models.Model):
     )
     contact_page_subtitle = models.CharField(
         max_length=500,
-        default="Have a mobile app idea or need a Flutter engineer? Drop me a message.",
+        default="Building a web app, Telegram bot, or AI-augmented system? Let's ship it together.",
         help_text="Contact page intro paragraph"
     )
     resume_file = models.FileField(
@@ -576,7 +575,7 @@ class EditorialContentMixin(models.Model):
     hero_section_count = models.CharField(max_length=24, blank=True, default="01 / 07")
     hero_eyebrow = models.CharField(
         max_length=160, blank=True,
-        default="Personal · Build Studio · Mobile Engineering",
+        default="Personal · Build Studio · VibeCoder",
     )
 
     # Brand line under wordmark
@@ -632,7 +631,7 @@ class EditorialContentMixin(models.Model):
     cta_title_em = models.CharField(max_length=120, blank=True, default="I'll bring the team.")
     cta_description = models.TextField(
         blank=True,
-        default="Two slots opening for Q2 2026. Best fit: ambitious mobile-first products with a 12+ week runway and a real user base in mind.",
+        default="Two slots opening for Q2 2026. Best fit: ambitious web apps, Telegram bot products, or AI-augmented systems with a 12+ week runway and a real user base in mind.",
     )
     cta_button_text = models.CharField(max_length=80, blank=True, default="Start a conversation")
     cta_response_label = models.CharField(max_length=80, blank=True, default="Avg. response · 4–6h")
@@ -652,7 +651,7 @@ class EditorialContentMixin(models.Model):
     team_studio_label = models.CharField(max_length=80, blank=True, default="Studio open · Tashkent")
     team_intro = models.TextField(
         blank=True,
-        default="A small studio of mobile engineers, designers, and operators. We combine technical execution, product thinking, and production experience to ship real apps for real users.",
+        default="A small studio of full-stack builders, designers, and operators. We ship production web apps, Telegram bots, and AI-augmented systems — using whatever tool fits the problem.",
     )
     team_values_eyebrow = models.CharField(max_length=80, blank=True, default="Operating principles")
     team_values_title = models.CharField(
@@ -672,15 +671,74 @@ class EditorialContentMixin(models.Model):
     # Availability badge (used on hero + footer)
     availability_badge = models.CharField(max_length=120, blank=True, default="Now booking · Q2 2026")
 
+    # ── Section labels (replace hardcoded "Section · 02" etc.) ────────────────
+    about_section_eyebrow = models.CharField(max_length=80, blank=True, default="About · Operator")
+    projects_section_label = models.CharField(max_length=80, blank=True, default="Section · 02")
+    blog_section_label = models.CharField(max_length=80, blank=True, default="Section · 04")
+    contact_section_label = models.CharField(max_length=80, blank=True, default="Section · 05")
+    blog_section_status = models.CharField(max_length=80, blank=True, default="New every fortnight")
+    contact_section_channels = models.CharField(max_length=80, blank=True, default="4 channels open")
+
+    # ── Team page headline (was hardcoded) ────────────────────────────────────
+    team_hero_headline = models.CharField(
+        max_length=300, blank=True,
+        default='Behind every<br>strong product is a<br><em>focused</em> team.',
+        help_text="HTML allowed (<br>, <em>). Big serif headline on /team/.",
+    )
+
+    # ── Footer CTA (was hardcoded in base.html) ───────────────────────────────
+    footer_cta_eyebrow = models.CharField(
+        max_length=120, blank=True,
+        default="End / Transmission complete",
+    )
+    footer_cta_headline = models.CharField(
+        max_length=400, blank=True,
+        default='Got a brief?<br><em>Let\'s </em>open a channel.',
+        help_text="HTML allowed. Footer ink-block CTA headline.",
+    )
+    footer_practice_items = models.JSONField(
+        blank=True, default=list,
+        help_text="List of practice/service strings, e.g. ['Web apps · Django', 'Telegram bots · Aiogram', ...]",
+    )
+
+    # ── Error page copy (was hardcoded in 404/500/section_unavailable) ────────
+    error_404_headline = models.CharField(
+        max_length=300, blank=True,
+        default='Looks like this page<br><em style="font-weight: 400;">drifted off the map.</em>',
+        help_text="HTML allowed.",
+    )
+    error_404_description = models.TextField(
+        blank=True,
+        default="The page you're looking for has either been moved, archived, or never existed in the first place. Let's get you back on track.",
+    )
+    error_500_headline = models.CharField(
+        max_length=300, blank=True,
+        default='Something on our<br><em style="font-weight: 400;">end snapped.</em>',
+        help_text="HTML allowed.",
+    )
+    error_500_description = models.TextField(
+        blank=True,
+        default="An internal error occurred and the page couldn't render. The team has been notified — try again in a moment, or head back home.",
+    )
+    error_unavailable_headline = models.CharField(
+        max_length=300, blank=True,
+        default='This section is<br><em style="font-weight: 400;">temporarily offline.</em>',
+        help_text="HTML allowed. Shown on /projects/ when apps_section_visible=False.",
+    )
+    error_unavailable_description = models.TextField(
+        blank=True,
+        default="This part of the site is temporarily offline. Check back soon — it should be up again shortly.",
+    )
+
     class Meta:
         abstract = True
 
 
 def _default_ticker():
     return [
-        "Flutter mobile engineering",
-        "Production apps",
-        "Fintech · Logistics · Consumer",
+        "VibeCoder",
+        "AI-augmented development",
+        "Web apps · Telegram bots · Full-stack",
         "Tashkent — worldwide remote",
         "Built for scale, not for demos",
     ]
@@ -704,11 +762,11 @@ def _default_process():
         {"n": "02", "title": "Architect",
          "description": "A 1-week sprint to lay out the data model, state shape, integration surfaces. No code yet."},
         {"n": "03", "title": "Build in slices",
-         "description": "End-to-end working features each week. You can run it on your phone from day 7."},
+         "description": "End-to-end working features each week. Staging deploy from day 7, AI-augmented iteration."},
         {"n": "04", "title": "Harden + ship",
-         "description": "Beta with real users, telemetry wired, rollout plan agreed. Then App Store + Play Store on the same day."},
+         "description": "Beta with real users, telemetry wired, rollback plan agreed. Then production deploy with one command."},
         {"n": "05", "title": "Operate",
-         "description": "Optional retainer. Crash triage, telemetry reviews — the boring middle that keeps things alive."},
+         "description": "Optional retainer. Incident triage, telemetry reviews — the boring middle that keeps things alive."},
     ]
 
 
@@ -720,6 +778,15 @@ def _default_team_values():
         {"title": "Fast delivery", "description": "Two-week sprints, Friday demos, no surprises."},
         {"title": "Long-term support", "description": "We don't hand off and disappear."},
         {"title": "Production-first", "description": "Real users, real reviews, real revenue."},
+    ]
+
+
+def _default_practice():
+    return [
+        "Web apps · Django",
+        "Telegram bots · Aiogram",
+        "AI-augmented systems",
+        "Design systems",
     ]
 
 
@@ -816,6 +883,10 @@ class SiteSettings(
     @property
     def team_values_resolved(self):
         return self.team_values if self.team_values else _default_team_values()
+
+    @property
+    def footer_practice_items_resolved(self):
+        return self.footer_practice_items if self.footer_practice_items else _default_practice()
 
     @property
     def footer_display_github(self):

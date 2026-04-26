@@ -28,7 +28,7 @@
 
             <div class="row between fade-up" style="margin-top: 60px; animation-delay: 0.4s; flex-wrap: wrap; gap: 24px;">
                 <p style="max-width: 560px; font-size: 18px; line-height: 1.55; color: var(--fg-2);">
-                    {% if site_settings.hero_subtitle %}{{ site_settings.hero_subtitle }}{% else %}I'm <strong style="color: var(--fg-0);">{{ site_settings.site_author }}</strong> — a Flutter mobile engineer running a small studio in Tashkent. I ship production apps for fintech, logistics, and consumer products.{% endif %}
+                    {% if site_settings.hero_subtitle %}{{ site_settings.hero_subtitle }}{% else %}I'm <strong style="color: var(--fg-0);">{{ site_settings.site_author }}</strong> — a VibeCoder running a build studio in Tashkent. I ship production web apps, Telegram bots, and AI-augmented systems.{% endif %}
                     {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">See the work →</a>{% endif %}
                 </p>
                 <div class="row gap-3" style="align-items: center; flex-wrap: wrap;">
@@ -153,7 +153,7 @@
         <div class="container">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;" class="grid-2-mobile-1">
                 <div class="col gap-5 reveal">
-                    <span class="eyebrow">About · Operator</span>
+                    <span class="eyebrow">{{ site_settings.about_section_eyebrow }}</span>
                     <h2 class="display-md serif">{{ site_settings.about_title|default:"Studio · Operator" }}</h2>
                     <p style="color: var(--fg-2); font-size: 17px; line-height: 1.7; max-width: 540px;">{{ site_settings.about_description }}</p>
                     {% if site_settings.resume_file %}

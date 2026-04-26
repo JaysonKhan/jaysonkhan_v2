@@ -19,11 +19,7 @@
                 <span class="tag"><span class="dot-live"></span> {{ site_settings.team_studio_label }}</span>
             </div>
             <div class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.team_hero_eyebrow }}</div>
-            <h1 class="display-xl">
-                Behind every<br>
-                strong product is a<br>
-                <em style="font-weight: 300; font-style: italic;">focused</em> team.
-            </h1>
+            <h1 class="display-xl">{{ site_settings.team_hero_headline|safe }}</h1>
             <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">{{ site_settings.team_intro }}</p>
         </div>
     </section>
