@@ -229,7 +229,7 @@
                 <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">{{ site_settings.footer_cta_eyebrow }}</span>
                 <h2 class="display-lg" style="max-width: 1100px; margin-top: 16px;">
                     {{ site_settings.footer_cta_headline|safe }}<br>
-                    <em style="font-weight: 300;">Let's </em><a href="{% url 'contact' %}" style="border-bottom: 2px solid var(--accent);">open a channel.</a>
+                    <em style="font-weight: 300;">{% trans "Let's" %} </em><a href="{% url 'contact' %}" style="border-bottom: 2px solid var(--accent);">{% trans "open a channel." %}</a>
                 </h2>
             </div>
 

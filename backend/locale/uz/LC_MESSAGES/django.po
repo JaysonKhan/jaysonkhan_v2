@@ -334,3 +334,9 @@ msgstr "Brief keltiring."
 
 msgid "We'll bring the team."
 msgstr "Biz jamoani olib kelamiz."
+
+msgid "Let's"
+msgstr "Keling,"
+
+msgid "open a channel."
+msgstr "kanal ochamiz."

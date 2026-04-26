@@ -348,3 +348,9 @@ msgstr "Приносите бриф."
 
 msgid "We'll bring the team."
 msgstr "Мы приведём команду."
+
+msgid "Let's"
+msgstr "Давайте"
+
+msgid "open a channel."
+msgstr "откроем канал."
