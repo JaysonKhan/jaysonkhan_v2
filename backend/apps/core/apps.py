@@ -28,6 +28,8 @@ class CoreConfig(AppConfig):
 
         @staticmethod
         def _xo_aware_get_language_info(language):
+            import sys as ___s
+            ___s.stderr.write(f"[xo-static] called with {language!r}\n")
             code = language[0] if (language and len(language[0]) > 1) else str(language)
             if code == 'xo':
                 return dict(_XO_LANG_INFO)
