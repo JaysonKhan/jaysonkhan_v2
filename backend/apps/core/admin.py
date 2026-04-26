@@ -99,7 +99,7 @@ class SiteSettingsAdmin(TranslationAdmin, ModelAdmin):
                 footer_fields.append(fname)
         footer_fields.append('footer_text')   # always exists
 
-        return [
+        fieldsets = [
 
             # ── Tab 1: Branding ────────────────────────────────────────────────
             ('Branding', {
@@ -276,6 +276,10 @@ class SiteSettingsAdmin(TranslationAdmin, ModelAdmin):
                 ),
             }),
         ]
+        # TranslationAdmin.get_form() replaces base field names (e.g. 'site_title')
+        # with language variants ('site_title_xo', 'site_title_uz', ...) in the form.
+        # _patch_fieldsets() does the same for fieldsets so they stay in sync.
+        return self._patch_fieldsets(fieldsets)
 
     @staticmethod
     def _editorial_fields(columns):
