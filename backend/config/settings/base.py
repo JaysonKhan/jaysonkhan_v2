@@ -167,6 +167,8 @@ def _patched_get_language_info(lang_code):
 
 
 _translation.get_language_info = _patched_get_language_info
+import sys as _sys  # noqa: E402
+_sys.stderr.write(f"[base.py] Monkey-patched get_language_info: {_translation.get_language_info.__name__}\n")
 LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
