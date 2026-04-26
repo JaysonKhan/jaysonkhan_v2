@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% trans 'Log in' %} | {{ site_title|default:"Studio Console" }}</title>
+    <title>{% trans 'Log in' %} | {{ site_title|default:"JK-DinAdmin" }}</title>
     <meta name="robots" content="noindex, nofollow">
 
     <script>
@@ -17,7 +17,7 @@
     })();
     </script>
 
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <link rel="stylesheet" href="{% static 'admin/css/editorial.css' %}">
     <style>
         body { min-height: 100vh; }
         .login-grid {
@@ -39,7 +39,7 @@
         .login-aside {
             background: var(--bg-ink);
             color: var(--fg-on-ink);
-            padding: 64px 48px;
+            padding: 56px 56px 56px 64px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -49,8 +49,8 @@
         .login-aside::before {
             content: "";
             position: absolute;
-            top: -100px; right: -100px;
-            width: 400px; height: 400px;
+            top: -120px; right: -120px;
+            width: 480px; height: 480px;
             border: 1px solid rgba(243,239,230,0.06);
             border-radius: 50%;
             pointer-events: none;
@@ -58,23 +58,23 @@
         .login-aside::after {
             content: "";
             position: absolute;
-            bottom: -150px; left: -150px;
-            width: 500px; height: 500px;
+            bottom: -180px; left: -180px;
+            width: 580px; height: 580px;
             border: 1px solid rgba(243,239,230,0.04);
             border-radius: 50%;
             pointer-events: none;
         }
         .login-aside .ticker-item {
             font-family: var(--font-mono);
-            font-size: 11px;
-            letter-spacing: 0.18em;
+            font-size: 10px;
+            letter-spacing: 0.22em;
             text-transform: uppercase;
             opacity: 0.5;
         }
         .login-error {
             padding: 14px 18px;
             background: var(--bg-2);
-            border: 1px solid var(--danger);
+            border: 1px solid rgba(177,67,47,0.32);
             border-left: 2px solid var(--danger);
             margin-bottom: 24px;
         }
@@ -87,71 +87,113 @@
         }
         .login-error-msg {
             color: var(--fg-1);
-            font-size: 14px;
+            font-size: 13px;
             margin-top: 4px;
         }
-        .login-input-block {
-            background: var(--bg-2);
-            border: 1px solid var(--line-2);
-            padding: 14px 16px;
+        .brand-mark {
+            width: 44px; height: 44px;
+            background: var(--bg-1);
             color: var(--fg-0);
-            font-family: var(--font-sans);
-            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 20px; line-height: 1;
+            font-variation-settings: var(--fraunces-headline);
+            flex-shrink: 0;
+            position: relative;
+        }
+        .brand-mark::after {
+            content: "";
+            position: absolute; inset: 4px;
+            border: 1px solid rgba(20,18,14,0.18);
+            pointer-events: none;
+        }
+        .brand-cluster {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .brand-cluster-text {
+            display: flex; flex-direction: column; gap: 3px;
+            line-height: 1;
+        }
+        .brand-cluster-name {
+            font-family: var(--font-display);
+            font-variation-settings: var(--fraunces-headline);
+            font-size: 18px;
+            letter-spacing: -0.01em;
+        }
+        .brand-cluster-sub {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+        .login-pe {
+            display: flex; align-items: center; gap: 14px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+        .login-pe .pe-num {
+            display: inline-flex; align-items: center;
+            padding: 3px 8px;
+            border: 1px solid rgba(243,239,230,0.2);
             border-radius: 4px;
-            width: 100%;
-            transition: border-color .3s var(--ease-out);
         }
-        .login-input-block:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+        .login-pe .pe-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
         }
-        .login-input-block::placeholder { color: var(--fg-4); }
     </style>
 </head>
-<body>
-    <main class="login-grid">
+<body data-font-set="A">
+    <main class="login-grid fade-in">
         {# ========================== LEFT: BRAND ASIDE ========================== #}
         <aside class="login-aside">
-            <div>
-                <div class="row gap-3" style="align-items: center;">
-                    <svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                        <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1"/>
-                        <text x="20" y="26" text-anchor="middle" font-family="Fraunces, serif" font-size="20" font-style="italic" font-weight="400" fill="currentColor">J</text>
-                        <circle cx="32" cy="8" r="2" fill="var(--accent)"/>
-                    </svg>
-                    <span class="col" style="line-height: 1; gap: 2px;">
-                        <span style="font-family: var(--font-display); font-size: 20px; letter-spacing: -0.02em;">Studio Console<span style="font-style: italic; color: var(--accent);">.</span></span>
-                        <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; opacity: 0.5; text-transform: uppercase;">v3.0 · OWNER</span>
-                    </span>
+            <div class="brand-cluster" style="position: relative; z-index: 1;">
+                <div class="brand-mark">JK</div>
+                <div class="brand-cluster-text">
+                    <span class="brand-cluster-name">Jaysonkhan</span>
+                    <span class="brand-cluster-sub">DIN-ADMIN · v3.2</span>
                 </div>
             </div>
 
             <div style="position: relative; z-index: 1;">
-                <span class="eyebrow" style="margin-bottom: 32px;">Restricted access · Owner only</span>
-                <h1 class="display-lg serif" style="margin-top: 24px;">
+                <div class="login-pe" style="margin-bottom: 32px;">
+                    <span class="pe-num">AUTH·001</span>
+                    <span class="pe-dot"></span>
+                    <span>Restricted access · Owner only</span>
+                </div>
+                <h1 class="page-title" style="font-size: 64px; line-height: 0.95;">
                     Authenticate<br>
                     to enter the<br>
-                    <em style="font-weight: 300; color: var(--accent);">console.</em>
+                    <em style="color: var(--accent);">console.</em>
                 </h1>
-                <p style="margin-top: 32px; font-size: 16px; opacity: 0.7; max-width: 420px; line-height: 1.6;">
+                <p style="margin-top: 32px; font-size: 14.5px; opacity: 0.7; max-width: 420px; line-height: 1.6;">
                     All sessions are logged. This system is monitored. Disconnect immediately if you are not authorized.
                 </p>
             </div>
 
-            <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 16px; position: relative; z-index: 1;">
+            <div class="row" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; position: relative; z-index: 1;">
                 <span class="ticker-item">● Tashkent · UTC+5</span>
-                <span class="ticker-item">VOL. 03 · ISSUE 01</span>
+                <span class="ticker-item">VOL. 03 · ISSUE 02</span>
             </div>
         </aside>
 
         {# ========================== RIGHT: FORM ========================== #}
         <div class="login-form-wrap">
             <div class="login-form">
-                <span class="eyebrow" style="margin-bottom: 32px;">Form 0001 · Authentication</span>
-                <h2 class="display-md serif" style="margin-top: 24px;">
+                <div class="page-eyebrow" style="margin-bottom: 28px;">
+                    <span class="pe-num">FORM·0001</span>
+                    <span class="pe-dot"></span>
+                    <span>Authentication</span>
+                </div>
+                <h2 class="page-title" style="font-size: 56px;">
                     Welcome back,<br>
-                    <em style="font-weight: 300;">operator.</em>
+                    <em>operator.</em>
                 </h2>
 
                 <div style="margin-top: 48px;">
@@ -166,52 +208,46 @@
                     {% endif %}
 
                     {% if user.is_authenticated %}
-                    <div class="login-error" style="border-color: var(--warning); border-left-color: var(--warning);">
+                    <div class="login-error" style="border-color: rgba(178,122,0,0.32); border-left-color: var(--warning);">
                         <span class="login-error-label" style="color: var(--warning);">● Insufficient permissions</span>
                         <p class="login-error-msg">{% blocktranslate trimmed %}You are authenticated as {{ username }}, but are not authorized to access this page.{% endblocktranslate %}</p>
                     </div>
                     {% endif %}
 
-                    <form action="{{ app_path }}" method="post" class="col gap-6" id="login-form">
+                    <form action="{{ app_path }}" method="post" id="login-form" style="display: flex; flex-direction: column; gap: 22px;">
                         {% csrf_token %}
 
-                        <div>
-                            <label class="label" for="id_username">{{ form.username.label|default:"Username" }}</label>
-                            <input type="text" name="username" id="id_username" class="login-input-block" autocapitalize="none" autocomplete="username" maxlength="254" required {% if form.username.value %}value="{{ form.username.value }}"{% endif %} placeholder="operator">
+                        <div class="field" style="display: flex; flex-direction: column; gap: 8px;">
+                            <label class="field-label" for="id_username">{{ form.username.label|default:"Username" }}</label>
+                            <input type="text" name="username" id="id_username" class="input-block" autocapitalize="none" autocomplete="username" maxlength="254" required {% if form.username.value %}value="{{ form.username.value }}"{% endif %} placeholder="operator">
                         </div>
 
-                        <div>
-                            <label class="label" for="id_password">{{ form.password.label|default:"Password" }}</label>
-                            <input type="password" name="password" id="id_password" class="login-input-block" autocomplete="current-password" required placeholder="••••••••">
+                        <div class="field" style="display: flex; flex-direction: column; gap: 8px;">
+                            <label class="field-label" for="id_password">{{ form.password.label|default:"Password" }}</label>
+                            <input type="password" name="password" id="id_password" class="input-block" autocomplete="current-password" required placeholder="••••••••">
                         </div>
 
                         <input type="hidden" name="next" value="{{ next }}">
 
-                        <div class="between" style="padding-top: 24px; border-top: 1px solid var(--line-2); margin-top: 8px; flex-wrap: wrap; gap: 16px;">
-                            <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">AWAITING CREDENTIALS</span>
-                            <button type="submit" class="btn btn-primary btn-arrow" style="--pad-y: 14px; --pad-x: 28px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 22px; border-top: 1px solid var(--line-2); margin-top: 8px; flex-wrap: wrap; gap: 16px;">
+                            <span class="label-mono">AWAITING CREDENTIALS</span>
+                            <button type="submit" class="btn btn-primary">
                                 {% trans 'Log in' %}
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 H19"/><path d="M13 6 L19 12 L13 18"/></svg>
                             </button>
                         </div>
 
                         {% url 'admin_password_reset' as password_reset_url %}
                         {% if password_reset_url %}
-                        <a href="{{ password_reset_url }}" class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase; text-align: center; margin-top: 12px;">{% trans 'Forgotten your password or username?' %} →</a>
+                        <a href="{{ password_reset_url }}" class="label-mono" style="margin-top: 8px; text-align: center; color: var(--fg-3);">{% trans 'Forgotten your password or username?' %} →</a>
                         {% endif %}
                     </form>
                 </div>
 
-                <div class="between" style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
-                    <a href="/" class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">← Back to site</a>
-                    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-                        <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                        </svg>
-                        <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="4"/>
-                            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-                        </svg>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
+                    <a href="/" class="label-mono" style="color: var(--fg-3); text-decoration: none;">← Back to site</a>
+                    <button type="button" id="theme-toggle" aria-label="Toggle theme" style="width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; color: var(--fg-2); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z"/></svg>
                     </button>
                 </div>
             </div>
@@ -222,11 +258,20 @@
     (function() {
         var btn = document.getElementById('theme-toggle');
         if (!btn) return;
+        function updateIcon(theme) {
+            var icon = document.getElementById('theme-icon');
+            if (!icon) return;
+            icon.innerHTML = theme === 'dark'
+                ? '<circle cx="12" cy="12" r="4"/><path d="M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22 M4.5 4.5 L6.5 6.5 M17.5 17.5 L19.5 19.5 M4.5 19.5 L6.5 17.5 M17.5 6.5 L19.5 4.5"/>'
+                : '<path d="M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z"/>';
+        }
+        updateIcon(document.documentElement.getAttribute('data-theme'));
         btn.addEventListener('click', function() {
             var r = document.documentElement;
             var current = r.getAttribute('data-theme') || 'light';
             var next = current === 'light' ? 'dark' : 'light';
             r.setAttribute('data-theme', next);
+            updateIcon(next);
             try {
                 var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
                 t.theme = next;

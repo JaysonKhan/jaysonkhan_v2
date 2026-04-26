@@ -1,144 +1,173 @@
 {% extends 'admin/base.html' %}
 {% load i18n %}
 
-{% block title %}Asset Manager | {{ site_title|default:_('Studio Console') }}{% endblock %}
+{% block title %}Media kutubxonasi | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
 
 {% block branding %}
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
 {% block content %}
-<div style="padding: 0; max-width: 1440px; margin: 0 auto;" class="jk-asset-manager">
+<div class="page fade-in" style="max-width: 1480px; margin: 0 auto; padding: 28px 4px 80px;" id="asset-manager">
 
     {# ========================== HEADER ========================== #}
-    <div class="flex items-start justify-between" style="flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
-        <div class="flex flex-col" style="gap: 8px;">
-            <span class="jk-eyebrow">Library · Studio Console</span>
-            <h1 class="jk-display-md">
-                <em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">Asset Manager.</em>
-            </h1>
-            <p class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em; text-transform: uppercase;">
-                {{ total_count }} files · {{ total_size_mb }} MB
-                {% if total_count %} · last upload {{ last_upload }} ago{% endif %}
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">MED·012</span>
+                <span class="pe-dot"></span>
+                <span>Asset · saqlash · {{ total_count }} fayl</span>
+            </div>
+            <h1 class="page-title">Media <em>kutubxonasi.</em></h1>
+            <p class="page-sub">
+                {{ total_count }} fayl · {{ total_size_mb }} MB band{% if total_count %} · oxirgi yuklash {{ last_upload }} oldin{% endif %}.
+                TinyMCE muharriri va loyiha sahifalari shu kutubxonadan oladi.
             </p>
         </div>
-        <div class="flex items-center" style="gap: 8px;">
-            <button type="button" class="jk-btn" id="btn-trigger-upload">↑ Upload files</button>
+        <div class="page-actions">
+            <button type="button" class="btn" id="btn-trigger-upload">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16 V4"/><path d="M6 10 L12 4 L18 10"/><path d="M4 20 H20"/></svg>
+                Fayl yuklash
+            </button>
+            <a href="{% url 'admin:core_asset_changelist' %}" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6 H20"/><path d="M4 12 H20"/><path d="M4 18 H20"/></svg>
+                Jadval ko'rinish
+            </a>
         </div>
     </div>
 
     {# ========================== DROPZONE ========================== #}
-    <form id="upload-form" enctype="multipart/form-data" style="margin-bottom: 32px;">
+    <form id="upload-form" enctype="multipart/form-data" style="margin-bottom: 24px;">
         {% csrf_token %}
-        <div id="dropzone" class="jk-brackets" style="
-            padding: 48px;
-            border: 1.5px dashed var(--jk-line-3);
-            background: var(--jk-bg-2);
+        <div id="dropzone" class="brackets" style="
+            padding: 56px;
+            border: 1.5px dashed var(--line-3);
+            background: var(--bg-2);
             text-align: center;
             cursor: pointer;
-            transition: all .3s var(--jk-ease-out);
+            transition: all .3s var(--ease-out);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
+            border-radius: 10px;
         ">
-            <span style="font-family: var(--jk-font-display); font-style: italic; font-size: 28px; color: var(--jk-fg-0);">Drop files here</span>
-            <span class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em;">JPG · PNG · SVG · WEBP · MP4 · PDF · MAX 50 MB</span>
-            <select id="upload-folder" class="jk-input" style="max-width: 240px; margin-top: 8px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fg-3);"><path d="M12 16 V4"/><path d="M6 10 L12 4 L18 10"/><path d="M4 20 H20"/></svg>
+            <div style="font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--fg-0); letter-spacing: -0.015em;">Drop files here</div>
+            <span class="label-mono">JPG · PNG · SVG · WEBP · MP4 · PDF · MAX 50 MB</span>
+            <select id="upload-folder" class="input-block" style="max-width: 240px; margin-top: 8px;">
                 {% for f in folders %}{% if f.key != 'all' %}<option value="{{ f.key }}">→ {{ f.label }}</option>{% endif %}{% endfor %}
             </select>
         </div>
         <input type="file" id="file-input" multiple style="display: none;" accept="image/*,video/*,application/pdf,.svg">
     </form>
 
-    {# ========================== FOLDER FILTER ========================== #}
-    <div class="flex items-center justify-between" style="padding-bottom: 16px; border-bottom: 1px solid var(--jk-line-1); flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-        <div class="flex items-center" style="gap: 8px; flex-wrap: wrap;">
-            {% for f in folders %}
-            <a href="?folder={{ f.key }}" class="jk-tag" style="padding: 8px 16px; text-decoration: none; {% if active_folder == f.key %}background: var(--jk-fg-0); color: var(--jk-bg-1); border-color: var(--jk-fg-0);{% else %}color: var(--jk-fg-2);{% endif %}">
-                {{ f.label }} <span style="opacity: 0.6;">{{ f.count }}</span>
-            </a>
-            {% endfor %}
-        </div>
-        <span class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em; text-transform: uppercase;">{{ assets|length }} ITEMS</span>
+    {# ========================== TOOLBAR (folders + count) ========================== #}
+    <div class="toolbar" style="border: 1px solid var(--line-1); border-radius: 10px; margin-bottom: 24px;">
+        {% for f in folders %}
+        <a href="?folder={{ f.key }}" class="chip{% if active_folder == f.key %} active{% endif %}">
+            {{ f.label }}
+            <span class="count">{{ f.count }}</span>
+        </a>
+        {% endfor %}
+        <span style="margin-left: auto;" class="label-mono">{{ assets|length }} ITEMS</span>
     </div>
 
     {# ========================== BULK BAR ========================== #}
-    <div id="bulk-bar" class="flex items-center justify-between jk-brackets" style="display: none; padding: 14px 24px; background: var(--jk-bg-3); border: 1px solid var(--jk-accent); margin-bottom: 24px;">
-        <span class="jk-mono" style="font-size: 11px; color: var(--jk-accent); letter-spacing: 0.14em;">● <span id="bulk-count">0</span> SELECTED</span>
-        <div class="flex items-center" style="gap: 8px; flex-wrap: wrap;">
-            <select id="bulk-move-folder" class="jk-input" style="padding: 8px 12px; max-width: 160px;">
-                {% for f in folders %}{% if f.key != 'all' %}<option value="{{ f.key }}">Move → {{ f.label }}</option>{% endif %}{% endfor %}
-            </select>
-            <button type="button" id="btn-bulk-move" class="jk-btn" style="padding: 8px 16px;">Move</button>
-            <button type="button" id="btn-bulk-delete" class="jk-btn" style="padding: 8px 16px; color: var(--danger,#b1432f); border-color: var(--danger,#b1432f);">✕ Delete</button>
-            <button type="button" id="btn-bulk-cancel" class="jk-btn jk-btn-ghost" style="padding: 8px 16px;">Cancel</button>
+    <div id="bulk-bar" class="brackets" style="display: none; padding: 14px 24px; background: var(--bg-3); border: 1px solid var(--accent); margin-bottom: 24px; border-radius: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <span class="label-mono" style="color: var(--accent);">● <span id="bulk-count">0</span> SELECTED</span>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <select id="bulk-move-folder" class="input-block" style="padding: 8px 12px; max-width: 180px;">
+                    {% for f in folders %}{% if f.key != 'all' %}<option value="{{ f.key }}">Move → {{ f.label }}</option>{% endif %}{% endfor %}
+                </select>
+                <button type="button" id="btn-bulk-move" class="btn btn-sm">Move</button>
+                <button type="button" id="btn-bulk-delete" class="btn btn-sm btn-danger">✕ Delete</button>
+                <button type="button" id="btn-bulk-cancel" class="btn btn-sm btn-ghost">Cancel</button>
+            </div>
         </div>
     </div>
 
     {# ========================== GRID ========================== #}
     <div id="asset-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
         {% for a in assets %}
-        <article class="asset-card jk-brackets" data-id="{{ a.pk }}" data-url="{{ a.file.url }}" data-name="{{ a.name }}.{{ a.format|lower }}" data-format="{{ a.format }}" data-dimensions="{{ a.dimensions }}" data-size="{{ a.size_human }}" data-folder="{{ a.folder }}" data-folder-label="{{ a.get_folder_display }}" data-image="{% if a.is_image %}1{% else %}0{% endif %}" style="background: var(--jk-bg-2); border: 1px solid var(--jk-line-1); cursor: pointer; position: relative; transition: border-color .3s var(--jk-ease-out);">
-            <button type="button" class="asset-checkbox" aria-label="Select" style="position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border: 1.5px solid var(--jk-line-3); background: var(--jk-bg-1); border-radius: 3px; z-index: 2; display: flex; align-items: center; justify-content: center; color: var(--jk-bg-1); font-size: 12px; cursor: pointer;"></button>
+        <article class="asset-card brackets" data-id="{{ a.pk }}" data-url="{{ a.file.url }}" data-name="{{ a.name }}.{{ a.format|lower }}" data-format="{{ a.format }}" data-dimensions="{{ a.dimensions }}" data-size="{{ a.size_human }}" data-folder="{{ a.folder }}" data-folder-label="{{ a.get_folder_display }}" data-image="{% if a.is_image %}1{% else %}0{% endif %}" data-usage="{{ a.usage_count }}" style="background: var(--bg-2); border: 1px solid var(--line-1); cursor: pointer; position: relative; padding: 0; border-radius: 10px; overflow: hidden; transition: border-color .3s var(--ease-out);">
+            <button type="button" class="asset-checkbox" aria-label="Select" style="position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border: 1.5px solid var(--line-3); background: var(--bg-1); border-radius: 4px; z-index: 2; display: flex; align-items: center; justify-content: center; color: var(--bg-1); font-size: 12px; cursor: pointer;"></button>
 
-            <div style="aspect-ratio: 4/3; background: var(--jk-bg-3); position: relative; border-bottom: 1px solid var(--jk-line-1); overflow: hidden;">
+            <div style="aspect-ratio: 4/3; background: var(--bg-3); position: relative; border-bottom: 1px solid var(--line-1); overflow: hidden;">
                 {% if a.is_image and a.file %}
                 <img src="{{ a.file.url }}" alt="{{ a.alt_text|default:a.name }}" loading="lazy" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;">
                 {% else %}
                 <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
-                    <span class="jk-numeral" style="font-size: 60px; color: var(--jk-fg-4);">{{ a.format|slice:":1"|default:"?" }}</span>
+                    <span class="numeral" style="font-size: 60px; color: var(--fg-4);">{{ a.format|slice:":1"|default:"?" }}</span>
                 </div>
                 {% endif %}
-                <span class="jk-tag" style="position: absolute; top: 10px; right: 10px; background: var(--jk-bg-1); font-size: 9px;">{{ a.format }}</span>
+                <span class="pill solid" style="position: absolute; top: 10px; right: 10px;">{{ a.format }}</span>
+                {% if a.usage_count > 0 %}<span class="pill ok" style="position: absolute; bottom: 10px; right: 10px;"><span class="d"></span>{{ a.usage_count }}×</span>{% endif %}
             </div>
-            <div style="padding: 14px;">
-                <div style="font-size: 13px; color: var(--jk-fg-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.name }}.{{ a.format|lower }}</div>
-                <div class="flex items-center justify-between" style="margin-top: 6px;">
-                    <span class="jk-mono" style="font-size: 10px; color: var(--jk-fg-3);">{{ a.size_human }}</span>
-                    <span class="jk-mono" style="font-size: 10px; color: var(--jk-fg-4);">{{ a.get_folder_display|upper }}</span>
+            <div style="padding: 14px 16px;">
+                <div class="ttl" style="font-family: var(--font-display); font-variation-settings: var(--fraunces-headline); font-size: 15px; color: var(--fg-0); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.name }}.{{ a.format|lower }}</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+                    <span class="label-mono" style="font-size: 9px;">{{ a.size_human }}</span>
+                    <span class="label-mono" style="font-size: 9px; color: var(--fg-4);">{{ a.get_folder_display|upper }}</span>
                 </div>
             </div>
         </article>
         {% empty %}
-        <div style="grid-column: 1 / -1; padding: 80px 0; text-align: center;">
-            <span class="jk-numeral" style="font-size: 120px; color: var(--jk-fg-4); font-style: italic; display: block; line-height: 1;">∅</span>
-            <span class="jk-mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--jk-fg-3); margin-top: 24px; display: block;">No assets in this folder</span>
-            <p style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300; font-size: 24px; color: var(--jk-fg-1); margin-top: 12px;">Drop files above to start the library.</p>
+        <div style="grid-column: 1 / -1;" class="empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--fg-4);"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M3 18 L8 13 L13 18 L17 14 L21 18"/></svg>
+            <div style="font-family: var(--font-display); font-size: 26px; margin-top: 16px; color: var(--fg-1); letter-spacing: -0.01em;">Bu papka <em style="font-style: italic; color: var(--accent);">bo'sh.</em></div>
+            <div style="margin-top: 8px; max-width: 460px; margin-left: auto; margin-right: auto; color: var(--fg-3); font-size: 13.5px; line-height: 1.6;">Yuqoridagi drag-zone'ga rasm yoki video tashlang. JPG, PNG, SVG, WEBP, MP4 va PDF qo'llab-quvvatlanadi.</div>
         </div>
         {% endfor %}
     </div>
 
     {# ========================== PREVIEW MODAL ========================== #}
     <div id="preview-modal" style="display: none; position: fixed; inset: 0; background: rgba(20,18,14,0.7); backdrop-filter: blur(12px); z-index: 1000; align-items: center; justify-content: center; padding: 32px;">
-        <div id="preview-content" class="jk-brackets" style="background: var(--jk-bg-2); border: 1px solid var(--jk-line-2); max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1fr 320px; max-height: 90vh; overflow: hidden;">
-            <div id="preview-media" style="aspect-ratio: 4/3; background: var(--jk-bg-3); position: relative; border-right: 1px solid var(--jk-line-2); display: flex; align-items: center; justify-content: center;">
-                <button type="button" id="preview-close" class="jk-mono" style="position: absolute; top: 16px; right: 16px; font-size: 11px; color: var(--jk-fg-2); letter-spacing: 0.18em;">✕ CLOSE</button>
+        <div id="preview-content" class="brackets" style="background: var(--bg-2); border: 1px solid var(--line-2); max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1fr 360px; max-height: 90vh; overflow: hidden; border-radius: 10px; padding: 0;">
+            <div id="preview-media" style="aspect-ratio: 4/3; background: var(--bg-3); position: relative; border-right: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center;">
+                <button type="button" id="preview-close" class="label-mono" style="position: absolute; top: 16px; right: 16px; cursor: pointer; background: transparent; border: 1px solid var(--line-2); padding: 6px 12px; border-radius: 4px;">✕ CLOSE</button>
             </div>
-            <div class="flex flex-col" style="padding: 32px; gap: 20px; overflow: auto;">
+            <div style="display: flex; flex-direction: column; padding: 28px; gap: 18px; overflow: auto;">
                 <div>
-                    <span class="jk-tile-label">File</span>
-                    <h3 id="preview-name" class="jk-display-sm" style="font-style: italic; margin-top: 6px;"></h3>
+                    <span class="label-mono">File</span>
+                    <h3 id="preview-name" style="font-family: var(--font-display); font-variation-settings: var(--fraunces-headline); font-size: 22px; color: var(--fg-0); margin-top: 6px; letter-spacing: -0.015em;"></h3>
                 </div>
-                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
-                    <span class="jk-tile-label">Format</span>
-                    <span id="preview-format" style="font-size: 13px; color: var(--jk-fg-1);"></span>
+                <div style="display: grid; gap: 0;">
+                    <div class="stat" style="border-right: none; border-bottom: 1px solid var(--line-1); padding: 12px 0;">
+                        <span class="stat-label">Format</span>
+                        <span id="preview-format" class="stat-value" style="font-size: 18px;"></span>
+                    </div>
+                    <div class="stat" style="border-right: none; border-bottom: 1px solid var(--line-1); padding: 12px 0;">
+                        <span class="stat-label">Dimensions</span>
+                        <span id="preview-dimensions" class="stat-value" style="font-size: 18px;"></span>
+                    </div>
+                    <div class="stat" style="border-right: none; border-bottom: 1px solid var(--line-1); padding: 12px 0;">
+                        <span class="stat-label">Size</span>
+                        <span id="preview-size" class="stat-value" style="font-size: 18px;"></span>
+                    </div>
+                    <div class="stat" style="border-right: none; border-bottom: 1px solid var(--line-1); padding: 12px 0;">
+                        <span class="stat-label">Folder</span>
+                        <span id="preview-folder" class="stat-value" style="font-size: 18px;"></span>
+                    </div>
+                    <div class="stat" style="border-right: none; padding: 12px 0;">
+                        <span class="stat-label">Usage</span>
+                        <span id="preview-usage" class="stat-value" style="font-size: 18px;"></span>
+                    </div>
                 </div>
-                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
-                    <span class="jk-tile-label">Dimensions</span>
-                    <span id="preview-dimensions" style="font-size: 13px; color: var(--jk-fg-1);"></span>
-                </div>
-                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
-                    <span class="jk-tile-label">Size</span>
-                    <span id="preview-size" style="font-size: 13px; color: var(--jk-fg-1);"></span>
-                </div>
-                <div class="flex items-center justify-between" style="padding-bottom: 12px; border-bottom: 1px solid var(--jk-line-1);">
-                    <span class="jk-tile-label">Folder</span>
-                    <span id="preview-folder" style="font-size: 13px; color: var(--jk-fg-1);"></span>
-                </div>
-                <div class="flex flex-col" style="gap: 8px; margin-top: 8px;">
-                    <a id="preview-download" href="#" download class="jk-btn jk-btn-primary" style="justify-content: center;">↓ Download</a>
-                    <a id="preview-edit" href="#" class="jk-btn" style="justify-content: center;">⚙ Edit metadata</a>
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                    <a id="preview-download" href="#" download class="btn btn-primary" style="justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 4 V16"/><path d="M6 10 L12 16 L18 10"/><path d="M4 20 H20"/></svg>
+                        Download
+                    </a>
+                    <a id="preview-edit" href="#" class="btn" style="justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 L4 16 L16 4 L20 8 L8 20 Z"/></svg>
+                        Edit metadata
+                    </a>
+                    <button type="button" id="preview-copy-url" class="btn btn-ghost" style="justify-content: center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="1"/><path d="M16 8 V5 A1 1 0 0 0 15 4 H4 A1 1 0 0 0 3 5 V16 A1 1 0 0 0 4 17 H8"/></svg>
+                        Copy URL
+                    </button>
                 </div>
             </div>
         </div>
@@ -158,21 +187,23 @@
 
     // ── Upload (click + drag) ─────────────────────────────────────────
     document.getElementById('btn-trigger-upload').addEventListener('click', function() { fileInput.click(); });
-    dropzone.addEventListener('click', function() { fileInput.click(); });
+    dropzone.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'SELECT') fileInput.click();
+    });
 
     dropzone.addEventListener('dragover', function(e) {
         e.preventDefault();
-        dropzone.style.borderColor = 'var(--jk-accent)';
-        dropzone.style.background = 'var(--jk-bg-3)';
+        dropzone.style.borderColor = 'var(--accent)';
+        dropzone.style.background = 'var(--bg-3)';
     });
     dropzone.addEventListener('dragleave', function() {
-        dropzone.style.borderColor = 'var(--jk-line-3)';
-        dropzone.style.background = 'var(--jk-bg-2)';
+        dropzone.style.borderColor = 'var(--line-3)';
+        dropzone.style.background = 'var(--bg-2)';
     });
     dropzone.addEventListener('drop', function(e) {
         e.preventDefault();
-        dropzone.style.borderColor = 'var(--jk-line-3)';
-        dropzone.style.background = 'var(--jk-bg-2)';
+        dropzone.style.borderColor = 'var(--line-3)';
+        dropzone.style.background = 'var(--bg-2)';
         if (e.dataTransfer.files && e.dataTransfer.files.length) upload(e.dataTransfer.files);
     });
     fileInput.addEventListener('change', function() {
@@ -183,9 +214,9 @@
         var fd = new FormData();
         for (var i = 0; i < files.length; i++) fd.append('files', files[i]);
         fd.append('folder', document.getElementById('upload-folder').value);
-        var label = dropzone.querySelector('span:first-child');
-        var orig = label.textContent;
-        label.textContent = 'Uploading…';
+        var label = dropzone.querySelector('div');
+        var orig = label ? label.textContent : '';
+        if (label) label.textContent = 'Uploading…';
         fetch("{% url 'admin:core_asset_upload' %}", {
             method: 'POST', body: fd,
             headers: { 'X-CSRFToken': csrf },
@@ -193,15 +224,12 @@
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            label.textContent = orig;
-            if (data.status === 'ok') {
-                window.location.reload();
-            } else {
-                alert(data.error || 'Upload failed');
-            }
+            if (label) label.textContent = orig;
+            if (data.status === 'ok') window.location.reload();
+            else alert(data.error || 'Upload failed');
         })
         .catch(function(err) {
-            label.textContent = orig;
+            if (label) label.textContent = orig;
             alert('Upload failed: ' + err);
         });
     }
@@ -209,19 +237,19 @@
     // ── Selection ──────────────────────────────────────────────────────
     function refreshBulk() {
         bulkCount.textContent = selected.size;
-        bulkBar.style.display = selected.size > 0 ? 'flex' : 'none';
+        bulkBar.style.display = selected.size > 0 ? 'block' : 'none';
     }
 
     function toggle(id, btn) {
         if (selected.has(id)) {
             selected.delete(id);
-            btn.style.background = 'var(--jk-bg-1)';
-            btn.style.borderColor = 'var(--jk-line-3)';
+            btn.style.background = 'var(--bg-1)';
+            btn.style.borderColor = 'var(--line-3)';
             btn.textContent = '';
         } else {
             selected.add(id);
-            btn.style.background = 'var(--jk-accent)';
-            btn.style.borderColor = 'var(--jk-accent)';
+            btn.style.background = 'var(--accent)';
+            btn.style.borderColor = 'var(--accent)';
             btn.textContent = '✓';
         }
         refreshBulk();
@@ -230,10 +258,12 @@
     grid.querySelectorAll('.asset-card').forEach(function(card) {
         var id = card.getAttribute('data-id');
         var checkbox = card.querySelector('.asset-checkbox');
-        checkbox.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggle(id, checkbox);
-        });
+        if (checkbox) {
+            checkbox.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggle(id, checkbox);
+            });
+        }
         card.addEventListener('click', function(e) {
             if (e.target.closest('.asset-checkbox')) return;
             openPreview(card);
@@ -252,10 +282,10 @@
         var size = card.getAttribute('data-size');
         var folder = card.getAttribute('data-folder-label');
         var isImage = card.getAttribute('data-image') === '1';
+        var usage = card.getAttribute('data-usage') || '0';
         var id = card.getAttribute('data-id');
 
         var media = document.getElementById('preview-media');
-        // Reset, keep close button
         var keep = closeBtn;
         media.innerHTML = '';
         media.appendChild(keep);
@@ -263,12 +293,12 @@
             var img = document.createElement('img');
             img.src = url;
             img.alt = name;
-            img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;';
+            img.style.cssText = 'max-width:100%;max-height:80vh;object-fit:contain;';
             media.appendChild(img);
         } else {
             var span = document.createElement('span');
-            span.className = 'jk-numeral';
-            span.style.cssText = 'font-size:200px;color:var(--jk-accent);';
+            span.className = 'numeral';
+            span.style.cssText = 'font-size:200px;color:var(--accent);';
             span.textContent = (fmt || '?').slice(0, 1);
             media.appendChild(span);
         }
@@ -277,8 +307,18 @@
         document.getElementById('preview-dimensions').textContent = dims;
         document.getElementById('preview-size').textContent = size;
         document.getElementById('preview-folder').textContent = folder;
+        document.getElementById('preview-usage').textContent = usage + (usage === '1' ? ' joyda' : ' joyda');
         document.getElementById('preview-download').href = url;
         document.getElementById('preview-edit').href = '../' + id + '/change/';
+
+        var copyBtn = document.getElementById('preview-copy-url');
+        copyBtn.onclick = function() {
+            var origText = copyBtn.innerHTML;
+            navigator.clipboard.writeText(window.location.origin + url).then(function() {
+                copyBtn.innerHTML = '✓ COPIED';
+                setTimeout(function() { copyBtn.innerHTML = origText; }, 1800);
+            });
+        };
 
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
@@ -296,8 +336,8 @@
     document.getElementById('btn-bulk-cancel').addEventListener('click', function() {
         selected.clear();
         grid.querySelectorAll('.asset-checkbox').forEach(function(b) {
-            b.style.background = 'var(--jk-bg-1)';
-            b.style.borderColor = 'var(--jk-line-3)';
+            b.style.background = 'var(--bg-1)';
+            b.style.borderColor = 'var(--line-3)';
             b.textContent = '';
         });
         refreshBulk();

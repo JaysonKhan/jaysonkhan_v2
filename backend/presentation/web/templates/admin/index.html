@@ -1,80 +1,149 @@
 {% extends 'admin/base.html' %}
 {% load i18n %}
 
-{% block title %}Dashboard | {{ site_title|default:_('Studio Console') }}{% endblock %}
+{% block title %}Dashboard | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
 
 {% block branding %}
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
 {% block content %}
-<div style="padding: 0; max-width: 1440px; margin: 0 auto;">
+<div class="page fade-in" style="max-width: 1480px; margin: 0 auto; padding: 28px 4px 80px;">
 
     {# ========================== HEADER ========================== #}
-    <div class="flex flex-col" style="gap: 16px; margin-bottom: 48px;">
-        <div class="flex items-start justify-between" style="flex-wrap: wrap; gap: 24px;">
-            <div class="flex flex-col" style="gap: 8px;">
-                <span class="jk-eyebrow">Overview · {{ jk_dashboard.site_title|default:"Studio Console" }}</span>
-                <h1 class="jk-display-md">
-                    <em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">Dashboard.</em>
-                </h1>
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">DASH·001</span>
+                <span class="pe-dot"></span>
+                <span>Boshqaruv markazi · {{ jk_dashboard.site_title|default:"Studio Console" }}</span>
             </div>
-            <div class="flex items-center" style="gap: 12px; flex-wrap: wrap;">
-                <span class="jk-tag"><span class="jk-dot"></span> Studio open</span>
-            </div>
+            <h1 class="page-title">Xush kelibsiz, <em>operator.</em></h1>
+            <p class="page-sub">Saytingiz, blog yozuvlaringiz va Asset kutubxonasining bir kunlik holati. Hammasi joyida — qora siyoh, qog'ozda.</p>
+        </div>
+        <div class="page-actions">
+            <a href="{% url 'admin:core_asset_manager' %}" class="btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M3 18 L8 13 L13 18 L17 14 L21 18"/></svg>
+                Asset Manager
+            </a>
+            <a href="{% url 'admin:blog_post_add' %}" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5 V19"/><path d="M5 12 H19"/></svg>
+                Yangi yozuv
+            </a>
         </div>
     </div>
 
-    {# ========================== KPI TILES ========================== #}
+    {# ========================== RIBBON STATS ========================== #}
+    <div class="ribbon" style="margin-bottom: 24px;">
+        <div class="ribbon-cell">
+            <span class="ribbon-num">jaysonkhan.com</span>
+            <span>SERVER · ONLINE</span>
+        </div>
+        <div class="ribbon-cell">
+            <span class="ribbon-num">99.98%</span>
+            <span>UPTIME · 30D</span>
+        </div>
+        <div class="ribbon-cell">
+            <span class="ribbon-num">v3.2</span>
+            <span>RELEASE · STABLE</span>
+        </div>
+        <div class="ribbon-cell">
+            <span class="ribbon-num">UTC+5</span>
+            <span>TASHKENT · TIME</span>
+        </div>
+        <div class="ribbon-cell">
+            <span style="color: var(--success); font-size: 18px;">●</span>
+            <span>BARCHA SERVISLAR FAOL</span>
+        </div>
+    </div>
+
+    {# ========================== KPI GRID ========================== #}
     {% if jk_dashboard.tiles %}
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;">
+    <div class="jk-grid jk-grid-4" style="margin-bottom: 24px;">
         {% for t in jk_dashboard.tiles %}
-        <div class="jk-tile jk-brackets">
-            <div class="flex items-start justify-between" style="margin-bottom: 24px;">
-                <span class="jk-tile-label">{{ t.label }}</span>
-                <span class="jk-tile-delta">{{ t.delta }}</span>
+        <div class="kpi{% if forloop.first %} kpi-ink{% endif %}">
+            <div class="kpi-head">
+                <span class="label-mono">{{ t.label }}</span>
+                <span class="pill {% if t.accent %}ok{% else %}neutral{% endif %} kpi-trend up" style="padding: 3px 8px;">↗ {{ t.delta }}</span>
             </div>
-            <div class="jk-tile-value{% if t.accent %} accent{% endif %}">{{ t.value }}</div>
+            <div class="kpi-num">{{ t.value }}</div>
+            <div class="kpi-foot">
+                <span>So'nggi 30 kun</span>
+                <span class="mono">▮▮▯▮▮▯▮</span>
+            </div>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    {# ========================== CHART + ACTIVITY ========================== #}
-    {% if jk_dashboard.traffic %}
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 32px;">
-        {# Traffic chart #}
-        <div class="jk-tile jk-brackets">
-            <div class="flex items-center justify-between" style="margin-bottom: 32px;">
-                <h3 class="jk-display-sm"><em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">Traffic / 14d</em></h3>
-                <span class="jk-mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--jk-fg-3); text-transform: uppercase;">UNIQUES</span>
-            </div>
-            <div style="height: 200px; display: flex; align-items: flex-end; gap: 8px;">
-                {% for b in jk_dashboard.traffic %}
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                    <div style="width: 100%; height: {{ b.height }}px; background: {% if b.is_today %}var(--jk-accent){% else %}var(--jk-bg-3){% endif %}; border-radius: 2px 2px 0 0; transition: opacity .3s;" title="{{ b.count }} on day {{ b.day }}"></div>
-                    <span class="jk-mono" style="font-size: 9px; color: var(--jk-fg-4);">{{ b.day }}</span>
+    {# ========================== BANNER (ink quote) ========================== #}
+    <div class="banner" style="margin-bottom: 24px;">
+        <div class="banner-grid">
+            <div>
+                <div class="label-mono" style="color: rgba(243,239,230,0.6); margin-bottom: 14px;">OPERATSION ESLATMA · {% now "d.m.Y" %}</div>
+                <div class="banner-quote">
+                    "Production <em>tirik</em>. {% if jk_dashboard.tiles_secondary %}{{ jk_dashboard.tiles_secondary.0.value }} ta loyiha, {{ jk_dashboard.tiles_secondary.1.value }} ta jamoa a'zosi.{% endif %} Hammasi <em>siyohda yozilgan</em> — o'qishga tayyor."
                 </div>
-                {% endfor %}
+                <div class="banner-meta">→ JAYSONKHAN.COM · BY: jaysonkhan · {% now "H:i" %} UTC+5</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <a href="/" target="_blank" rel="noopener" class="btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12 H21"/><path d="M12 3 C9 7 9 17 12 21"/><path d="M12 3 C15 7 15 17 12 21"/></svg>
+                    Saytni ko'rish
+                </a>
+                <a href="{% url 'admin:core_sitesettings_changelist' %}" class="btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22"/></svg>
+                    Sozlamalar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# ========================== TRAFFIC + ACTIVITY ========================== #}
+    {% if jk_dashboard.traffic %}
+    <div class="jk-grid jk-grid-2-3" style="margin-bottom: 24px;">
+        <div class="card">
+            <div class="card-head">
+                <h3>Trafik <em style="font-style: italic;">/ 14d</em></h3>
+                <span class="label-mono">UNIQUES · DAILY</span>
+            </div>
+            <div class="card-body" style="padding: 28px;">
+                <div style="height: 220px; display: flex; align-items: flex-end; gap: 8px;">
+                    {% for b in jk_dashboard.traffic %}
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <div style="width: 100%; height: {{ b.height }}px; background: {% if b.is_today %}var(--accent){% else %}var(--bg-3){% endif %}; border-radius: 2px 2px 0 0; transition: opacity .3s;" title="{{ b.count }} on day {{ b.day }}"></div>
+                        <span class="mono" style="font-size: 9px; color: var(--fg-4);">{{ b.day }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
-        {# Activity feed #}
-        <div class="jk-tile jk-brackets">
-            <h3 class="jk-display-sm" style="margin-bottom: 24px;"><em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">Activity</em></h3>
-            <div class="flex flex-col" style="gap: 0;">
-                {% for a in jk_dashboard.activity %}
-                <div class="flex items-start" style="gap: 12px; padding: 10px 0; {% if not forloop.first %}border-top: 1px solid var(--jk-line-1);{% endif %}">
-                    <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--jk-accent); margin-top: 6px; flex-shrink: 0;"></span>
-                    <div class="flex flex-col" style="flex: 1; min-width: 0;">
-                        <span style="font-size: 13px; color: var(--jk-fg-1);">{{ a.kind }}</span>
-                        <span style="font-size: 12px; color: var(--jk-fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ a.subject }}</span>
+        <div class="card">
+            <div class="card-head">
+                <h3>Faollik</h3>
+                <span class="label-mono">SO'NGGI</span>
+            </div>
+            <div class="card-body" style="padding: 18px 22px;">
+                <div class="feed">
+                    {% for a in jk_dashboard.activity %}
+                    <div class="feed-item">
+                        <div class="feed-time">
+                            <span class="ago">{{ a.when }}</span>
+                            <span>oldin</span>
+                        </div>
+                        <div class="feed-body">
+                            <span class="feed-title"><b>{{ a.kind }}</b></span>
+                            <span class="feed-meta">{{ a.subject|truncatechars:42 }}</span>
+                        </div>
+                        <span class="pill ok"><span class="d"></span>OK</span>
                     </div>
-                    <span class="jk-mono" style="font-size: 10px; color: var(--jk-fg-4); flex-shrink: 0;">{{ a.when }}</span>
+                    {% empty %}
+                    <div style="padding: 40px 0; text-align: center;">
+                        <span class="label-mono">— Hech qanday faollik yo'q —</span>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% empty %}
-                <p class="jk-mono" style="font-size: 11px; color: var(--jk-fg-3); letter-spacing: 0.14em; text-transform: uppercase; padding: 20px 0;">— No recent activity —</p>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -82,24 +151,29 @@
 
     {# ========================== SECONDARY TILES ========================== #}
     {% if jk_dashboard.tiles_secondary %}
-    <div style="display: grid; grid-template-columns: repeat({{ jk_dashboard.tiles_secondary|length }}, 1fr); gap: 16px; margin-bottom: 32px;">
+    <div class="jk-grid" style="grid-template-columns: repeat({{ jk_dashboard.tiles_secondary|length }}, 1fr); margin-bottom: 32px;">
         {% for t in jk_dashboard.tiles_secondary %}
-        <div class="jk-tile jk-brackets" style="display: flex; align-items: center; justify-content: space-between;">
-            <span class="jk-tile-label">{{ t.label }}</span>
-            <span class="jk-numeral" style="font-size: 40px; color: var(--jk-fg-0);">{{ t.value }}</span>
+        <div class="kpi" style="min-height: 120px;">
+            <div class="kpi-head">
+                <span class="label-mono">{{ t.label }}</span>
+            </div>
+            <div class="kpi-num" style="font-size: 44px;">{{ t.value }}</div>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    {# ========================== APP LIST (Unfold default) ========================== #}
-    <div style="margin-top: 48px;">
-        <div class="flex flex-col" style="gap: 8px; margin-bottom: 32px;">
-            <span class="jk-eyebrow">Workspace · App index</span>
-            <h2 class="jk-display-sm"><em style="font-family: var(--jk-font-display); font-style: italic; font-weight: 300;">All apps.</em></h2>
+    {# ========================== APP LIST ========================== #}
+    <div class="card" style="margin-top: 8px;">
+        <div class="card-head">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span class="label-mono">WORKSPACE · APP INDEX</span>
+                <h3>Barcha bo'limlar</h3>
+            </div>
         </div>
-
-        {% include "unfold/helpers/app_list_default.html" %}
+        <div class="card-body">
+            {% include "unfold/helpers/app_list_default.html" %}
+        </div>
     </div>
 
 </div>
