@@ -170,15 +170,14 @@
                 <span class="tag hud-only hide-mobile"><span class="dot-live"></span> Available · Q2</span>
 
                 {# ── Language switcher (XO · UZ · RU · EN) ── #}
-                <form action="{% url 'set_language' %}" method="post" class="row" style="gap: 4px; align-items: center; margin: 0;">
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.path }}">
+                {# Direct URL-prefix links — LocaleMiddleware reads prefix, not cookie #}
+                <div class="row" style="gap: 4px; align-items: center; margin: 0;">
                     {% for code, name in LANGUAGES %}
-                    <button type="submit" name="language" value="{{ code }}"
-                            class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
-                            aria-label="{{ name }}">{{ code|upper }}</button>
+                    <a href="/{{ code }}{{ request.path|slice:'4:' }}"
+                       class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
+                       aria-label="{{ name }}">{{ code|upper }}</a>
                     {% endfor %}
-                </form>
+                </div>
 
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" type="button">
                     <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
