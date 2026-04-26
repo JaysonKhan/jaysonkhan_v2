@@ -1,4 +1,5 @@
 {% extends 'web/base.html' %}
+{% load i18n %}
 
 {% block title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ post.excerpt }}{% endblock %}
@@ -39,11 +40,11 @@
             <div class="between hud-only" style="margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
                 <a href="{% url 'blog_list' %}" class="row gap-2" style="align-items: center; color: var(--fg-3);">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">All journal</span>
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">{% trans "All journal" %}</span>
                 </a>
                 <div class="row gap-3" style="flex-wrap: wrap;">
                     {% if post.category %}<span class="tag">{{ post.category.name }}</span>{% endif %}
-                    <span class="tag">{{ post.reading_time }} min read</span>
+                    <span class="tag">{{ post.reading_time }} {% trans "min read" %}</span>
                 </div>
             </div>
 
@@ -87,7 +88,7 @@
             {# Tags #}
             {% if post.tags.all %}
             <div style="margin-top: 60px; padding-top: 32px; border-top: 1px solid var(--line-1);">
-                <span class="label">Tags</span>
+                <span class="label">{% trans "Tags" %}</span>
                 <div class="row gap-2" style="flex-wrap: wrap;">
                     {% for tag in post.tags.all %}<span class="tag">#{{ tag.name }}</span>{% endfor %}
                 </div>
@@ -96,12 +97,12 @@
 
             {# Share #}
             <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line-1);">
-                <span class="label">Share</span>
+                <span class="label">{% trans "Share" %}</span>
                 <div class="row gap-2" style="flex-wrap: wrap;">
                     <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}" target="_blank" rel="noopener" class="tag">X / Twitter ↗</a>
                     <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener" class="tag">LinkedIn ↗</a>
                     <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}" target="_blank" rel="noopener" class="tag">Telegram ↗</a>
-                    <button type="button" id="copy-link-btn" class="tag" style="cursor: pointer;">Copy link</button>
+                    <button type="button" id="copy-link-btn" class="tag" style="cursor: pointer;">{% trans "Copy link" %}</button>
                 </div>
                 {% include 'web/partials/channel_share.html' with content_type='post' slug=post.slug %}
             </div>
@@ -121,15 +122,15 @@
     <section class="section" style="border-top: 1px solid var(--line-1);">
         <div class="container">
             <div class="reveal" style="margin-bottom: 60px;">
-                <span class="eyebrow">— Continue reading</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">Related <em style="font-weight: 300;">dispatches.</em></h2>
+                <span class="eyebrow">— {% trans "Continue reading" %}</span>
+                <h2 class="display-md serif" style="margin-top: 16px;">{% trans "Related" %} <em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
             </div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
                 {% for rp in related_posts|slice:":3" %}
                 <a href="{% url 'blog_detail' rp.slug %}" class="reveal article-card" style="padding: 32px; border-top: 1px solid var(--line-1); {% if not forloop.last %}border-right: 1px solid var(--line-1);{% endif %} display: flex; flex-direction: column; gap: 16px; min-height: 280px; transition: background .4s var(--ease-out);">
                     {% if rp.category %}<span class="tag" style="align-self: flex-start;">{{ rp.category.name }}</span>{% endif %}
                     <h3 class="display-sm serif article-title" style="flex: 1;"><em style="font-weight: 300;">{{ rp.title }}</em></h3>
-                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ rp.created_at|date:"M d, Y"|upper }} · {{ rp.reading_time }} MIN ↗</span>
+                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ rp.created_at|date:"M d, Y"|upper }} · {{ rp.reading_time }} {% trans "MIN" %} ↗</span>
                 </a>
                 {% endfor %}
             </div>

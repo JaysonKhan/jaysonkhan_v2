@@ -1,5 +1,5 @@
 {% extends 'web/base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}Journal | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.blog_page_subtitle }}{% endblock %}
@@ -18,10 +18,10 @@
                 </div>
                 <span class="tag"><span class="dot-live"></span> {{ site_settings.blog_section_status }}</span>
             </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">Journal · Field notes from the studio</div>
+            <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Journal · Field notes from the studio" %}</div>
             <h1 class="display-xl">
                 {{ site_settings.blog_page_title|default:"Long-form notes," }}<br>
-                <em style="font-weight: 300; font-style: italic;">from the field.</em>
+                <em style="font-weight: 300; font-style: italic;">{% trans "from the field." %}</em>
             </h1>
             <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">
                 {{ site_settings.blog_page_subtitle|default:"Things I figured out the hard way, written up so you don't have to. No tutorials. No \"10 things.\" Just engineering essays from production." }}
@@ -33,10 +33,10 @@
     <section class="section">
         <div class="container">
             <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <h2 class="display-md serif">All <em style="font-weight: 300;">dispatches.</em></h2>
+                <h2 class="display-md serif">{% trans "All" %} <em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
                 <form action="{% url 'blog_search' %}" method="get" class="row" style="max-width: 320px; flex: 1;">
                     <div style="position: relative; width: 100%;">
-                        <input type="text" name="q" placeholder="Search..." autocomplete="off" class="input" style="padding-left: 28px;">
+                        <input type="text" name="q" placeholder="{% trans 'Search...' %}" autocomplete="off" class="input" style="padding-left: 28px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: var(--fg-3);">
                             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
                         </svg>
@@ -56,12 +56,12 @@
                     <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:20 }}</p>
                     <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
                         <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
-                        <span class="mono article-meta" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em; transition: color .3s;">{{ post.reading_time }} MIN ↗</span>
+                        <span class="mono article-meta" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em; transition: color .3s;">{{ post.reading_time }} {% trans "MIN" %} ↗</span>
                     </div>
                 </a>
                 {% empty %}
                 <div style="grid-column: 1 / -1; padding: 80px 0; text-align: center; color: var(--fg-3);">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— No dispatches yet —</span>
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— {% trans "No dispatches yet" %} —</span>
                 </div>
                 {% endfor %}
             </div>

@@ -73,3 +73,278 @@ msgstr "Практика"
 #: backend/presentation/web/templates/web/base.html:278
 msgid "Channels"
 msgstr "Каналы"
+
+# ── home.html ──────────────────────────────────────────────────────────────
+
+msgid "See the work →"
+msgstr "Смотреть работы →"
+
+msgid "Start a project"
+msgstr "Начать проект"
+
+msgid "View case studies"
+msgstr "Смотреть кейсы"
+
+msgid "Career · Track record"
+msgstr "Карьера · Послужной список"
+
+msgid "Where I've shipped."
+msgstr "Где я работал."
+
+msgid "PRESENT"
+msgstr "ПО СЕЙ ДЕНЬ"
+
+msgid "04 — Selected work"
+msgstr "04 — Избранные работы"
+
+msgid "View all projects"
+msgstr "Все проекты"
+
+msgid "Web"
+msgstr "Веб"
+
+msgid "Telegram bot"
+msgstr "Telegram-бот"
+
+msgid "04 — Recent work"
+msgstr "04 — Недавние работы"
+
+msgid "A handful of recent builds."
+msgstr "Несколько последних проектов."
+
+msgid "06 — From the journal"
+msgstr "06 — Из журнала"
+
+msgid "Latest"
+msgstr "Последние"
+
+msgid "dispatches."
+msgstr "статьи."
+
+msgid "All entries"
+msgstr "Все записи"
+
+msgid "MIN"
+msgstr "МИН"
+
+# ── projects.html ──────────────────────────────────────────────────────────
+
+msgid "Production builds"
+msgstr "Production проекты"
+
+msgid "Selected work · Production builds"
+msgstr "Избранные работы · Production проекты"
+
+msgid "and what they"
+msgstr "и чему они"
+
+msgid "taught me."
+msgstr "меня научили."
+
+msgid "The full"
+msgstr "Полный"
+
+msgid "index."
+msgstr "каталог."
+
+msgid "Project"
+msgstr "Проект"
+
+msgid "Category"
+msgstr "Категория"
+
+msgid "Year"
+msgstr "Год"
+
+msgid "Stack"
+msgstr "Стек"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "Cross-platform"
+msgstr "Кросс-платформа"
+
+msgid "Mobile"
+msgstr "Мобильный"
+
+msgid "Featured"
+msgstr "Выбранное"
+
+msgid "Live"
+msgstr "Активный"
+
+msgid "No entries yet"
+msgstr "Записей пока нет"
+
+# ── project_detail.html ────────────────────────────────────────────────────
+
+msgid "All work"
+msgstr "Все работы"
+
+msgid "Open in iOS"
+msgstr "Открыть в iOS"
+
+msgid "Open in Android"
+msgstr "Открыть в Android"
+
+msgid "Visit web app"
+msgstr "Открыть веб-приложение"
+
+msgid "Source code"
+msgstr "Исходный код"
+
+msgid "Behind"
+msgstr "За кулисами"
+
+msgid "the build."
+msgstr "проекта."
+
+msgid "Challenge"
+msgstr "Задача"
+
+msgid "Solution"
+msgstr "Решение"
+
+msgid "Results"
+msgstr "Результаты"
+
+msgid "End of dispatch"
+msgstr "Конец статьи"
+
+msgid "Got a brief like"
+msgstr "Есть похожий"
+
+msgid "this one?"
+msgstr "проект?"
+
+msgid "Open a channel"
+msgstr "Открыть канал"
+
+msgid "Back to all work"
+msgstr "Ко всем работам"
+
+# ── blog_list.html ─────────────────────────────────────────────────────────
+
+msgid "Journal · Field notes from the studio"
+msgstr "Журнал · Заметки из студии"
+
+msgid "from the field."
+msgstr "с поля."
+
+msgid "All"
+msgstr "Все"
+
+msgid "Search..."
+msgstr "Поиск..."
+
+msgid "No dispatches yet"
+msgstr "Статей пока нет"
+
+# ── blog_detail.html ───────────────────────────────────────────────────────
+
+msgid "All journal"
+msgstr "Все статьи"
+
+msgid "min read"
+msgstr "мин чтения"
+
+msgid "Tags"
+msgstr "Теги"
+
+msgid "Share"
+msgstr "Поделиться"
+
+msgid "Copy link"
+msgstr "Скопировать ссылку"
+
+msgid "Continue reading"
+msgstr "Читать далее"
+
+msgid "Related"
+msgstr "Похожие"
+
+# ── contact.html ───────────────────────────────────────────────────────────
+
+msgid "Avg. response · 4–6h"
+msgstr "Среднее время ответа · 4–6 ч"
+
+msgid "Contact · Open the channel"
+msgstr "Контакт · Открыть канал"
+
+msgid "TRANSMISSION RECEIVED"
+msgstr "СООБЩЕНИЕ ПОЛУЧЕНО"
+
+msgid "Message sent. I'll reply within 24 hours — usually faster."
+msgstr "Сообщение отправлено. Отвечу в течение 24 часов — обычно быстрее."
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Your name"
+msgstr "Ваше имя"
+
+msgid "Subject"
+msgstr "Тема"
+
+msgid "What are we building?"
+msgstr "Что строим?"
+
+msgid "The brief"
+msgstr "Бриф"
+
+msgid "Tell me about the project, the timeline, what success looks like…"
+msgstr "Расскажите о проекте, сроках, как выглядит успех…"
+
+msgid "TRANSMITTED"
+msgstr "ОТПРАВЛЕНО"
+
+msgid "AWAITING INPUT"
+msgstr "ОЖИДАНИЕ ВВОДА"
+
+msgid "Send brief"
+msgstr "Отправить бриф"
+
+msgid "Direct channels"
+msgstr "Прямые каналы"
+
+msgid "Prefer not to fill out a form? Pick a faster channel — they all reach me."
+msgstr "Не хотите заполнять форму? Выберите быстрый канал — все они достигают меня."
+
+msgid "Replies within 24h"
+msgstr "Ответ в течение 24 ч"
+
+msgid "Faster, async"
+msgstr "Быстрее, асинхронно"
+
+msgid "Code & issues"
+msgstr "Код и задачи"
+
+msgid "Long-form, professional"
+msgstr "Профессиональный"
+
+# ── team.html ──────────────────────────────────────────────────────────────
+
+msgid "PORTRAIT NO."
+msgstr "ПОРТРЕТ №"
+
+msgid "skills · dossier"
+msgstr "навыков · досье"
+
+msgid "READ →"
+msgstr "ЧИТАТЬ →"
+
+msgid "Crew manifest · pending"
+msgstr "Состав команды · в сборке"
+
+msgid "The team page is being assembled."
+msgstr "Страница команды собирается."
+
+msgid "Want to work with us?"
+msgstr "Хотите работать с нами?"
+
+msgid "Bring the brief."
+msgstr "Приносите бриф."
+
+msgid "We'll bring the team."
+msgstr "Мы приведём команду."

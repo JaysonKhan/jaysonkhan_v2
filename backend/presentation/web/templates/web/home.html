@@ -1,5 +1,5 @@
 {% extends 'web/base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}{{ site_settings.site_title }}{% endblock %}
 
@@ -29,15 +29,15 @@
             <div class="row between fade-up" style="margin-top: 60px; animation-delay: 0.4s; flex-wrap: wrap; gap: 24px;">
                 <p style="max-width: 560px; font-size: 18px; line-height: 1.55; color: var(--fg-2);">
                     {% if site_settings.hero_subtitle %}{{ site_settings.hero_subtitle }}{% else %}I'm <strong style="color: var(--fg-0);">{{ site_settings.site_author }}</strong> — a VibeCoder running a build studio in Tashkent. I ship production web apps, Telegram bots, and AI-augmented systems.{% endif %}
-                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">See the work →</a>{% endif %}
+                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">{% trans "See the work →" %}</a>{% endif %}
                 </p>
                 <div class="row gap-3" style="align-items: center; flex-wrap: wrap;">
                     <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow">
-                        Start a project
+                        {% trans "Start a project" %}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
                     {% if site_settings.apps_section_visible %}
-                    <a href="{% url 'projects' %}" class="btn">View case studies</a>
+                    <a href="{% url 'projects' %}" class="btn">{% trans "View case studies" %}</a>
                     {% endif %}
                 </div>
             </div>
@@ -184,8 +184,8 @@
     <section class="section" style="border-bottom: 1px solid var(--line-1);">
         <div class="container">
             <div class="reveal" style="margin-bottom: 60px; max-width: 720px;">
-                <span class="eyebrow" style="margin-bottom: 24px;">Career · Track record</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">Where I've shipped.</h2>
+                <span class="eyebrow" style="margin-bottom: 24px;">{% trans "Career · Track record" %}</span>
+                <h2 class="display-md serif" style="margin-top: 16px;">{% trans "Where I've shipped." %}</h2>
             </div>
             <div class="col">
                 {% for exp in portfolio.experience %}
@@ -202,7 +202,7 @@
                         <p style="color: var(--fg-2); font-size: 15px; line-height: 1.6;">{{ exp.description|truncatewords:30 }}</p>
                         <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); justify-self: end;">
                             {{ exp.start_date|date:"M Y"|upper }} —
-                            {% if exp.is_current %}<span style="color: var(--accent);">PRESENT</span>{% else %}{{ exp.end_date|date:"M Y"|upper }}{% endif %}
+                            {% if exp.is_current %}<span style="color: var(--accent);">{% trans "PRESENT" %}</span>{% else %}{{ exp.end_date|date:"M Y"|upper }}{% endif %}
                         </span>
                     </div>
                 </div>
@@ -219,11 +219,11 @@
         <div class="container">
             <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
-                    <span class="eyebrow">04 — Selected work</span>
+                    <span class="eyebrow">{% trans "04 — Selected work" %}</span>
                     <h2 class="display-md serif">{{ site_settings.featured_projects_title|default:"A handful of recent builds." }}</h2>
                 </div>
                 <a href="{% url 'projects' %}" class="btn btn-arrow">
-                    View all projects
+                    {% trans "View all projects" %}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
             </div>
@@ -242,7 +242,7 @@
                         </div>
                         <p style="color: var(--fg-2); font-size: 16px; line-height: 1.5; max-width: 540px;">{{ project.get_card_description|truncatewords:25 }}</p>
                         <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">
-                            {% if project.app_store_url and project.play_store_url %}iOS · Android{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}Web{% elif project.is_bot %}Telegram bot{% else %}—{% endif %}
+                            {% if project.app_store_url and project.play_store_url %}iOS · Android{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}{% trans "Telegram bot" %}{% else %}—{% endif %}
                         </span>
                         <span class="featured-arrow" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s var(--ease-out);">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -259,11 +259,11 @@
         <div class="container">
             <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
-                    <span class="eyebrow">04 — Recent work</span>
-                    <h2 class="display-md serif">A handful of<br>recent builds.</h2>
+                    <span class="eyebrow">{% trans "04 — Recent work" %}</span>
+                    <h2 class="display-md serif">{% trans "A handful of recent builds." %}</h2>
                 </div>
                 <a href="{% url 'projects' %}" class="btn btn-arrow">
-                    View all projects
+                    {% trans "View all projects" %}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
             </div>
@@ -315,11 +315,11 @@
         <div class="container">
             <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
                 <div class="col gap-3">
-                    <span class="eyebrow">06 — From the journal</span>
-                    <h2 class="display-md serif">Latest<br><em style="font-weight: 300;">dispatches.</em></h2>
+                    <span class="eyebrow">{% trans "06 — From the journal" %}</span>
+                    <h2 class="display-md serif">{% trans "Latest" %}<br><em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
                 </div>
                 <a href="{% url 'blog_list' %}" class="btn btn-arrow">
-                    All entries
+                    {% trans "All entries" %}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
             </div>
@@ -335,7 +335,7 @@
                     <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:18 }}</p>
                     <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
                         <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.reading_time|default:5 }} MIN ↗</span>
+                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.reading_time|default:5 }} {% trans "MIN" %} ↗</span>
                     </div>
                 </a>
                 {% endfor %}

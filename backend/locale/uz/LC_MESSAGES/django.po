@@ -73,3 +73,264 @@ msgstr "Amaliyot"
 #: backend/presentation/web/templates/web/base.html:278
 msgid "Channels"
 msgstr "Kanallar"
+
+msgid "See the work →"
+msgstr "Ishlarni ko'rish →"
+
+msgid "Start a project"
+msgstr "Loyiha boshlash"
+
+msgid "View case studies"
+msgstr "Keyslarni ko'rish"
+
+msgid "Career · Track record"
+msgstr "Karyera · Ish tarixi"
+
+msgid "Where I've shipped."
+msgstr "Qayda ishlagan."
+
+msgid "PRESENT"
+msgstr "HOZIRGI VAQT"
+
+msgid "04 — Selected work"
+msgstr "04 — Tanlangan ishlar"
+
+msgid "View all projects"
+msgstr "Barcha loyihalar"
+
+msgid "Web"
+msgstr "Veb"
+
+msgid "Telegram bot"
+msgstr "Telegram-bot"
+
+msgid "04 — Recent work"
+msgstr "04 — So'nggi ishlar"
+
+msgid "A handful of recent builds."
+msgstr "Bir nechta so'nggi loyiha."
+
+msgid "06 — From the journal"
+msgstr "06 — Jurnaldan"
+
+msgid "Latest"
+msgstr "So'nggi"
+
+msgid "dispatches."
+msgstr "maqolalar."
+
+msgid "All entries"
+msgstr "Barcha yozuvlar"
+
+msgid "MIN"
+msgstr "DAQIQA"
+
+msgid "Production builds"
+msgstr "Production loyihalari"
+
+msgid "Selected work · Production builds"
+msgstr "Tanlangan ishlar · Production loyihalari"
+
+msgid "and what they"
+msgstr "va ular"
+
+msgid "taught me."
+msgstr "o'rgatgan narsalar."
+
+msgid "The full"
+msgstr "To'liq"
+
+msgid "index."
+msgstr "ro'yxat."
+
+msgid "Project"
+msgstr "Loyiha"
+
+msgid "Category"
+msgstr "Kategoriya"
+
+msgid "Year"
+msgstr "Yil"
+
+msgid "Stack"
+msgstr "Stek"
+
+msgid "Result"
+msgstr "Natija"
+
+msgid "Cross-platform"
+msgstr "Kross-platforma"
+
+msgid "Mobile"
+msgstr "Mobil"
+
+msgid "Featured"
+msgstr "Tanlangan"
+
+msgid "Live"
+msgstr "Faol"
+
+msgid "No entries yet"
+msgstr "Hozircha yozuvlar yo'q"
+
+msgid "All work"
+msgstr "Barcha ishlar"
+
+msgid "Open in iOS"
+msgstr "iOS da ochish"
+
+msgid "Open in Android"
+msgstr "Android da ochish"
+
+msgid "Visit web app"
+msgstr "Veb-ilovani ochish"
+
+msgid "Source code"
+msgstr "Manba kodi"
+
+msgid "Behind"
+msgstr "Orqasida"
+
+msgid "the build."
+msgstr "loyihaning."
+
+msgid "Challenge"
+msgstr "Muammo"
+
+msgid "Solution"
+msgstr "Yechim"
+
+msgid "Results"
+msgstr "Natijalar"
+
+msgid "End of dispatch"
+msgstr "Maqola tugadi"
+
+msgid "Got a brief like"
+msgstr "Shunday"
+
+msgid "this one?"
+msgstr "loyiha bormi?"
+
+msgid "Open a channel"
+msgstr "Kanal ochish"
+
+msgid "Back to all work"
+msgstr "Barcha ishlarga qaytish"
+
+msgid "Journal · Field notes from the studio"
+msgstr "Jurnal · Studiyadan eslatmalar"
+
+msgid "from the field."
+msgstr "maydondan."
+
+msgid "All"
+msgstr "Barcha"
+
+msgid "Search..."
+msgstr "Qidirish..."
+
+msgid "No dispatches yet"
+msgstr "Hozircha maqolalar yo'q"
+
+msgid "All journal"
+msgstr "Barcha maqolalar"
+
+msgid "min read"
+msgstr "daqiqa o'qish"
+
+msgid "Tags"
+msgstr "Teglar"
+
+msgid "Share"
+msgstr "Ulashish"
+
+msgid "Copy link"
+msgstr "Havolani nusxalash"
+
+msgid "Continue reading"
+msgstr "O'qishni davom eting"
+
+msgid "Related"
+msgstr "O'xshash"
+
+msgid "Avg. response · 4–6h"
+msgstr "O'rtacha javob · 4–6 soat"
+
+msgid "Contact · Open the channel"
+msgstr "Aloqa · Kanal ochish"
+
+msgid "TRANSMISSION RECEIVED"
+msgstr "XABAR OLINDI"
+
+msgid "Message sent. I'll reply within 24 hours — usually faster."
+msgstr "Xabar yuborildi. 24 soat ichida javob beraman — odatda tezroq."
+
+msgid "Name"
+msgstr "Ism"
+
+msgid "Your name"
+msgstr "Ismingiz"
+
+msgid "Subject"
+msgstr "Mavzu"
+
+msgid "What are we building?"
+msgstr "Nima quramiz?"
+
+msgid "The brief"
+msgstr "Brief"
+
+msgid "Tell me about the project, the timeline, what success looks like…"
+msgstr "Loyiha, muddatlar va muvaffaqiyat haqida ayting…"
+
+msgid "TRANSMITTED"
+msgstr "YUBORILDI"
+
+msgid "AWAITING INPUT"
+msgstr "KIRITISH KUTILMOQDA"
+
+msgid "Send brief"
+msgstr "Brief yuborish"
+
+msgid "Direct channels"
+msgstr "To'g'ridan-to'g'ri kanallar"
+
+msgid "Prefer not to fill out a form? Pick a faster channel — they all reach me."
+msgstr "Forma to'ldirishni xohlamaysizmi? Tezroq kanal tanlang — barchasi menga etib keladi."
+
+msgid "Replies within 24h"
+msgstr "24 soat ichida javob"
+
+msgid "Faster, async"
+msgstr "Tezroq, asinxron"
+
+msgid "Code & issues"
+msgstr "Kod va muammolar"
+
+msgid "Long-form, professional"
+msgstr "Professional"
+
+msgid "PORTRAIT NO."
+msgstr "PORTRET №"
+
+msgid "skills · dossier"
+msgstr "ko'nikma · dossier"
+
+msgid "READ →"
+msgstr "O'QISH →"
+
+msgid "Crew manifest · pending"
+msgstr "Jamoa ro'yxati · yig'ilmoqda"
+
+msgid "The team page is being assembled."
+msgstr "Jamoa sahifasi tayyorlanmoqda."
+
+msgid "Want to work with us?"
+msgstr "Biz bilan ishlashni xohlaysizmi?"
+
+msgid "Bring the brief."
+msgstr "Brief keltiring."
+
+msgid "We'll bring the team."
+msgstr "Biz jamoani olib kelamiz."

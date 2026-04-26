@@ -1,5 +1,5 @@
 {% extends 'web/base.html' %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}Work | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
@@ -16,13 +16,13 @@
                     <span class="tag">{{ site_settings.projects_section_label }}</span>
                     <span class="tag">{{ paginator.count|default:0 }} entries · 2022–2026</span>
                 </div>
-                <span class="tag"><span class="dot-live"></span> Production builds</span>
+                <span class="tag"><span class="dot-live"></span> {% trans "Production builds" %}</span>
             </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">Selected work · Production builds</div>
+            <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Selected work · Production builds" %}</div>
             <h1 class="display-xl">
                 <em style="font-weight: 300;">{{ site_settings.projects_page_title|default:"Things I've shipped," }}</em><br>
-                and what they<br>
-                taught me.
+                {% trans "and what they" %}<br>
+                {% trans "taught me." %}
             </h1>
             {% if site_settings.projects_page_subtitle %}
             <p class="reveal" style="margin-top: 40px; font-size: 18px; color: var(--fg-2); max-width: 720px; line-height: 1.55;">
@@ -40,7 +40,7 @@
     <section class="section">
         <div class="container">
             <div class="between reveal" style="margin-bottom: 48px; flex-wrap: wrap; gap: 24px;">
-                <h2 class="display-md serif">The full <em style="font-weight: 300;">index.</em></h2>
+                <h2 class="display-md serif">{% trans "The full" %} <em style="font-weight: 300;">{% trans "index." %}</em></h2>
                 <div class="row gap-2" style="flex-wrap: wrap;">
                     {% for tab in filter_tabs %}
                     <a href="{{ tab.url }}" class="tag" style="padding: 8px 16px; {% if active_filter == tab.key %}background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0);{% endif %}">{{ tab.label }}</a>
@@ -50,11 +50,11 @@
 
             <div style="display: grid; grid-template-columns: 60px 2fr 1fr 100px 1.5fr 80px 60px; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line-2);" class="hide-mobile">
                 <span class="mono index-head">Nº</span>
-                <span class="mono index-head">Project</span>
-                <span class="mono index-head">Category</span>
-                <span class="mono index-head">Year</span>
-                <span class="mono index-head">Stack</span>
-                <span class="mono index-head">Result</span>
+                <span class="mono index-head">{% trans "Project" %}</span>
+                <span class="mono index-head">{% trans "Category" %}</span>
+                <span class="mono index-head">{% trans "Year" %}</span>
+                <span class="mono index-head">{% trans "Stack" %}</span>
+                <span class="mono index-head">{% trans "Result" %}</span>
                 <span></span>
             </div>
 
@@ -65,14 +65,14 @@
                         <span class="numeral index-num" style="font-size: 32px; color: var(--fg-3); transition: color .3s;">{{ forloop.counter|stringformat:"02d" }}</span>
                         <h3 class="serif index-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
                         <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
-                            {% if project.app_store_url and project.play_store_url %}Cross-platform{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}Web{% elif project.is_bot %}Telegram{% else %}Mobile{% endif %}
+                            {% if project.app_store_url and project.play_store_url %}{% trans "Cross-platform" %}{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}Telegram{% else %}{% trans "Mobile" %}{% endif %}
                         </span>
                         <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ project.created_at|date:"Y" }}</span>
                         <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.12em;">
                             {% with techs=project.technologies.all %}{% for tech in techs|slice:":3" %}{{ tech.name }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endwith %}
                         </span>
                         <span class="mono" style="font-size: 10px; color: var(--accent); letter-spacing: 0.14em;">
-                            {% if project.is_featured %}● Featured{% else %}● Live{% endif %}
+                            {% if project.is_featured %}● {% trans "Featured" %}{% else %}● {% trans "Live" %}{% endif %}
                         </span>
                         <span class="index-arrow" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s; justify-self: end;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -81,7 +81,7 @@
                 </a>
                 {% empty %}
                 <div style="padding: 80px 0; text-align: center; color: var(--fg-3);">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— No entries yet —</span>
+                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— {% trans "No entries yet" %} —</span>
                 </div>
                 {% endfor %}
             </div>
