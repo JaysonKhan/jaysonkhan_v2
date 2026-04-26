@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
+from django.contrib.sitemaps.views import sitemap, index as sitemap_index
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
@@ -12,9 +12,9 @@ from rest_framework_simplejwt.views import (
 )
 import environ
 from presentation.web.views import custom_404_view, custom_500_view
-from core.views import upload_media_view, robots_txt, health_check
+from core.views import upload_media_view, robots_txt, humans_txt, health_check
 from core.emoji_views import emoji_manager
-from core.sitemaps import StaticViewSitemap, ProjectSitemap, PostSitemap
+from core.sitemaps import SITEMAPS
 from blog.feeds import LatestPostsFeed, LatestPostsAtomFeed
 from interactions.notifications.webhook import TelegramWebhookView
 
@@ -23,11 +23,7 @@ env = environ.Env()
 # ── Admin URL: read from env, fall back to a non-obvious slug ─────────────────
 ADMIN_URL = env('ADMIN_URL', default='admin/')
 
-sitemaps = {
-    'static': StaticViewSitemap,
-    'projects': ProjectSitemap,
-    'posts': PostSitemap,
-}
+sitemaps = SITEMAPS
 
 # Non-localized URLs (admin, API, sitemap, webhooks)
 urlpatterns = [
@@ -49,11 +45,18 @@ urlpatterns = [
     # ── SEO ────────────────────────────────────────────────────────────────────
     # robots.txt cached 1 day (rarely changes, served on every crawl)
     path('robots.txt', cache_page(86400)(robots_txt), name='robots_txt'),
-    # sitemap.xml cached 1 hour (fresh enough for crawlers, saves DB queries)
+    # humans.txt — E-E-A-T signal (real human team behind the site)
+    path('humans.txt', cache_page(86400)(humans_txt), name='humans_txt'),
+    # /sitemap.xml — sitemap-index pointing to per-section sub-sitemaps.
+    # Search Console shows coverage per section; debug index issues per-segment.
     path('sitemap.xml',
+         cache_page(3600)(sitemap_index),
+         {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap_section'},
+         name='sitemap_index'),
+    path('sitemap-<section>.xml',
          cache_page(3600)(sitemap),
          {'sitemaps': sitemaps},
-         name='django.contrib.sitemaps.views.sitemap'),
+         name='sitemap_section'),
 
     # ── Service Worker — emoji cache (root scope majburiy) ─────────────────
     path('sw.js', TemplateView.as_view(

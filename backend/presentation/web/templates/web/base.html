@@ -55,6 +55,8 @@
     {% endif %}
 
     <link rel="alternate" type="application/rss+xml" title="{{ site_settings.site_author }} Journal" href="{% url 'blog_rss_feed' %}">
+    <link rel="author" type="text/plain" href="/humans.txt">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
@@ -85,12 +87,73 @@
           "@type": "Person",
           "@id": "{{ site_settings.og_url }}#person",
           "name": "{{ site_settings.site_author }}",
+          "alternateName": [
+            "JaysonKhan",
+            "Jayson Khan",
+            "Jahongir Qo'ziboyev",
+            "Qo'ziboyev Jahongir",
+            "Kuziboev Jahongir",
+            "Jahongir Kuziboev",
+            "Quziboyev Jahongir",
+            "Jahongir Quziboyev",
+            "Betta347",
+            "Jayson"
+          ],
+          "givenName": "Jahongir",
+          "familyName": "Qo'ziboyev",
+          "additionalName": "JaysonKhan",
           "url": "{{ site_settings.og_url }}",
-          "jobTitle": "VibeCoder · Full-Stack Builder",
+          "jobTitle": "VibeCoder · Flutter & Full-Stack Engineer",
           "description": "{{ site_settings.meta_description|escapejs }}",
-          "email": "{{ site_settings.email }}"{% if site_settings.og_image %},
+          "email": "{{ site_settings.email }}",
+          "nationality": {"@type": "Country", "name": "Uzbekistan"},
+          "homeLocation": {
+            "@type": "Place",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Tashkent",
+              "addressCountry": "UZ"
+            }
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Tashkent",
+            "addressCountry": "UZ"
+          },
+          "knowsAbout": [
+            "Flutter", "Dart", "Mobile Engineering", "iOS Development", "Android Development",
+            "Python", "Django", "Backend Engineering", "REST API",
+            "PostgreSQL", "Redis", "DevOps", "Linux Server Administration",
+            "Telegram Bot Development", "aiogram", "FastAPI",
+            "JavaScript", "TypeScript", "Tailwind CSS", "HTMX",
+            "SEO", "Web Performance", "Site Architecture",
+            "Vibecoding", "AI-assisted Engineering", "Claude Code"
+          ],
+          "knowsLanguage": ["uz", "ru", "en"],
+          "worksFor": {
+            "@type": "Organization",
+            "@id": "{{ site_settings.og_url }}#organization",
+            "name": "JaysonKhan Build Studio",
+            "url": "{{ site_settings.og_url }}"
+          }{% if site_settings.og_image %},
           "image": "{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}"{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
           "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %}, {% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}{% if site_settings.twitter_url and site_settings.linkedin_url %}, {% elif site_settings.twitter_url and site_settings.github_url %}, {% endif %}{% if site_settings.twitter_url %}"{{ site_settings.twitter_url }}"{% endif %}{% if site_settings.telegram_url %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url %}, {% endif %}"{{ site_settings.telegram_url }}"{% endif %}]{% endif %}
+        },
+        {
+          "@type": "Organization",
+          "@id": "{{ site_settings.og_url }}#organization",
+          "name": "JaysonKhan Build Studio",
+          "alternateName": ["JaysonKhan", "Jayson Khan Studio"],
+          "url": "{{ site_settings.og_url }}",
+          "founder": {"@id": "{{ site_settings.og_url }}#person"},
+          "foundingDate": "2022",
+          "description": "Flutter va full-stack engineering studiyasi. Talaba'larga, biznesga va community'ga mahsulot quramiz.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Tashkent",
+            "addressCountry": "UZ"
+          },
+          "areaServed": {"@type": "Country", "name": "Uzbekistan"}
         },
         {
           "@type": "WebSite",
