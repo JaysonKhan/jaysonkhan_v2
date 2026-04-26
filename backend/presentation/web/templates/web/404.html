@@ -29,8 +29,8 @@
 
                 <div class="fade-up" style="animation-delay: 0.2s;">
                     <span class="eyebrow" style="margin-top: 40px; justify-content: center;">Error · Transmission lost</span>
-                    <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_404_headline|safe }}</h1>
-                    <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ site_settings.error_404_description }}</p>
+                    <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_404_headline|safe|default:"Bu sahifa xaritadan chiqib ketgan." }}</h1>
+                    <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ site_settings.error_404_description|default:"Qidirayotgan sahifa ko'chirilgan, arxivlangan yoki umuman bo'lmagan." }}</p>
                 </div>
 
                 <div class="row gap-3 fade-up" style="justify-content: center; margin-top: 40px; flex-wrap: wrap; animation-delay: 0.4s;">

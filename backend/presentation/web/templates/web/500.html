@@ -29,8 +29,8 @@
 
                 <div class="fade-up" style="animation-delay: 0.2s;">
                     <span class="eyebrow" style="margin-top: 40px; justify-content: center; color: var(--danger);">Error · Server fault</span>
-                    <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_500_headline|safe }}</h1>
-                    <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ site_settings.error_500_description }}</p>
+                    <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_500_headline|safe|default:"Bizning tomonda nimadir uzilibdi." }}</h1>
+                    <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ site_settings.error_500_description|default:"Ichki xato yuz berdi. Jamoaga xabar yetib bordi — bir oz vaqtdan keyin urinib ko'ring." }}</p>
                 </div>
 
                 <div class="row gap-3 fade-up" style="justify-content: center; margin-top: 40px; flex-wrap: wrap; animation-delay: 0.4s;">

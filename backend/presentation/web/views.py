@@ -29,7 +29,11 @@ def custom_404_view(request, exception=None):
     Custom 404 handler — shown instead of Django's debug 404 page when DEBUG=False.
     Hides internal URL patterns and stack traces from unauthenticated users.
     """
-    return render(request, 'web/404.html', status=404)
+    try:
+        site_settings = SiteSettings.load()
+    except Exception:
+        site_settings = None
+    return render(request, 'web/404.html', {'site_settings': site_settings}, status=404)
 
 
 def custom_500_view(request):
@@ -37,7 +41,11 @@ def custom_500_view(request):
     Custom 500 handler — shown instead of Django's debug 500 page when DEBUG=False.
     Prevents leaking stack traces and settings to users.
     """
-    return render(request, 'web/500.html', status=500)
+    try:
+        site_settings = SiteSettings.load()
+    except Exception:
+        site_settings = None
+    return render(request, 'web/500.html', {'site_settings': site_settings}, status=500)
 
 
 def _interactions_context(request, obj):

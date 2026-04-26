@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
@@ -70,6 +70,30 @@ urlpatterns = [
         name='telegram_webhook',
     ),
 ]
+
+# ── Legacy URL redirects (pre-i18n migration) ─────────────────────────────────
+# Before i18n, URLs were /xoprojects/, /rublog/ etc. (lang glued to page name).
+# Now the correct format is /xo/projects/, /ru/blog/. 301 redirect to fix SEO.
+from django.shortcuts import redirect as _redirect
+
+
+def _make_legacy_redirect(lang, page):
+    def _view_list(request):
+        return _redirect(f'/{lang}/{page}/', permanent=True)
+
+    def _view_detail(request, slug):
+        return _redirect(f'/{lang}/{page}/{slug}/', permanent=True)
+
+    return _view_list, _view_detail
+
+
+for _lang in ('xo', 'uz', 'ru', 'en'):
+    for _page in ('projects', 'blog', 'team', 'contact'):
+        _vlist, _vdetail = _make_legacy_redirect(_lang, _page)
+        urlpatterns += [
+            re_path(rf'^{_lang}{_page}/$', _vlist),
+            re_path(rf'^{_lang}{_page}/(?P<slug>[\w-]+)/$', _vdetail),
+        ]
 
 # Localized URLs — prefixed with /xo/, /uz/, /ru/, /en/. Default `xo` is also
 # served at /xo/ (prefix_default_language=True), so existing /projects/ etc.
