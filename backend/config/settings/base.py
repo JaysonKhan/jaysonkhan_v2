@@ -146,12 +146,14 @@ LANGUAGES = [
 # import LANG_INFO` at module-level, so REPLACING the dict leaves a stale
 # reference there.
 import django.conf.locale  # noqa: E402
+import sys  # noqa: E402
 django.conf.locale.LANG_INFO['xo'] = {
     'bidi': False,
     'code': 'xo',
     'name': 'Khorezm Uzbek',
     'name_local': 'Xorazmcha',
 }
+sys.stderr.write(f"[base.py] Patched LANG_INFO with 'xo'. Total keys: {len(django.conf.locale.LANG_INFO)}\n")
 LOCALE_PATHS = [BASE_DIR / 'locale']
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
