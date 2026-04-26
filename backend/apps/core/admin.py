@@ -182,16 +182,10 @@ class SiteSettingsAdmin(ModelAdmin):
                 ),
                 'fields': (
                     # — Hero ——————————————————————————————————————————————————
-                    'hero_availability_badge',
                     'hero_title',
                     'hero_subtitle',
                     'hero_image',
                     'hero_image_preview',
-                    'hero_primary_cta_text',
-                    'hero_primary_cta_url',
-                    'hero_secondary_cta_text',
-                    'hero_secondary_cta_url',
-                    'hero_typing_texts',
                     # — About ——————————————————————————————————————————————————
                     'about_title',
                     'about_description',
@@ -203,11 +197,7 @@ class SiteSettingsAdmin(ModelAdmin):
                     'stat_3_count', 'stat_3_suffix', 'stat_3_label',
                     'stat_4_count', 'stat_4_suffix', 'stat_4_label',
                     # — Section headings ——————————————————————————————————————
-                    'skills_section_title',
                     'featured_projects_title',
-                    'featured_projects_subtitle',
-                    'experience_section_title',
-                    'latest_blog_title',
                     # — Visibility ————————————————————————————————————————————
                     'apps_section_visible',
                 ),
@@ -230,8 +220,6 @@ class SiteSettingsAdmin(ModelAdmin):
                     # — Contact ————————————————————————————————————————————————
                     'contact_page_title',
                     'contact_page_subtitle',
-                    'contact_email_label',
-                    'contact_linkedin_label',
                 ),
             }),
 
@@ -249,7 +237,6 @@ class SiteSettingsAdmin(ModelAdmin):
                     'linkedin_url',
                     'twitter_url',
                     'telegram_url',
-                    'wakatime_api_key',
                     'resume_file',
                     'resume_preview',
                     'resume_button_text',

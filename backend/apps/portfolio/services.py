@@ -44,18 +44,8 @@ class PortfolioRepository:
     def get_all_skills():
         return (
             Skill.objects
-            .only('id', 'name', 'icon', 'category', 'order', 'show_in_hero')
+            .only('id', 'name', 'category', 'order')
             .all()
-        )
-
-    @staticmethod
-    def get_hero_skills():
-        """Return skills marked for hero orbit display, ordered by order field."""
-        return (
-            Skill.objects
-            .filter(show_in_hero=True)
-            .only('id', 'name', 'icon', 'order')
-            .order_by('order', 'name')
         )
 
     @staticmethod
@@ -63,7 +53,7 @@ class PortfolioRepository:
         """Return skills grouped by category as {category_label: [skills]}."""
         skills = (
             Skill.objects
-            .only('id', 'name', 'icon', 'category', 'order')
+            .only('id', 'name', 'category', 'order')
             .order_by('category', 'order', 'name')
         )
         grouped: dict = {}
@@ -93,7 +83,6 @@ class PortfolioService:
             'bot_projects': self.repository.get_bot_projects(),
             'skills': self.repository.get_all_skills(),
             'skills_grouped': self.repository.get_skills_grouped(),
-            'hero_skills': self.repository.get_hero_skills(),
             'experience': self.repository.get_all_experience(),
         }
 
@@ -105,6 +94,5 @@ class PortfolioService:
             # Fallback if none are marked as featured — template uses this
             'projects': self.repository.get_all_projects()[:3] if not featured else [],
             'skills_grouped': self.repository.get_skills_grouped(),
-            'hero_skills': self.repository.get_hero_skills(),
             'experience': self.repository.get_all_experience(),
         }

@@ -18,19 +18,11 @@ class Skill(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    level = models.IntegerField(help_text="Skill level out of 100", default=80)
-    icon = models.CharField(
-        max_length=50, help_text="Tailwind or FontAwesome icon class", blank=True
-    )
     category = models.CharField(
         max_length=20, choices=CATEGORY_CHOICES, default='mobile',
         help_text="Skill category for grouped display"
     )
     order = models.IntegerField(default=0, help_text="Display order within category")
-    show_in_hero = models.BooleanField(
-        default=False,
-        help_text="Show this skill icon in the hero section orbit animation"
-    )
 
     class Meta:
         ordering = ['category', 'order', 'name']

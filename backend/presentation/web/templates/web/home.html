@@ -15,7 +15,7 @@
                     <span class="tag mono" id="hero-clock">— UTC+5</span>
                 </div>
                 <div class="row gap-3">
-                    <span class="tag"><span class="dot-live"></span> {{ site_settings.availability_badge|default:site_settings.hero_availability_badge }}</span>
+                    <span class="tag"><span class="dot-live"></span> {{ site_settings.availability_badge }}</span>
                 </div>
             </div>
         </div>
@@ -32,17 +32,10 @@
                     {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">See the work →</a>{% endif %}
                 </p>
                 <div class="row gap-3" style="align-items: center; flex-wrap: wrap;">
-                    {% if site_settings.hero_primary_cta_text %}
-                    <a href="{{ site_settings.hero_primary_cta_url|default_if_none:'' }}" class="btn btn-primary btn-arrow">
-                        {{ site_settings.hero_primary_cta_text }}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    {% else %}
                     <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow">
                         Start a project
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
-                    {% endif %}
                     {% if site_settings.apps_section_visible %}
                     <a href="{% url 'projects' %}" class="btn">View case studies</a>
                     {% endif %}
@@ -192,7 +185,7 @@
         <div class="container">
             <div class="reveal" style="margin-bottom: 60px; max-width: 720px;">
                 <span class="eyebrow" style="margin-bottom: 24px;">Career · Track record</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.experience_section_title|default:"Where I've shipped." }}</h2>
+                <h2 class="display-md serif" style="margin-top: 16px;">Where I've shipped.</h2>
             </div>
             <div class="col">
                 {% for exp in portfolio.experience %}

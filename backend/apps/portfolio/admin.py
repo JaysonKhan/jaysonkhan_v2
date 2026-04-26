@@ -10,24 +10,15 @@ from django.utils.safestring import mark_safe
 @admin.register(Skill)
 class SkillAdmin(UnfoldModelAdmin):
     list_per_page = 10
-    list_display = ('name', 'icon_display', 'category', 'order', 'show_in_hero')
-    list_editable = ('category', 'order', 'show_in_hero')
-    list_filter = ('category', 'show_in_hero')
+    list_display = ('name', 'category', 'order')
+    list_editable = ('category', 'order')
+    list_filter = ('category',)
     search_fields = ('name',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'icon', 'category', 'order', 'show_in_hero'),
+            'fields': ('name', 'category', 'order'),
         }),
     )
-
-    def icon_display(self, obj):
-        if obj.icon:
-            return format_html(
-                '<code style="font-size:11px;opacity:.7;">{}</code>',
-                obj.icon,
-            )
-        return '—'
-    icon_display.short_description = 'Icon'
 
 
 class ProjectAdminForm(forms.ModelForm):

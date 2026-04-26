@@ -123,15 +123,11 @@ class NavigationMixin(models.Model):
 
 
 class HeroMixin(models.Model):
-    """Hero section — headline, subtitle, CTAs, typing animation."""
+    """Hero section — headline, subtitle, optional image. CTAs/typing/badge moved to EditorialContentMixin."""
 
-    hero_availability_badge = models.CharField(
-        max_length=100, default="Available for work",
-        help_text="Small badge text above the hero headline"
-    )
     hero_title = models.CharField(
         max_length=255, default="I craft pixel-perfect mobile experiences.",
-        help_text="Main hero headline"
+        help_text="Main hero headline (HTML allowed; leave blank to use v3 default)"
     )
     hero_subtitle = models.TextField(
         max_length=500,
@@ -142,31 +138,6 @@ class HeroMixin(models.Model):
     hero_image = models.ImageField(
         upload_to='hero/', blank=True, null=True,
         help_text="Hero section portrait/image"
-    )
-    hero_primary_cta_text = models.CharField(
-        max_length=50, default="View Apps",
-        help_text="Primary CTA button text in hero"
-    )
-    hero_primary_cta_url = models.CharField(
-        max_length=200, default="/projects/",
-        help_text="Primary CTA button URL"
-    )
-    hero_secondary_cta_text = models.CharField(
-        max_length=50, default="Contact Me",
-        help_text="Secondary CTA button text in hero"
-    )
-    hero_secondary_cta_url = models.CharField(
-        max_length=200, default="/contact/",
-        help_text="Secondary CTA button URL"
-    )
-    hero_typing_texts = models.TextField(
-        blank=True,
-        default='["Flutter Developer", "Mobile Engineer", "Problem Solver", "App Builder"]',
-        help_text=(
-            'JSON array of phrases for the hero typing animation. '
-            'Example: ["Flutter Developer", "Mobile Engineer"]. '
-            'Leave empty to disable.'
-        )
     )
 
     class Meta:
@@ -219,25 +190,9 @@ class ContentSectionsMixin(models.Model):
     stat_4_label = models.CharField(max_length=60, default="Clean Architecture")
 
     # ── Section Headings
-    skills_section_title = models.CharField(
-        max_length=100, default="Tech Stack",
-        help_text="Skills section heading"
-    )
     featured_projects_title = models.CharField(
         max_length=100, default="Featured Apps",
         help_text="Featured projects section heading"
-    )
-    featured_projects_subtitle = models.CharField(
-        max_length=255, default="Apps I've built and shipped to production.",
-        help_text="Featured projects section sub-heading"
-    )
-    experience_section_title = models.CharField(
-        max_length=100, default="Experience",
-        help_text="Experience section heading on homepage"
-    )
-    latest_blog_title = models.CharField(
-        max_length=100, default="Latest from the Blog",
-        help_text="Latest blog section heading on homepage"
     )
 
     # ── Visibility
@@ -278,14 +233,6 @@ class ContentSectionsMixin(models.Model):
         default="Have a mobile app idea or need a Flutter engineer? Drop me a message.",
         help_text="Contact page intro paragraph"
     )
-    contact_email_label = models.CharField(
-        max_length=50, default="Email",
-        help_text="Label for email contact block"
-    )
-    contact_linkedin_label = models.CharField(
-        max_length=50, default="LinkedIn",
-        help_text="Label for LinkedIn contact block"
-    )
     resume_file = models.FileField(
         upload_to='cv/', blank=True, null=True,
         help_text="CV / Resume PDF for download"
@@ -325,10 +272,6 @@ class ContactSocialsMixin(models.Model):
     telegram_url = models.URLField(
         blank=True, default="",
         help_text="Telegram profile URL (optional)"
-    )
-    wakatime_api_key = models.CharField(
-        max_length=255, blank=True, default="",
-        help_text="WakaTime API key (from wakatime.com/settings/api-key). Used server-side only."
     )
 
     class Meta:
