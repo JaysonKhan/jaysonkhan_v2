@@ -139,7 +139,7 @@ p { margin: 0; }
 .mono { font-family: var(--font-mono); font-feature-settings: "calt", "ss01"; }
 .sans { font-family: var(--font-sans); }
 
-.display-xl  { font-family: var(--font-display); font-size: clamp(72px, 12vw, 200px); line-height: 0.86; letter-spacing: -0.045em; }
+.display-xl  { font-family: var(--font-display); font-size: clamp(64px, 8vw, 120px);  line-height: 0.88; letter-spacing: -0.04em; }
 .display-lg  { font-family: var(--font-display); font-size: clamp(56px, 8vw, 128px);  line-height: 0.9;  letter-spacing: -0.035em; }
 .display-md  { font-family: var(--font-display); font-size: clamp(40px, 5vw, 72px);   line-height: 0.95; letter-spacing: -0.025em; }
 .display-sm  { font-family: var(--font-display); font-size: clamp(28px, 3vw, 40px);   line-height: 1.05; letter-spacing: -0.02em; }
@@ -667,7 +667,7 @@ body::before {
     .container, .container-narrow { padding: 0 24px; }
     .section { padding: 80px 0; }
     .section-sm { padding: 56px 0; }
-    .display-xl { font-size: clamp(56px, 14vw, 96px); }
+    .display-xl { font-size: clamp(44px, 11vw, 72px); }
     .display-lg { font-size: clamp(44px, 11vw, 72px); }
     .grid-2-mobile-1 { grid-template-columns: 1fr !important; }
     .grid-3-mobile-1 { grid-template-columns: 1fr !important; }
