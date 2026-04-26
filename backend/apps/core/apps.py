@@ -26,17 +26,23 @@ class CoreConfig(AppConfig):
 
         _orig_static = _i18n.GetLanguageInfoListNode.get_language_info
 
-        # Original is an instance method (`def get_language_info(self, language)`).
-        # Match that signature exactly so Python's auto-binding still works.
+        # Reimplement the method end-to-end so we don't have to thread
+        # through the original (which is a bound method that's awkward to
+        # call back into). 'xo' short-circuits to our metadata; everything
+        # else delegates to translation.get_language_info, which already
+        # handles the standard codes and fallbacks.
+        from django.utils import translation as _translation_mod
+
         def _xo_aware_get_language_info(self, language):
             code = language[0] if (language and len(language[0]) > 1) else str(language)
             if code == 'xo':
                 return dict(_XO_LANG_INFO)
-            return _orig_static(self, language)
+            return _translation_mod.get_language_info(code)
 
         _i18n.GetLanguageInfoListNode.get_language_info = _xo_aware_get_language_info
 
-        # Same fix for the single-language template filter helpers.
+        # Same short-circuit for the module-level helper used by single-language
+        # template filters.
         _orig_lookup = _t.get_language_info
 
         def _xo_aware_translation_get_language_info(lang_code):
