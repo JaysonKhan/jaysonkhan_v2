@@ -14,7 +14,7 @@
             <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
                 <div class="row gap-3">
                     <span class="tag">{{ site_settings.blog_section_label }}</span>
-                    <span class="tag">{{ paginator.count|default:0 }} dispatches</span>
+                    <span class="tag">{{ paginator.count|default:0 }} {% trans "dispatches" %}</span>
                 </div>
                 <span class="tag"><span class="dot-live"></span> {{ site_settings.blog_section_status }}</span>
             </div>

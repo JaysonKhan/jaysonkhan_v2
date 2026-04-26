@@ -21,7 +21,7 @@
             <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Contact · Open the channel" %}</div>
             <h1 class="display-xl">
                 {{ site_settings.contact_page_title|default:"Let's build" }}<br>
-                something <em style="font-weight: 300; font-style: italic;">real.</em>
+                {% trans "something" %} <em style="font-weight: 300; font-style: italic;">{% trans "real." %}</em>
             </h1>
             {% if site_settings.contact_page_subtitle %}
             <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">{{ site_settings.contact_page_subtitle }}</p>
@@ -165,9 +165,11 @@
     var msg = document.getElementById('id_message');
     var counter = document.getElementById('char-counter');
     if (!msg || !counter) return;
+    var labelChars = "{% trans 'CHARS' %}";
+    var labelMin = "{% trans 'MIN' %}";
     function update() {
         var n = msg.value.length;
-        counter.textContent = n + ' CHARS' + (n < 20 ? ' · MIN 20' : '');
+        counter.textContent = n + ' ' + labelChars + (n < 20 ? ' · ' + labelMin + ' 20' : '');
     }
     msg.addEventListener('input', update);
     update();

@@ -354,3 +354,18 @@ msgstr "Давайте"
 
 msgid "open a channel."
 msgstr "откроем канал."
+
+msgid "something"
+msgstr "что-то"
+
+msgid "real."
+msgstr "настоящее."
+
+msgid "dispatches"
+msgstr "материалов"
+
+msgid "entries"
+msgstr "записей"
+
+msgid "CHARS"
+msgstr "СИМВ"

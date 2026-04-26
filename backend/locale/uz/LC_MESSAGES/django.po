@@ -340,3 +340,18 @@ msgstr "Keling,"
 
 msgid "open a channel."
 msgstr "kanal ochamiz."
+
+msgid "something"
+msgstr "biror narsa"
+
+msgid "real."
+msgstr "haqiqiy."
+
+msgid "dispatches"
+msgstr "maqola"
+
+msgid "entries"
+msgstr "yozuv"
+
+msgid "CHARS"
+msgstr "BELGI"
