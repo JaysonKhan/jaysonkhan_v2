@@ -24,11 +24,15 @@ class CoreConfig(AppConfig):
         _orig = _t.get_language_info
 
         def _patched(lang_code):
+            import sys as ___sys
+            ___sys.stderr.write(f"[patched-call] lang_code={lang_code!r} module_attr_id={id(_t.get_language_info)}\n")
             if lang_code == 'xo':
                 return dict(_xo_info)
             return _orig(lang_code)
 
         _t.get_language_info = _patched
+        import sys as __sys2
+        __sys2.stderr.write(f"[CoreConfig.ready] After patch, _t.get_language_info id={id(_t.get_language_info)} name={_t.get_language_info.__name__}\n")
 
         # Also patch django.conf.locale.LANG_INFO in case anything iterates it.
         import django.conf.locale as _locale
