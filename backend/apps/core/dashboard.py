@@ -115,3 +115,27 @@ def _humanize(td):
     if sec < 86_400:
         return f"{sec // 3600}h"
     return f"{sec // 86_400}d"
+
+
+# ── Sidebar badge counters ────────────────────────────────────────────────────
+# Called on every admin page render — keep cheap. Return None if zero so
+# Unfold hides the badge instead of showing "0".
+
+def unread_messages_badge(request):
+    """Count of unread Contact Messages — shown on Aloqa → Xabarlar."""
+    try:
+        from contact.models import ContactMessage
+        n = ContactMessage.objects.filter(is_read=False).count()
+        return str(n) if n else None
+    except Exception:
+        return None
+
+
+def pending_comments_badge(request):
+    """Count of comments awaiting approval — shown on Aloqa → Komentariyalar."""
+    try:
+        from interactions.models import Comment
+        n = Comment.objects.filter(is_approved=False).count()
+        return str(n) if n else None
+    except Exception:
+        return None

@@ -324,11 +324,18 @@ UNFOLD = {
         },
     },
     "SIDEBAR": {
-        "show_search": False,
+        "show_search": True,
         "show_all_applications": True,
+        # ── Navigation organized by daily-usage frequency ────────────────────
+        # 1. Boshqaruv  — entry point (Dashboard, Tashriflar)
+        # 2. Kontent    — daily content edits (Blog, Projects, Team, Media)
+        # 3. Aloqa      — inbox (Xabarlar, Komentariyalar, Layklar) [BADGES]
+        # 4. Sozlamalar — less-frequent setup (Site, Skills, Categories, Tags)
+        # 5. Bot        — TalabaOvozi service (Bot, Telegram session, Emoji)
+        # 6. Tizim      — rare admin (Cron, Users, Bans, Telegram entities, OSINT)
         "navigation": [
             {
-                "title": "Workspace",
+                "title": "Boshqaruv",
                 "separator": True,
                 "items": [
                     {
@@ -338,7 +345,37 @@ UNFOLD = {
                         "permission": lambda r: r.user.is_active and r.user.is_staff,
                     },
                     {
-                        "title": "Assets",
+                        "title": "Tashriflar",
+                        "icon": "trending_up",
+                        "link": f"{_A}core/pageview/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                ],
+            },
+            {
+                "title": "Kontent",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Blog yozuvlari",
+                        "icon": "edit_note",
+                        "link": f"{_A}blog/post/",
+                        "permission": lambda r: r.user.has_perm("blog.view_post"),
+                    },
+                    {
+                        "title": "Loyihalar",
+                        "icon": "folder_open",
+                        "link": f"{_A}portfolio/project/",
+                        "permission": lambda r: r.user.has_perm("portfolio.view_project"),
+                    },
+                    {
+                        "title": "Jamoa",
+                        "icon": "groups",
+                        "link": f"{_A}portfolio/teammember/",
+                        "permission": lambda r: r.user.has_perm("portfolio.view_teammember"),
+                    },
+                    {
+                        "title": "Media kutubxonasi",
                         "icon": "image",
                         "link": f"{_A}core/asset/manager/",
                         "permission": lambda r: r.user.has_perm("core.view_asset"),
@@ -346,125 +383,67 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Site",
+                "title": "Aloqa",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Site Settings",
+                        "title": "Xabarlar",
+                        "icon": "inbox",
+                        "link": f"{_A}contact/contactmessage/",
+                        "badge": "core.dashboard.unread_messages_badge",
+                        "permission": lambda r: r.user.has_perm("contact.view_contactmessage"),
+                    },
+                    {
+                        "title": "Komentariyalar",
+                        "icon": "forum",
+                        "link": f"{_A}interactions/comment/",
+                        "badge": "core.dashboard.pending_comments_badge",
+                        "permission": lambda r: r.user.has_perm("interactions.view_comment"),
+                    },
+                    {
+                        "title": "Layklar",
+                        "icon": "favorite",
+                        "link": f"{_A}interactions/like/",
+                        "permission": lambda r: r.user.has_perm("interactions.view_like"),
+                    },
+                ],
+            },
+            {
+                "title": "Sozlamalar",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Sayt sozlamalari",
                         "icon": "settings",
                         "link": f"{_A}core/sitesettings/",
                         "permission": lambda r: r.user.is_superuser,
                     },
                     {
-                        "title": "Site Visitors",
-                        "icon": "person_pin",
-                        "link": f"{_A}core/pageview/",
-                        "permission": lambda r: r.user.is_superuser,
-                    },
-                ],
-            },
-            {
-                "title": "Telegram",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Emoji Manager",
-                        "icon": "emoji_emotions",
-                        "link": f"{_A}telegram/settings/",
-                        "permission": lambda r: r.user.is_superuser,
-                    },
-                    {
-                        "title": "Session",
-                        "icon": "key",
-                        "link": f"{_A}bot/telegram/session/",
-                        "permission": lambda r: r.user.has_perm("botproxy.manage_telegram_session"),
-                    },
-                ],
-            },
-            {
-                "title": "Content",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Projects",
-                        "icon": "folder_open",
-                        "link": f"{_A}portfolio/project/",
-                        "permission": lambda r: r.user.has_perm("portfolio.view_project"),
-                    },
-                    {
-                        "title": "Team members",
-                        "icon": "groups",
-                        "link": f"{_A}portfolio/teammember/",
-                        "permission": lambda r: r.user.has_perm("portfolio.view_teammember"),
-                    },
-                    {
-                        "title": "Skills",
+                        "title": "Skill",
                         "icon": "star",
                         "link": f"{_A}portfolio/skill/",
                         "permission": lambda r: r.user.has_perm("portfolio.view_skill"),
                     },
                     {
-                        "title": "Experience",
+                        "title": "Tajriba",
                         "icon": "work",
                         "link": f"{_A}portfolio/experience/",
                         "permission": lambda r: r.user.has_perm("portfolio.view_experience"),
                     },
                     {
-                        "title": "Blog Posts",
-                        "icon": "article",
-                        "link": f"{_A}blog/post/",
-                        "permission": lambda r: r.user.has_perm("blog.view_post"),
-                    },
-                    {
-                        "title": "Categories",
+                        "title": "Blog kategoriyalari",
                         "icon": "category",
                         "link": f"{_A}blog/category/",
                         "permission": lambda r: r.user.has_perm("blog.view_category"),
                     },
                     {
-                        "title": "Tags",
+                        "title": "Blog teglari",
                         "icon": "label",
                         "link": f"{_A}blog/tag/",
                         "permission": lambda r: r.user.has_perm("blog.view_tag"),
                     },
                     {
-                        "title": "Contact Messages",
-                        "icon": "mail",
-                        "link": f"{_A}contact/contactmessage/",
-                        "permission": lambda r: r.user.has_perm("contact.view_contactmessage"),
-                    },
-                ],
-            },
-            {
-                "title": "Interactions",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Comments",
-                        "icon": "forum",
-                        "link": f"{_A}interactions/comment/",
-                        "permission": lambda r: r.user.has_perm("interactions.view_comment"),
-                    },
-                    {
-                        "title": "Likes",
-                        "icon": "favorite",
-                        "link": f"{_A}interactions/like/",
-                        "permission": lambda r: r.user.has_perm("interactions.view_like"),
-                    },
-                    {
-                        "title": "Telegram Entities",
-                        "icon": "group",
-                        "link": f"{_A}telegram/telegramentity/",
-                        "permission": lambda r: r.user.has_perm("telegram.view_telegramentity"),
-                    },
-                    {
-                        "title": "Bans",
-                        "icon": "block",
-                        "link": f"{_A}interactions/userban/",
-                        "permission": lambda r: r.user.has_perm("interactions.view_userban"),
-                    },
-                    {
-                        "title": "Notification Prefs",
+                        "title": "Notifikatsiya sozlamalari",
                         "icon": "notifications",
                         "link": f"{_A}interactions/notificationpreference/",
                         "permission": lambda r: r.user.has_perm("interactions.view_notificationpreference"),
@@ -472,37 +451,31 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "Authentication",
+                "title": "TalabaOvozi Bot",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Users",
-                        "icon": "person",
-                        "link": f"{_A}users/user/",
-                        "permission": lambda r: r.user.is_superuser,
-                    },
-                ],
-            },
-            {
-                "title": "My Services",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "TalabaOvozi",
+                        "title": "Bot dashboard",
                         "icon": "smart_toy",
                         "link": f"{_A}bot/talabaovozi/dashboard/",
                         "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
                     },
                     {
-                        "title": "OSINT",
-                        "icon": "person_search",
-                        "link": f"{_A}osint/search/",
-                        "permission": lambda r: r.user.has_perm("osint.use_osint"),
+                        "title": "Telegram session",
+                        "icon": "key",
+                        "link": f"{_A}bot/telegram/session/",
+                        "permission": lambda r: r.user.has_perm("botproxy.manage_telegram_session"),
+                    },
+                    {
+                        "title": "Emoji manager",
+                        "icon": "emoji_emotions",
+                        "link": f"{_A}telegram/settings/",
+                        "permission": lambda r: r.user.is_superuser,
                     },
                 ],
             },
             {
-                "title": "Ops",
+                "title": "Tizim",
                 "separator": True,
                 "items": [
                     {
@@ -516,6 +489,30 @@ UNFOLD = {
                         "icon": "history",
                         "link": f"{_A}ops/cronrun/",
                         "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Foydalanuvchilar",
+                        "icon": "person",
+                        "link": f"{_A}users/user/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Bans",
+                        "icon": "block",
+                        "link": f"{_A}interactions/userban/",
+                        "permission": lambda r: r.user.has_perm("interactions.view_userban"),
+                    },
+                    {
+                        "title": "Telegram entities",
+                        "icon": "group",
+                        "link": f"{_A}telegram/telegramentity/",
+                        "permission": lambda r: r.user.has_perm("telegram.view_telegramentity"),
+                    },
+                    {
+                        "title": "OSINT",
+                        "icon": "person_search",
+                        "link": f"{_A}osint/search/",
+                        "permission": lambda r: r.user.has_perm("osint.use_osint"),
                     },
                 ],
             },
