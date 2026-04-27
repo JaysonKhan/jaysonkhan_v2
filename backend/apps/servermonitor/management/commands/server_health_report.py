@@ -107,7 +107,7 @@ class Command(BaseCommand):
         self.stdout.write('Collecting server metrics...')
         snapshot = collect_full_snapshot()
 
-        cpu_alert = format_cpu_alert(snapshot.cpu, threshold=75.0)
+        cpu_alert = format_cpu_alert(snapshot.cpu, threshold=85.0)
         has_cpu_alert = cpu_alert is not None
         has_service_down = any(not s.active for s in snapshot.services)
 

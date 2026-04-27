@@ -241,8 +241,14 @@ def format_top_processes(procs: list[dict]) -> str:
 # ── CPU Alert (core-level) ───────────────────────────────────────────────────
 
 
-def format_cpu_alert(cpu: CpuMetrics, threshold: float = 75.0) -> str | None:
-    """Return alert message if any core exceeds threshold. None if all OK."""
+def format_cpu_alert(cpu: CpuMetrics, threshold: float = 85.0) -> str | None:
+    """Return alert message if any core exceeds threshold. None if all OK.
+
+    Default threshold raised to 85% (was 75%) on 2026-04-27 after
+    transient sub-second bursts kept tripping the 75% line. WARN_THRESHOLD
+    above stays at 75% — that drives the yellow visual badge, which is
+    informational, not paging.
+    """
     hot_cores = [c for c in cpu.cores if c.percent >= threshold]
     if not hot_cores:
         return None

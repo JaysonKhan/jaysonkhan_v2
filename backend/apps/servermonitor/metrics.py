@@ -101,8 +101,19 @@ def _bytes_to_gb(b: int) -> float:
     return round(b / (1024 ** 3), 2)
 
 
-def collect_cpu() -> CpuMetrics:
-    per_core = psutil.cpu_percent(interval=1, percpu=True)
+def collect_cpu(*, interval: float = 1.0) -> CpuMetrics:
+    """Sample per-core CPU usage.
+
+    interval=1 (default) — quick snapshot for interactive /status. Cheap
+    but susceptible to sub-second spikes (e.g., a single Postgres parallel
+    query can briefly max several cores during the 1s sample window and
+    cause a false-positive alert in check_cpu_alert).
+
+    interval=5 — sustained sample. Recommended for cron-driven alerts where
+    we care about real overload, not transient bursts. Adds 4s to the
+    measurement, which is negligible for a 10-minute cron tick.
+    """
+    per_core = psutil.cpu_percent(interval=interval, percpu=True)
     total = psutil.cpu_percent(interval=0)
     load = psutil.getloadavg()
     cores = [CpuCoreInfo(core=i, percent=p) for i, p in enumerate(per_core)]
