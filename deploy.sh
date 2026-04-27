@@ -235,13 +235,12 @@ if $DEPLOY_JK; then
         else
             warn "  Health endpoint: $HEALTH_CODE"
         fi
-        # Server monitor timer check
-        TIMER_STATUS=$(remote "sudo systemctl is-active server-health-report.timer 2>/dev/null" || echo "unknown")
-        if [[ "$TIMER_STATUS" == "active" ]]; then
-            NEXT_RUN=$(remote "sudo systemctl show server-health-report.timer --property=NextElapseUSecRealtime --value 2>/dev/null" || echo "")
-            ok "  Health report timer: active ${DIM}(next: $NEXT_RUN)${RESET}"
+        # Server monitor crontab check — managed block must be present.
+        CRON_BLOCK=$(remote "crontab -l 2>/dev/null | grep -c '^# JK_SERVERMONITOR_BEGIN$' || true")
+        if [[ "$CRON_BLOCK" == "1" ]]; then
+            ok "  Server monitor crontab: ${DIM}4 crons via cron_run${RESET}"
         else
-            warn "  Health report timer: $TIMER_STATUS"
+            warn "  Server monitor crontab block missing — re-run deploy.sh"
         fi
     else
         echo -e "${RED}${BOLD}✖${RESET}  jaysonkhan: $JK_STATUS"
