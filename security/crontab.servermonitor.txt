@@ -1,0 +1,35 @@
+# jaysonkhan_v2 server-monitor crontab
+#
+# Install on the server (one-time, as the user that owns /var/www/jaysonkhan):
+#
+#   crontab -e
+#   # paste the lines below, save
+#
+# Wrapper command `cron_run` records every execution into the
+# `ops.CronRun` table (visible at /jk-dinadmin/ops/cronrun/), so the
+# admin panel always shows the latest run + status, without you needing
+# to dig through journalctl.
+#
+# All crons share the same prefix block — change it once if paths move.
+
+PROJECT_DIR=/var/www/jaysonkhan
+PYTHON=/var/www/jaysonkhan/backend/venv/bin/python
+MANAGE=/var/www/jaysonkhan/backend/manage.py
+LOG=/var/log/jaysonkhan/cron.log
+
+# ── Server health monitoring ─────────────────────────────────────────────────
+
+# Every 10 minutes — CPU core overload alert (≥75% threshold)
+*/10 * * * *  cd $PROJECT_DIR && $PYTHON $MANAGE cron_run check_cpu_alert      >> $LOG 2>&1
+
+# Every 5 minutes — per-service state-change detection + Telegram alert
+*/5 * * * *   cd $PROJECT_DIR && $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
+
+# Hourly — failed and overdue managed crons
+0 * * * *     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run cron_health_check    >> $LOG 2>&1
+
+# Daily at 09:00 Tashkent (server is UTC+? — adjust if needed) — full report
+0 9 * * *     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
+
+# Optional: weekly at Monday 09:00 — Contabo tariff advice
+0 9 * * 1     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run server_health_report --tariff >> $LOG 2>&1

@@ -4,15 +4,17 @@ Uses centralized core.emoji.ce() for custom emoji support.
 """
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import timedelta
 
-from core.emoji import ce as _ce, reset_cache as reset_emoji_cache
+from core.emoji import ce as _ce, reset_cache as reset_emoji_cache  # noqa: F401
 
 from .metrics import (
     CpuMetrics,
     DiskMetrics,
     DiskPartitionInfo,
     MemoryMetrics,
+    SERVICE_GROUPS,
     ServerSnapshot,
     ServiceStatus,
     SwapMetrics,
@@ -55,23 +57,36 @@ def _format_uptime(td: timedelta) -> str:
     return ' '.join(parts)
 
 
+# Per-unit icons. Unit names with `@` keep the part before the `@`
+# for matching (e.g. `postgresql@16-main` → `postgresql`).
+_SERVICE_ICONS = {
+    'jaysonkhan':      '🌐',
+    'talabaovozi-web': '📊',
+    'talabaovozi':     '🤖',
+    'uzexam':          '🎓',
+    'uzexam-bot':      '🤖',
+    'nginx':           '⚡',
+    'postgresql':      '🐘',
+    'redis-server':    '🧠',
+    'postfix':         '📬',
+    'dovecot':         '📨',
+    'fail2ban':        '🛡',
+}
+
+
 def _service_icon(svc_name: str) -> str:
-    icons = {
-        'jaysonkhan': _ce('web', '🌐'),
-        'talabaovozi': _ce('bot', '🤖'),
-        'nginx': _ce('nginx', '⚡'),
-        'postgresql': _ce('postgresql', '🐘'),
-        'redis-server': _ce('critical', '🔴'),
-    }
-    return icons.get(svc_name, _ce('services_icon', '⚙️'))
+    base = svc_name.split('@')[0]
+    return _SERVICE_ICONS.get(svc_name) or _SERVICE_ICONS.get(base) or '⚙️'
 
 
 def _service_badge(status: ServiceStatus) -> str:
     if status.active:
         return _ce('ok', '🟢')
-    if status.status in ('inactive', 'dead'):
+    if status.status in ('inactive', 'dead', 'failed'):
         return _ce('critical', '🔴')
-    return ''
+    if status.status == 'activating':
+        return _ce('warn', '🟡')
+    return _ce('warn', '🟡')
 
 
 MEDAL_EMOJIS = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣']
@@ -159,12 +174,57 @@ def format_disk_detailed(partitions: list[DiskPartitionInfo]) -> str:
 
 
 def format_services(services: list[ServiceStatus]) -> str:
+    """Flat services list — kept for the /status compact snapshot."""
     lines = [f'\n{_ce("services_icon", "🔧")} <b>Services</b>']
     for svc in services:
         icon = _service_icon(svc.name)
         badge = _service_badge(svc)
         mem_info = f' ({svc.memory_mb}MB)' if svc.memory_mb else ''
-        lines.append(f'  {badge} {icon} <b>{svc.name}</b>: {svc.status}{mem_info}')
+        label = svc.display or svc.name
+        lines.append(f'  {badge} {icon} <b>{label}</b>: {svc.status}{mem_info}')
+    return '\n'.join(lines)
+
+
+def format_services_grouped(
+    services: list[ServiceStatus],
+    *,
+    restart_counts: dict[str, int] | None = None,
+) -> str:
+    """Grouped services view with optional 24h restart counts.
+
+    `restart_counts` is a {unit: count} dict — pulled from
+    ServiceCheckResult by the caller. Shown inline next to each unit
+    when > 0 to surface flapping services in the daily report.
+    """
+    restart_counts = restart_counts or {}
+    by_group: dict[str, list[ServiceStatus]] = defaultdict(list)
+    for svc in services:
+        by_group[svc.group or 'other'].append(svc)
+
+    lines = [f'\n{_ce("services_icon", "🔧")} <b>Services</b>']
+    # Render in declared group order (apps → infra → mail → security → other)
+    declared = list(SERVICE_GROUPS.keys()) + [g for g in by_group if g not in SERVICE_GROUPS]
+    for group_key in declared:
+        bucket = by_group.get(group_key)
+        if not bucket:
+            continue
+        meta = SERVICE_GROUPS.get(group_key, {'label': group_key.title(), 'icon': '⚙️'})
+        active_n = sum(1 for s in bucket if s.active)
+        total_n = len(bucket)
+        health_dot = '🟢' if active_n == total_n else '🔴' if active_n == 0 else '🟡'
+        lines.append(
+            f'\n  {meta["icon"]} <b>{meta["label"]}</b> {health_dot} ({active_n}/{total_n} up)'
+        )
+        for svc in bucket:
+            icon = _service_icon(svc.name)
+            badge = _service_badge(svc)
+            mem_info = f' · {svc.memory_mb}MB' if svc.memory_mb else ''
+            label = svc.display or svc.name
+            restarts = restart_counts.get(svc.name, 0)
+            restart_info = f' · 🔁 {restarts}x/24h' if restarts else ''
+            lines.append(
+                f'    {badge} {icon} {label} <code>{svc.status}</code>{mem_info}{restart_info}'
+            )
     return '\n'.join(lines)
 
 
@@ -202,21 +262,136 @@ def format_cpu_alert(cpu: CpuMetrics, threshold: float = 75.0) -> str | None:
     return '\n'.join(lines)
 
 
+# ── Service state-change alert ───────────────────────────────────────────────
+
+
+def format_service_alert(
+    *,
+    unit: str,
+    display: str,
+    group: str,
+    new_active: bool,
+    previous_active: bool | None,
+    status_text: str = '',
+) -> str:
+    """Per-service alert for state transitions.
+
+    Sent ONLY when current check differs from previous one — so
+    a clean restart produces 1 DOWN message followed by 1 UP message,
+    never the same alert twice for the same status.
+    """
+    icon = _service_icon(unit)
+    group_meta = SERVICE_GROUPS.get(group, {'label': 'Other', 'icon': '⚙️'})
+    arrow = '→'
+    prev_label = 'active' if previous_active else 'inactive'
+    new_label = 'active' if new_active else 'inactive'
+
+    if not new_active:
+        title = f'🚨 <b>Service DOWN</b>'
+        body = f'{icon} <b>{display}</b> — endi ishlamayapti.'
+        action = (
+            'Tekshirish:\n'
+            f'  <code>journalctl -u {unit} -n 50</code>\n'
+            f'  <code>systemctl status {unit}</code>\n\n'
+            'Koʼp marta DOWN boʼlsa restart yoki deploy.sh bilan qayta koʼtarish kerak.'
+        )
+    else:
+        title = '✅ <b>Service Recovered</b>'
+        body = f'{icon} <b>{display}</b> — qayta ishlayapti.'
+        action = 'Avtomatik tiklandi yoki deploy/restart natijasi.'
+
+    return (
+        f'{title}\n\n'
+        f'{body}\n'
+        f'<b>Guruh:</b> {group_meta["icon"]} {group_meta["label"]}\n'
+        f'<b>Unit:</b> <code>{unit}</code>\n'
+        f'<b>Holat:</b> <code>{prev_label}</code> {arrow} <code>{new_label}</code>'
+        + (f' ({status_text})' if status_text and status_text != new_label else '')
+        + f'\n\n{action}'
+    )
+
+
+# ── Cron health alert ────────────────────────────────────────────────────────
+
+
+def format_cron_failure_alert(
+    *,
+    failures: list[dict],
+    overdue: list[dict],
+) -> str | None:
+    """Cron failure / overdue summary. None if everything's fine.
+
+    failures: [{command, started_at, duration_ms, error_summary}, ...]
+    overdue:  [{command, schedule, last_seen}, ...]
+    """
+    if not failures and not overdue:
+        return None
+
+    lines = ['🚨 <b>Cron Health Alert</b>']
+
+    if failures:
+        lines.append(f'\n❌ <b>Failed runs ({len(failures)})</b>')
+        for f in failures[:10]:
+            ts = f['started_at'].strftime('%H:%M:%S') if f.get('started_at') else '?'
+            dur = f.get('duration_ms')
+            dur_s = f'{dur / 1000:.1f}s' if dur else '?'
+            err = (f.get('error_summary') or '').strip()[:80]
+            err_part = f' — {err}' if err else ''
+            lines.append(f'  • <code>{f["command"]}</code> [{ts}, {dur_s}]{err_part}')
+        if len(failures) > 10:
+            lines.append(f'  …va yana {len(failures) - 10} ta')
+
+    if overdue:
+        lines.append(f'\n⏳ <b>Overdue (no recent run)</b>')
+        for o in overdue[:10]:
+            last = o['last_seen'].strftime('%Y-%m-%d %H:%M') if o.get('last_seen') else 'never'
+            lines.append(f'  • <code>{o["command"]}</code> — last: {last}')
+
+    return '\n'.join(lines)
+
+
 # ── Full Report ──────────────────────────────────────────────────────────────
 
 
-def format_full_report(snapshot: ServerSnapshot) -> str:
-    """Complete daily health report with all sections."""
+def format_full_report(
+    snapshot: ServerSnapshot,
+    *,
+    restart_counts: dict[str, int] | None = None,
+    cron_summary: dict | None = None,
+) -> str:
+    """Complete daily health report with all sections.
+
+    `cron_summary` is an optional dict from server_health_report:
+        {'success': N, 'failed': M, 'recent_failures': [{...}], 'overdue': [{...}]}
+    """
     sections = [
         format_header(snapshot),
         format_cpu(snapshot.cpu),
         format_memory(snapshot.memory),
         format_swap(snapshot.swap),
         format_disk(snapshot.disk),
-        format_services(snapshot.services),
+        format_services_grouped(snapshot.services, restart_counts=restart_counts),
         format_top_processes(snapshot.top_processes),
     ]
+    if cron_summary:
+        sections.append(format_cron_summary(cron_summary))
     return '\n'.join(sections)
+
+
+def format_cron_summary(s: dict) -> str:
+    success = s.get('success', 0)
+    failed = s.get('failed', 0)
+    overdue = s.get('overdue', [])
+    icon_ok = _ce('ok', '🟢')
+    icon_bad = _ce('critical', '🔴')
+    head = f'\n{_ce("clock", "🕐")} <b>Cron (24h)</b>'
+    body = f'  {icon_ok} {success} muvaffaqiyat · {icon_bad} {failed} xato'
+    extras = []
+    if overdue:
+        extras.append(f'  ⏳ Overdue: {len(overdue)} ta')
+    if extras:
+        body = body + '\n' + '\n'.join(extras)
+    return f'{head}\n{body}'
 
 
 def format_status_report(snapshot: ServerSnapshot) -> str:
@@ -226,6 +401,6 @@ def format_status_report(snapshot: ServerSnapshot) -> str:
         format_cpu_compact(snapshot.cpu),
         format_memory(snapshot.memory),
         format_disk(snapshot.disk),
-        format_services(snapshot.services),
+        format_services_grouped(snapshot.services),
     ]
     return '\n'.join(sections)

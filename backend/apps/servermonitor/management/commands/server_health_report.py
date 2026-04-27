@@ -5,39 +5,95 @@ Usage:
     python manage.py server_health_report          # full daily report
     python manage.py server_health_report --quick   # quick status only
     python manage.py server_health_report --tariff  # include tariff advice
+    python manage.py server_health_report --alert-only  # send only on issues
 
 Cron (systemd timer or crontab):
     0 9 * * * /path/to/venv/bin/python /path/to/manage.py server_health_report
+
+The full report now also folds in:
+  - Per-service restart count over the last 24h (from ServiceCheckResult)
+  - Cron summary over the last 24h (success/fail counts + overdue list)
+
+If you ever want a strictly "infra only" snapshot, the --quick flag
+still produces the compact CPU+RAM+disk+services view without history.
 """
+from __future__ import annotations
+
+from collections import Counter
+from datetime import timedelta
+
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from core.services import SiteSettingsService
 from interactions.notifications.telegram_api import TelegramBotAPI
+from ops.models import CronRun, CronStatus, ManagedCron
 from servermonitor.contabo import analyze_tariff, format_tariff_advice
 from servermonitor.formatters import (
     format_cpu_alert,
     format_full_report,
     format_status_report,
 )
-from servermonitor.metrics import collect_cpu, collect_disk, collect_full_snapshot, collect_memory
+from servermonitor.metrics import collect_full_snapshot
+from servermonitor.models import ServiceCheckResult
+
+
+REPORT_WINDOW = timedelta(hours=24)
+
+
+def _restart_counts_24h() -> dict[str, int]:
+    """Count active→inactive transitions per service in the last 24h.
+
+    A "restart" is any state-change check where the service ended up
+    INACTIVE (the recovery transition is then the recovery, not a restart).
+    """
+    since = timezone.now() - REPORT_WINDOW
+    qs = (ServiceCheckResult.objects
+          .filter(checked_at__gte=since, is_state_change=True, is_active=False)
+          .values_list('service_unit', flat=True))
+    return dict(Counter(qs))
+
+
+def _cron_summary_24h() -> dict:
+    """Aggregate CronRun stats for the last 24 hours."""
+    since = timezone.now() - REPORT_WINDOW
+    base = CronRun.objects.filter(started_at__gte=since)
+    success = base.filter(status=CronStatus.SUCCESS).count()
+    failed = base.filter(status=CronStatus.FAILED).count()
+    recent_failures = list(
+        base.filter(status=CronStatus.FAILED)
+            .order_by('-started_at')
+            .values('command', 'started_at', 'error_summary')[:5]
+    )
+
+    # Overdue managed crons — last run > 24h ago.
+    overdue = []
+    now = timezone.now()
+    for mc in ManagedCron.objects.filter(enabled=True).only('command', 'schedule'):
+        last = (CronRun.objects.filter(command=mc.command)
+                .order_by('-started_at').only('started_at').first())
+        last_seen = last.started_at if last else None
+        if not last_seen or (now - last_seen) > REPORT_WINDOW:
+            overdue.append({'command': mc.command, 'last_seen': last_seen})
+
+    return {
+        'success': success,
+        'failed': failed,
+        'recent_failures': recent_failures,
+        'overdue': overdue,
+    }
 
 
 class Command(BaseCommand):
-    help = 'Send server health report to Telegram owner'
+    help = 'Send server health report to Telegram owner.'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '--quick', action='store_true',
-            help='Send quick status instead of full report',
-        )
-        parser.add_argument(
-            '--tariff', action='store_true',
-            help='Include Contabo tariff advice',
-        )
-        parser.add_argument(
-            '--alert-only', action='store_true',
-            help='Only send if there are warnings/alerts',
-        )
+        parser.add_argument('--quick', action='store_true',
+                            help='Send compact status instead of full report.')
+        parser.add_argument('--tariff', action='store_true',
+                            help='Include Contabo tariff advice as separate message.')
+        parser.add_argument('--alert-only', action='store_true',
+                            help='Only send if there are warnings/alerts.')
 
     def handle(self, *args, **options):
         site = SiteSettingsService.get()
@@ -51,39 +107,43 @@ class Command(BaseCommand):
         self.stdout.write('Collecting server metrics...')
         snapshot = collect_full_snapshot()
 
-        # Check for alerts
         cpu_alert = format_cpu_alert(snapshot.cpu, threshold=75.0)
-        has_alerts = cpu_alert is not None
+        has_cpu_alert = cpu_alert is not None
         has_service_down = any(not s.active for s in snapshot.services)
 
-        if options['alert_only'] and not has_alerts and not has_service_down:
+        # Pull supplementary data only for the full report (not quick).
+        restart_counts: dict[str, int] = {}
+        cron_summary: dict | None = None
+        if not options['quick']:
+            restart_counts = _restart_counts_24h()
+            cron_summary = _cron_summary_24h()
+
+        cron_unhealthy = bool(cron_summary and (cron_summary['failed'] or cron_summary['overdue']))
+
+        if options['alert_only'] and not (has_cpu_alert or has_service_down or cron_unhealthy):
             self.stdout.write(self.style.SUCCESS('No alerts — skipping report'))
             return
 
-        # Build report
         if options['quick']:
             text = format_status_report(snapshot)
         else:
-            text = format_full_report(snapshot)
+            text = format_full_report(
+                snapshot,
+                restart_counts=restart_counts,
+                cron_summary=cron_summary,
+            )
 
-        # Append CPU alert
         if cpu_alert:
             text += '\n\n' + cpu_alert
 
-        # Append service down warning
         if has_service_down:
-            down = [s.name for s in snapshot.services if not s.active]
+            down = [(s.display or s.name) for s in snapshot.services if not s.active]
             text += f'\n\n🚨 <b>Down services:</b> {", ".join(down)}'
 
         api.send_message(tg_id, text)
         self.stdout.write(self.style.SUCCESS(f'Report sent to {tg_id}'))
 
-        # Tariff advice (separate message)
         if options['tariff']:
-            cpu = snapshot.cpu
-            mem = snapshot.memory
-            disk = snapshot.disk
-            advice = analyze_tariff(cpu, mem, disk)
-            tariff_text = format_tariff_advice(advice)
-            api.send_message(tg_id, tariff_text)
+            advice = analyze_tariff(snapshot.cpu, snapshot.memory, snapshot.disk)
+            api.send_message(tg_id, format_tariff_advice(advice))
             self.stdout.write(self.style.SUCCESS('Tariff advice sent'))

@@ -2,7 +2,13 @@
 Server metrics collection.
 
 Uses psutil to gather CPU, RAM, disk, swap, uptime, and load averages.
-All functions return plain dicts — formatting is in formatters.py.
+All functions return plain dataclasses — formatting is in formatters.py.
+
+Service inventory now lives in ``MONITORED_SERVICES`` as structured
+dicts (unit / group / display / critical). Earlier the list was a flat
+collection of unit names — that meant adding a new app required
+sprinkling the icon, group, and display name across formatters and
+the daily report. Today the list is the single source of truth.
 """
 from __future__ import annotations
 
@@ -67,9 +73,12 @@ class DiskPartitionInfo:
 
 @dataclass
 class ServiceStatus:
-    name: str
+    name: str                   # systemd unit name (e.g. "uzexam-bot", "postgresql@16-main")
     active: bool
-    status: str  # 'running', 'dead', 'inactive', 'not-found'
+    status: str                 # 'active', 'inactive', 'failed', 'no-systemctl', 'error'
+    group: str = ''             # 'apps' / 'infra' / 'mail' / 'security'
+    display: str = ''           # human-readable name (e.g. "UzExam Bot")
+    critical: bool = True       # alert on state change?
     uptime: Optional[str] = None
     memory_mb: Optional[float] = None
 
@@ -156,65 +165,100 @@ def collect_partitions() -> list[DiskPartitionInfo]:
     return result
 
 
-def collect_service_status(service_name: str) -> ServiceStatus:
-    """Check systemd service status via systemctl."""
+def _systemctl(*args: str) -> str:
+    """Tiny wrapper. Returns stripped stdout, '' on error/timeout."""
     try:
-        result = subprocess.run(
-            ['systemctl', 'is-active', service_name],
+        r = subprocess.run(
+            ['systemctl', *args],
             capture_output=True, text=True, timeout=5,
         )
-        status_text = result.stdout.strip()
-        active = status_text == 'active'
-
-        # Get memory usage
-        mem_mb = None
-        if active:
-            try:
-                mem_result = subprocess.run(
-                    ['systemctl', 'show', service_name, '--property=MemoryCurrent'],
-                    capture_output=True, text=True, timeout=5,
-                )
-                mem_line = mem_result.stdout.strip()
-                if '=' in mem_line:
-                    val = mem_line.split('=')[1]
-                    if val.isdigit():
-                        mem_mb = round(int(val) / (1024 * 1024), 1)
-            except Exception:
-                pass
-
-        # Get uptime (ActiveEnterTimestamp)
-        uptime_str = None
-        if active:
-            try:
-                ts_result = subprocess.run(
-                    ['systemctl', 'show', service_name, '--property=ActiveEnterTimestamp'],
-                    capture_output=True, text=True, timeout=5,
-                )
-                ts_line = ts_result.stdout.strip()
-                if '=' in ts_line and ts_line.split('=')[1].strip():
-                    uptime_str = ts_line.split('=', 1)[1].strip()
-            except Exception:
-                pass
-
-        return ServiceStatus(
-            name=service_name,
-            active=active,
-            status=status_text if status_text else 'unknown',
-            uptime=uptime_str,
-            memory_mb=mem_mb,
-        )
-    except FileNotFoundError:
-        return ServiceStatus(name=service_name, active=False, status='no-systemctl')
-    except Exception:
-        return ServiceStatus(name=service_name, active=False, status='error')
+        return r.stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired, Exception):  # noqa: BLE001
+        return ''
 
 
-MONITORED_SERVICES = [
-    'jaysonkhan',
-    'talabaovozi',
-    'nginx',
-    'postgresql',
-    'redis-server',
+def collect_service_status(
+    service_name: str,
+    *,
+    group: str = '',
+    display: str = '',
+    critical: bool = True,
+) -> ServiceStatus:
+    """Check systemd service status via systemctl. Always returns a row.
+
+    Status text mirrors ``systemctl is-active``:
+      - 'active'          → up
+      - 'inactive'        → stopped (clean)
+      - 'failed'          → crashed (still in unit registry, won't restart)
+      - 'activating'      → mid-restart
+      - 'no-systemctl'    → systemctl binary missing (dev box)
+      - 'error'           → unexpected exception
+    """
+    status_text = _systemctl('is-active', service_name) or 'unknown'
+    if status_text == 'unknown' and not _systemctl('--version'):
+        status_text = 'no-systemctl'
+    active = status_text == 'active'
+
+    mem_mb: Optional[float] = None
+    uptime_str: Optional[str] = None
+
+    if active:
+        # MemoryCurrent is bytes; format is `MemoryCurrent=12345`.
+        mem_line = _systemctl('show', service_name, '--property=MemoryCurrent')
+        if '=' in mem_line:
+            val = mem_line.split('=', 1)[1]
+            if val.isdigit():
+                mem_mb = round(int(val) / (1024 * 1024), 1)
+
+        ts_line = _systemctl('show', service_name, '--property=ActiveEnterTimestamp')
+        if '=' in ts_line:
+            stamp = ts_line.split('=', 1)[1].strip()
+            if stamp:
+                uptime_str = stamp
+
+    return ServiceStatus(
+        name=service_name,
+        active=active,
+        status=status_text,
+        group=group,
+        display=display or service_name,
+        critical=critical,
+        uptime=uptime_str,
+        memory_mb=mem_mb,
+    )
+
+
+# ── Service inventory ──────────────────────────────────────────────────────
+#
+# Single source of truth for "which services do we monitor and how".
+# Adding a new service: add a dict entry + run `service_health_check`.
+# `critical=False` means logged but no Telegram alert on state change
+# (used for ancillary services where flap-on-deploy is acceptable).
+
+SERVICE_GROUPS = {
+    'apps':     {'label': 'Applications',   'icon': '🚀'},
+    'infra':    {'label': 'Infrastructure', 'icon': '🛠'},
+    'mail':     {'label': 'Mail Server',    'icon': '📬'},
+    'security': {'label': 'Security',       'icon': '🛡'},
+}
+
+
+MONITORED_SERVICES: list[dict] = [
+    # ── Apps (user-visible) ──
+    {'unit': 'jaysonkhan',         'group': 'apps',     'display': 'JaysonKhan Portfolio',  'critical': True},
+    {'unit': 'talabaovozi-web',    'group': 'apps',     'display': 'EduStats Web',          'critical': True},
+    {'unit': 'talabaovozi',        'group': 'apps',     'display': 'TalabaOvozi Bot',       'critical': True},
+    {'unit': 'uzexam',             'group': 'apps',     'display': 'UzExam Web',            'critical': True},
+    {'unit': 'uzexam-bot',         'group': 'apps',     'display': 'UzExam Bot',            'critical': True},
+    # ── Infrastructure (everyone depends on these) ──
+    {'unit': 'nginx',              'group': 'infra',    'display': 'Nginx',                 'critical': True},
+    {'unit': 'postgresql@16-main', 'group': 'infra',    'display': 'PostgreSQL 16',         'critical': True},
+    {'unit': 'redis-server',       'group': 'infra',    'display': 'Redis',                 'critical': True},
+    # ── Mail (VIP-grade, alert if flap) ──
+    {'unit': 'postfix@-',          'group': 'mail',     'display': 'Postfix',               'critical': True},
+    {'unit': 'dovecot',            'group': 'mail',     'display': 'Dovecot (IMAP/POP3)',   'critical': True},
+    # ── Security ──
+    {'unit': 'fail2ban',           'group': 'security', 'display': 'Fail2ban',              'critical': True},
 ]
 
 
@@ -248,7 +292,15 @@ def collect_hostname() -> str:
 
 def collect_full_snapshot() -> ServerSnapshot:
     """Collect all server metrics in one call."""
-    services = [collect_service_status(s) for s in MONITORED_SERVICES]
+    services = [
+        collect_service_status(
+            cfg['unit'],
+            group=cfg['group'],
+            display=cfg['display'],
+            critical=cfg.get('critical', True),
+        )
+        for cfg in MONITORED_SERVICES
+    ]
     return ServerSnapshot(
         timestamp=datetime.now(),
         hostname=collect_hostname(),
