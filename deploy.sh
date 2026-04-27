@@ -157,27 +157,29 @@ if $DEPLOY_JK; then
         && ok "  Bot commands registered" \
         || warn "  Bot commands registration skipped"
 
-    info "  Server Monitor: systemd timer..."
+    # Disable the legacy systemd timer (server_health_report) — cron_run
+    # in the managed crontab block now drives the daily report and
+    # records every run into ops.CronRun. Leaving the timer enabled
+    # would double-fire and leave the timer's run invisible to
+    # cron_health_check.
+    info "  Server Monitor: disable legacy systemd timer..."
     remote "
-        # Copy timer files if they don't exist or are outdated
-        sudo cp $JK_BACKEND/apps/servermonitor/systemd/server-health-report.service /etc/systemd/system/ 2>/dev/null && \
-        sudo cp $JK_BACKEND/apps/servermonitor/systemd/server-health-report.timer /etc/systemd/system/ 2>/dev/null && \
-        sudo systemctl daemon-reload && \
-        sudo systemctl enable server-health-report.timer 2>/dev/null && \
-        sudo systemctl start server-health-report.timer 2>/dev/null && \
-        echo 'TIMER_OK' || echo 'TIMER_SKIP'
-    " | grep -q 'TIMER_OK' \
-        && ok "  Daily health report timer enabled (09:00)" \
-        || warn "  Timer setup skipped (may already be active)"
+        if systemctl list-unit-files server-health-report.timer 2>/dev/null | grep -q server-health-report.timer; then
+            sudo systemctl stop server-health-report.timer 2>/dev/null || true
+            sudo systemctl disable server-health-report.timer 2>/dev/null || true
+            echo 'TIMER_OFF'
+        else
+            echo 'TIMER_ABSENT'
+        fi
+    " | grep -qE 'TIMER_OFF|TIMER_ABSENT' \
+        && ok "  Systemd timer disabled (cron_run takes over)" \
+        || warn "  Timer disable skipped"
 
-    info "  Server Monitor: CPU alert cron..."
-    remote "
-        CRON_LINE='*/10 * * * * source $JK_VENV && DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE check_cpu_alert 2>/dev/null'
-        (crontab -l 2>/dev/null | grep -v 'check_cpu_alert'; echo \"\$CRON_LINE\") | crontab -
-        echo 'CRON_OK'
-    " | grep -q 'CRON_OK' \
-        && ok "  CPU alert cron installed (every 10 min)" \
-        || warn "  CPU alert cron setup skipped"
+    info "  Server Monitor: install crontab block (4 crons via cron_run)..."
+    remote "bash $JK_DIR/security/install-servermonitor-cron.sh" \
+        | grep -q 'CRON_OK' \
+        && ok "  Crontab block installed (check_cpu_alert / service_health_check / cron_health_check / server_health_report)" \
+        || warn "  Crontab install failed — inspect server crontab manually"
     echo
 fi
 
