@@ -30,6 +30,14 @@ from servermonitor.metrics import MONITORED_SERVICES, collect_service_status
 from servermonitor.models import ServiceCheckResult
 
 
+# Status values where we couldn't actually reach systemctl. Treating
+# these as "down" once caused an 11-service DOWN/UP storm when an admin
+# "Run now" click ran the check from a gunicorn worker whose unit PATH
+# was venv-only — `systemctl` resolved nowhere, every unit returned
+# this status, every unit "flipped". Skip alerting on these.
+AMBIGUOUS_STATUSES = frozenset({'no-systemctl', 'unknown', 'error'})
+
+
 class Command(BaseCommand):
     help = 'Check all services, persist results, alert on state changes.'
 
@@ -72,13 +80,27 @@ class Command(BaseCommand):
                     .first())
             prev_active = prev.is_active if prev else None
             is_first_check = prev is None
-            is_change = (not is_first_check) and (prev_active != status.active)
+            ambiguous = status.status in AMBIGUOUS_STATUSES
+
+            # If we couldn't actually probe systemctl, persist the previous
+            # is_active rather than recording a synthetic "False" — that
+            # way the next real probe doesn't see a phantom transition,
+            # and a future probe that's also ambiguous stays consistent
+            # with whatever we last knew.
+            recorded_active = (
+                prev_active if (ambiguous and prev_active is not None) else status.active
+            )
+            is_change = (
+                (not is_first_check)
+                and (not ambiguous)
+                and (prev_active != status.active)
+            )
 
             row = ServiceCheckResult.objects.create(
                 service_unit=unit,
                 service_group=cfg['group'],
                 service_display=cfg['display'],
-                is_active=status.active,
+                is_active=recorded_active,
                 status_text=status.status,
                 memory_mb=status.memory_mb,
                 uptime_text=status.uptime or '',

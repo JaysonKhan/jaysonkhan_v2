@@ -51,6 +51,15 @@ def _spawn_cron_run(target: str, *, triggered_by: str = 'admin') -> None:
         python, str(manage_py), 'cron_run', target,
         f'--triggered-by={triggered_by}',
     ]
+    # The gunicorn unit ships PATH=<venv>/bin only — extend it with the
+    # system locations so the spawned process can resolve helpers like
+    # `systemctl` (used by service_health_check). Without this the
+    # admin "Run now" path would fall back to "no-systemctl" for every
+    # unit and produce a phantom DOWN/UP storm on the next cron tick.
+    child_env = {**os.environ}
+    child_env['PATH'] = (
+        child_env.get('PATH', '') + ':/usr/bin:/bin:/usr/sbin:/sbin'
+    ).lstrip(':')
     subprocess.Popen(
         cmd,
         stdout=subprocess.DEVNULL,
@@ -58,7 +67,7 @@ def _spawn_cron_run(target: str, *, triggered_by: str = 'admin') -> None:
         stdin=subprocess.DEVNULL,
         start_new_session=True,
         cwd=str(manage_py.parent),
-        env={**os.environ},
+        env=child_env,
     )
 
 

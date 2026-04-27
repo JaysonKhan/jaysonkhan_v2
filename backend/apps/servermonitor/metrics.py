@@ -12,12 +12,25 @@ the daily report. Today the list is the single source of truth.
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional
 
 import psutil
+
+
+# Absolute path to systemctl, resolved once at import. The gunicorn
+# systemd unit ships PATH=<venv>/bin only — when admin "Run now"
+# spawns a subprocess from a worker, a bare `systemctl` lookup raises
+# FileNotFoundError and the whole monitor falsely reports every unit
+# as "no-systemctl". Resolving against a known set of system paths
+# avoids that without depending on the inherited PATH.
+_SYSTEMCTL = (
+    shutil.which('systemctl', path='/usr/bin:/bin:/usr/sbin:/sbin')
+    or '/usr/bin/systemctl'
+)
 
 
 @dataclass
@@ -180,7 +193,7 @@ def _systemctl(*args: str) -> str:
     """Tiny wrapper. Returns stripped stdout, '' on error/timeout."""
     try:
         r = subprocess.run(
-            ['systemctl', *args],
+            [_SYSTEMCTL, *args],
             capture_output=True, text=True, timeout=5,
         )
         return r.stdout.strip()
