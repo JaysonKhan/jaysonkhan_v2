@@ -1,154 +1,196 @@
-# CLAUDE.md
+# jaysonkhan_v2 — CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## 1. What this project is
 
-## Project Overview
+Personal portfolio platform for a Flutter Mobile Engineer.
+Production: **https://jaysonkhan.com** — 4 languages (xo/uz/ru/en), SSR-first
+Django site with a small DRF API for infinite scroll, plus an admin panel
+that proxies the [hokimiyatbot](../hokimiyatbot/) Telegram bot and a
+psutil-based server monitor.
 
-Personal portfolio platform for a Flutter Mobile Engineer — Django 4.2 backend with SSR templates (Tailwind CSS) and a DRF JSON API. Production site: https://jaysonkhan.com
+## 2. Tech stack
 
-## Commands
+| Layer        | Technology                                               |
+|--------------|----------------------------------------------------------|
+| Backend      | Django 4.2 + Gunicorn (3 sync workers)                   |
+| Database     | PostgreSQL                                               |
+| Auth         | Email-based custom User + Telegram Login Widget (HMAC)   |
+| Admin        | django-unfold (8-tab SiteSettings)                       |
+| API          | DRF 3.16 + SimpleJWT                                     |
+| Templates    | Django SSR + Tailwind CSS 4 (CLI build)                  |
+| Rich text    | TinyMCE 6 (CDN) + bleach sanitizer                       |
+| i18n         | django-modeltranslation (9 models, 4 langs, hreflang)    |
+| Charts       | Chart.js 4 (CDN)                                         |
+| Server tools | psutil (CPU/RAM/disk metrics)                            |
+| Web server   | Nginx (TLS, static, media, CSP headers)                  |
+| Python       | 3.12 (server)                                            |
+
+## 3. Folder structure
+
+```
+jaysonkhan_v2/
+├── backend/
+│   ├── manage.py
+│   ├── config/
+│   │   └── settings/         base.py → dev.py / prod.py (split, not env-toggled)
+│   ├── apps/                 Domain layer
+│   │   ├── core/             SiteSettings singleton, security middleware,
+│   │   │                     RichTextWidget, bleach sanitizer
+│   │   ├── users/            custom User (email auth, no username)
+│   │   ├── portfolio/        Project, Skill, Experience + Repository/Service
+│   │   ├── blog/             Post, Category, Tag
+│   │   ├── contact/          ContactMessage + honeypot + rate limit
+│   │   ├── interactions/     TelegramProfile, Comment (generic FK), Like, Reaction
+│   │   ├── botproxy/         Admin panel for hokimiyatbot (HMAC client + views)
+│   │   ├── servermonitor/    psutil metrics + Telegram /status, /tariff, /logs
+│   │   ├── telegram/         Telegram bot helpers / webhook glue
+│   │   ├── osint/             OSINT lookups (private)
+│   │   └── ops/              ad-hoc ops/cron utilities
+│   ├── presentation/         Delivery layer
+│   │   ├── api/              DRF ViewSets + Serializers (DefaultRouter)
+│   │   │                     Full + lightweight "List" serializers for infinite scroll
+│   │   └── web/              SSR class-based views
+│   │       └── templates/web/  base.html, home, projects, blog, contact, partials
+│   ├── locale/               .po/.mo (xo, uz, ru, en)
+│   ├── static/ staticfiles/  Tailwind output (`output.css`), JS, images
+│   └── media/                user uploads (rich-text inline media, project covers)
+├── docs/                     human docs
+├── security/
+│   └── nginx/jaysonkhan.conf nginx config (kept in sync with server)
+├── presentation/             additional templates / partials
+├── server-manager.sh         server health / restart helpers
+├── deploy.sh                 unified deploy (web / --bot / --all)
+├── tailwind.config.js        + tailwind.input.css
+├── package.json              Tailwind 4 CLI build only
+└── requirements.txt
+```
+
+## 4. Patterns & conventions
+
+- **Clean Architecture split** — `apps/` is the domain layer (models, services, repositories), `presentation/` is the delivery layer (views, serializers, templates). Don't put templates inside `apps/`.
+- **Settings split, not env toggle** — `config/settings/base.py` → `dev.py` / `prod.py`. Never read `DEBUG` from env in `base.py`. Production sets `DJANGO_SETTINGS_MODULE=config.settings.prod`.
+- **Repository + Service** — `PortfolioRepository` (queries) → `PortfolioService` (orchestration). Same pattern in `contact/services.py`.
+- **SiteSettings singleton** — single-row model (`pk=1`), 80+ fields organised via abstract mixins (`BrandingMixin`, `SEOMixin`, etc. — NOT separate models). Cached 5 min, invalidated on `post_save`. Read globally via `core.context_processors.site_settings`.
+- **Visibility flags** — `Project.is_visible`, `is_featured`, `is_bot`; `Post.is_published`; `SiteSettings.apps_section_visible` (toggles entire Apps section via `AppsGuardMixin`).
+- **Project filtering** — by URL fields (`app_store_url`, `play_store_url`, `web_page_url`, `is_bot`). No `platform` field.
+- **Rich text** — TinyMCE 6 CDN → `/api/admin/media-upload/` → bleach sanitization on `save()`. CSRF token read from a hidden input (NOT cookie, because `CSRF_COOKIE_HTTPONLY=True`).
+- **Infinite scroll** — `ProjectListSerializer` / `PostListSerializer` (lightweight) consumed by `static/js/infinite-scroll.js`.
+- **Telegram auth** — Login Widget → HMAC verify with `TELEGRAM_BOT_TOKEN` → session-based `TelegramProfile`.
+- **Comments / likes / reactions** — generic FK (ContentType), works on both `Post` and `Project`.
+- **i18n** — 9 models translated with `django-modeltranslation`, real per-language URLs, `hreflang` alternates, plus `Person.alternateName` (10 ism varianti) for SEO.
+- **AI-bot policy** — opposite of EduStats: `robots.txt` BLOCKS AI bots here (not allow).
+
+## 5. How to run
+
+### Local dev
 
 ```bash
-# Dev server (from project root)
-backend/venv/bin/python backend/manage.py runserver 0.0.0.0:8000
+# 1. Backend
+cd backend
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r ../requirements.txt
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8000
+# (default settings module = config.settings.dev)
 
-# Tailwind CSS
-npm run css:build          # one-time build
-npm run css:watch          # watch mode
+# 2. Tailwind (separate terminal)
+npm install
+npm run css:watch         # dev
+npm run css:build         # one-shot prod build
+```
 
-# Django management
+### Common Django commands
+
+```bash
+# from project root
 backend/venv/bin/python backend/manage.py makemigrations <app>
 backend/venv/bin/python backend/manage.py migrate
 backend/venv/bin/python backend/manage.py collectstatic --noinput
-
-# Tests
-backend/venv/bin/python backend/manage.py test                              # all
-backend/venv/bin/python backend/manage.py test portfolio                    # single app
-backend/venv/bin/python backend/manage.py test portfolio.tests.SkillModelTest  # single class
-# Settings override: append --settings=config.settings.dev
-
-# Production deploy (pushes, SSHes to server, migrates, restarts)
-bash deploy.sh "commit message"
 ```
 
-## Architecture
+### Tests
 
-Clean Architecture with three layers:
-
-```
-backend/
-├── config/settings/       # base.py → dev.py / prod.py (never read DEBUG from env)
-├── apps/                  # Domain layer (models, services, repositories)
-│   ├── core/              # SiteSettings singleton, security middleware, RichTextWidget, bleach sanitizer
-│   ├── users/             # Custom User (email-based auth, not username)
-│   ├── portfolio/         # Project, Skill, Experience + PortfolioRepository/Service
-│   ├── blog/              # Post, Category, Tag
-│   ├── contact/           # ContactMessage + honeypot spam protection + rate limiting
-│   └── interactions/      # TelegramProfile, Comment (generic FK), Like, Reaction
-└── presentation/          # Delivery layer
-    ├── api/               # DRF ViewSets + Serializers (DefaultRouter)
-    │   └── serializers.py # Full + lightweight "List" versions for infinite scroll
-    └── web/               # SSR class-based views + Django templates
-        └── templates/web/ # base.html, home, projects, blog, contact, partials
+```bash
+backend/venv/bin/python backend/manage.py test
+backend/venv/bin/python backend/manage.py test portfolio
+backend/venv/bin/python backend/manage.py test portfolio.tests.SkillModelTest
+# Override settings: append --settings=config.settings.dev
 ```
 
-## Key Patterns
+### Deploy
 
-- **Repository + Service**: `PortfolioRepository` (queries) → `PortfolioService` (orchestration). Same pattern in `contact/services.py`.
-- **SiteSettings Singleton**: Single-row model (pk=1), 80+ fields, 8-tab Unfold admin. Cached 5 min, invalidated on `post_save`. Accessed globally via `core.context_processors.site_settings`.
-- **Visibility Flags**: `Project.is_visible`, `Project.is_featured`, `Project.is_bot`, `Post.is_published`, `SiteSettings.apps_section_visible` (toggles entire section via `AppsGuardMixin`).
-- **Project Filtering**: Done by URL fields (app_store_url, play_store_url, web_page_url, is_bot) — no platform field.
-- **Rich Text**: TinyMCE 6 (CDN) → upload to `/api/admin/media-upload/` → bleach sanitization on model save. CSRF token read from hidden input (not cookie, because `CSRF_COOKIE_HTTPONLY=True`).
-- **Infinite Scroll**: `ProjectListSerializer` / `PostListSerializer` (lightweight) consumed by `static/js/infinite-scroll.js`.
-- **Telegram Auth**: Login Widget → HMAC verification via `TELEGRAM_BOT_TOKEN` → session-based `TelegramProfile`.
-- **Comments/Likes**: Generic FK (ContentType) — works on both Post and Project.
-
-## Security
-
-- **Middleware stack order matters**: `RequestSanitizationMiddleware` (first) → CORS → Django Security → `SecurityHeadersMiddleware` → Session → CSRF → Auth → `AdminIPRestrictionMiddleware`.
-- **CSP**: Set in Nginx config (`/etc/nginx/sites-enabled/jaysonkhan`), not Django. `frame-src` must include any new embed domains (YouTube, etc.).
-- **Admin access**: IP-restricted via `ADMIN_ALLOWED_IPS` env var. Admin URL is configurable via `ADMIN_URL` env.
-- **API permissions**: Default `IsAdminUser`. Public endpoints override with `AllowAny` (projects list, contact create).
-
-## Bot Admin (botproxy app)
-
-Django admin panel for managing TalabaOvozi Telegram bot. Bot runs on same server as a separate systemd service.
-
-```
-apps/botproxy/
-├── client.py       # BotAPIClient — HMAC-authenticated httpx client to bot API
-├── views.py        # Dashboard, polls, universities, users, analytics views
-├── urls.py         # /jk-dinadmin/bot/<svc>/...
-└── templates/botproxy/
-    ├── base.html           # Bot admin layout (dark theme, nav tabs)
-    ├── dashboard.html      # Chart.js analytics dashboard
-    ├── university_list.html # University cards with logo disk-serving
-    └── ...
+```bash
+./deploy.sh "commit message"   # Django only (push → pull → pip → css:build → migrate → collectstatic → restart)
+./deploy.sh --bot              # hokimiyatbot only
+./deploy.sh --all              # both services
 ```
 
-- **Bot API**: `http://127.0.0.1:8433` (aiohttp, localhost only)
-- **Auth**: HMAC-SHA256 (`BOT_API_SECRET_KEY`)
-- **Logos**: Saved to `/var/www/jaysonkhan/media/uni_logos/talabaovozi/`, served by nginx `/media/`. View annotates `logo_url` for direct media path (avoids Django proxy → 503 issue with sync workers).
-- **Dashboard charts**: Chart.js 4.x (CDN), AJAX lazy-load for poll analytics
-
-## Botproxy Staff & Feedback (added 2026-04-05)
-
-- Staff CRUD views: staff_list, staff_create, staff_detail, staff_edit, staff_delete, staff_photo_proxy
-- Staff form: position/department selects (from API), faculty dropdown (JS-filtered by university), time picker, phone format
-- Staff list filters: university, position_code, name search
-- Feedback dashboard: per-poll sentiment summary
-- Staff photo disk cache: /media/staff_photos/{svc}/{id}.jpg — avoids repeated API proxy calls
-- University detail page includes staff list section
-- SiteSettings uses abstract mixins (BrandingMixin, SEOMixin, etc.) — NOT separate models. No migration needed.
-
-## Gotchas
-
-- NEVER use async views with Gunicorn sync workers + @staff_member_required — causes "coroutine was never awaited" 500 error
-- Use ThreadPoolExecutor for parallel bot API calls (not asyncio.gather) under WSGI/Gunicorn sync
-- Staff photo proxy: always disk-cache to /media/staff_photos/ — 260 staff × parallel img loads kills Gunicorn workers
-- Deploy --bot uses `deploy` user git (not sudo) — GitHub SSH key is on deploy user only
-- Bot API at 127.0.0.1:8433 — never exposed externally. Django connects via httpx with HMAC-SHA256 auth
-
-## Production
-
-- **Server**: Ubuntu 24.04 at 144.91.69.225, SSH alias `jaysonkhan`
-- **Stack**: Gunicorn (3 sync workers) → Nginx → PostgreSQL
-- **Settings module**: `config.settings.prod` (set in wsgi.py and systemd unit)
-- **Nginx config**: `security/nginx/jaysonkhan.conf` (keep in sync with server)
-- **deploy.sh**: Unified deploy script
-  - `./deploy.sh` — Django only (git push → pull → pip → css:build → migrate → collectstatic → restart)
-  - `./deploy.sh --bot` — Bot only (push hokimiyatbot → pull on server → restart talabaovozi)
-  - `./deploy.sh --all` — Both services
-- **Static/Media**: Nginx serves from `/var/www/jaysonkhan/static` and `/var/www/jaysonkhan/media`
-- **Architecture doc**: See `~/JaysonServer/SERVER_ARCHITECTURE.md` for full server layout
-
-## Server Monitor (servermonitor app)
-
-Telegram bot commands for server health monitoring. All commands are owner-only (checked via `SiteSettings.telegram_owner_id`).
+### Server monitor (Telegram bot commands — owner-only)
 
 ```
-apps/servermonitor/
-├── metrics.py       # psutil-based server metrics collection (CPU, RAM, disk, services)
-├── formatters.py    # Kreativ emoji dizayn: progress bars, color badges, box drawing
-├── contabo.py       # Contabo VPS tariff advisor (usage vs plan limits)
-├── handlers.py      # Telegram command handlers (/status, /services, /disk, /tariff, /logs, /backup)
-├── apps.py
-└── management/commands/
-    ├── server_health_report.py  # Daily health report (use with systemd timer)
-    ├── check_cpu_alert.py       # CPU threshold alert (run every 5-15 min)
-    └── register_bot_commands.py # Register commands with Telegram menu
+/status       /services    /disk    /tariff
+/logs [service] [lines]    /backup
 ```
 
-**Bot Commands**: `/status`, `/services`, `/disk`, `/tariff`, `/logs [service] [lines]`, `/backup`
-**Management Commands**: `server_health_report [--quick] [--tariff] [--alert-only]`, `check_cpu_alert [--threshold N]`
-**Systemd files**: `servermonitor/systemd/server-health-report.{service,timer}` (daily at 09:00)
-**Alert threshold**: CPU cores at 75% trigger upgrade warning
-**Dependency**: `psutil>=5.9` (in requirements.txt)
+Backed by management commands:
+```bash
+python manage.py server_health_report [--quick] [--tariff] [--alert-only]
+python manage.py check_cpu_alert [--threshold N]
+python manage.py register_bot_commands
+```
 
-## Environment Variables
+## 6. Important things to keep in mind
 
-Core: `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `ADMIN_URL`, `ADMIN_ALLOWED_IPS`
-Database: `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`
-Telegram: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`
-Email: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`
-Bot: `BOT_API_BASE_URL` (default: http://127.0.0.1:8433), `BOT_API_SECRET_KEY`, `BOT_API_TIMEOUT`
+### Architecture invariants
+1. **Middleware order matters** — `RequestSanitizationMiddleware` (first) → CORS → Django Security → `SecurityHeadersMiddleware` → Session → CSRF → Auth → `AdminIPRestrictionMiddleware`.
+2. **CSP lives in Nginx**, not Django. New iframe embeds (YouTube etc.) require updating `frame-src` in `security/nginx/jaysonkhan.conf` AND on the server.
+3. **Admin URL is configurable** via `ADMIN_URL` env; admin is also IP-restricted via `ADMIN_ALLOWED_IPS`.
+4. **API permissions** — default `IsAdminUser`. Public endpoints (`projects`, `contact`) explicitly override with `AllowAny`.
+
+### Common bugs to avoid
+5. **NEVER use async views with Gunicorn sync workers + `@staff_member_required`** — fires "coroutine was never awaited" 500.
+6. **Parallel bot API calls** — use `ThreadPoolExecutor`, NOT `asyncio.gather`, under sync WSGI/Gunicorn.
+7. **Staff photo proxy** — always disk-cache to `/media/staff_photos/` (`260 staff × parallel <img>` floods Gunicorn workers otherwise).
+8. **Bot API host = `127.0.0.1:8433`** — never exposed externally. Django connects via httpx + HMAC-SHA256.
+9. **TinyMCE CSRF** — read from hidden input (`{% csrf_token %}`), not cookie (cookie is HttpOnly).
+
+### Deploy / production
+10. **`deploy` user owns the git pull** for both Django and `--bot` flow (GitHub SSH key is on this user only). Do not run as root.
+11. **Settings module** — `config.settings.prod` is set in `wsgi.py` and the systemd unit. `dev.py` only ever runs locally.
+12. **Static / media** — Nginx serves from `/var/www/jaysonkhan/static` and `/var/www/jaysonkhan/media`.
+13. **Server**: Ubuntu 24.04 at `144.91.69.225`, SSH alias `jaysonkhan`. Architecture doc: [`SERVER_ARCHITECTURE.md`](../SERVER_ARCHITECTURE.md).
+
+### Botproxy specifics
+14. **Logos** — saved to `/var/www/jaysonkhan/media/uni_logos/talabaovozi/`, served by Nginx `/media/`. Views annotate `logo_url` for direct media path (avoids Django proxy → 503 under sync workers).
+15. **Bot API auth** — every call is HMAC-SHA256 via `BotAPIClient` (`apps/botproxy/client.py`) using `BOT_API_SECRET_KEY`.
+16. **SiteSettings uses abstract mixins** — adding a new field group does NOT need a new model or migration of an FK; just extend the existing model with another mixin.
+
+## Environment variables
+
+```env
+# Core
+DJANGO_SECRET_KEY
+DJANGO_ALLOWED_HOSTS
+ADMIN_URL                       # admin slug
+ADMIN_ALLOWED_IPS               # comma-separated whitelist
+
+# Database
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+POSTGRES_HOST
+POSTGRES_PORT
+
+# Telegram
+TELEGRAM_BOT_TOKEN
+TELEGRAM_BOT_USERNAME
+
+# Email
+EMAIL_HOST EMAIL_PORT EMAIL_HOST_USER EMAIL_HOST_PASSWORD
+
+# Bot proxy
+BOT_API_BASE_URL=http://127.0.0.1:8433
+BOT_API_SECRET_KEY              # MUST match hokimiyatbot's API_SECRET_KEY
+BOT_API_TIMEOUT
+```

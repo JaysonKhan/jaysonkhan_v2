@@ -20,7 +20,6 @@ from typing import Optional
 
 import psutil
 
-
 # Absolute path to systemctl, resolved once at import. The gunicorn
 # systemd unit ships PATH=<venv>/bin only — when admin "Run now"
 # spawns a subprocess from a worker, a bare `systemctl` lookup raises
@@ -122,14 +121,19 @@ def collect_cpu(*, interval: float = 1.0) -> CpuMetrics:
     query can briefly max several cores during the 1s sample window and
     cause a false-positive alert in check_cpu_alert).
 
-    interval=5 — sustained sample. Recommended for cron-driven alerts where
-    we care about real overload, not transient bursts. Adds 4s to the
-    measurement, which is negligible for a 10-minute cron tick.
+    interval=5 — sustained sample. Recommended for cron-driven reports and
+    alerts where we care about real overload, not transient bursts.
+
+    total_percent is derived as the average of per-core values so it always
+    reflects the same measurement window as the individual cores. Using a
+    separate psutil.cpu_percent(interval=0) call for total was wrong: it
+    measured a different (and uncontrolled) time window, producing impossible
+    combinations like total=2.6% while all cores showed 76-100%.
     """
     per_core = psutil.cpu_percent(interval=interval, percpu=True)
-    total = psutil.cpu_percent(interval=0)
     load = psutil.getloadavg()
     cores = [CpuCoreInfo(core=i, percent=p) for i, p in enumerate(per_core)]
+    total = round(sum(per_core) / len(per_core), 1) if per_core else 0.0
     return CpuMetrics(
         total_percent=total,
         core_count=psutil.cpu_count(logical=True),
@@ -314,8 +318,12 @@ def collect_hostname() -> str:
     return socket.gethostname()
 
 
-def collect_full_snapshot() -> ServerSnapshot:
-    """Collect all server metrics in one call."""
+def collect_full_snapshot(*, cpu_interval: float = 1.0) -> ServerSnapshot:
+    """Collect all server metrics in one call.
+
+    cpu_interval=1 (default) for interactive /status.
+    cpu_interval=5 for cron-driven reports to avoid false-positive spikes.
+    """
     services = [
         collect_service_status(
             cfg['unit'],
@@ -329,7 +337,7 @@ def collect_full_snapshot() -> ServerSnapshot:
         timestamp=datetime.now(),
         hostname=collect_hostname(),
         uptime=collect_uptime(),
-        cpu=collect_cpu(),
+        cpu=collect_cpu(interval=cpu_interval),
         memory=collect_memory(),
         swap=collect_swap(),
         disk=collect_disk('/'),

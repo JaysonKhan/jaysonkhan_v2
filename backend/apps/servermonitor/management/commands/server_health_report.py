@@ -22,10 +22,9 @@ from __future__ import annotations
 from collections import Counter
 from datetime import timedelta
 
+from core.services import SiteSettingsService
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-
-from core.services import SiteSettingsService
 from interactions.notifications.telegram_api import TelegramBotAPI
 from ops.models import CronRun, CronStatus, ManagedCron
 from servermonitor.contabo import analyze_tariff, format_tariff_advice
@@ -36,7 +35,6 @@ from servermonitor.formatters import (
 )
 from servermonitor.metrics import collect_full_snapshot
 from servermonitor.models import ServiceCheckResult
-
 
 REPORT_WINDOW = timedelta(hours=24)
 
@@ -105,7 +103,7 @@ class Command(BaseCommand):
         tg_id = site.telegram_owner_id
 
         self.stdout.write('Collecting server metrics...')
-        snapshot = collect_full_snapshot()
+        snapshot = collect_full_snapshot(cpu_interval=5.0)
 
         cpu_alert = format_cpu_alert(snapshot.cpu, threshold=85.0)
         has_cpu_alert = cpu_alert is not None
