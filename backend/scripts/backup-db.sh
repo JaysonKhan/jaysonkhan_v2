@@ -17,19 +17,24 @@ RETENTION_DAYS=30
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/jaysonkhan_${TIMESTAMP}.sql.gz"
 
-# Load env vars (DB credentials)
+# ── Read DB credentials from .env (grep/cut — safe with special chars) ───────
 ENV_FILE="/var/www/jaysonkhan/.env"
-if [[ -f "$ENV_FILE" ]]; then
-    set -a
-    # shellcheck source=/dev/null
-    source "$ENV_FILE"
-    set +a
-fi
+_env() {
+    grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -n1 | cut -d= -f2- | \
+        sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+            -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r'
+}
 
-DB_NAME="${POSTGRES_DB:-jaysonkhan}"
-DB_USER="${POSTGRES_USER:-jaysonkhan}"
-DB_HOST="${POSTGRES_HOST:-localhost}"
-DB_PORT="${POSTGRES_PORT:-5432}"
+DB_NAME="$(_env POSTGRES_DB)"
+DB_USER="$(_env POSTGRES_USER)"
+DB_HOST="$(_env POSTGRES_HOST)"
+DB_PORT="$(_env POSTGRES_PORT)"
+POSTGRES_PASSWORD="$(_env POSTGRES_PASSWORD)"
+
+DB_NAME="${DB_NAME:-jaysonkhan}"
+DB_USER="${DB_USER:-jaysonkhan}"
+DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5432}"
 
 # ── Backup ───────────────────────────────────────────────────────────────────
 mkdir -p "$BACKUP_DIR"
