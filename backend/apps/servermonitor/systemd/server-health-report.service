@@ -6,5 +6,5 @@ After=network.target postgresql.service
 Type=oneshot
 User=deploy
 WorkingDirectory=/var/www/jaysonkhan
-ExecStart=/var/www/jaysonkhan/venv/bin/python /var/www/jaysonkhan/backend/manage.py server_health_report --tariff
+ExecStart=/var/www/jaysonkhan/backend/venv/bin/python /var/www/jaysonkhan/backend/manage.py server_health_report --tariff
 Environment=DJANGO_SETTINGS_MODULE=config.settings.prod

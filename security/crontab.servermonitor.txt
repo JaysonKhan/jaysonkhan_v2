@@ -18,18 +18,18 @@ MANAGE=/var/www/jaysonkhan/backend/manage.py
 LOG=/var/log/jaysonkhan/cron.log
 
 # ── Server health monitoring ─────────────────────────────────────────────────
+# STAGGERING: no job fires at :00 (avoids thundering-herd when UzExam
+# hourly jobs also start at :00, causing all-cores-100% CPU burst).
+# These values match install-servermonitor-cron.sh exactly.
 
-# Every 10 minutes — CPU core overload alert (≥75% threshold)
-*/10 * * * *  cd $PROJECT_DIR && $PYTHON $MANAGE cron_run check_cpu_alert      >> $LOG 2>&1
+# Every 10 minutes — CPU core overload alert (≥85% / 5s sustained sample)
+3,13,23,33,43,53 * * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run check_cpu_alert      >> $LOG 2>&1
 
 # Every 5 minutes — per-service state-change detection + Telegram alert
-*/5 * * * *   cd $PROJECT_DIR && $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
+1,6,11,16,21,26,31,36,41,46,51,56 * * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
 
-# Hourly — failed and overdue managed crons
-0 * * * *     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run cron_health_check    >> $LOG 2>&1
+# Hourly at :02 — failed and overdue managed crons
+2 * * * *     cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run cron_health_check    >> $LOG 2>&1
 
-# Daily at 09:00 Tashkent (server is UTC+? — adjust if needed) — full report
-0 9 * * *     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
-
-# Optional: weekly at Monday 09:00 — Contabo tariff advice
-0 9 * * 1     cd $PROJECT_DIR && $PYTHON $MANAGE cron_run server_health_report --tariff >> $LOG 2>&1
+# Daily at 09:00 Berlin (11:00 Tashkent) — full server health report
+0 9 * * *     cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
