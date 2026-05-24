@@ -219,7 +219,7 @@ msgid "this one?"
 msgstr "проект?"
 
 msgid "Open a channel"
-msgstr "Открыть канал"
+msgstr "Связаться"
 
 msgid "Back to all work"
 msgstr "Ко всем работам"
@@ -353,7 +353,7 @@ msgid "Let's"
 msgstr "Давайте"
 
 msgid "open a channel."
-msgstr "откроем канал."
+msgstr "пообщаемся."
 
 msgid "something"
 msgstr "что-то"

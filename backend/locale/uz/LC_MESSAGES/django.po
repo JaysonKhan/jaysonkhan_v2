@@ -213,7 +213,7 @@ msgid "this one?"
 msgstr "loyiha bormi?"
 
 msgid "Open a channel"
-msgstr "Kanal ochish"
+msgstr "Bog'lanish"
 
 msgid "Back to all work"
 msgstr "Barcha ishlarga qaytish"
@@ -339,7 +339,7 @@ msgid "Let's"
 msgstr "Keling,"
 
 msgid "open a channel."
-msgstr "kanal ochamiz."
+msgstr "suhbatlashaylik."
 
 msgid "something"
 msgstr "biror narsa"

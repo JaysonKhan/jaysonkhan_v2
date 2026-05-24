@@ -73,3 +73,11 @@ msgstr "Practice"
 #: backend/presentation/web/templates/web/base.html:278
 msgid "Channels"
 msgstr "Channels"
+
+#: backend/presentation/web/templates/web/project_detail.html:206
+msgid "Open a channel"
+msgstr "Get in touch"
+
+#: backend/presentation/web/templates/web/base.html:295
+msgid "open a channel."
+msgstr "chat."

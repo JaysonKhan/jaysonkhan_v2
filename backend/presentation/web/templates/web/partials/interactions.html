@@ -492,6 +492,10 @@
     }
     .like-btn .like-count { font-weight: 600; }
 
+    /* inline-svg spinner (Tailwind animate-spin may be purged by JIT) */
+    .ix-spin { animation: ix-spin 0.7s linear infinite; transform-origin: center; }
+    @keyframes ix-spin { to { transform: rotate(360deg); } }
+
     /* ── Comments header ── */
     .comments-h3 {
         font-family: var(--font-display);
@@ -546,13 +550,13 @@
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
             data-liked="{{ user_liked|yesno:'true,false' }}"
             class="like-btn{% if user_liked %} liked{% endif %}">
-            <i class="fa-{% if user_liked %}solid{% else %}regular{% endif %} fa-heart text-sm" id="like-icon"></i>
+            <svg id="like-icon" width="15" height="15" viewBox="0 0 24 24" fill="{% if user_liked %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"/></svg>
             <span id="like-count" class="like-count">{{ like_count }}</span>
             <span style="opacity: 0.7;">likes</span>
         </button>
         {% else %}
         <div class="like-btn disabled">
-            <i class="fa-regular fa-heart text-sm"></i>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"/></svg>
             <span class="like-count">{{ like_count }}</span>
             <span style="opacity: 0.7;">likes</span>
         </div>
@@ -570,7 +574,7 @@
             <button id="sort-toggle" type="button" class="sort-toggle inline-flex items-center gap-1"
                 onclick="toggleSortDropdown(event)">
                 <span id="active-sort">Top Comments</span>
-                <i class="fa-solid fa-chevron-down text-[9px]" style="opacity: 0.6;"></i>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div id="sort-dropdown" class="sort-dropdown hidden absolute top-full mt-2 right-0 py-2 w-44 z-50">
                 <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
@@ -593,7 +597,7 @@
             <button onclick="clearReply()"
                     class="hover:opacity-100 transition" style="color: var(--fg-3); opacity: 0.7;"
                     aria-label="Cancel reply">
-                <i class="fa-solid fa-xmark"></i>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
 
@@ -601,7 +605,7 @@
         <div id="image-preview-container" class="hidden relative inline-block mb-3 p-1 overflow-hidden" style="background: var(--bg-2); border: 1px solid var(--line-2);">
             <img id="image-preview" src="" class="max-h-40 object-contain" alt="">
             <button onclick="clearImage()" class="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition" style="background: var(--fg-0); color: var(--bg-1);" aria-label="Remove image">
-                <i class="fa-solid fa-trash-can text-xs"></i>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
         </div>
 
@@ -613,7 +617,7 @@
                 <label for="image-upload"
                        class="tg-compose-attach"
                        aria-label="Attach file">
-                    <i class="fa-solid fa-paperclip text-sm"></i>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
                 </label>
 
@@ -634,7 +638,7 @@
                         data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
                         class="tg-compose-send"
                         aria-label="Send comment">
-                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
                 </button>
             </div>
         </div>
@@ -659,7 +663,7 @@
     {% else %}
     <div class="tg-login-card">
         <div class="tg-login-badge">
-            <i class="fa-brands fa-telegram text-lg"></i>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212-.07-.062-.174-.041-.249-.024-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
         </div>
         <h4 class="tg-login-title">Join the Discussion</h4>
         <p class="tg-login-subtitle">Komment qoldirish uchun Telegram orqali kiring.</p>
@@ -669,7 +673,7 @@
             <script>
             window.onTelegramAuth = function(user) {
                 var btn = document.getElementById('tg-login-btn-wrap');
-                if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--accent);"><i class="fa-solid fa-circle-notch fa-spin mr-1"></i>Logging in…</span>';
+                if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--accent);"><svg class="ix-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:4px;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>Logging in…</span>';
 
                 // Convert all values to strings (widget may send integers for id/auth_date)
                 var payload = {};
@@ -687,7 +691,7 @@
                         window.location.reload();
                     } else {
                         var msg = (res.data && res.data.error) ? res.data.error : 'Unknown error';
-                        if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + msg + '</span>';
+                        if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:4px;" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>' + msg + '</span>';
                         console.error('[TelegramAuth] Failed:', msg);
                     }
                 })
@@ -715,7 +719,7 @@
 
     {# ── Render Area ── #}
     <div id="tg-chat-container"></div>
-    <div id="loading-spinner" class="text-center py-6 hidden" style="color: var(--fg-3);"><i class="fa-solid fa-circle-notch fa-spin text-2xl"></i></div>
+    <div id="loading-spinner" class="text-center py-6 hidden" style="color: var(--fg-3);"><svg class="ix-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg></div>
 </section>
 
 <script>
@@ -760,10 +764,10 @@
                     
                     if (data.liked) {
                         this.classList.add('liked');
-                        icon.classList.replace('fa-regular', 'fa-solid');
+                        icon.setAttribute('fill', 'currentColor');
                     } else {
                         this.classList.remove('liked');
-                        icon.classList.replace('fa-solid', 'fa-regular');
+                        icon.setAttribute('fill', 'none');
                     }
                 } catch (e) {
                     console.error("Like failed", e);
@@ -831,7 +835,7 @@
     }
 
     async function loadReplies(parentId, btnElem, currentDepth = 0) {
-        btnElem.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Loading...`;
+        btnElem.innerHTML = `<svg class="ix-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg> Loading...`;
         try {
             const req = await fetch(`/interactions/comments/${parentId}/replies/?page=1`);
             const res = await req.json();
@@ -862,7 +866,7 @@
         const repliesHtml = comment.reply_count > 0 ? `
             <div class="tg-replies-container" id="replies-${comment.id}">
                 <button onclick="loadReplies(${comment.id}, this, ${depth})" class="tg-view-replies">
-                    <i class="fa-solid fa-reply rotate-180"></i> View ${comment.reply_count} ${repliesLabel}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;" aria-hidden="true"><path d="m9 17-5-5 5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> View ${comment.reply_count} ${repliesLabel}
                 </button>
             </div>` : '';
 
@@ -886,14 +890,14 @@
                         ${authorLabel}
                     </div>
                     ${imgHtml}
-                    <div class="tg-bubble-text">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<i class="fa-solid fa-check-double"></i>` : ''}${timeAgo(comment.created_at)}</span></div>
+                    <div class="tg-bubble-text">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7 7-1.5-1.5"/></svg>` : ''}${timeAgo(comment.created_at)}</span></div>
                 </div>
 
                 <div class="tg-reaction-bar" id="reactions-${comment.id}">
                     ${emojisHtml}
                     ${document.getElementById('submit-comment') ? `
                         <div class="relative emoji-menu-wrapper">
-                            <button class="tg-reaction-btn tg-reaction-trigger" onclick="toggleEmojiMenu(${comment.id}, event)"><i class="fa-solid fa-face-smile"></i></button>
+                            <button class="tg-reaction-btn tg-reaction-trigger" onclick="toggleEmojiMenu(${comment.id}, event)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
                             <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
                                 ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
                             </div>
@@ -1073,7 +1077,7 @@
 
             submitBtn.disabled = true;
             const originalContent = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-sm"></i>';
+            submitBtn.innerHTML = '<svg class="ix-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>';
 
             const formData = new FormData();
             formData.append('text', text);
