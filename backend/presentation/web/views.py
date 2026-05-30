@@ -1,24 +1,24 @@
 import json
 import uuid
 
-from django.utils.translation import gettext as _
-from django.core.cache import cache
-from django.views.generic import TemplateView, ListView, DetailView, FormView
-from django.views import View
-from django.urls import reverse_lazy, reverse
+from blog.models import Post
+from blog.services import BlogRepository, BlogService
+from contact.services import ContactRepository, ContactService
+from contact.spam_protection import is_honeypot_filled, is_rate_limited
+from core.models import PageView, SiteSettings
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
-from django.contrib.contenttypes.models import ContentType
-from portfolio.services import PortfolioService, PortfolioRepository
-from portfolio.models import Project
-from blog.services import BlogService, BlogRepository
-from contact.services import ContactService, ContactRepository
-from contact.spam_protection import is_honeypot_filled, is_rate_limited
-from blog.models import Post
-from core.models import SiteSettings, PageView
+from django.urls import reverse
+from django.utils.translation import gettext as _
+from django.views import View
+from django.views.generic import DetailView, ListView, TemplateView
 from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
+from portfolio.models import Project
+from portfolio.services import PortfolioRepository, PortfolioService
 
 # Visitor count cache — avoids COUNT(*) on every page render
 _VISITOR_COUNT_CACHE_KEY = 'visitor_count'
@@ -466,28 +466,6 @@ class TgAppRouterView(View):
                     return reverse('project_detail', kwargs={'slug': slug})
                 except Exception:
                     pass
-
-        # OSINT user profile
-        if start.startswith('osint-p-'):
-            try:
-                user_id = int(start[8:])
-                return reverse(
-                    'osint_profile', kwargs={'user_id': user_id},
-                )
-            except (ValueError, TypeError):
-                pass
-
-        # OSINT entity profile (channel/group) — supports negative IDs
-        if start.startswith('osint-e-'):
-            entity_id = start[8:]
-            try:
-                int(entity_id)  # validate numeric (incl. negative)
-                return reverse(
-                    'osint_entity_profile',
-                    kwargs={'entity_id': entity_id},
-                )
-            except (ValueError, Exception):
-                pass
 
         # Default — home page
         return reverse('home')
