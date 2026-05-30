@@ -7,14 +7,14 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import timedelta
 
-from core.emoji import ce as _ce, reset_cache as reset_emoji_cache  # noqa: F401
+from core.emoji import ce as _ce  # noqa: F401
 
 from .metrics import (
+    SERVICE_GROUPS,
     CpuMetrics,
     DiskMetrics,
     DiskPartitionInfo,
     MemoryMetrics,
-    SERVICE_GROUPS,
     ServerSnapshot,
     ServiceStatus,
     SwapMetrics,
@@ -61,8 +61,8 @@ def _format_uptime(td: timedelta) -> str:
 # for matching (e.g. `postgresql@16-main` → `postgresql`).
 _SERVICE_ICONS = {
     'jaysonkhan':      '🌐',
-    'talabaovozi-web': '📊',
-    'talabaovozi':     '🤖',
+    'edustats-web':    '📊',
+    'edustats-bot':    '🤖',
     'uzexam':          '🎓',
     'uzexam-bot':      '🤖',
     'nginx':           '⚡',

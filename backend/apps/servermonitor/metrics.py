@@ -274,8 +274,8 @@ SERVICE_GROUPS = {
 MONITORED_SERVICES: list[dict] = [
     # ── Apps (user-visible) ──
     {'unit': 'jaysonkhan',         'group': 'apps',     'display': 'JaysonKhan Portfolio',  'critical': True},
-    {'unit': 'talabaovozi-web',    'group': 'apps',     'display': 'EduStats Web',          'critical': True},
-    {'unit': 'talabaovozi',        'group': 'apps',     'display': 'TalabaOvozi Bot',       'critical': True},
+    {'unit': 'edustats-web',       'group': 'apps',     'display': 'EduStats Web',          'critical': True},
+    {'unit': 'edustats-bot',       'group': 'apps',     'display': 'EduStats Bot',          'critical': True},
     {'unit': 'uzexam',             'group': 'apps',     'display': 'UzExam Web',            'critical': True},
     {'unit': 'uzexam-bot',         'group': 'apps',     'display': 'UzExam Bot',            'critical': True},
     # ── Infrastructure (everyone depends on these) ──

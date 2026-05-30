@@ -4,14 +4,14 @@
 # ══════════════════════════════════════════════════════════════════════════════
 # Usage:
 #   ./deploy.sh                    — deploy jaysonkhan only (default)
-#   ./deploy.sh --all              — deploy jaysonkhan + talabaovozi
-#   ./deploy.sh --bot              — deploy talabaovozi bot only
+#   ./deploy.sh --all              — deploy jaysonkhan + edustats-bot
+#   ./deploy.sh --bot              — deploy edustats-bot only
 #   ./deploy.sh --bot "fix bug"    — deploy bot with custom commit message
 #   ./deploy.sh "commit msg"       — deploy jaysonkhan with custom commit msg
 #
 # Architecture (all on jaysonkhan server 144.91.69.225):
 #   /var/www/jaysonkhan/      Django admin + portfolio (systemd: jaysonkhan)
-#   /var/www/talabaovozi/     Telegram bot + API       (systemd: talabaovozi)
+#   /var/www/talabaovozi/     Telegram bot + API       (systemd: edustats-bot)
 #   Bot API: 127.0.0.1:8433 (localhost only, not exposed)
 
 set -e
@@ -37,7 +37,7 @@ BOT_DIR="/var/www/talabaovozi"
 BOT_VENV="$BOT_DIR/venv/bin/activate"
 BOT_PIP="$BOT_DIR/venv/bin/pip"
 BOT_BRANCH="ovoz_v2"
-BOT_SERVICE="talabaovozi"
+BOT_SERVICE="edustats-bot"
 
 # ─── Parse flags ──────────────────────────────────────────────────────────────
 DEPLOY_JK=false
@@ -84,7 +84,7 @@ echo -e "${BOLD}🚀 Jaysonkhan Deploy${RESET}  ${DIM}($DOMAIN)${RESET}"
 echo -e "${DIM}   $(date '+%Y-%m-%d %H:%M:%S')${RESET}"
 TARGETS=""
 $DEPLOY_JK && TARGETS+="jaysonkhan "
-$DEPLOY_BOT && TARGETS+="talabaovozi "
+$DEPLOY_BOT && TARGETS+="edustats-bot "
 echo -e "${DIM}   Targets: ${TARGETS}${RESET}"
 echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
@@ -184,10 +184,10 @@ if $DEPLOY_JK; then
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Deploy talabaovozi (Bot)
+# Deploy edustats-bot (Bot)
 # ══════════════════════════════════════════════════════════════════════════════
 if $DEPLOY_BOT; then
-    echo -e "${CYAN}${BOLD}── talabaovozi (Bot) ──${RESET}"
+    echo -e "${CYAN}${BOLD}── edustats-bot (Bot) ──${RESET}"
 
     info "  Server git pull..."
     # Use deploy user (not sudo/root) for git operations — deploy key is on deploy user
@@ -208,7 +208,7 @@ if $DEPLOY_BOT; then
         ok "  Dependencies installed"
     fi
 
-    info "  Restarting talabaovozi..."
+    info "  Restarting edustats-bot..."
     remote "sudo systemctl daemon-reload && sudo systemctl restart $BOT_SERVICE"
     ok "  $BOT_SERVICE restarted"
     echo
@@ -251,7 +251,7 @@ fi
 if $DEPLOY_BOT; then
     BOT_STATUS=$(remote "sudo systemctl is-active $BOT_SERVICE 2>/dev/null" || echo "unknown")
     if [[ "$BOT_STATUS" == "active" ]]; then
-        ok "  talabaovozi: active"
+        ok "  edustats-bot: active"
         API_HEALTH=$(remote "curl -sf --max-time 3 http://127.0.0.1:8433/api/v1/health 2>/dev/null" || echo "unavailable")
         if [[ "$API_HEALTH" != "unavailable" ]]; then
             ok "  Bot API: ${DIM}$API_HEALTH${RESET}"
@@ -266,7 +266,7 @@ if $DEPLOY_BOT; then
             warn "  Port 8433 is accessible externally! Check firewall."
         fi
     else
-        echo -e "${RED}${BOLD}✖${RESET}  talabaovozi: $BOT_STATUS"
+        echo -e "${RED}${BOLD}✖${RESET}  edustats-bot: $BOT_STATUS"
         ALL_OK=false
         remote "sudo journalctl -u $BOT_SERVICE -n 15 --no-pager" 2>/dev/null || true
     fi
@@ -283,7 +283,7 @@ if $ALL_OK; then
     echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
     echo -e "${GREEN}${BOLD}✅ Deploy successful!${RESET}  ${DIM}(${DURATION_STR})${RESET}"
     $DEPLOY_JK  && echo -e "   ${DIM}jaysonkhan:${RESET}   $JK_SERVICE @ $JK_DIR"
-    $DEPLOY_BOT && echo -e "   ${DIM}talabaovozi:${RESET}  $BOT_SERVICE @ $BOT_DIR"
+    $DEPLOY_BOT && echo -e "   ${DIM}edustats-bot:${RESET}  $BOT_SERVICE @ $BOT_DIR"
     echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 else
     echo -e "${RED}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
