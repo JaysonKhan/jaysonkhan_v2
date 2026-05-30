@@ -13,10 +13,10 @@ import threading
 from html import escape
 from typing import Optional
 
-from django.conf import settings
-
 from core.emoji import ce
 from core.services import SiteSettingsService
+from django.conf import settings
+
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -170,18 +170,8 @@ class NotificationService:
         if not self._admin_enabled('admin_notify_new_users'):
             return
 
-        # ── FunStat stats_min (bepul) ─────────────────────────────────────
-        funstat = {}
-        if profile.entity_type in ('user', 'bot'):
-            try:
-                from osint.services.osint_service import fetch_or_cache
-                result = fetch_or_cache('stats_min', profile.telegram_id)
-                if result and result.data:
-                    funstat = result.data
-            except Exception:
-                logger.debug('FunStat stats_min failed for %s', profile.telegram_id)
-
         # ── Entity type ───────────────────────────────────────────────────
+        funstat = {}
         type_map = {
             'user': (ce('user', '👤'), 'Foydalanuvchi'),
             'bot': (ce('bot', '🤖'), 'Bot'),
@@ -263,80 +253,20 @@ class NotificationService:
         if badges:
             lines.append(' · '.join(badges))
 
-        # ── FunStat statistika ────────────────────────────────────────────
-        if funstat:
-            stats_parts = []
-            total_msg = funstat.get('total_msg_count')
-            if total_msg:
-                stats_parts.append(f'{ce("comment", "💬")} {total_msg:,} xabar')
-            total_grp = funstat.get('total_groups')
-            if total_grp:
-                stats_parts.append(f'{ce("group", "👥")} {total_grp} guruh')
-            adm = funstat.get('adm_in_groups')
-            if adm:
-                stats_parts.append(f'{ce("crown", "👑")} {adm} admin')
-            if stats_parts:
-                lines.append(' · '.join(stats_parts))
-
-            history_parts = []
-            unames = funstat.get('usernames_count')
-            if unames:
-                history_parts.append(f'{ce("history", "📝")} {unames} username')
-            names = funstat.get('names_count')
-            if names:
-                history_parts.append(f'{ce("pencil", "✏️")} {names} ism')
-            if history_parts:
-                lines.append(' · '.join(history_parts))
-
-            # Faollik davri
-            first_d = funstat.get('first_msg_date', '')
-            last_d = funstat.get('last_msg_date', '')
-            if first_d and last_d:
-                lines.append(f'{ce("calendar", "📅")} {str(first_d)[:10]} — {str(last_d)[:10]}')
-            elif first_d:
-                lines.append(f'{ce("calendar", "📅")} {str(first_d)[:10]} dan beri')
-
         # ── Bio ───────────────────────────────────────────────────────────
-        bio = funstat.get('about') or funstat.get('bio') or getattr(profile, 'bio', '')
+        bio = getattr(profile, 'bio', '')
         if bio:
             lines.append(f'💬 <i>{escape(str(bio)[:120])}</i>')
 
         text = '\n'.join(lines)
 
         # ── Tugmalar ──────────────────────────────────────────────────────
-        buttons = []
-        # OSINT — Mini App deep link (Telegram ichida ochiladi)
-        if profile.entity_type in ('channel', 'supergroup', 'group'):
-            startapp = f'osint-e-{profile.telegram_id}'
-        else:
-            startapp = f'osint-p-{profile.telegram_id}'
-        deep_url = self._tg_deep_link(startapp)
-        if deep_url:
-            buttons.append([{'text': '🔍 OSINT', 'url': deep_url}])
-        else:
-            # Fallback — oddiy URL
-            try:
-                from django.urls import reverse
-                if profile.entity_type in ('channel', 'supergroup', 'group'):
-                    osint_url = reverse(
-                        'osint_entity_profile',
-                        kwargs={'entity_id': profile.telegram_id},
-                    )
-                else:
-                    osint_url = reverse(
-                        'osint_profile',
-                        kwargs={'user_id': profile.telegram_id},
-                    )
-                buttons.append([{
-                    'text': '🔍 OSINT',
-                    'url': f'{self._domain}{osint_url}',
-                }])
-            except Exception:
-                pass
-        buttons.append([
-            {'text': '⚙️ Admin', 'url': self._admin_entity_url(profile)},
-            {'text': '🌐 Sayt', 'url': self._domain},
-        ])
+        buttons = [
+            [
+                {'text': '⚙️ Admin', 'url': self._admin_entity_url(profile)},
+                {'text': '🌐 Sayt', 'url': self._domain},
+            ]
+        ]
 
         reply_markup = {'inline_keyboard': buttons}
         photo_url = profile.get_photo_url() or None

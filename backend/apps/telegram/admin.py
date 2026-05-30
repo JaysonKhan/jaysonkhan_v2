@@ -1,11 +1,9 @@
 """Admin configuration for unified Telegram entities."""
 from django.contrib import admin
-from django.db import DatabaseError
-from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 
-from .models import EntitySource, TelegramEntity, TelegramSession
+from .models import EntitySource, TelegramEntity
 
 
 class EntitySourceInline(TabularInline):
@@ -114,16 +112,15 @@ class TelegramEntityAdmin(ModelAdmin):
 
     @admin.display(description="Telegram ID")
     def tg_id_link(self, obj):
-        """Telegram ID → OSINT profil link."""
-        try:
-            url = reverse("osint_profile", kwargs={"user_id": obj.telegram_id})
+        """Telegram ID → t.me link (if username available)."""
+        if obj.username:
+            url = f"https://t.me/{obj.username}"
             return format_html(
-                '<a href="{}" title="OSINT profil">{}</a>',
+                '<a href="{}" title="Telegram" target="_blank" rel="noopener">{}</a>',
                 url,
                 obj.telegram_id,
             )
-        except NoReverseMatch:
-            return obj.telegram_id
+        return obj.telegram_id
 
     @admin.display(description="Services")
     def services_display(self, obj):
@@ -150,17 +147,3 @@ class TelegramEntityAdmin(ModelAdmin):
         return super().get_queryset(request).prefetch_related("sources")
 
 
-@admin.register(TelegramSession)
-class TelegramSessionAdmin(ModelAdmin):
-    list_display = ("account_name", "account_id", "updated_at")
-    readonly_fields = ("session_string", "account_id", "account_name", "created_at", "updated_at")
-
-    def has_add_permission(self, request):
-        """Singleton — faqat bitta yozuv."""
-        try:
-            return not TelegramSession.objects.exists()
-        except DatabaseError:
-            return True
-
-    def has_delete_permission(self, request, obj=None):
-        return False

@@ -1,7 +1,8 @@
 import os
 import sys
-import environ
 from pathlib import Path
+
+import environ
 from django.templatetags.static import static
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -57,8 +58,6 @@ INSTALLED_APPS = [
     'core',
     'interactions',
     'telegram',
-    'botproxy',
-    'osint',
     'servermonitor',
     'ops',
 ]
@@ -263,6 +262,7 @@ REST_FRAMEWORK = {
 
 # JWT Settings
 from datetime import timedelta
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env.int('JWT_ACCESS_TOKEN_LIFETIME', default=5)),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=env.int('JWT_REFRESH_TOKEN_LIFETIME', default=30)),
@@ -535,30 +535,6 @@ UNFOLD = {
                 ],
             },
             {
-                "title": "TalabaOvozi Bot",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "Bot dashboard",
-                        "icon": "smart_toy",
-                        "link": f"{_A}bot/talabaovozi/dashboard/",
-                        "permission": lambda r: r.user.has_perm("botproxy.view_bot_dashboard"),
-                    },
-                    {
-                        "title": "Telegram session",
-                        "icon": "key",
-                        "link": f"{_A}bot/telegram/session/",
-                        "permission": lambda r: r.user.has_perm("botproxy.manage_telegram_session"),
-                    },
-                    {
-                        "title": "Emoji manager",
-                        "icon": "emoji_emotions",
-                        "link": f"{_A}telegram/settings/",
-                        "permission": lambda r: r.user.is_superuser,
-                    },
-                ],
-            },
-            {
                 "title": "Tizim",
                 "separator": True,
                 "items": [
@@ -592,44 +568,8 @@ UNFOLD = {
                         "link": f"{_A}telegram/telegramentity/",
                         "permission": lambda r: r.user.has_perm("telegram.view_telegramentity"),
                     },
-                    {
-                        "title": "OSINT",
-                        "icon": "person_search",
-                        "link": f"{_A}osint/search/",
-                        "permission": lambda r: r.user.has_perm("osint.use_osint"),
-                    },
                 ],
             },
         ],
     },
 }
-
-# ── Bot API (hokimiyatbot integration) ───────────────────────────────────────
-BOT_API_BASE_URL = env('BOT_API_BASE_URL', default='http://127.0.0.1:8433')
-BOT_API_SECRET_KEY = env('BOT_API_SECRET_KEY', default='')
-BOT_API_TIMEOUT = env.int('BOT_API_TIMEOUT', default=30)
-
-BOT_SERVICES = {
-    "talabaovozi": {
-        "title": "TalabaOvozi",
-        "icon": "smart_toy",
-        "base_url": env("BOT_API_BASE_URL", default="http://127.0.0.1:8433"),
-        "secret": env("BOT_API_SECRET_KEY", default=""),
-        "timeout": env.int("BOT_API_TIMEOUT", default=30),
-    },
-}
-
-# ── FunStat OSINT API ─────────────────────────────────────────────────────────
-FUNSTAT_API_BASE_URL = env('FUNSTAT_API_BASE_URL', default='https://funstat.in')
-FUNSTAT_API_TOKEN = env('FUNSTAT_API_TOKEN', default='')
-FUNSTAT_API_TIMEOUT = env.int('FUNSTAT_API_TIMEOUT', default=30)
-
-# ── Telegram MTProto API (profil rasmlarni yuklash uchun) ──────────────────
-TELEGRAM_API_ID = env.int('TELEGRAM_API_ID', default=0)
-TELEGRAM_API_HASH = env('TELEGRAM_API_HASH', default='')
-TELEGRAM_SESSION_PATH = env(
-    'TELEGRAM_SESSION_PATH',
-    default=str(BASE_DIR.parent / '.telegram_session'),
-)
-OSINT_PHOTO_CACHE_DAYS = env.int('OSINT_PHOTO_CACHE_DAYS', default=7)
-OSINT_PHOTO_MAX_REQUESTS_PER_MIN = env.int('OSINT_PHOTO_MAX_REQUESTS_PER_MIN', default=15)

@@ -1,22 +1,23 @@
-from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap, index as sitemap_index
-from django.urls import path, include, re_path
+import environ
+from blog.feeds import LatestPostsAtomFeed, LatestPostsFeed
+from core.emoji_views import emoji_manager
+from core.sitemaps import SITEMAPS
+from core.views import health_check, humans_txt, robots_txt, upload_media_view
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.sitemaps.views import index as sitemap_index
+from django.contrib.sitemaps.views import sitemap
+from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
+from interactions.notifications.webhook import TelegramWebhookView
+from presentation.web.views import custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-import environ
-from presentation.web.views import custom_404_view, custom_500_view
-from core.views import upload_media_view, robots_txt, humans_txt, health_check
-from core.emoji_views import emoji_manager
-from core.sitemaps import SITEMAPS
-from blog.feeds import LatestPostsFeed, LatestPostsAtomFeed
-from interactions.notifications.webhook import TelegramWebhookView
 
 env = environ.Env()
 
@@ -28,8 +29,6 @@ sitemaps = SITEMAPS
 # Non-localized URLs (admin, API, sitemap, webhooks)
 urlpatterns = [
     path(ADMIN_URL + 'telegram/settings/', emoji_manager, name='telegram_settings'),
-    path(ADMIN_URL + 'bot/', include('botproxy.urls')),
-    path(ADMIN_URL + 'osint/', include('osint.urls')),
     path(ADMIN_URL + 'rosetta/', include('rosetta.urls')),
     path(ADMIN_URL, admin.site.urls),
     path('api/admin/media-upload/', upload_media_view, name='admin_media_upload'),

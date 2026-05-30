@@ -3,16 +3,11 @@
 # Jaysonkhan Unified Deploy Script
 # ══════════════════════════════════════════════════════════════════════════════
 # Usage:
-#   ./deploy.sh                    — deploy jaysonkhan only (default)
-#   ./deploy.sh --all              — deploy jaysonkhan + edustats-bot
-#   ./deploy.sh --bot              — deploy edustats-bot only
-#   ./deploy.sh --bot "fix bug"    — deploy bot with custom commit message
+#   ./deploy.sh                    — deploy jaysonkhan (default)
 #   ./deploy.sh "commit msg"       — deploy jaysonkhan with custom commit msg
 #
 # Architecture (all on jaysonkhan server 144.91.69.225):
 #   /var/www/jaysonkhan/      Django admin + portfolio (systemd: jaysonkhan)
-#   /var/www/talabaovozi/     Telegram bot + API       (systemd: edustats-bot)
-#   Bot API: 127.0.0.1:8433 (localhost only, not exposed)
 
 set -e
 
@@ -32,29 +27,19 @@ JK_BRANCH="main"
 JK_SERVICE="jaysonkhan"
 JK_SETTINGS="config.settings.prod"
 
-# Bot config
-BOT_DIR="/var/www/talabaovozi"
-BOT_VENV="$BOT_DIR/venv/bin/activate"
-BOT_PIP="$BOT_DIR/venv/bin/pip"
-BOT_BRANCH="ovoz_v2"
-BOT_SERVICE="edustats-bot"
-
 # ─── Parse flags ──────────────────────────────────────────────────────────────
 DEPLOY_JK=false
-DEPLOY_BOT=false
 MSG=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --all)   DEPLOY_JK=true; DEPLOY_BOT=true; shift ;;
-        --bot)   DEPLOY_BOT=true; shift ;;
         --jk)    DEPLOY_JK=true; shift ;;
         *)       MSG="$*"; break ;;
     esac
 done
 
-# Default: deploy jaysonkhan if no flag specified
-if ! $DEPLOY_JK && ! $DEPLOY_BOT; then
+# Default: deploy jaysonkhan
+if ! $DEPLOY_JK; then
     DEPLOY_JK=true
 fi
 MSG="${MSG:-deploy update}"
@@ -82,10 +67,7 @@ echo
 echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${BOLD}🚀 Jaysonkhan Deploy${RESET}  ${DIM}($DOMAIN)${RESET}"
 echo -e "${DIM}   $(date '+%Y-%m-%d %H:%M:%S')${RESET}"
-TARGETS=""
-$DEPLOY_JK && TARGETS+="jaysonkhan "
-$DEPLOY_BOT && TARGETS+="edustats-bot "
-echo -e "${DIM}   Targets: ${TARGETS}${RESET}"
+echo -e "${DIM}   Target: jaysonkhan${RESET}"
 echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
 
@@ -183,36 +165,6 @@ if $DEPLOY_JK; then
     echo
 fi
 
-# ══════════════════════════════════════════════════════════════════════════════
-# Deploy edustats-bot (Bot)
-# ══════════════════════════════════════════════════════════════════════════════
-if $DEPLOY_BOT; then
-    echo -e "${CYAN}${BOLD}── edustats-bot (Bot) ──${RESET}"
-
-    info "  Server git pull..."
-    # Use deploy user (not sudo/root) for git operations — deploy key is on deploy user
-    remote "ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true"
-    REMOTE_BEFORE=$(remote "git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
-    remote "git -C $BOT_DIR fetch origin $BOT_BRANCH && \
-        git -C $BOT_DIR checkout $BOT_BRANCH 2>/dev/null; \
-        git -C $BOT_DIR reset --hard origin/$BOT_BRANCH"
-    remote "find $BOT_DIR -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true"
-    REMOTE_AFTER=$(remote "sudo git -C $BOT_DIR rev-parse --short HEAD 2>/dev/null" || echo "?")
-    ok "  Code updated: ${DIM}$REMOTE_BEFORE → $REMOTE_AFTER${RESET}"
-
-    info "  Python dependencies..."
-    DEPS_OUTPUT=$(remote "sudo bash -c 'source $BOT_VENV && $BOT_PIP install -r $BOT_DIR/requirements.txt --quiet 2>&1'" || true)
-    if echo "$DEPS_OUTPUT" | grep -qi "error\|failed"; then
-        warn "  Dependency install had warnings"
-    else
-        ok "  Dependencies installed"
-    fi
-
-    info "  Restarting edustats-bot..."
-    remote "sudo systemctl daemon-reload && sudo systemctl restart $BOT_SERVICE"
-    ok "  $BOT_SERVICE restarted"
-    echo
-fi
 
 # ─── Health checks ────────────────────────────────────────────────────────────
 echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -248,29 +200,6 @@ if $DEPLOY_JK; then
     fi
 fi
 
-if $DEPLOY_BOT; then
-    BOT_STATUS=$(remote "sudo systemctl is-active $BOT_SERVICE 2>/dev/null" || echo "unknown")
-    if [[ "$BOT_STATUS" == "active" ]]; then
-        ok "  edustats-bot: active"
-        API_HEALTH=$(remote "curl -sf --max-time 3 http://127.0.0.1:8433/api/v1/health 2>/dev/null" || echo "unavailable")
-        if [[ "$API_HEALTH" != "unavailable" ]]; then
-            ok "  Bot API: ${DIM}$API_HEALTH${RESET}"
-        else
-            warn "  Bot API health check failed (may still be starting)"
-        fi
-        # Check port not exposed externally
-        EXT_CHECK=$(curl -sf --max-time 3 "http://${PUBLIC_IP}:8433/" 2>/dev/null && echo "EXPOSED" || echo "SAFE")
-        if [[ "$EXT_CHECK" == "SAFE" ]]; then
-            ok "  Port 8433: ${DIM}not exposed externally${RESET}"
-        else
-            warn "  Port 8433 is accessible externally! Check firewall."
-        fi
-    else
-        echo -e "${RED}${BOLD}✖${RESET}  edustats-bot: $BOT_STATUS"
-        ALL_OK=false
-        remote "sudo journalctl -u $BOT_SERVICE -n 15 --no-pager" 2>/dev/null || true
-    fi
-fi
 
 # ─── Final status ─────────────────────────────────────────────────────────────
 END_TIME=$(date +%s)
@@ -282,8 +211,7 @@ echo
 if $ALL_OK; then
     echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
     echo -e "${GREEN}${BOLD}✅ Deploy successful!${RESET}  ${DIM}(${DURATION_STR})${RESET}"
-    $DEPLOY_JK  && echo -e "   ${DIM}jaysonkhan:${RESET}   $JK_SERVICE @ $JK_DIR"
-    $DEPLOY_BOT && echo -e "   ${DIM}edustats-bot:${RESET}  $BOT_SERVICE @ $BOT_DIR"
+    echo -e "   ${DIM}jaysonkhan:${RESET}   $JK_SERVICE @ $JK_DIR"
     echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 else
     echo -e "${RED}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
