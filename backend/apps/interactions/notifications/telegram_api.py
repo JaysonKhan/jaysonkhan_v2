@@ -2,7 +2,7 @@
 Low-level Telegram Bot API client.
 
 Synchronous (httpx), designed to be called from daemon threads.
-All exceptions are caught and logged — notification failure never crashes a request.
+All exceptions are caught and logged -- notification failure never crashes a request.
 """
 from __future__ import annotations
 
@@ -23,9 +23,8 @@ class TelegramBotAPI:
     def __init__(self, token: Optional[str] = None):
         self._token = token or getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
         self._base = f'https://api.telegram.org/bot{self._token}'
-        self._client = httpx.Client(timeout=10.0)
 
-    # ── Public methods ───────────────────────────────────────────────────────
+    # -- Public methods -------------------------------------------------------
 
     def send_message(
         self,
@@ -57,11 +56,11 @@ class TelegramBotAPI:
         reply_markup: Optional[dict] = None,
     ) -> Optional[dict]:
         """POST /sendPhoto. *photo* can be:
-          - HTTPS URL string  → Telegram fetches it
-          - Local file path   → uploaded as multipart (recommended)
+          - HTTPS URL string  -> Telegram fetches it
+          - Local file path   -> uploaded as multipart (recommended)
 
         URL fetch often fails with non-ASCII filenames, HTTP/2-only
-        servers, or >5MB images served with strict headers — Telegram
+        servers, or >5MB images served with strict headers -- Telegram
         returns `400 wrong type of the web page content`. Direct
         multipart upload bypasses the fetcher entirely.
         """
@@ -93,15 +92,15 @@ class TelegramBotAPI:
         parse_mode: str = 'HTML',
         reply_markup: Optional[dict] = None,
     ) -> Optional[dict]:
-        """Multipart /sendPhoto upload — sidesteps URL-fetch brittleness.
+        """Multipart /sendPhoto upload -- sidesteps URL-fetch brittleness.
 
         httpx's `files=` parameter builds the multipart body automatically;
         `data=` for text fields carries chat_id / caption / reply_markup.
-        Complex fields (reply_markup dict) must be JSON-encoded — Telegram
+        Complex fields (reply_markup dict) must be JSON-encoded -- Telegram
         rejects raw Python repr.
         """
         if not self._token:
-            logger.warning('TELEGRAM_BOT_TOKEN not configured — skipping sendPhoto')
+            logger.warning('TELEGRAM_BOT_TOKEN not configured -- skipping sendPhoto')
             return None
         url = f'{self._base}/sendPhoto'
         data = {
@@ -120,8 +119,9 @@ class TelegramBotAPI:
                 # inside the upload doesn't matter for display anyway.
                 safe_name = filename.encode('ascii', errors='replace').decode('ascii')
                 files = {'photo': (safe_name, fh, 'application/octet-stream')}
-                # 60s timeout — large photos over slow network need room.
-                resp = self._client.post(url, data=data, files=files, timeout=60.0)
+                # 60s timeout -- large photos over slow network need room.
+                with httpx.Client(timeout=60.0) as client:
+                    resp = client.post(url, data=data, files=files)
             result = resp.json()
             if not result.get('ok'):
                 logger.warning(
@@ -158,25 +158,6 @@ class TelegramBotAPI:
             'reply_markup': reply_markup,
         })
 
-    def edit_message_text(
-        self,
-        chat_id: int,
-        message_id: int,
-        text: str,
-        *,
-        parse_mode: str = 'HTML',
-        reply_markup: Optional[dict] = None,
-    ) -> Optional[dict]:
-        payload: dict = {
-            'chat_id': chat_id,
-            'message_id': message_id,
-            'text': text,
-            'parse_mode': parse_mode,
-        }
-        if reply_markup:
-            payload['reply_markup'] = reply_markup
-        return self._post('editMessageText', payload)
-
     def send_chat_action(self, chat_id: int, action: str = 'typing') -> Optional[dict]:
         """POST /sendChatAction. Shows typing/uploading indicator."""
         return self._post('sendChatAction', {
@@ -193,15 +174,16 @@ class TelegramBotAPI:
     def delete_webhook(self) -> Optional[dict]:
         return self._post('deleteWebhook', {})
 
-    # ── Internal ─────────────────────────────────────────────────────────────
+    # -- Internal -------------------------------------------------------------
 
     def _post(self, method: str, data: dict) -> Optional[dict]:
         """POST to Bot API endpoint. Logs errors, never raises."""
         if not self._token:
-            logger.warning('TELEGRAM_BOT_TOKEN not configured — skipping %s', method)
+            logger.warning('TELEGRAM_BOT_TOKEN not configured -- skipping %s', method)
             return None
         try:
-            resp = self._client.post(f'{self._base}/{method}', json=data)
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.post(f'{self._base}/{method}', json=data)
             result = resp.json()
             if not result.get('ok'):
                 logger.warning(

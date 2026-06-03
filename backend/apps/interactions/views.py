@@ -5,21 +5,21 @@ from datetime import timedelta
 from urllib.parse import urlparse
 
 import bleach
-from PIL import Image
-
 from django.conf import settings
-from django.utils import timezone
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.contenttypes.models import ContentType
-from django.http import JsonResponse
-from django.views import View
-from django.db import transaction
-from django.db.models import Count
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from PIL import Image
 from telegram.models import TelegramEntity
+
 from .models import Comment, Like
 from .notifications.ban_check import check_ban
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
@@ -66,6 +66,16 @@ def _is_same_origin(request):
     return not request.is_secure()
 
 
+# ── Commentable content types ───────────────────────────────────────────────────
+# Comments/likes are only allowed on these (app_label, model) pairs. Without this
+# allowlist, any authenticated Telegram user could enumerate or comment on internal
+# models (users.user, contact.contactmessage, core.sitesettings, …) via the URL.
+COMMENTABLE_CONTENT_TYPES = frozenset([
+    ('blog', 'post'),
+    ('portfolio', 'project'),
+])
+
+
 # ── Session helpers ────────────────────────────────────────────────────────────
 
 SESSION_KEY = 'tg_profile_id'
@@ -94,6 +104,12 @@ class TelegramAuthView(View):
     """
 
     def get(self, request):
+        # Same-origin guard: this GET writes the session, so a cross-site link
+        # carrying a valid (attacker-issued) Telegram payload could otherwise
+        # bind a victim's session to the attacker's identity (session fixation).
+        if not _is_same_origin(request):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+
         data = dict(request.GET)
         # GET params come as lists; flatten them
         flat = {k: v[0] if isinstance(v, list) else v for k, v in data.items()}
@@ -107,7 +123,10 @@ class TelegramAuthView(View):
 
         if not verify_telegram_auth(flat):
             logger.warning('[TelegramAuth] FAILED verification. Params: %s', safe_flat)
-            return JsonResponse({'error': 'Invalid Telegram authentication'}, status=400)
+            # Browser redirect callback — redirect with an error flag rather than
+            # rendering raw JSON in the popup window.
+            sep = '&' if '?' in next_url else '?'
+            return redirect(f'{next_url}{sep}error=auth_failed')
 
         logger.info('[TelegramAuth] verification OK for id=%s', flat.get('id'))
 
@@ -127,6 +146,9 @@ class TelegramLoginView(View):
     """
 
     def post(self, request):
+        if not _is_same_origin(request):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+
         try:
             body = json.loads(request.body)
         except (json.JSONDecodeError, Exception):
@@ -188,6 +210,9 @@ class TelegramWebAppLoginView(View):
     """
 
     def post(self, request):
+        if not _is_same_origin(request):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+
         try:
             body = json.loads(request.body)
         except (json.JSONDecodeError, Exception):
@@ -282,13 +307,21 @@ class AddCommentView(View):
             if image.content_type not in allowed_mimes:
                 return JsonResponse({'error': 'Invalid image format (must be JPG, PNG, GIF, WEBP)'}, status=400)
                 
+            # content_type above is the client-supplied multipart header and is
+            # spoofable; trust Pillow's format detected from the actual file bytes.
+            allowed_formats = {'JPEG', 'PNG', 'GIF', 'WEBP'}
             try:
-                img = Image.open(image)
-                img.verify()
+                Image.open(image).verify()
+                image.seek(0)
+                detected_format = Image.open(image).format
                 image.seek(0)
             except Exception as e:
                 logger.warning(f'[Upload] Invalid image from {profile.telegram_id}: {e}')
                 return JsonResponse({'error': 'Uploaded file is corrupted or not a valid image'}, status=400)
+
+            if detected_format not in allowed_formats:
+                logger.warning(f'[Upload] Spoofed MIME from {profile.telegram_id}: format={detected_format}')
+                return JsonResponse({'error': 'Invalid image format (must be JPG, PNG, GIF, WEBP)'}, status=400)
 
         # ── 4. Rate Limiting logic ──
         now = timezone.now()
@@ -302,6 +335,9 @@ class AddCommentView(View):
             limit_count = getattr(settings, 'COMMENT_RATE_LIMIT_COUNT', 3)
 
         # ── Setup target object (before atomic block so errors are cheap) ──
+        if (app_label, model_name) not in COMMENTABLE_CONTENT_TYPES:
+            return JsonResponse({'error': 'Invalid content type'}, status=404)
+
         try:
             ct = ContentType.objects.get(app_label=app_label, model=model_name)
         except ContentType.DoesNotExist:
@@ -448,6 +484,9 @@ class ToggleLikeView(View):
         if not profile:
             return JsonResponse({'error': 'Login with Telegram first'}, status=401)
 
+        if (app_label, model_name) not in COMMENTABLE_CONTENT_TYPES:
+            return JsonResponse({'error': 'Invalid content type'}, status=404)
+
         try:
             ct = ContentType.objects.get(app_label=app_label, model=model_name)
         except ContentType.DoesNotExist:
@@ -458,15 +497,23 @@ class ToggleLikeView(View):
         if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
             return JsonResponse({'error': 'Target object not found'}, status=404)
 
-        like, created = Like.objects.get_or_create(
-            author=profile,
-            content_type=ct,
-            object_id=object_id,
-        )
-        if not created:
-            like.delete()
-            liked = False
-        else:
+        # Atomic toggle: select_for_update serializes concurrent double-submits
+        # so the get_or_create + delete cannot interleave (prevents TOCTOU
+        # IntegrityError on the unique_together constraint).
+        try:
+            with transaction.atomic():
+                like, created = Like.objects.select_for_update().get_or_create(
+                    author=profile,
+                    content_type=ct,
+                    object_id=object_id,
+                )
+                if not created:
+                    like.delete()
+                    liked = False
+                else:
+                    liked = True
+        except IntegrityError:
+            # Lost the race: the row already exists (created by the racer).
             liked = True
 
         count = Like.objects.filter(content_type=ct, object_id=object_id).count()
@@ -499,7 +546,7 @@ def serialize_comment(comment, tg_profile_id=None):
             "initial": comment.author.first_name[0].upper() if comment.author.first_name else 'U',
         },
         "text": comment.text,
-        "image_url": comment.image.url if getattr(comment, 'image', None) and hasattr(comment.image, 'url') else None,
+        "image_url": comment.image.url if comment.image else None,
         "created_at": comment.created_at.isoformat(),
         "is_reviewed": comment.is_reviewed,
         "is_own": tg_profile_id == comment.author.id,
@@ -524,6 +571,9 @@ class ListCommentsView(View):
         except (ValueError, TypeError):
             page = 1
 
+        if (app_label, model) not in COMMENTABLE_CONTENT_TYPES:
+            return JsonResponse({'error': 'Invalid content type'}, status=404)
+
         try:
             ct = ContentType.objects.get(app_label=app_label, model=model)
         except ContentType.DoesNotExist:
@@ -537,12 +587,18 @@ class ListCommentsView(View):
             parent__isnull=True
         ).select_related('author').prefetch_related('reactions', 'reactions__author')
 
+        # Annotate reply_count (approved-only) so serialize_comment never falls
+        # back to a per-comment COUNT query (N+1). Matches the serializer's
+        # approved-reply semantics.
+        qs = qs.annotate(
+            reply_count=Count('replies', filter=Q(replies__is_approved=True), distinct=True)
+        )
+
         if sort == 'top':
             # Sorting formula: Score interactions dynamically
             qs = qs.annotate(
-                rcount=Count('reactions', distinct=True),
-                pcount=Count('replies', distinct=True)
-            ).order_by('-rcount', '-pcount', '-created_at')
+                rcount=Count('reactions', distinct=True)
+            ).order_by('-rcount', '-reply_count', '-created_at')
         else:
             qs = qs.order_by('-created_at')
 

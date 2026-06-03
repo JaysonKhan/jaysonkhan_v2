@@ -10,11 +10,11 @@ import logging
 import threading
 from typing import Optional
 
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-
 from interactions.models import Comment, CommentReaction, Like
 from telegram.models import EntitySource
+
 from .service import NotificationService, fire_and_forget
 
 logger = logging.getLogger('interactions.notifications')
@@ -53,7 +53,8 @@ def on_comment_created(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=CommentReaction)
 def on_reaction_saved(sender, instance, created, **kwargs):
-    """Fires on both create and update (emoji change)."""
+    if not created:
+        return  # emoji update -- suppress spurious DM
     svc = _get_service()
     fire_and_forget(svc.notify_reaction, instance, 'added')
     fire_and_forget(svc.log_reaction, instance, 'added')

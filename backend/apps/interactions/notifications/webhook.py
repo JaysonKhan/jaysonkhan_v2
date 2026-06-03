@@ -13,23 +13,23 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
+from core.emoji import ce
+from core.services import SiteSettingsService
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-
-from core.emoji import ce
-from core.services import SiteSettingsService
 from interactions.models import (
+    AdminLogMessage,
     NotificationPreference,
     UserBan,
-    AdminLogMessage,
 )
 from servermonitor.handlers import handle_server_callback, handle_server_command
 from telegram.models import TelegramEntity
-from .emoji_admin import handle_emoji_callback, handle_emoji_input
+
+from .emoji_admin import handle_emoji_input
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -108,8 +108,8 @@ class TelegramWebhookView(View):
             return
 
         if command == '/start':
-            from servermonitor.handlers import is_owner
             from core.emoji import ce as _ce
+            from servermonitor.handlers import is_owner
             if is_owner(tg_id):
                 self.api.send_chat_action(tg_id, 'typing')
                 chart = _ce('chart', '📊')
@@ -293,9 +293,6 @@ class TelegramWebhookView(View):
 
     def _handle_callback(self, callback_query):
         data = callback_query.get('data', '')
-        # Emoji admin callbacks
-        if handle_emoji_callback(data, callback_query, self.api):
-            return
         # Server monitor callbacks (service restart, refresh)
         if handle_server_callback(data, callback_query, self.api):
             return
@@ -337,6 +334,12 @@ class TelegramWebhookView(View):
         data = cq['data']
         cb_id = cq['id']
         msg = cq.get('message')
+
+        # Owner-only: config toggles change site-wide SiteSettings.
+        from servermonitor.handlers import is_owner
+        if not is_owner(cq['from']['id']):
+            self.api.answer_callback_query(cb_id, 'Ruxsat yo\'q')
+            return
 
         field_name = CONFIG_FIELDS.get(data)
         if not field_name:

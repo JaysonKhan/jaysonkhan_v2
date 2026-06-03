@@ -57,8 +57,3 @@ def handle_emoji_input(message: dict, api: TelegramBotAPI) -> bool:
         return True
 
     return False
-
-
-def handle_emoji_callback(data: str, cq: dict, api: TelegramBotAPI) -> bool:
-    """No emoji callbacks — managed in admin panel."""
-    return False

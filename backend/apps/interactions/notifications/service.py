@@ -56,7 +56,8 @@ class NotificationService:
         if comment.author_id == parent.author_id:
             return
         recipient = parent.author
-        if not self._should_notify(recipient, 'replies_enabled'):
+        site = SiteSettingsService.get()
+        if not self._should_notify(recipient, 'replies_enabled', site=site):
             return
 
         replier = escape(comment.author.display_name)
@@ -68,7 +69,7 @@ class NotificationService:
         )
         fallback_url = f'{self._domain}{self._content_url(comment)}#comment-{comment.id}'
         reply_markup = self._deep_link_button(
-            'Javob berish', f'c-{comment.id}', fallback_url,
+            'Javob berish', f'c-{comment.id}', fallback_url, site=site,
         )
         self.api.send_message(
             recipient.telegram_id, text, reply_markup=reply_markup,
@@ -85,7 +86,8 @@ class NotificationService:
         if reaction.author_id == comment.author_id:
             return
         recipient = comment.author
-        if not self._should_notify(recipient, 'reactions_enabled'):
+        site = SiteSettingsService.get()
+        if not self._should_notify(recipient, 'reactions_enabled', site=site):
             return
 
         reactor = escape(reaction.author.display_name)
@@ -96,7 +98,8 @@ class NotificationService:
     # ── Admin group logging ──────────────────────────────────────────────────
 
     def log_new_comment(self, comment) -> None:
-        if not self._admin_enabled('admin_notify_comments'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_comments', True):
             return
         if not comment.author:
             return
@@ -105,16 +108,17 @@ class NotificationService:
         text = f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
             text, comment.author, 'comment',
-            reply_markup=button, photo_url=photo_url,
+            reply_markup=button, photo_url=photo_url, site=site,
         )
 
     def log_reply(self, comment) -> None:
-        if not self._admin_enabled('admin_notify_replies'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_replies', True):
             return
         parent = comment.parent
         if not parent or not parent.author:
@@ -125,16 +129,17 @@ class NotificationService:
         text = f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            'Javobni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Javobni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
             text, comment.author, 'reply',
-            reply_markup=button, photo_url=photo_url,
+            reply_markup=button, photo_url=photo_url, site=site,
         )
 
     def log_reaction(self, reaction, action: str) -> None:
-        if not self._admin_enabled('admin_notify_reactions'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_reactions', True):
             return
         actor = escape(reaction.author.display_name)
         comment_author = escape(reaction.comment.author.display_name)
@@ -143,12 +148,13 @@ class NotificationService:
         comment = reaction.comment
         fallback_url = self._comment_anchor_url(comment)
         button = self._deep_link_button(
-            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url,
+            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
         )
-        self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button)
+        self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button, site=site)
 
     def log_like(self, like, action: str) -> None:
-        if not self._admin_enabled('admin_notify_likes'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_likes', True):
             return
         obj = like.content_object
         if not obj:
@@ -162,16 +168,16 @@ class NotificationService:
         if hasattr(obj, 'get_absolute_url'):
             fallback_url = f'{self._domain}{obj.get_absolute_url()}'
         button = self._deep_link_button(
-            'Ko\'rish', startapp, fallback_url,
+            'Ko\'rish', startapp, fallback_url, site=site,
         ) if (startapp or fallback_url) else None
-        self._send_to_admin_group(text, like.author, 'like', reply_markup=button)
+        self._send_to_admin_group(text, like.author, 'like', reply_markup=button, site=site)
 
     def log_new_user(self, profile) -> None:
-        if not self._admin_enabled('admin_notify_new_users'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_new_users', True):
             return
 
         # ── Entity type ───────────────────────────────────────────────────
-        funstat = {}
         type_map = {
             'user': (ce('user', '👤'), 'Foydalanuvchi'),
             'bot': (ce('bot', '🤖'), 'Bot'),
@@ -184,47 +190,39 @@ class NotificationService:
         # ── Servis manbalarini erta so'rash (yangi vs qaytgan user uchun) ──
         svc_labels = {
             'site': f'{ce("web", "🌐")} Sayt (Login)',
-            'osint': f'{ce("osint", "🔍")} OSINT',
-            'talabaovozi': f'{ce("education", "🎓")} TalabaOvozi',
         }
         svc_action_labels = {
             'site': f'{ce("web", "🌐")} Saytga kirdi',
-            'osint': f'{ce("osint", "🔍")} OSINT qidirildi',
-            'talabaovozi': f'{ce("education", "🎓")} TalabaOvozi botga qo\'shildi',
         }
         try:
             from telegram.models import EntitySource
             sources = list(
                 EntitySource.objects.filter(entity=profile)
+                .order_by('-updated_at')
                 .values_list('service', flat=True)
             )
         except Exception:
             sources = []
         is_returning = len(sources) > 1
 
-        # Ism — FunStat dan yangilangan bo'lishi mumkin
-        fs_name = ''
-        if funstat:
-            parts = [funstat.get('first_name', ''), funstat.get('last_name', '')]
-            fs_name = ' '.join(p for p in parts if p).strip()
-        name = escape(fs_name or profile.display_name)
+        name = escape(profile.display_name)
 
         if is_returning:
-            # Qaytgan user — yangi servisdan kirdi
-            new_service = sources[0] if sources else ''  # ordering = ["-updated_at"]
+            # Qaytgan user — yangi servisdan kirdi (sources ordered by -updated_at)
+            new_service = sources[0] if sources else ''
             action = svc_action_labels.get(new_service, f'{new_service} dan topildi')
             lines = [f'{ce("returning", "🔄")} <b>{name}</b> — {action}']
         else:
             lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
 
         # ── Asosiy ma'lumotlar ────────────────────────────────────────────
-        username = funstat.get('username') or profile.username
+        username = profile.username
         info_parts = [f'{ce("id_badge", "🆔")} <code>{profile.telegram_id}</code>']
         if username:
             info_parts.append(f'@{escape(username)}')
         lines.append(' · '.join(info_parts))
 
-        phone = funstat.get('phone') or profile.phone
+        phone = profile.phone
         if phone:
             lines.append(f'{ce("phone", "📱")} <code>{escape(phone)}</code>')
 
@@ -235,21 +233,14 @@ class NotificationService:
 
         # ── Badgelar ──────────────────────────────────────────────────────
         badges = []
-        if funstat.get('is_premium') or getattr(profile, 'is_premium', False):
+        if getattr(profile, 'is_premium', False):
             badges.append(f'{ce("premium", "⭐️")} Premium')
-        if funstat.get('is_verified') or getattr(profile, 'is_verified', False):
+        if getattr(profile, 'is_verified', False):
             badges.append(f'{ce("verified", "✅")} Tasdiqlangan')
-        if funstat.get('is_scam') or getattr(profile, 'is_scam', False):
+        if getattr(profile, 'is_scam', False):
             badges.append(f'{ce("scam_warn", "⚠️")} SCAM')
-        if funstat.get('is_fake') or getattr(profile, 'is_fake', False):
+        if getattr(profile, 'is_fake', False):
             badges.append(f'{ce("ban", "🚫")} FAKE')
-        if funstat.get('is_bot'):
-            badges.append(f'{ce("bot", "🤖")} Bot')
-        is_active = funstat.get('is_active')
-        if is_active is True:
-            badges.append(f'{ce("ok", "🟢")} Faol')
-        elif is_active is False:
-            badges.append(f'{ce("critical", "🔴")} Nofaol')
         if badges:
             lines.append(' · '.join(badges))
 
@@ -272,11 +263,12 @@ class NotificationService:
         photo_url = profile.get_photo_url() or None
         self._send_to_admin_group(
             text, profile, 'new_user',
-            reply_markup=reply_markup, photo_url=photo_url,
+            reply_markup=reply_markup, photo_url=photo_url, site=site,
         )
 
     def log_contact_message(self, contact) -> None:
-        if not self._admin_enabled('admin_notify_contacts'):
+        site = SiteSettingsService.get()
+        if not getattr(site, 'admin_notify_contacts', True):
             return
         name = escape(contact.name or '')
         email = escape(contact.email or '')
@@ -288,10 +280,15 @@ class NotificationService:
             f'<b>Subject:</b> {subject}\n'
             f'<b>Message:</b> {body}'
         )
-        admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
-        admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
+        try:
+            from django.urls import reverse
+            path = reverse('admin:contact_contactmessage_changelist')
+            admin_url = f'{self._domain}{path}'
+        except Exception:
+            admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/').rstrip('/') + '/'
+            admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
         button = {'inline_keyboard': [[{'text': 'Admin panelda ko\'rish', 'url': admin_url}]]}
-        self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button)
+        self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button, site=site)
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
@@ -336,11 +333,13 @@ class NotificationService:
         event_type: str = '',
         reply_markup: Optional[dict] = None,
         photo_url: Optional[str] = None,
+        site=None,
     ) -> Optional[int]:
         """Send message to admin group.  Saves AdminLogMessage for /ban lookup."""
         from interactions.models import AdminLogMessage
 
-        site = SiteSettingsService.get()
+        if site is None:
+            site = SiteSettingsService.get()
         group_id = site.telegram_admin_group_id
         if not group_id:
             return None
@@ -370,20 +369,21 @@ class NotificationService:
             return msg_id
         return None
 
-    def _should_notify(self, profile, pref_field: str) -> bool:
+    def _should_notify(self, profile, pref_field: str, site=None) -> bool:
         """
         Check if *profile* should receive the given notification type.
         Site owner always receives, regardless of preferences.
         """
         from interactions.models import NotificationPreference
 
-        if self._is_site_owner(profile):
+        if self._is_site_owner(profile, site=site):
             return True
         pref, _ = NotificationPreference.objects.get_or_create(profile=profile)
         return getattr(pref, pref_field, True)
 
-    def _is_site_owner(self, profile) -> bool:
-        site = SiteSettingsService.get()
+    def _is_site_owner(self, profile, site=None) -> bool:
+        if site is None:
+            site = SiteSettingsService.get()
         owner_id = site.telegram_owner_id
         return bool(owner_id and profile.telegram_id == owner_id)
 
@@ -393,7 +393,7 @@ class NotificationService:
             return None
         return f'{self._domain}{comment.image.url}'
 
-    def _deep_link_button(self, label: str, startapp: str, fallback_url: str = '') -> dict:
+    def _deep_link_button(self, label: str, startapp: str, fallback_url: str = '', site=None) -> dict:
         """Build inline keyboard with Mini App deep link button.
 
         Button text should NOT contain emoji — icon_custom_emoji_id handles that.
@@ -402,7 +402,8 @@ class NotificationService:
         url = deep_url or fallback_url or self._domain
         btn = {'text': label, 'url': url}
         # Add custom emoji icon for the button
-        site = SiteSettingsService.get()
+        if site is None:
+            site = SiteSettingsService.get()
         emoji_id = getattr(site, 'tg_emoji_comment', '') or ''
         if emoji_id:
             btn['icon_custom_emoji_id'] = emoji_id

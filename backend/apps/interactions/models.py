@@ -1,8 +1,7 @@
 from django.conf import settings
-from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-
+from django.db import models
 from telegram.models import TelegramEntity
 
 
@@ -20,7 +19,7 @@ class Comment(models.Model):
     object_id    = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    text         = models.TextField(max_length=1000)
+    text         = models.TextField(max_length=1000, blank=True, default='')
     # Telegram-like features
     parent       = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     image        = models.ImageField(upload_to='comments/images/', null=True, blank=True)

@@ -52,15 +52,7 @@ def check_ban(profile) -> BanCheckResult:
 
     now = timezone.now()
 
-    # Auto-expire old mutes
-    UserBan.objects.filter(
-        profile=profile,
-        is_active=True,
-        ban_type=UserBan.MUTE,
-        expires_at__lt=now,
-    ).update(is_active=False)
-
-    # Fetch remaining active ban (if any)
+    # Fetch the most recent active ban/mute first; if none, skip the write path
     active = (
         UserBan.objects
         .filter(profile=profile, is_active=True)
@@ -68,6 +60,12 @@ def check_ban(profile) -> BanCheckResult:
         .first()
     )
     if not active:
+        return BanCheckResult()
+
+    # Auto-expire if this is a mute that has already passed its expiry
+    if active.ban_type == UserBan.MUTE and active.expires_at and active.expires_at < now:
+        active.is_active = False
+        active.save(update_fields=['is_active'])
         return BanCheckResult()
 
     return BanCheckResult(
