@@ -6,6 +6,7 @@ TTL: 5 minutes. Invalidated on every admin save via post_save signal.
 No Redis required — upgrade path: swap CACHES backend in settings, zero code change.
 """
 import logging
+
 from django.core.cache import cache
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -52,7 +53,14 @@ class SiteSettingsService:
 
 # ── Signal: auto-invalidate on admin save ────────────────────────────────────
 
-@receiver(post_save, sender=SiteSettings)
+@receiver(post_save, dispatch_uid="core_sitesettings_invalidate")
 def _invalidate_on_save(sender, instance, **kwargs):
-    """Automatically bust cache whenever SiteSettings is saved."""
-    SiteSettingsService.invalidate()
+    """Automatically bust cache whenever SiteSettings (or any proxy of it) is saved.
+
+    Cannot filter via ``sender=SiteSettings``: the 8 admin proxy models
+    (SiteSettingsBranding, ...SEO, ...Navigation, etc.) dispatch post_save with
+    sender=<proxy class>, so a concrete-class sender filter never matches an admin
+    save. Proxy instances still pass ``isinstance(instance, SiteSettings)``.
+    """
+    if isinstance(instance, SiteSettings):
+        SiteSettingsService.invalidate()

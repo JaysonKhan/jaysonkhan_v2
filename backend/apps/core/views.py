@@ -1,15 +1,15 @@
+import io
 import logging
 import os
 import re
 import uuid
-import io
 
-from django.http import JsonResponse, HttpResponse
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.http import require_POST
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ IMAGE_MAGIC_BYTES = {
     b'\x89PNG': 'png',
     b'GIF87a': 'gif',
     b'GIF89a': 'gif',
-    b'RIFF': 'webp',
 }
 
 MAX_IMAGE_SIZE = 10 * 1024 * 1024   # 10 MB
@@ -33,7 +32,7 @@ MAX_VIDEO_SIZE = 50 * 1024 * 1024   # 50 MB
 
 # ── SVG sanitization ────────────────────────────────────────────────────────
 # Tags and attributes that can execute JavaScript or load external resources.
-_SVG_DANGEROUS_TAG_GROUP = r'(?:script|foreignObject|set|animate(?:Transform)?)'
+_SVG_DANGEROUS_TAG_GROUP = r'(?:script|foreignObject|set|animate(?:Transform|Motion)?)'
 _SVG_DANGEROUS_TAGS = re.compile(
     rf'<\s*{_SVG_DANGEROUS_TAG_GROUP}[^>]*>.*?</\s*{_SVG_DANGEROUS_TAG_GROUP}\s*>',
     re.IGNORECASE | re.DOTALL,
@@ -108,12 +107,15 @@ def upload_media_view(request):
         file.seek(0)
 
         valid_magic = False
-        for magic, _ in IMAGE_MAGIC_BYTES.items():
-            if header.startswith(magic):
-                valid_magic = True
-                break
+        if ext == '.webp':
+            valid_magic = header[:4] == b'RIFF' and header[8:12] == b'WEBP'
+        else:
+            for magic in IMAGE_MAGIC_BYTES:
+                if header.startswith(magic):
+                    valid_magic = True
+                    break
 
-        if not valid_magic and ext not in {'.webp', '.svg'}:
+        if not valid_magic and ext not in {'.svg'}:
             logger.warning('[Upload] Magic byte mismatch for %s from user %s', ext, request.user)
             return JsonResponse({'error': 'File content does not match expected image format.'}, status=400)
 
@@ -382,8 +384,8 @@ def health_check(request):
     Lightweight health check for monitoring and deploy verification.
     Checks: database connectivity, cache backend, migrations applied.
     """
-    from django.db import connection
     from django.core.cache import cache
+    from django.db import connection
 
     health = {'status': 'ok'}
 

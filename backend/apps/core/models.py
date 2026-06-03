@@ -1,9 +1,7 @@
 import uuid
 
-from django.core.cache import cache
-from django.db import models
 from django.core.exceptions import ValidationError
-
+from django.db import models
 
 # ── Abstract Mixins ──────────────────────────────────────────────────────────────
 # Each mixin groups related fields. They are abstract, so Django stores
@@ -845,16 +843,6 @@ class SiteSettings(
     def display_logo_text(self):
         """Logo text with fallback to site_author."""
         return self.logo_text or self.site_author
-
-    @property
-    def visitor_count(self):
-        """Total unique visitors tracked by PageView (cached 1 hour)."""
-        key = 'visitor_count'
-        count = cache.get(key)
-        if count is None:
-            count = PageView.objects.count()
-            cache.set(key, count, 60 * 60)
-        return count
 
     @property
     def footer_display_description(self):

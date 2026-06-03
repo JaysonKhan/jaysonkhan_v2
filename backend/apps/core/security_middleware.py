@@ -4,10 +4,24 @@ Provides additional security layers on top of Django's built-in security.
 """
 import logging
 import re
+
 from django.conf import settings
 from django.http import HttpResponseForbidden
 
 logger = logging.getLogger('django.security')
+
+
+def _get_client_ip(request):
+    """
+    Return the real client IP.
+
+    Nginx is the single trusted reverse proxy and sets REMOTE_ADDR to the real
+    client IP. The raw X-Forwarded-For header is client-controlled (Nginx
+    *appends* to it via $proxy_add_x_forwarded_for), so it must NOT be trusted
+    for security checks — using it allows admin IP-restriction and rate-limit
+    bypass via a spoofed leftmost entry.
+    """
+    return request.META.get('REMOTE_ADDR', '0.0.0.0')
 
 
 class SecurityHeadersMiddleware:
@@ -45,13 +59,6 @@ class RequestSanitizationMiddleware:
     Place early in MIDDLEWARE stack.
     """
 
-    # Common SQL injection patterns
-    SQL_PATTERNS = re.compile(
-        r"(?:')|(?:--)|(?:#)|(?:;)|"
-        r"(?:(?:UNION|SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|EXEC)\s)",
-        re.IGNORECASE
-    )
-
     # Path traversal patterns
     PATH_TRAVERSAL = re.compile(r'\.\./|\.\.\\|%2e%2e|%252e%252e', re.IGNORECASE)
 
@@ -74,24 +81,24 @@ class RequestSanitizationMiddleware:
         if len(request.get_full_path()) > self.MAX_URL_LENGTH:
             logger.warning(
                 '[Security] Blocked oversized URL from %s: %d chars',
-                self._get_ip(request), len(request.get_full_path())
+                _get_client_ip(request), len(request.get_full_path())
             )
             return HttpResponseForbidden('Request URI too long')
 
         # Block null byte injection
         if self.NULL_BYTE.search(path) or self.NULL_BYTE.search(request.META.get('QUERY_STRING', '')):
-            logger.warning('[Security] Null byte injection attempt from %s', self._get_ip(request))
+            logger.warning('[Security] Null byte injection attempt from %s', _get_client_ip(request))
             return HttpResponseForbidden('Bad request')
 
         # Block path traversal
         if self.PATH_TRAVERSAL.search(path):
-            logger.warning('[Security] Path traversal attempt from %s: %s', self._get_ip(request), path)
+            logger.warning('[Security] Path traversal attempt from %s: %s', _get_client_ip(request), path)
             return HttpResponseForbidden('Bad request')
 
         # Block requests for non-Django file types
         ext = path.rsplit('.', 1)[-1].lower() if '.' in path else ''
         if f'.{ext}' in self.BLOCKED_EXTENSIONS:
-            logger.warning('[Security] Blocked extension request from %s: %s', self._get_ip(request), path)
+            logger.warning('[Security] Blocked extension request from %s: %s', _get_client_ip(request), path)
             return HttpResponseForbidden('Not found')
 
         # Block common exploit paths
@@ -107,12 +114,6 @@ class RequestSanitizationMiddleware:
 
         return self.get_response(request)
 
-    def _get_ip(self, request):
-        xff = request.META.get('HTTP_X_FORWARDED_FOR')
-        if xff:
-            return xff.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', '0.0.0.0')
-
 
 class AdminIPRestrictionMiddleware:
     """
@@ -127,7 +128,7 @@ class AdminIPRestrictionMiddleware:
 
     def __call__(self, request):
         if self.allowed_ips and request.path.startswith(f'/{self.admin_url}'):
-            client_ip = self._get_ip(request)
+            client_ip = _get_client_ip(request)
             if client_ip not in self.allowed_ips:
                 logger.warning(
                     '[Security] Admin access attempt from unauthorized IP: %s, path: %s',
@@ -137,9 +138,3 @@ class AdminIPRestrictionMiddleware:
                 raise Http404
 
         return self.get_response(request)
-
-    def _get_ip(self, request):
-        xff = request.META.get('HTTP_X_FORWARDED_FOR')
-        if xff:
-            return xff.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR', '0.0.0.0')
