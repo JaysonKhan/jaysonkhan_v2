@@ -23,7 +23,7 @@ Pillow==12.1.0
 
 # Frontend helpers
 django-cors-headers==4.9.0
-bleach==6.2.0
+bleach[css]==6.2.0
 markdown2==2.5.4
 Pygments==2.19.2
 MarkupSafe==3.0.3
