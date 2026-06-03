@@ -66,22 +66,22 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;" class="grid-2-mobile-1">
                         <div>
                             <label class="label" for="id_name">{% trans "Name" %}</label>
-                            <input type="text" name="name" id="id_name" required class="input" placeholder="{% trans 'Your name' %}">
+                            <input type="text" name="name" id="id_name" required class="input" placeholder="{% trans 'Your name' %}" value="{{ form_data.name }}">
                         </div>
                         <div>
                             <label class="label" for="id_email">Email</label>
-                            <input type="email" name="email" id="id_email" required class="input" placeholder="you@company.com">
+                            <input type="email" name="email" id="id_email" required class="input" placeholder="you@company.com" value="{{ form_data.email }}">
                         </div>
                     </div>
 
                     <div>
                         <label class="label" for="id_subject">{% trans "Subject" %}</label>
-                        <input type="text" name="subject" id="id_subject" required class="input" placeholder="{% trans 'What are we building?' %}">
+                        <input type="text" name="subject" id="id_subject" required class="input" placeholder="{% trans 'What are we building?' %}" value="{{ form_data.subject }}">
                     </div>
 
                     <div>
                         <label class="label" for="id_message">{% trans "The brief" %}</label>
-                        <textarea name="message" id="id_message" rows="6" required class="input" placeholder="{% trans 'Tell me about the project, the timeline, what success looks like…' %}" style="resize: vertical;"></textarea>
+                        <textarea name="message" id="id_message" rows="6" required class="input" placeholder="{% trans 'Tell me about the project, the timeline, what success looks like…' %}" style="resize: vertical;">{{ form_data.message }}</textarea>
                         <span class="mono" style="font-size: 10px; color: var(--fg-4); letter-spacing: 0.14em; margin-top: 6px; display: block;" id="char-counter">0 CHARS</span>
                     </div>
 
