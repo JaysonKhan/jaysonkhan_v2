@@ -5,6 +5,7 @@ Contact form spam protection utilities.
 2. Rate limiting: per-IP throttle using Django's cache framework.
 """
 import logging
+
 from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
@@ -37,20 +38,28 @@ def is_rate_limited(request) -> bool:
     """
     ip = _get_client_ip(request)
     key = f"{RATE_LIMIT_KEY_PREFIX}{ip}"
-    current = cache.get(key, 0)
 
-    if current >= RATE_LIMIT_MAX_SUBMISSIONS:
-        logger.warning("Rate-limit hit for IP %s (%d/%d)", ip, current, RATE_LIMIT_MAX_SUBMISSIONS)
+    # Atomic increment: cache.add is a no-op if the key already exists (and sets
+    # the TTL on the first hit), then cache.incr is atomic on Redis. Doing
+    # get()+set() as two calls races under concurrent Gunicorn workers and lets
+    # a burst slip past the limit. The add() also guards LocMemCache.incr, which
+    # raises ValueError on a missing key.
+    cache.add(key, 0, RATE_LIMIT_WINDOW_SECONDS)
+    count = cache.incr(key)
+
+    if count > RATE_LIMIT_MAX_SUBMISSIONS:
+        logger.warning("Rate-limit hit for IP %s (%d/%d)", ip, count, RATE_LIMIT_MAX_SUBMISSIONS)
         return True
-
-    # Increment counter; set TTL on first hit
-    cache.set(key, current + 1, RATE_LIMIT_WINDOW_SECONDS)
     return False
 
 
 def _get_client_ip(request) -> str:
-    """Extract client IP, respecting X-Forwarded-For behind reverse proxies."""
-    xff = request.META.get('HTTP_X_FORWARDED_FOR')
-    if xff:
-        return xff.split(',')[0].strip()
+    """
+    Return the real client IP.
+
+    Nginx is the single trusted reverse proxy and sets REMOTE_ADDR to the real
+    client IP. The raw X-Forwarded-For header is client-controlled (Nginx
+    *appends* to it), so trusting its leftmost entry would let a bot defeat the
+    rate limit by rotating spoofed XFF values.
+    """
     return request.META.get('REMOTE_ADDR', '0.0.0.0')

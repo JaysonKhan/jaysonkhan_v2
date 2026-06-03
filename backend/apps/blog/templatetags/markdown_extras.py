@@ -1,9 +1,19 @@
 """
 Custom template filter for safe Markdown rendering.
 
-Usage in templates:
-    {% load markdown_extras %}
-    {{ post.content|render_markdown }}
+NOTE: This filter (render_markdown) is NOT currently used in any template.
+blog_detail.html renders {{ post.content_rich|safe }} (TinyMCE HTML, bleach-sanitized on save).
+This file is kept only because apps/core/tests.py imports and unit-tests it.
+If Markdown authoring is added in future, wire it to a dedicated content_md field,
+not the same field as TinyMCE (content_rich).
+
+NOTE on ALLOWED_TAGS/ALLOWED_ATTRIBUTES vs core/utils.py:
+The lists here are intentionally different from core/utils.py's bleach allowlist.
+- This file's list is for Markdown output: adds del, ins, mark, abbr (valid Markdown
+  output elements) and deliberately omits 'style' (safer for Markdown context).
+- core/utils.py's list is for TinyMCE rich-text sanitization and allows 'style'.
+Keep both lists in sync intentionally -- a security change to one does NOT auto-apply
+to the other.
 """
 import bleach
 import markdown2
@@ -12,7 +22,8 @@ from django.utils.safestring import mark_safe
 
 register = template.Library()
 
-# Allowed HTML tags after Markdown conversion (safe subset)
+# Allowed HTML tags after Markdown conversion (safe subset).
+# Intentionally differs from core/utils.py ALLOWED_TAGS -- see module docstring.
 ALLOWED_TAGS = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'p', 'br', 'hr',

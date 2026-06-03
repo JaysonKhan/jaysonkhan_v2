@@ -9,10 +9,9 @@ from __future__ import annotations
 import logging
 import subprocess
 
+from core.emoji import ce
 from core.services import SiteSettingsService
 from interactions.notifications.telegram_api import TelegramBotAPI
-
-from core.emoji import ce
 
 from .contabo import analyze_tariff, format_tariff_advice
 from .formatters import (
@@ -22,19 +21,36 @@ from .formatters import (
     format_status_report,
 )
 from .metrics import (
+    MONITORED_SERVICES,
     collect_cpu,
     collect_disk,
     collect_full_snapshot,
     collect_memory,
     collect_partitions,
     collect_service_status,
-    MONITORED_SERVICES,
 )
 
 logger = logging.getLogger('servermonitor')
 
 # Commands this module handles
 SERVER_COMMANDS = {'/status', '/services', '/disk', '/tariff', '/logs', '/backup'}
+
+# Allowed systemd unit names (MONITORED_SERVICES is list[dict]; we only ever
+# accept/operate on these exact unit strings). Ordered for stable display.
+_UNIT_NAMES = tuple(cfg['unit'] for cfg in MONITORED_SERVICES)
+
+
+def _collect_all_services() -> list:
+    """Collect status for every monitored service, unpacking the config dicts."""
+    return [
+        collect_service_status(
+            cfg['unit'],
+            group=cfg['group'],
+            display=cfg['display'],
+            critical=cfg.get('critical', True),
+        )
+        for cfg in MONITORED_SERVICES
+    ]
 
 
 def is_owner(telegram_id: int) -> bool:
@@ -95,7 +111,7 @@ def _handle_services(tg_id: int, api: TelegramBotAPI) -> None:
     """Systemd services status."""
     api.send_chat_action(tg_id, 'typing')
     try:
-        services = [collect_service_status(s) for s in MONITORED_SERVICES]
+        services = _collect_all_services()
         text = format_services(services)
 
         # Add inline keyboard for restart actions
@@ -160,11 +176,11 @@ def _handle_logs(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
         except ValueError:
             pass
 
-    if service not in MONITORED_SERVICES:
+    if service not in _UNIT_NAMES:
         api.send_message(
             tg_id,
             f'{ce("scam_warn", "⚠️")} Noma\'lum servis: <code>{service}</code>\n'
-            f'Mavjud: {", ".join(MONITORED_SERVICES)}',
+            f'Mavjud: {", ".join(_UNIT_NAMES)}',
         )
         return
 
@@ -191,25 +207,41 @@ def _handle_logs(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
 
 
 def _handle_backup(tg_id: int, api: TelegramBotAPI) -> None:
-    """Trigger a PostgreSQL database backup."""
+    """Trigger a PostgreSQL database backup.
+
+    The dump is written to a deploy-user-owned directory (mode 0700) with the
+    file itself locked to 0600 — never to world-readable /tmp.
+    """
+    import os
+
     api.send_message(tg_id, f'{ce("swap", "🔄")} Backup boshlanmoqda...')
+
+    backup_dir = '/var/www/jaysonkhan/backups'
+    backup_path = os.path.join(backup_dir, 'jaysonkhan_db.dump')
     try:
+        # Private, owner-only directory; tighten even if it pre-existed.
+        os.makedirs(backup_dir, mode=0o700, exist_ok=True)
+        os.chmod(backup_dir, 0o700)
+        # Pre-create the target file at 0600 so pg_dump never leaves a
+        # world-readable window (pg_dump -f opens an existing file in place).
+        fd = os.open(backup_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.close(fd)
+
         result = subprocess.run(
-            ['pg_dump', '-Fc', '-f', '/tmp/jaysonkhan_backup.dump', 'jaysonkhan_db'],
+            ['pg_dump', '-Fc', '-f', backup_path, 'jaysonkhan_db'],
             capture_output=True, text=True, timeout=120,
         )
         if result.returncode == 0:
-            # Get file size
-            import os
+            os.chmod(backup_path, 0o600)
             size_mb = 0
             try:
-                size_mb = round(os.path.getsize('/tmp/jaysonkhan_backup.dump') / (1024 * 1024), 1)
+                size_mb = round(os.path.getsize(backup_path) / (1024 * 1024), 1)
             except OSError:
                 pass
             api.send_message(
                 tg_id,
                 f'{ce("success", "✅")} <b>Backup tayyor!</b>\n'
-                f'{ce("backup_icon", "📁")} <code>/tmp/jaysonkhan_backup.dump</code>\n'
+                f'{ce("backup_icon", "📁")} <code>{backup_path}</code>\n'
                 f'{ce("backup_icon", "💾")} Hajm: {size_mb}MB',
             )
         else:
@@ -232,14 +264,15 @@ def handle_server_callback(callback_data: str, callback_query: dict, api: Telegr
 
     if callback_data == 'svc_refresh':
         # Refresh services list
-        services = [collect_service_status(s) for s in MONITORED_SERVICES]
+        services = _collect_all_services()
         text = format_services(services)
         keyboard = _build_services_keyboard(services)
         msg = callback_query.get('message', {})
         if msg.get('message_id') and msg.get('chat', {}).get('id'):
-            api.edit_message_reply_markup(
+            api.edit_message_text(
                 chat_id=msg['chat']['id'],
                 message_id=msg['message_id'],
+                text=text,
                 reply_markup=keyboard,
             )
         api.answer_callback_query(cb_id, 'Yangilandi ✓')
@@ -247,7 +280,7 @@ def handle_server_callback(callback_data: str, callback_query: dict, api: Telegr
 
     if callback_data.startswith('svc_restart_'):
         service_name = callback_data.replace('svc_restart_', '')
-        if service_name not in MONITORED_SERVICES:
+        if service_name not in _UNIT_NAMES:
             api.answer_callback_query(cb_id, 'Noma\'lum servis')
             return True
 

@@ -18,14 +18,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from django.core.management.base import BaseCommand
-from django.utils import timezone
-
 from core.services import SiteSettingsService
+from django.core.management.base import BaseCommand
+from django.db.models import Max
+from django.utils import timezone
 from interactions.notifications.telegram_api import TelegramBotAPI
 from ops.models import CronRun, CronStatus, ManagedCron
 from servermonitor.formatters import format_cron_failure_alert
-
 
 # Default lookback for failures.
 LOOKBACK_HOURS = 1
@@ -81,16 +80,22 @@ class Command(BaseCommand):
         # ── Overdue managed crons ──
         overdue: list[dict] = []
         now = timezone.now()
-        for mc in ManagedCron.objects.filter(enabled=True).only('command', 'schedule'):
+        managed_crons = list(
+            ManagedCron.objects.filter(enabled=True).only('command', 'schedule')
+        )
+        # Pre-fetch last-run timestamp per command in one query (avoids N+1).
+        last_runs: dict = dict(
+            CronRun.objects
+            .filter(command__in=[mc.command for mc in managed_crons])
+            .values('command')
+            .annotate(last=Max('started_at'))
+            .values_list('command', 'last')
+        )
+        for mc in managed_crons:
             interval = _expected_interval(mc.schedule)
             if not interval:
                 continue
-            last_run = (CronRun.objects
-                        .filter(command=mc.command)
-                        .order_by('-started_at')
-                        .only('started_at')
-                        .first())
-            last_seen = last_run.started_at if last_run else None
+            last_seen = last_runs.get(mc.command)
             if not last_seen or (now - last_seen) > interval * OVERDUE_MULTIPLIER:
                 overdue.append({
                     'command': mc.command,

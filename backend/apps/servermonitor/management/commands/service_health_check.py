@@ -9,7 +9,7 @@ Designed to run every 5 minutes via cron. For each unit in
     3. Persist a new row (always — drives the daily report's restart count
        and the admin history view)
     4. If state flipped AND service is `critical=True` AND we haven't
-       already alerted on this exact transition → send a Telegram alert
+       already alerted on this exact transition -> send a Telegram alert
 
 Idempotent: re-running it back-to-back will not double-alert; the second
 run sees the just-written row as the "previous" and reports no change.
@@ -21,19 +21,18 @@ Usage:
 """
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand
-
 from core.services import SiteSettingsService
+from django.core.management.base import BaseCommand
+from django.db.models import Max
 from interactions.notifications.telegram_api import TelegramBotAPI
 from servermonitor.formatters import format_service_alert
 from servermonitor.metrics import MONITORED_SERVICES, collect_service_status
 from servermonitor.models import ServiceCheckResult
 
-
 # Status values where we couldn't actually reach systemctl. Treating
 # these as "down" once caused an 11-service DOWN/UP storm when an admin
 # "Run now" click ran the check from a gunicorn worker whose unit PATH
-# was venv-only — `systemctl` resolved nowhere, every unit returned
+# was venv-only -- `systemctl` resolved nowhere, every unit returned
 # this status, every unit "flipped". Skip alerting on these.
 AMBIGUOUS_STATUSES = frozenset({'no-systemctl', 'unknown', 'error'})
 
@@ -50,7 +49,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         send_alerts = not options['no_alert']
 
-        # Telegram setup — best-effort. If owner_id missing we still record
+        # Telegram setup -- best-effort. If owner_id missing we still record
         # results, just no alerts go out.
         api = None
         owner = None
@@ -64,6 +63,25 @@ class Command(BaseCommand):
         unchanged: list[str] = []
         errors: list[str] = []
 
+        # Pre-fetch latest checked_at per unit (2 queries total, not N).
+        units = [cfg['unit'] for cfg in MONITORED_SERVICES]
+        latest_ts = {
+            row['service_unit']: row['latest']
+            for row in (
+                ServiceCheckResult.objects
+                .filter(service_unit__in=units)
+                .values('service_unit')
+                .annotate(latest=Max('checked_at'))
+            )
+        }
+        prev_rows = {
+            row.service_unit: row
+            for row in ServiceCheckResult.objects.filter(
+                service_unit__in=latest_ts.keys(),
+                checked_at__in=latest_ts.values(),
+            ).only('service_unit', 'is_active')
+        } if latest_ts else {}
+
         for cfg in MONITORED_SERVICES:
             unit = cfg['unit']
             status = collect_service_status(
@@ -73,17 +91,13 @@ class Command(BaseCommand):
                 critical=cfg.get('critical', True),
             )
 
-            prev = (ServiceCheckResult.objects
-                    .filter(service_unit=unit)
-                    .order_by('-checked_at')
-                    .only('is_active')
-                    .first())
+            prev = prev_rows.get(unit)
             prev_active = prev.is_active if prev else None
             is_first_check = prev is None
             ambiguous = status.status in AMBIGUOUS_STATUSES
 
             # If we couldn't actually probe systemctl, persist the previous
-            # is_active rather than recording a synthetic "False" — that
+            # is_active rather than recording a synthetic "False" -- that
             # way the next real probe doesn't see a phantom transition,
             # and a future probe that's also ambiguous stays consistent
             # with whatever we last knew.

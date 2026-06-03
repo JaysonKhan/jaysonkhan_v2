@@ -1,11 +1,8 @@
 """Unified Telegram entity models.
 
 Barcha Telegram foydalanuvchilari, guruhlar, kanallar va botlar uchun
-yagona model. Har bir entity qaysi servisdan (site, OSINT, talabaovozi)
+yagona model (TelegramEntity). Har bir entity qaysi servisdan (site)
 topilganligini EntitySource orqali kuzatadi.
-
-TelegramSession — Telethon StringSession ni PostgreSQL da saqlaydi
-(Gunicorn multi-worker muhitida xavfsiz).
 """
 from __future__ import annotations
 
@@ -60,7 +57,7 @@ class TelegramEntity(models.Model):
     # ── Photo cache (OsintPhotoCache ni almashtiradi) ────────────────────────
     photo_file = models.CharField(
         max_length=255, blank=True, default="",
-        help_text="Relative path under MEDIA_ROOT (e.g. osint/photos/123.jpg)",
+        help_text="Relative path under MEDIA_ROOT (e.g. telegram/photos/123.jpg)",
     )
     photo_fetched_at = models.DateTimeField(
         null=True, blank=True,
@@ -159,7 +156,12 @@ class TelegramEntity(models.Model):
             data: dict with keys: id, first_name, last_name, username,
                   photo_url, auth_date (all optional except id)
         """
-        telegram_id = int(data["id"])
+        try:
+            telegram_id = int(data["id"])
+        except (KeyError, ValueError, TypeError) as exc:
+            raise ValueError(
+                "Invalid Telegram id: {!r}".format(data.get("id"))
+            ) from exc
         defaults = {}
 
         # Faqat bo'sh bo'lmagan qiymatlarni qo'shish — mavjud datani
@@ -212,8 +214,6 @@ class EntitySource(models.Model):
 
     class Service(models.TextChoices):
         SITE = "site", "Website (jaysonkhan.com)"
-        OSINT = "osint", "OSINT"
-        TALABAOVOZI = "talabaovozi", "TalabaOvozi"
 
     entity = models.ForeignKey(
         TelegramEntity,

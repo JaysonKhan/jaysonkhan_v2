@@ -18,6 +18,7 @@ class LatestPostsFeed(Feed):
             Post.objects
             .filter(is_published=True)
             .select_related('category', 'author')
+            .defer('content_rich', 'content_rich_xo', 'content_rich_uz', 'content_rich_ru', 'content_rich_en')
             .order_by('-created_at')[:15]
         )
 

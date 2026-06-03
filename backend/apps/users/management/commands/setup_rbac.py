@@ -20,7 +20,7 @@ def create_rbac_groups(**kwargs) -> dict[str, int]:
     all_perms = Permission.objects.all()
     admin_group.permissions.set(all_perms)
 
-    # ── Analyst group — read-only + OSINT + export ───────────────────────
+    # ── Analyst group — read-only ────────────────────────────────────────
     analyst_group, _ = Group.objects.get_or_create(name="analyst")
 
     analyst_perms = set()
@@ -28,21 +28,6 @@ def create_rbac_groups(**kwargs) -> dict[str, int]:
     # All view_* permissions (read-only access to Django admin models)
     view_perms = Permission.objects.filter(codename__startswith="view_")
     analyst_perms.update(view_perms)
-
-    # Bot dashboard read-only access
-    for codename in ("view_bot_dashboard", "export_data"):
-        perm = Permission.objects.filter(
-            codename=codename, content_type__app_label="botproxy",
-        ).first()
-        if perm:
-            analyst_perms.add(perm)
-
-    # Full OSINT access
-    osint_perm = Permission.objects.filter(
-        codename="use_osint", content_type__app_label="osint",
-    ).first()
-    if osint_perm:
-        analyst_perms.add(osint_perm)
 
     analyst_group.permissions.set(analyst_perms)
 

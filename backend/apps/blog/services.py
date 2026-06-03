@@ -1,16 +1,9 @@
 from django.db import models
 
-from .models import Post, Category
+from .models import Category, Post
 
 
 class BlogRepository:
-    _PUBLISHED_BASE = (
-        Post.objects
-        .filter(is_published=True)
-        .select_related('category', 'author')
-        .prefetch_related('tags')
-    )
-
     @staticmethod
     def get_published_posts():
         return (
@@ -18,7 +11,7 @@ class BlogRepository:
             .filter(is_published=True)
             .select_related('category', 'author')
             .prefetch_related('tags')
-            .defer('content_rich')
+            .defer('content_rich', 'content_rich_xo', 'content_rich_uz', 'content_rich_ru', 'content_rich_en')
         )
 
     @staticmethod
@@ -50,11 +43,13 @@ class BlogRepository:
             .filter(is_published=True)
             .select_related('category', 'author')
             .prefetch_related('tags')
-            .defer('content_rich')
+            .defer('content_rich', 'content_rich_xo', 'content_rich_uz', 'content_rich_ru', 'content_rich_en')
         )
         if BlogRepository._is_postgres():
             from django.contrib.postgres.search import (
-                SearchVector, SearchQuery, SearchRank,
+                SearchQuery,
+                SearchRank,
+                SearchVector,
             )
             vector = SearchVector('title', weight='A') + SearchVector('excerpt', weight='B')
             sq = SearchQuery(query)
@@ -84,7 +79,7 @@ class BlogRepository:
             .exclude(pk=post.pk)
             .select_related('category', 'author')
             .prefetch_related('tags')
-            .defer('content_rich')
+            .defer('content_rich', 'content_rich_xo', 'content_rich_uz', 'content_rich_ru', 'content_rich_en')
             .annotate(shared_tags=models.Count('tags'))
             .order_by('-shared_tags', '-created_at')
             .distinct()[:limit]

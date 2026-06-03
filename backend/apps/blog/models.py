@@ -1,9 +1,10 @@
 import math
 
-from django.db import models
-from django.conf import settings
-from django.utils.html import strip_tags
 from core.utils import sanitize_rich_text
+from django.conf import settings
+from django.db import models
+from django.utils.html import strip_tags
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -59,6 +60,9 @@ class Post(models.Model):
         return max(1, math.ceil(word_count / 200))
 
     def save(self, *args, **kwargs):
-        if self.content_rich:
-            self.content_rich = sanitize_rich_text(self.content_rich)
+        for lang_code in ('xo', 'uz', 'ru', 'en'):
+            field = f'content_rich_{lang_code}'
+            val = getattr(self, field, None)
+            if val:
+                setattr(self, field, sanitize_rich_text(val))
         super().save(*args, **kwargs)

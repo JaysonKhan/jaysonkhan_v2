@@ -8,6 +8,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from core.emoji import ce as _ce  # noqa: F401
+from django.utils.timezone import localtime as _localtime
 
 from .metrics import (
     SERVICE_GROUPS,
@@ -338,7 +339,7 @@ def format_cron_failure_alert(
     if failures:
         lines.append(f'\n❌ <b>Failed runs ({len(failures)})</b>')
         for f in failures[:10]:
-            ts = f['started_at'].strftime('%H:%M:%S') if f.get('started_at') else '?'
+            ts = _localtime(f['started_at']).strftime('%H:%M:%S') if f.get('started_at') else '?'
             dur = f.get('duration_ms')
             dur_s = f'{dur / 1000:.1f}s' if dur else '?'
             err = (f.get('error_summary') or '').strip()[:80]
@@ -350,7 +351,7 @@ def format_cron_failure_alert(
     if overdue:
         lines.append('\n⏳ <b>Overdue (no recent run)</b>')
         for o in overdue[:10]:
-            last = o['last_seen'].strftime('%Y-%m-%d %H:%M') if o.get('last_seen') else 'never'
+            last = _localtime(o['last_seen']).strftime('%Y-%m-%d %H:%M') if o.get('last_seen') else 'never'
             lines.append(f'  • <code>{o["command"]}</code> — last: {last}')
 
     return '\n'.join(lines)

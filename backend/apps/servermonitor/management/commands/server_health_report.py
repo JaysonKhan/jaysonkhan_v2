@@ -36,6 +36,8 @@ from servermonitor.formatters import (
 from servermonitor.metrics import collect_full_snapshot
 from servermonitor.models import ServiceCheckResult
 
+from .cron_health_check import _expected_interval
+
 REPORT_WINDOW = timedelta(hours=24)
 
 
@@ -71,7 +73,9 @@ def _cron_summary_24h() -> dict:
         last = (CronRun.objects.filter(command=mc.command)
                 .order_by('-started_at').only('started_at').first())
         last_seen = last.started_at if last else None
-        if not last_seen or (now - last_seen) > REPORT_WINDOW:
+        interval = _expected_interval(mc.schedule)
+        threshold = (interval * 2) if interval else REPORT_WINDOW
+        if not last_seen or (now - last_seen) > threshold:
             overdue.append({'command': mc.command, 'last_seen': last_seen})
 
     return {

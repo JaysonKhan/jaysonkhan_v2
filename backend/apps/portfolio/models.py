@@ -1,7 +1,7 @@
-from django.db import models
-from django.utils.text import slugify
-from django.utils.html import strip_tags
 from core.utils import sanitize_rich_text
+from django.db import models
+from django.utils.html import strip_tags
+from django.utils.text import slugify
 
 
 class Skill(models.Model):
@@ -104,8 +104,11 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
-        if self.description_rich:
-            self.description_rich = sanitize_rich_text(self.description_rich)
+        for lang in ('xo', 'uz', 'ru', 'en'):
+            field = 'description_rich_' + lang
+            val = getattr(self, field, None)
+            if val:
+                setattr(self, field, sanitize_rich_text(val))
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

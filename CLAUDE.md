@@ -41,10 +41,8 @@ jaysonkhan_v2/
 │   │   ├── blog/             Post, Category, Tag
 │   │   ├── contact/          ContactMessage + honeypot + rate limit
 │   │   ├── interactions/     TelegramProfile, Comment (generic FK), Like, Reaction
-│   │   ├── botproxy/         Admin panel for hokimiyatbot (HMAC client + views)
 │   │   ├── servermonitor/    psutil metrics + Telegram /status, /tariff, /logs
 │   │   ├── telegram/         Telegram bot helpers / webhook glue
-│   │   ├── osint/             OSINT lookups (private)
 │   │   └── ops/              ad-hoc ops/cron utilities
 │   ├── presentation/         Delivery layer
 │   │   ├── api/              DRF ViewSets + Serializers (DefaultRouter)
@@ -161,10 +159,8 @@ python manage.py register_bot_commands
 12. **Static / media** — Nginx serves from `/var/www/jaysonkhan/static` and `/var/www/jaysonkhan/media`.
 13. **Server**: Ubuntu 24.04 at `144.91.69.225`, SSH alias `jaysonkhan`. Architecture doc: [`SERVER_ARCHITECTURE.md`](../SERVER_ARCHITECTURE.md).
 
-### Botproxy specifics
-14. **Logos** — saved to `/var/www/jaysonkhan/media/uni_logos/talabaovozi/`, served by Nginx `/media/`. Views annotate `logo_url` for direct media path (avoids Django proxy → 503 under sync workers).
-15. **Bot API auth** — every call is HMAC-SHA256 via `BotAPIClient` (`apps/botproxy/client.py`) using `BOT_API_SECRET_KEY`.
-16. **SiteSettings uses abstract mixins** — adding a new field group does NOT need a new model or migration of an FK; just extend the existing model with another mixin.
+### SiteSettings
+14. **SiteSettings uses abstract mixins** — adding a new field group does NOT need a new model or migration of an FK; just extend the existing model with another mixin.
 
 ## Environment variables
 
@@ -189,8 +185,4 @@ TELEGRAM_BOT_USERNAME
 # Email
 EMAIL_HOST EMAIL_PORT EMAIL_HOST_USER EMAIL_HOST_PASSWORD
 
-# Bot proxy
-BOT_API_BASE_URL=http://127.0.0.1:8433
-BOT_API_SECRET_KEY              # MUST match hokimiyatbot's API_SECRET_KEY
-BOT_API_TIMEOUT
 ```

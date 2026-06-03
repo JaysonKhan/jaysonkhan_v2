@@ -1,4 +1,4 @@
-from .models import Project, Skill, Experience, TeamMember
+from .models import Experience, Project, Skill, TeamMember
 
 
 class PortfolioRepository:
@@ -64,7 +64,7 @@ class PortfolioRepository:
 
     @staticmethod
     def get_all_experience():
-        return Experience.objects.select_related().order_by('-start_date')
+        return Experience.objects.order_by('-start_date')
 
     @staticmethod
     def get_visible_team():
@@ -88,7 +88,7 @@ class PortfolioService:
 
     def get_homepage_data(self) -> dict:
         """Lightweight version — only data needed for the homepage."""
-        featured = self.repository.get_featured_projects()
+        featured = list(self.repository.get_featured_projects())
         return {
             'featured_projects': featured,
             # Fallback if none are marked as featured — template uses this

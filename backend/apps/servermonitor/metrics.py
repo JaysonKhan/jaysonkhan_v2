@@ -236,7 +236,9 @@ def collect_service_status(
         if '=' in mem_line:
             val = mem_line.split('=', 1)[1]
             if val.isdigit():
-                mem_mb = round(int(val) / (1024 * 1024), 1)
+                mem_bytes = int(val)
+                if 0 < mem_bytes < (1 << 62):
+                    mem_mb = round(mem_bytes / (1024 * 1024), 1)
 
         ts_line = _systemctl('show', service_name, '--property=ActiveEnterTimestamp')
         if '=' in ts_line:
