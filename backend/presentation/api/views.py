@@ -1,18 +1,30 @@
 
-from rest_framework import viewsets, permissions, status
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from .serializers import (
-    UserSerializer, SkillSerializer, ProjectSerializer, ProjectListSerializer,
-    ExperienceSerializer, CategorySerializer, TagSerializer,
-    PostSerializer, PostListSerializer, ContactMessageSerializer, SiteSettingsSerializer,
-)
-from users.models import User
-from portfolio.models import Skill, Project, Experience
-from blog.models import Category, Tag, Post
+from blog.models import Category, Post, Tag
 from contact.models import ContactMessage
+from contact.services import ContactRepository, ContactService
+from contact.spam_protection import is_rate_limited
 from core.services import SiteSettingsService
+from portfolio.models import Experience, Project, Skill
+from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import Throttled
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from users.models import User
+
+from .serializers import (
+    CategorySerializer,
+    ContactMessageSerializer,
+    ExperienceSerializer,
+    PostListSerializer,
+    PostSerializer,
+    ProjectListSerializer,
+    ProjectSerializer,
+    SiteSettingsSerializer,
+    SkillSerializer,
+    TagSerializer,
+    UserSerializer,
+)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -23,7 +35,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Skill.objects.only('id', 'name', 'level', 'icon', 'category', 'order').all()
+    queryset = Skill.objects.only('id', 'name', 'category', 'order').all()
     serializer_class = SkillSerializer
     pagination_class = None
     # Inherits IsAdminUser from REST_FRAMEWORK default
@@ -58,7 +70,7 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
         elif f == 'bot':
             qs = qs.filter(is_bot=True)
         return qs
-    # Inherits IsAdminUser from REST_FRAMEWORK default
+    # Public: AllowAny set at class level (portfolio projects are intentionally public)
 
 
 class ExperienceViewSet(viewsets.ReadOnlyModelViewSet):
@@ -107,10 +119,22 @@ class PostViewSet(viewsets.ReadOnlyModelViewSet):
     # Inherits IsAdminUser from REST_FRAMEWORK default
 
 
-class ContactMessageViewSet(viewsets.ModelViewSet):
+class ContactMessageViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     POST (create) is open to anyone — the public contact form.
-    All other actions (list, retrieve, update, delete) require admin.
+    list / retrieve require admin. update / delete are intentionally not
+    exposed here (managed via the Django admin panel), which also avoids
+    leaking message-ID existence through 403-vs-404 on those verbs.
+
+    create() delegates to ContactService (so confirmation + owner-notification
+    emails fire, matching the SSR ContactView) and applies the same per-IP
+    rate limit. The honeypot check is form-only (reads request.POST) and is
+    therefore not applicable to this JSON endpoint.
     """
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
@@ -119,6 +143,20 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+
+    def create(self, request, *args, **kwargs):
+        if is_rate_limited(request):
+            raise Throttled()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        # ContactService.repository.create_message() performs the DB write,
+        # so we must NOT also call serializer.save().
+        msg = ContactService(ContactRepository()).send_contact_message(
+            data['name'], data['email'], data['subject'], data['message'],
+        )
+        out = self.get_serializer(msg)
+        return Response(out.data, status=status.HTTP_201_CREATED)
 
 
 class SiteSettingsView(APIView):

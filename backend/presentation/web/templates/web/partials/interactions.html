@@ -1003,9 +1003,6 @@
             
             if (emoji === currentEmoji && action !== 'removed') {
                 btn.classList.add('active');
-            } else if (emoji !== currentEmoji && action === 'added') {
-                // Determine if they were already active from another emoji click previously. 
-                // Full state should come from backend, but optimistic works fine for now.
             }
 
             btn.onclick = () => window.toggleReaction(commentId, emoji, btn);

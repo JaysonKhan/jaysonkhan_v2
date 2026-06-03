@@ -1,11 +1,13 @@
 import json
+import logging
 import uuid
 
 from blog.models import Post
 from blog.services import BlogRepository, BlogService
 from contact.services import ContactRepository, ContactService
 from contact.spam_protection import is_honeypot_filled, is_rate_limited
-from core.models import PageView, SiteSettings
+from core.models import PageView
+from core.services import SiteSettingsService
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -20,6 +22,8 @@ from interactions.views import get_tg_profile  # session helper
 from portfolio.models import Project
 from portfolio.services import PortfolioRepository, PortfolioService
 
+logger = logging.getLogger(__name__)
+
 # Visitor count cache — avoids COUNT(*) on every page render
 _VISITOR_COUNT_CACHE_KEY = 'visitor_count'
 _VISITOR_COUNT_TTL = 60 * 60  # 1 hour
@@ -31,7 +35,7 @@ def custom_404_view(request, exception=None):
     Hides internal URL patterns and stack traces from unauthenticated users.
     """
     try:
-        site_settings = SiteSettings.load()
+        site_settings = SiteSettingsService.get()
     except Exception:
         site_settings = None
     return render(request, 'web/404.html', {'site_settings': site_settings}, status=404)
@@ -43,7 +47,7 @@ def custom_500_view(request):
     Prevents leaking stack traces and settings to users.
     """
     try:
-        site_settings = SiteSettings.load()
+        site_settings = SiteSettingsService.get()
     except Exception:
         site_settings = None
     return render(request, 'web/500.html', {'site_settings': site_settings}, status=500)
@@ -53,37 +57,47 @@ def _interactions_context(request, obj):
     """
     Returns like/comment data for a given model instance.
     Passed to template context for BlogDetailView and ProjectDetailView.
+
+    Uses request.tg_profile if already set by the context processor to avoid
+    a second TelegramEntity DB lookup on the same request.
     """
     ct = ContentType.objects.get_for_model(obj)
-    # Get only top-level comments (parent=None) to build the tree in template, 
-    # or just prefetch all and handle nested in template. 
-    # Telegram style usually shows a thread or a simple flat list with 'reply' references.
-    # We'll prefetch all approved comments for this object.
     comments = Comment.objects.filter(
         content_type=ct, object_id=obj.pk, is_approved=True
-    ).select_related('author', 'parent', 'parent__author').prefetch_related('reactions', 'reactions__author').order_by('created_at')
-    
+    ).select_related('author', 'parent', 'parent__author').prefetch_related(
+        'reactions', 'reactions__author'
+    ).order_by('created_at')
+
     like_count = Like.objects.filter(content_type=ct, object_id=obj.pk).count()
 
-    profile = get_tg_profile(request)
+    # Re-use profile already fetched by the context processor (avoids duplicate PK lookup).
+    profile = getattr(request, '_cached_tg_profile', _SENTINEL)
+    if profile is _SENTINEL:
+        profile = get_tg_profile(request)
+        request._cached_tg_profile = profile
+
     user_liked = (
         Like.objects.filter(author=profile, content_type=ct, object_id=obj.pk).exists()
         if profile else False
     )
     return {
-        'comments':   comments,
+        'comments': comments,
         'like_count': like_count,
         'user_liked': user_liked,
-        'app_label':  ct.app_label,
+        'app_label': ct.app_label,
         'model_name': ct.model,
-        'object_id':  obj.pk,
-        'tg_profile': profile, # Ensure profile is always in context for the form
+        'object_id': obj.pk,
+        'tg_profile': profile,  # Ensure profile is always in context for the form
     }
+
+
+# Sentinel object used to distinguish "not yet cached" from None (not logged in).
+_SENTINEL = object()
 
 
 def _apps_visible():
     """Return True if the Apps section is enabled in SiteSettings."""
-    return SiteSettings.load().apps_section_visible
+    return SiteSettingsService.get().apps_section_visible
 
 
 class AppsGuardMixin:
@@ -132,10 +146,7 @@ class HomeView(TemplateView):
 
     @staticmethod
     def _get_client_ip(request):
-        """Extract real client IP (handles reverse proxy X-Forwarded-For)."""
-        xff = request.META.get('HTTP_X_FORWARDED_FOR')
-        if xff:
-            return xff.split(',')[0].strip()
+        """Extract real client IP — trust REMOTE_ADDR (set by Nginx to real client IP)."""
         return request.META.get('REMOTE_ADDR')
 
     def get(self, request, *args, **kwargs):
@@ -145,38 +156,50 @@ class HomeView(TemplateView):
         ip = self._get_client_ip(request)
 
         if visitor_id:
-            # Case 1: Cookie exists — returning visitor (same browser)
-            # Ensure DB record still exists (cookie might outlive DB reset)
+            # Case 1: Cookie exists — returning visitor (same browser).
+            # Ensure DB record still exists (cookie might outlive DB reset).
             try:
                 uid = uuid.UUID(visitor_id)
             except ValueError:
+                # Malformed cookie — treat as new visitor and overwrite with a valid UUID.
                 uid = uuid.uuid4()
+                PageView.objects.create(visitor_id=uid, ip_address=ip)
+                cache.delete(_VISITOR_COUNT_CACHE_KEY)
+                response.set_cookie(
+                    self.VISITOR_COOKIE,
+                    str(uid),
+                    max_age=self.COOKIE_MAX_AGE,
+                    httponly=True,
+                    samesite='Lax',
+                )
+                return response
             if not PageView.objects.filter(visitor_id=uid).exists():
                 PageView.objects.create(visitor_id=uid, ip_address=ip)
                 cache.delete(_VISITOR_COUNT_CACHE_KEY)
-        elif ip and PageView.objects.filter(ip_address=ip).exists():
-            # Case 2: No cookie but IP already seen — different browser / incognito
-            # Link to existing record via cookie, don't create new (no cache bust)
-            existing = PageView.objects.filter(ip_address=ip).first()
-            response.set_cookie(
-                self.VISITOR_COOKIE,
-                str(existing.visitor_id),
-                max_age=self.COOKIE_MAX_AGE,
-                httponly=True,
-                samesite='Lax',
-            )
         else:
-            # Case 3: No cookie, new IP — genuinely new visitor
-            new_id = uuid.uuid4()
-            PageView.objects.create(visitor_id=new_id, ip_address=ip)
-            cache.delete(_VISITOR_COUNT_CACHE_KEY)
-            response.set_cookie(
-                self.VISITOR_COOKIE,
-                str(new_id),
-                max_age=self.COOKIE_MAX_AGE,
-                httponly=True,
-                samesite='Lax',
-            )
+            # No cookie — check if this IP was seen before (different browser / incognito).
+            existing = PageView.objects.filter(ip_address=ip).first() if ip else None
+            if existing:
+                # Case 2: Known IP — link browser to existing record via cookie.
+                response.set_cookie(
+                    self.VISITOR_COOKIE,
+                    str(existing.visitor_id),
+                    max_age=self.COOKIE_MAX_AGE,
+                    httponly=True,
+                    samesite='Lax',
+                )
+            else:
+                # Case 3: No cookie, new IP — genuinely new visitor.
+                new_id = uuid.uuid4()
+                PageView.objects.create(visitor_id=new_id, ip_address=ip)
+                cache.delete(_VISITOR_COUNT_CACHE_KEY)
+                response.set_cookie(
+                    self.VISITOR_COOKIE,
+                    str(new_id),
+                    max_age=self.COOKIE_MAX_AGE,
+                    httponly=True,
+                    samesite='Lax',
+                )
 
         return response
 
@@ -244,6 +267,7 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
             from interactions.notifications.channel_share import ChannelShareService
             context['channel_share_info'] = ChannelShareService().get_share_info(self.object)
         return context
+
 
 class BlogListView(ListView):
     template_name = 'web/blog_list.html'
@@ -329,7 +353,7 @@ class ContactView(TemplateView):
     template_name = 'web/contact.html'
 
     def post(self, request, *args, **kwargs):
-        # ── Spam protection ──────────────────────────────────────────────────
+        # -- Spam protection --
         if is_honeypot_filled(request):
             # Silently reject: return success to not tip off bots
             return self.render_to_response(self.get_context_data(success=True))
@@ -339,9 +363,9 @@ class ContactView(TemplateView):
                 request,
                 "Too many messages sent. Please try again in a few minutes."
             )
-            return self.render_to_response(self.get_context_data())
+            return self.render_to_response(self.get_context_data(form_data=request.POST))
 
-        # ── Normal processing ────────────────────────────────────────────────
+        # -- Normal processing --
         name = request.POST.get('name', '').strip()
         email = request.POST.get('email', '').strip()
         subject = request.POST.get('subject', '').strip()
@@ -349,10 +373,15 @@ class ContactView(TemplateView):
 
         if not all([name, email, subject, message]):
             messages.error(request, "Please fill in all required fields.")
-            return self.render_to_response(self.get_context_data())
+            return self.render_to_response(self.get_context_data(form_data=request.POST))
 
-        contact_service = ContactService(ContactRepository())
-        contact_service.send_contact_message(name, email, subject, message)
+        try:
+            contact_service = ContactService(ContactRepository())
+            contact_service.send_contact_message(name, email, subject, message)
+        except Exception:
+            logger.exception('Contact form submission failed')
+            messages.error(request, 'Something went wrong. Please try again later.')
+            return self.render_to_response(self.get_context_data(form_data=request.POST))
 
         return self.render_to_response(self.get_context_data(success=True))
 
@@ -361,7 +390,7 @@ class ContactView(TemplateView):
         return context
 
 
-# ── Telegram Mini App router ─────────────────────────────────────────────────
+# -- Telegram Mini App router --
 
 
 class TgAppRouterView(View):
@@ -375,18 +404,16 @@ class TgAppRouterView(View):
     Muammo: Server-side 302 redirect ``initData`` ni yo'qotadi (URL hash
     fragment serverga yuborilmaydi, redirect qilganda yo'qoladi).
 
-    Yechim: "Trampoline" sahifa — avval ``initData`` bilan auto-login
+    Yechim: "Trampoline" sahifa -- avval ``initData`` bilan auto-login
     qiladi, so'ng JS orqali target sahifaga yo'naltiradi.  Agar user
     allaqachon login bo'lgan bo'lsa yoki Telegram konteksti yo'q bo'lsa,
     darhol redirect qiladi.
 
     Parametrlar:
-        osint-p-{id}   → OSINT foydalanuvchi profili
-        osint-e-{id}   → OSINT entity (kanal/guruh) profili
-        c-{id}         → Kommentga o'tish (post/project sahifasida)
-        post-{slug}    → Blog post
-        proj-{slug}    → Project
-        home           → Bosh sahifa
+        c-{id}         -> Kommentga o'tish (post/project sahifasida)
+        post-{slug}    -> Blog post
+        proj-{slug}    -> Project
+        home           -> Bosh sahifa
     """
 
     # Minimal HTML that does auto-login before navigating away.
@@ -399,7 +426,7 @@ class TgAppRouterView(View):
         '<style>body{margin:0;display:flex;justify-content:center;'
         'align-items:center;height:100vh;background:#0f172a;'
         'color:#94a3b8;font-family:sans-serif}</style>'
-        '</head><body><p>Loading\u2026</p><script>'
+        '</head><body><p>Loading…</p><script>'
         '(function(){'
         'var t=%(target)s,u=%(login)s;'
         'if(window.Telegram&&window.Telegram.WebApp){'
@@ -424,7 +451,7 @@ class TgAppRouterView(View):
         if get_tg_profile(request):
             return redirect(target_url)
 
-        # Render trampoline: auto-login via initData → JS redirect
+        # Render trampoline: auto-login via initData -> JS redirect
         login_url = reverse('interactions:telegram_webapp_login')
         html = self._TRAMPOLINE % {
             'target': json.dumps(target_url),
@@ -434,7 +461,10 @@ class TgAppRouterView(View):
 
     @staticmethod
     def _resolve_target(start: str) -> str:
-        """Map ``startapp`` parameter to a local URL path."""
+        """Map ``startapp`` parameter to a local URL path.
+
+        Unknown prefixes fall through to the home page.
+        """
 
         # Comment deep link
         if start.startswith('c-'):

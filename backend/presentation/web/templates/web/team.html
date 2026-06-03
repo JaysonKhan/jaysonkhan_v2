@@ -175,43 +175,133 @@
     var dataNode = document.getElementById('team-data');
     if (dataNode) { try { teamData = JSON.parse(dataNode.textContent); } catch (e) {} }
 
+    // Only allow http(s) and root-relative URLs; reject javascript:/data: etc.
+    function safeUrl(url) {
+        if (typeof url !== 'string') return '';
+        var u = url.trim();
+        if (u.charAt(0) === '/') return u;
+        if (/^https?:\/\//i.test(u)) return u;
+        return '';
+    }
+
+    function el(tag, props, styleText) {
+        var node = document.createElement(tag);
+        if (props) {
+            for (var key in props) {
+                if (key === 'className') node.className = props[key];
+                else if (key === 'text') node.textContent = props[key];
+                else node.setAttribute(key, props[key]);
+            }
+        }
+        if (styleText) node.setAttribute('style', styleText);
+        return node;
+    }
+
     function openMember(pk) {
         var m = teamData[String(pk)];
         if (!m) return;
 
-        var skillsHtml = (m.skills || []).map(function(s) {
-            return '<span class="tag" style="border-color:var(--accent);color:var(--accent);">' + s + '</span>';
-        }).join('');
-        var channelsHtml = '';
-        ['telegram','github','linkedin'].forEach(function(k) {
-            if (m[k]) channelsHtml += '<a href="' + m[k] + '" target="_blank" rel="noopener" class="tag">' + k + ' ↗</a>';
+        body.textContent = '';
+
+        // --- Header ---
+        var header = el('div', { className: 'between' }, 'padding:24px 32px;border-bottom:1px solid var(--line-1);');
+        header.appendChild(el('span', {
+            className: 'mono',
+            text: 'Dossier · #' + String(m.id).padStart(2, '0')
+        }, 'font-size:11px;letter-spacing:0.18em;color:var(--fg-3);text-transform:uppercase;'));
+        header.appendChild(el('button', {
+            type: 'button', className: 'mono', id: 'dossier-close', text: 'CLOSE ✕'
+        }, 'font-size:11px;letter-spacing:0.18em;color:var(--fg-2);'));
+        body.appendChild(header);
+
+        var grid = el('div', { className: 'grid-2-mobile-1' }, 'display:grid;grid-template-columns:320px 1fr;gap:0;');
+
+        // --- Left column (portrait + tenure + channels) ---
+        var left = el('div', null, 'padding:32px;background:var(--bg-3);border-right:1px solid var(--line-1);');
+        var portraitBox = el('div', null, 'aspect-ratio:1;background:var(--bg-2);display:flex;align-items:center;justify-content:center;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;overflow:hidden;');
+        var photoUrl = safeUrl(m.photo);
+        if (photoUrl) {
+            portraitBox.appendChild(el('img', {
+                src: photoUrl, alt: m.name || ''
+            }, 'width:100%;height:100%;object-fit:cover;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;'));
+        } else {
+            portraitBox.appendChild(el('span', {
+                text: m.initials || ''
+            }, 'font-family:var(--font-display);font-style:italic;font-size:120px;color:var(--accent);'));
+        }
+        left.appendChild(portraitBox);
+
+        if (m.years) {
+            var tenure = el('div', { className: 'col gap-2' }, 'margin-top:24px;');
+            tenure.appendChild(el('span', { className: 'label', text: 'Tenure' }));
+            var tenureVal = el('span', { className: 'display-sm serif' });
+            var tenureEm = document.createElement('em');
+            tenureEm.textContent = m.years;
+            tenureVal.appendChild(tenureEm);
+            tenureVal.appendChild(document.createTextNode(' years'));
+            tenure.appendChild(tenureVal);
+            left.appendChild(tenure);
+        }
+
+        var channels = document.createDocumentFragment();
+        var channelCount = 0;
+        ['telegram', 'github', 'linkedin'].forEach(function(k) {
+            var href = safeUrl(m[k]);
+            if (!href) return;
+            channelCount++;
+            channels.appendChild(el('a', {
+                href: href, target: '_blank', rel: 'noopener', className: 'tag', text: k + ' ↗'
+            }));
         });
+        if (channelCount) {
+            var channelsWrap = el('div', { className: 'col gap-2' }, 'margin-top:20px;');
+            channelsWrap.appendChild(el('span', { className: 'label', text: 'Channels' }));
+            var channelsRow = el('div', { className: 'row gap-2' }, 'flex-wrap:wrap;');
+            channelsRow.appendChild(channels);
+            channelsWrap.appendChild(channelsRow);
+            left.appendChild(channelsWrap);
+        }
+        grid.appendChild(left);
 
-        var portrait = m.photo
-            ? '<img src="' + m.photo + '" alt="' + m.name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;">'
-            : '<span style="font-family:var(--font-display);font-style:italic;font-size:120px;color:var(--accent);">' + m.initials + '</span>';
+        // --- Right column (name + role + bio + quote + skills) ---
+        var right = el('div', { className: 'col' }, 'padding:40px;gap:24px;');
 
-        body.innerHTML =
-            '<div class="between" style="padding:24px 32px;border-bottom:1px solid var(--line-1);">' +
-                '<span class="mono" style="font-size:11px;letter-spacing:0.18em;color:var(--fg-3);text-transform:uppercase;">Dossier · #' + String(m.id).padStart(2, '0') + '</span>' +
-                '<button type="button" class="mono" id="dossier-close" style="font-size:11px;letter-spacing:0.18em;color:var(--fg-2);">CLOSE ✕</button>' +
-            '</div>' +
-            '<div style="display:grid;grid-template-columns:320px 1fr;gap:0;" class="grid-2-mobile-1">' +
-                '<div style="padding:32px;background:var(--bg-3);border-right:1px solid var(--line-1);">' +
-                    '<div style="aspect-ratio:1;background:var(--bg-2);display:flex;align-items:center;justify-content:center;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;overflow:hidden;">' + portrait + '</div>' +
-                    (m.years ? ('<div class="col gap-2" style="margin-top:24px;"><span class="label">Tenure</span><span class="display-sm serif"><em>' + m.years + '</em> years</span></div>') : '') +
-                    (channelsHtml ? ('<div class="col gap-2" style="margin-top:20px;"><span class="label">Channels</span><div class="row gap-2" style="flex-wrap:wrap;">' + channelsHtml + '</div></div>') : '') +
-                '</div>' +
-                '<div class="col" style="padding:40px;gap:24px;">' +
-                    '<div>' +
-                        '<h2 class="display-md serif" id="dossier-name"><em style="font-weight:300;">' + m.name + '</em></h2>' +
-                        '<span class="mono" style="font-size:12px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;margin-top:8px;display:block;">' + m.role + '</span>' +
-                    '</div>' +
-                    '<p style="font-size:16px;color:var(--fg-2);line-height:1.6;">' + m.bio + '</p>' +
-                    (m.quote ? ('<blockquote class="serif" style="font-size:24px;font-style:italic;font-weight:300;color:var(--fg-0);border-left:2px solid var(--accent);padding-left:20px;line-height:1.4;margin:0;">"' + m.quote + '"</blockquote>') : '') +
-                    (skillsHtml ? ('<div><span class="label">Skills</span><div class="row gap-2" style="flex-wrap:wrap;">' + skillsHtml + '</div></div>') : '') +
-                '</div>' +
-            '</div>';
+        var nameBlock = el('div');
+        var nameH2 = el('h2', { className: 'display-md serif', id: 'dossier-name' });
+        var nameEm = el('em', { text: m.name || '' }, 'font-weight:300;');
+        nameH2.appendChild(nameEm);
+        nameBlock.appendChild(nameH2);
+        nameBlock.appendChild(el('span', {
+            className: 'mono', text: m.role || ''
+        }, 'font-size:12px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;margin-top:8px;display:block;'));
+        right.appendChild(nameBlock);
+
+        right.appendChild(el('p', {
+            text: m.bio || ''
+        }, 'font-size:16px;color:var(--fg-2);line-height:1.6;'));
+
+        if (m.quote) {
+            right.appendChild(el('blockquote', {
+                className: 'serif', text: '"' + m.quote + '"'
+            }, 'font-size:24px;font-style:italic;font-weight:300;color:var(--fg-0);border-left:2px solid var(--accent);padding-left:20px;line-height:1.4;margin:0;'));
+        }
+
+        var skills = m.skills || [];
+        if (skills.length) {
+            var skillsBlock = el('div');
+            skillsBlock.appendChild(el('span', { className: 'label', text: 'Skills' }));
+            var skillsRow = el('div', { className: 'row gap-2' }, 'flex-wrap:wrap;');
+            skills.forEach(function(s) {
+                skillsRow.appendChild(el('span', {
+                    className: 'tag', text: s
+                }, 'border-color:var(--accent);color:var(--accent);'));
+            });
+            skillsBlock.appendChild(skillsRow);
+            right.appendChild(skillsBlock);
+        }
+        grid.appendChild(right);
+
+        body.appendChild(grid);
 
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';

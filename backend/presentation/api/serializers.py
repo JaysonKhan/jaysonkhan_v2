@@ -1,9 +1,9 @@
-from rest_framework import serializers
-from users.models import User
-from portfolio.models import Skill, Project, Experience
-from blog.models import Category, Tag, Post
+from blog.models import Category, Post, Tag
 from contact.models import ContactMessage
 from core.models import SiteSettings
+from portfolio.models import Experience, Project, Skill
+from rest_framework import serializers
+from users.models import User
 
 
 # Users
@@ -11,6 +11,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'bio', 'profile_picture')
+
+
+class PublicAuthorSerializer(serializers.ModelSerializer):
+    """Display-safe author fields for public (AllowAny) endpoints. No email/PII."""
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'bio', 'profile_picture')
 
 
 # Portfolio
@@ -55,7 +62,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
         return ''
 
     def get_tech_tags(self, obj):
-        return [t.name for t in obj.technologies.all()[:6]]
+        # Unsliced .all() consumes the prefetch cache; slice in Python (no extra query).
+        return [t.name for t in list(obj.technologies.all())[:6]]
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
@@ -78,13 +86,15 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = PublicAuthorSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ('id', 'title', 'slug', 'author', 'content_rich', 'excerpt',
+                  'category', 'tags', 'featured_image', 'created_at',
+                  'updated_at', 'reading_time')
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -111,7 +121,7 @@ class PostListSerializer(serializers.ModelSerializer):
 class ContactMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
-        fields = ('id', 'name', 'email', 'subject', 'message', 'created_at')
+        fields = ('id', 'name', 'email', 'subject', 'message', 'is_read', 'created_at')
         read_only_fields = ('id', 'created_at')
 
 
@@ -131,24 +141,28 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         exclude = ('favicon', 'og_image', 'hero_image', 'about_image',
-                   'resume_file', 'logo', 'created_at', 'updated_at')
+                   'resume_file', 'logo', 'created_at', 'updated_at',
+                   # Owner PII / secret-ish: never echo back via the API.
+                   'telegram_owner_id', 'telegram_admin_group_id',
+                   'telegram_channel_id', 'google_site_verification',
+                   'yandex_verification', 'bing_verification')
 
     def _url(self, field_value, request):
-        if not field_value:
+        if not field_value or not request:
             return None
         return request.build_absolute_uri(field_value.url)
 
     def get_favicon_url(self, obj):
-        return self._url(obj.favicon, self.context['request'])
+        return self._url(obj.favicon, self.context.get('request'))
 
     def get_og_image_url(self, obj):
-        return self._url(obj.og_image, self.context['request'])
+        return self._url(obj.og_image, self.context.get('request'))
 
     def get_hero_image_url(self, obj):
-        return self._url(obj.hero_image, self.context['request'])
+        return self._url(obj.hero_image, self.context.get('request'))
 
     def get_about_image_url(self, obj):
-        return self._url(obj.about_image, self.context['request'])
+        return self._url(obj.about_image, self.context.get('request'))
 
     def get_resume_file_url(self, obj):
-        return self._url(obj.resume_file, self.context['request'])
+        return self._url(obj.resume_file, self.context.get('request'))
