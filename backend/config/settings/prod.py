@@ -1,7 +1,19 @@
-from .base import *
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
+from .base import *
+
 DEBUG = False
+
+# Admin IP gate must be configured in production. AdminIPRestrictionMiddleware
+# no-ops on an empty allowlist, which would leave the admin panel publicly
+# reachable at the custom admin URL. Fail loud instead of failing open.
+if not ADMIN_ALLOWED_IPS:
+    raise ImproperlyConfigured(
+        'ADMIN_ALLOWED_IPS must be set in production (config.settings.prod) — '
+        'an empty list silently disables the admin IP restriction.'
+    )
 
 # ── Security headers (OWASP + CIS Benchmark) ─────────────────────────────────
 SECURE_SSL_REDIRECT = True
