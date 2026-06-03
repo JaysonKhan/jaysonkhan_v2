@@ -210,7 +210,7 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # ── Admin IP Restriction (empty list = no restriction in dev) ────────────────
-ADMIN_ALLOWED_IPS = env.list('ADMIN_ALLOWED_IPS', default=[])
+ADMIN_ALLOWED_IPS = [ip.strip() for ip in env.list('ADMIN_ALLOWED_IPS', default=[]) if ip.strip()]
 ADMIN_URL_PREFIX = env('ADMIN_URL', default='admin/')
 
 # ── File Upload Security ─────────────────────────────────────────────────────
