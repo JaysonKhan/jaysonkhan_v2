@@ -14,7 +14,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from interactions.models import Comment, CommentReaction, Like
-from telegram.models import TelegramEntity, EntitySource
+from telegram.models import EntitySource
 from .service import NotificationService, fire_and_forget
 
 logger = logging.getLogger('interactions.notifications')

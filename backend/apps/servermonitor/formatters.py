@@ -262,8 +262,8 @@ def format_cpu_alert(cpu: CpuMetrics, threshold: float = 85.0) -> str | None:
             f'{_badge(c.percent)} Core {c.core}: {_progress_bar(c.percent)} <b>{c.percent}%</b>'
         )
     lines.append(
-        f'\n⚠️ <b>Server kuchaytirish kerak bo\'lishi mumkin!</b>\n'
-        f'CPU overload — ko\'proq yadro yoki kuchliroq protsessor tavsiya etiladi.'
+        '\n⚠️ <b>Server kuchaytirish kerak bo\'lishi mumkin!</b>\n'
+        'CPU overload — ko\'proq yadro yoki kuchliroq protsessor tavsiya etiladi.'
     )
     return '\n'.join(lines)
 
@@ -293,7 +293,7 @@ def format_service_alert(
     new_label = 'active' if new_active else 'inactive'
 
     if not new_active:
-        title = f'🚨 <b>Service DOWN</b>'
+        title = '🚨 <b>Service DOWN</b>'
         body = f'{icon} <b>{display}</b> — endi ishlamayapti.'
         action = (
             'Tekshirish:\n'
@@ -348,7 +348,7 @@ def format_cron_failure_alert(
             lines.append(f'  …va yana {len(failures) - 10} ta')
 
     if overdue:
-        lines.append(f'\n⏳ <b>Overdue (no recent run)</b>')
+        lines.append('\n⏳ <b>Overdue (no recent run)</b>')
         for o in overdue[:10]:
             last = o['last_seen'].strftime('%Y-%m-%d %H:%M') if o.get('last_seen') else 'never'
             lines.append(f'  • <code>{o["command"]}</code> — last: {last}')

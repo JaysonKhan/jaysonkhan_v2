@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Optional
 
 from core.services import SiteSettingsService
 from interactions.notifications.telegram_api import TelegramBotAPI
@@ -17,10 +16,8 @@ from core.emoji import ce
 
 from .contabo import analyze_tariff, format_tariff_advice
 from .formatters import (
-    format_cpu,
     format_cpu_alert,
     format_disk_detailed,
-    format_full_report,
     format_services,
     format_status_report,
 )

@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import re
 from datetime import timedelta
 from urllib.parse import urlparse

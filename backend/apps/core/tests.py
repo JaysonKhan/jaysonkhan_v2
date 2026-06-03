@@ -4,7 +4,6 @@ Run with: python manage.py test
 """
 from django.test import TestCase, RequestFactory
 from django.template import Template, Context
-from unittest.mock import patch
 
 from blog.templatetags.markdown_extras import render_markdown
 from contact.spam_protection import is_honeypot_filled, is_rate_limited, RATE_LIMIT_MAX_SUBMISSIONS

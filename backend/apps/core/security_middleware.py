@@ -5,7 +5,7 @@ Provides additional security layers on top of Django's built-in security.
 import logging
 import re
 from django.conf import settings
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponseForbidden
 
 logger = logging.getLogger('django.security')
 

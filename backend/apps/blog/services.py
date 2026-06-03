@@ -1,7 +1,6 @@
 from django.db import models
-from django.utils.html import strip_tags
 
-from .models import Post, Category, Tag
+from .models import Post, Category
 
 
 class BlogRepository:

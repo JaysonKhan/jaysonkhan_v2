@@ -16,7 +16,6 @@ from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
-from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db.models import FileField, ImageField
 
