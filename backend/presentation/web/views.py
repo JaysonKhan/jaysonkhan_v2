@@ -1,6 +1,5 @@
 import json
 import logging
-import uuid
 
 from blog.models import Post
 from blog.services import BlogRepository, BlogService
@@ -124,9 +123,6 @@ class AppsGuardMixin:
 class HomeView(TemplateView):
     template_name = 'web/home.html'
 
-    VISITOR_COOKIE = 'jk_visitor'
-    COOKIE_MAX_AGE = 365 * 24 * 60 * 60  # 1 year
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -136,72 +132,15 @@ class HomeView(TemplateView):
         blog_service = BlogService(BlogRepository())
         context['latest_posts'] = blog_service.get_all_published_posts()[:3]
 
-        # Cached visitor count — avoids COUNT(*) on every request
+        # Cached visitor count — avoids COUNT(*) on every request.
+        # Visitor rows are created by core.tracking.VisitorTrackingMiddleware
+        # (first-touch attribution on every page), not here.
         count = cache.get(_VISITOR_COUNT_CACHE_KEY)
         if count is None:
             count = PageView.objects.count()
             cache.set(_VISITOR_COUNT_CACHE_KEY, count, _VISITOR_COUNT_TTL)
         context['visitor_count'] = count
         return context
-
-    @staticmethod
-    def _get_client_ip(request):
-        """Extract real client IP — trust REMOTE_ADDR (set by Nginx to real client IP)."""
-        return request.META.get('REMOTE_ADDR')
-
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-
-        visitor_id = request.COOKIES.get(self.VISITOR_COOKIE)
-        ip = self._get_client_ip(request)
-
-        if visitor_id:
-            # Case 1: Cookie exists — returning visitor (same browser).
-            # Ensure DB record still exists (cookie might outlive DB reset).
-            try:
-                uid = uuid.UUID(visitor_id)
-            except ValueError:
-                # Malformed cookie — treat as new visitor and overwrite with a valid UUID.
-                uid = uuid.uuid4()
-                PageView.objects.create(visitor_id=uid, ip_address=ip)
-                cache.delete(_VISITOR_COUNT_CACHE_KEY)
-                response.set_cookie(
-                    self.VISITOR_COOKIE,
-                    str(uid),
-                    max_age=self.COOKIE_MAX_AGE,
-                    httponly=True,
-                    samesite='Lax',
-                )
-                return response
-            if not PageView.objects.filter(visitor_id=uid).exists():
-                PageView.objects.create(visitor_id=uid, ip_address=ip)
-                cache.delete(_VISITOR_COUNT_CACHE_KEY)
-        else:
-            # No cookie — check if this IP was seen before (different browser / incognito).
-            existing = PageView.objects.filter(ip_address=ip).first() if ip else None
-            if existing:
-                # Case 2: Known IP — link browser to existing record via cookie.
-                response.set_cookie(
-                    self.VISITOR_COOKIE,
-                    str(existing.visitor_id),
-                    max_age=self.COOKIE_MAX_AGE,
-                    httponly=True,
-                    samesite='Lax',
-                )
-            else:
-                # Case 3: No cookie, new IP — genuinely new visitor.
-                new_id = uuid.uuid4()
-                PageView.objects.create(visitor_id=new_id, ip_address=ip)
-                cache.delete(_VISITOR_COUNT_CACHE_KEY)
-                response.set_cookie(
-                    self.VISITOR_COOKIE,
-                    str(new_id),
-                    max_age=self.COOKIE_MAX_AGE,
-                    httponly=True,
-                    samesite='Lax',
-                )
-
-        return response
 
 
 class ProjectListView(AppsGuardMixin, ListView):

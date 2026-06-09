@@ -74,6 +74,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'core.security_middleware.AdminIPRestrictionMiddleware',  # Admin IP whitelist
     'django.contrib.messages.middleware.MessageMiddleware',
+    'core.tracking.VisitorTrackingMiddleware',  # First-touch visitor attribution (last: only acts on final 200 HTML GET)
     # XFrameOptionsMiddleware removed: CSP frame-ancestors in Nginx handles
     # clickjacking protection and allows Telegram Mini App iframes.
 ]

@@ -7,11 +7,11 @@ from django.utils import timezone
 
 def dashboard_callback(request, context):
     """Inject editorial KPI data into admin/index.html context."""
-    from portfolio.models import Project, TeamMember
     from blog.models import Post
     from contact.models import ContactMessage
-    from core.models import PageView, SiteSettings, Asset
+    from core.models import Asset, PageView, SiteSettings
     from interactions.models import Comment
+    from portfolio.models import Project, TeamMember
 
     now = timezone.now()
     last_30 = now - timedelta(days=30)
@@ -46,6 +46,24 @@ def dashboard_callback(request, context):
     max_traffic = max((b['count'] for b in traffic_buckets), default=1) or 1
     for b in traffic_buckets:
         b['height'] = max(8, int((b['count'] / max_traffic) * 180)) if max_traffic else 8
+
+    # ── Traffic sources / 30d ────────────────────────────────────────────
+    from core.tracking import source_color
+    from django.db.models import Count
+    src_rows = (
+        PageView.objects.filter(created_at__gte=last_30)
+        .exclude(source='')
+        .values('source')
+        .annotate(n=Count('id'))
+        .order_by('-n')[:7]
+    )
+    src_total = sum(r['n'] for r in src_rows) or 1
+    sources = [{
+        'source': r['source'],
+        'count': r['n'],
+        'pct': round(r['n'] / src_total * 100),
+        'color': source_color(r['source']),
+    } for r in src_rows]
 
     # ── Activity feed ────────────────────────────────────────────────────
     activity = []
@@ -90,6 +108,7 @@ def dashboard_callback(request, context):
         ],
         'traffic': traffic_buckets,
         'traffic_max': max_traffic,
+        'sources': sources,
         'activity': activity,
         'site_title': SiteSettings.load().site_title,
     }

@@ -965,13 +965,29 @@ class PageView(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ── First-touch attribution ──────────────────────────────────────────
+    # Captured ONCE, when the visitor row is first created (the page they
+    # landed on + how they got here). Returning visits never overwrite it.
+    source = models.CharField(
+        max_length=32, blank=True, default='', db_index=True,
+        help_text="Classified origin: google / chatgpt / facebook / instagram / telegram / direct / …",
+    )
+    landing_path = models.CharField(max_length=200, blank=True, default='')
+    referrer = models.CharField(max_length=500, blank=True, default='')
+    utm_source = models.CharField(max_length=100, blank=True, default='')
+    utm_medium = models.CharField(max_length=100, blank=True, default='')
+    utm_campaign = models.CharField(max_length=100, blank=True, default='')
+    utm_content = models.CharField(max_length=100, blank=True, default='')
+    utm_term = models.CharField(max_length=100, blank=True, default='')
+    user_agent = models.CharField(max_length=300, blank=True, default='')
+
     class Meta:
         verbose_name = "Site Visitor"
         verbose_name_plural = "Site Visitors"
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Visitor {self.visitor_id} ({self.ip_address}) — {self.created_at:%Y-%m-%d %H:%M}"
+        return f"Visitor {self.visitor_id} ({self.source or 'direct'}) — {self.created_at:%Y-%m-%d %H:%M}"
 
 
 # ── Asset Manager ────────────────────────────────────────────────────────────

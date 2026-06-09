@@ -272,6 +272,10 @@
 
     // ── Preview modal ─────────────────────────────────────────────────
     var modal = document.getElementById('preview-modal');
+    // Portal to <body>: the .fade-in wrapper carries a CSS transform, which
+    // otherwise makes this modal's `position:fixed` resolve against the tall
+    // page (not the viewport) — so it renders mid-page / "at the bottom".
+    if (modal.parentNode !== document.body) document.body.appendChild(modal);
     var closeBtn = document.getElementById('preview-close');
 
     function openPreview(card) {

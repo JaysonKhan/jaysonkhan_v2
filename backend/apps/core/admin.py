@@ -1,20 +1,27 @@
 import logging
+
 from django.contrib import admin
 from django.db import connection
 from django.db.models import Sum
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import path
 from django.utils.html import format_html
-from unfold.admin import ModelAdmin
 from modeltranslation.admin import TranslationAdmin
+from unfold.admin import ModelAdmin
 
 from .models import (
+    Asset,
+    PageView,
     SiteSettings,
-    SiteSettingsBranding, SiteSettingsSEO, SiteSettingsNavigation,
-    SiteSettingsHomepage, SiteSettingsContact, SiteSettingsTelegram,
-    SiteSettingsEmoji, SiteSettingsEditorial,
-    PageView, Asset,
+    SiteSettingsBranding,
+    SiteSettingsContact,
+    SiteSettingsEditorial,
+    SiteSettingsEmoji,
+    SiteSettingsHomepage,
+    SiteSettingsNavigation,
+    SiteSettingsSEO,
+    SiteSettingsTelegram,
 )
 
 logger = logging.getLogger(__name__)
@@ -493,10 +500,35 @@ class SiteSettingsEditorialAdmin(
 
 @admin.register(PageView)
 class PageViewAdmin(ModelAdmin):
-    list_display = ('visitor_id', 'ip_address', 'created_at')
-    list_filter = ('created_at',)
-    readonly_fields = ('visitor_id', 'ip_address', 'created_at')
+    list_display = ('source_badge', 'landing_path', 'utm_campaign', 'referrer_short', 'ip_address', 'created_at')
+    list_filter = ('source', 'created_at', 'utm_source')
+    search_fields = ('referrer', 'landing_path', 'utm_source', 'utm_medium', 'utm_campaign', 'ip_address')
+    readonly_fields = (
+        'visitor_id', 'ip_address', 'created_at', 'source', 'landing_path',
+        'referrer', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content',
+        'utm_term', 'user_agent',
+    )
     ordering = ('-created_at',)
+
+    @admin.display(description='Source', ordering='source')
+    def source_badge(self, obj):
+        from core.tracking import source_color
+        label = obj.source or 'direct'
+        color = source_color(label)
+        return format_html(
+            '<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;'
+            'font-weight:600;letter-spacing:.04em;text-transform:uppercase;">'
+            '<span style="width:8px;height:8px;border-radius:50%;background:{};"></span>{}</span>',
+            color, label,
+        )
+
+    @admin.display(description='Referrer')
+    def referrer_short(self, obj):
+        if not obj.referrer:
+            return '—'
+        r = obj.referrer.replace('https://', '').replace('http://', '')
+        return format_html('<span title="{}">{}</span>', obj.referrer,
+                           r[:42] + ('…' if len(r) > 42 else ''))
 
     def has_add_permission(self, request):
         return False
@@ -565,6 +597,7 @@ class AssetAdmin(TranslationAdmin, ModelAdmin):
 
         latest = Asset.objects.order_by('-uploaded_at').first()
         from django.utils import timezone
+
         from .dashboard import _humanize
         last_upload = _humanize(timezone.now() - latest.uploaded_at) if latest else '—'
 
