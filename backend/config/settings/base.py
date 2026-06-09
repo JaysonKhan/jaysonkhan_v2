@@ -387,6 +387,12 @@ UNFOLD = {
                         "link": f"{_A}core/pageview/",
                         "permission": lambda r: r.user.is_superuser,
                     },
+                    {
+                        "title": "UTM linklar",
+                        "icon": "add_link",
+                        "link": f"{_A}core/pageview/utm-builder/",
+                        "permission": lambda r: r.user.is_staff,
+                    },
                 ],
             },
             {

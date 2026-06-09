@@ -1,0 +1,137 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}UTM link yasagich | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page fade-in" style="max-width: 1080px; margin: 0 auto; padding: 28px 4px 80px;" id="utm-builder">
+
+    {# ========================== HEADER ========================== #}
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">UTM·001</span>
+                <span class="pe-dot"></span>
+                <span>Attribution · link generator</span>
+            </div>
+            <h1 class="page-title">UTM <em>linklar.</em></h1>
+            <p class="page-sub">
+                Share linklarga UTM teg qo'shing — <a href="{{ default_base }}jk-dinadmin/core/pageview/" style="color: var(--accent);">Tashriflar</a>da manba aniq ko'rinadi.
+                ChatGPT / Google / Instagram referrer'lari avtomatik aniqlanadi; bu sahifa qo'lda kampaniya teglash uchun.
+            </p>
+        </div>
+    </div>
+
+    <div class="brackets" style="background: var(--bg-2); border: 1px solid var(--line-1); border-radius: 10px; padding: 28px; display: flex; flex-direction: column; gap: 22px;">
+
+        {# Base URL #}
+        <div>
+            <label class="label-mono" for="utm-base">Sahifa · base URL</label>
+            <input id="utm-base" class="input-block" value="{{ default_base }}" style="margin-top: 8px;">
+        </div>
+
+        {# Source quick-presets #}
+        <div>
+            <label class="label-mono">Manba · tez tanlash</label>
+            <div id="src-presets" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                <button type="button" class="btn btn-sm src-preset" data-source="instagram" data-medium="social">Instagram</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="facebook" data-medium="social">Facebook</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="telegram" data-medium="messaging">Telegram</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="chatgpt" data-medium="referral">ChatGPT</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="linkedin" data-medium="social">LinkedIn</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="youtube" data-medium="video">YouTube</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="twitter" data-medium="social">X / Twitter</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="github" data-medium="referral">GitHub</button>
+                <button type="button" class="btn btn-sm src-preset" data-source="email" data-medium="email">Email</button>
+            </div>
+        </div>
+
+        {# UTM inputs #}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label class="label-mono" for="utm-source">utm_source <span style="color: var(--accent);">*</span></label>
+                <input id="utm-source" class="input-block utm-field" placeholder="instagram" style="margin-top: 8px;">
+            </div>
+            <div>
+                <label class="label-mono" for="utm-medium">utm_medium</label>
+                <input id="utm-medium" class="input-block utm-field" placeholder="social" style="margin-top: 8px;">
+            </div>
+            <div>
+                <label class="label-mono" for="utm-campaign">utm_campaign</label>
+                <input id="utm-campaign" class="input-block utm-field" placeholder="portfolio_2026" style="margin-top: 8px;">
+            </div>
+            <div>
+                <label class="label-mono" for="utm-content">utm_content</label>
+                <input id="utm-content" class="input-block utm-field" placeholder="bio_link" style="margin-top: 8px;">
+            </div>
+        </div>
+
+        {# Result #}
+        <div>
+            <label class="label-mono" for="utm-result">Natija · tayyor link</label>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <input id="utm-result" class="input-block" readonly style="flex: 1; font-family: var(--font-mono); font-size: 13px;">
+                <button type="button" id="utm-copy" class="btn btn-primary" style="white-space: nowrap;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="1"/><path d="M16 8 V5 A1 1 0 0 0 15 4 H4 A1 1 0 0 0 3 5 V16 A1 1 0 0 0 4 17 H8"/></svg>
+                    Copy
+                </button>
+            </div>
+            <span id="utm-warn" class="label-mono" style="color: var(--accent); display: none; margin-top: 8px;">⚠ utm_source majburiy</span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var base = document.getElementById('utm-base');
+    var result = document.getElementById('utm-result');
+    var warn = document.getElementById('utm-warn');
+    var copyBtn = document.getElementById('utm-copy');
+    var fields = { source: 'utm-source', medium: 'utm-medium', campaign: 'utm-campaign', content: 'utm-content' };
+
+    function val(id) { return (document.getElementById(id).value || '').trim(); }
+
+    function build() {
+        var raw = val('utm-base');
+        if (!raw) { result.value = ''; return; }
+        if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+        var url;
+        try { url = new URL(raw); } catch (e) { result.value = '⚠ Noto‘g‘ri URL'; return; }
+        var hasSource = !!val('utm-source');
+        warn.style.display = (val('utm-source') === '' && (val('utm-medium') || val('utm-campaign') || val('utm-content'))) ? 'block' : 'none';
+        Object.keys(fields).forEach(function(k) {
+            var v = val(fields[k]);
+            if (v) url.searchParams.set('utm_' + k, v); else url.searchParams.delete('utm_' + k);
+        });
+        result.value = decodeURIComponent(url.toString());
+    }
+
+    [base].concat([].slice.call(document.querySelectorAll('.utm-field'))).forEach(function(el) {
+        el.addEventListener('input', build);
+    });
+
+    document.querySelectorAll('.src-preset').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('utm-source').value = btn.getAttribute('data-source');
+            if (!val('utm-medium')) document.getElementById('utm-medium').value = btn.getAttribute('data-medium') || '';
+            build();
+        });
+    });
+
+    copyBtn.addEventListener('click', function() {
+        if (!result.value || result.value.charAt(0) === '⚠') return;
+        var orig = copyBtn.innerHTML;
+        navigator.clipboard.writeText(result.value).then(function() {
+            copyBtn.innerHTML = '✓ Copied';
+            setTimeout(function() { copyBtn.innerHTML = orig; }, 1600);
+        });
+    });
+
+    build();
+})();
+</script>
+{% endblock %}

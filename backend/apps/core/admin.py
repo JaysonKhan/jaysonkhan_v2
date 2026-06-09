@@ -530,6 +530,24 @@ class PageViewAdmin(ModelAdmin):
         return format_html('<span title="{}">{}</span>', obj.referrer,
                            r[:42] + ('…' if len(r) > 42 else ''))
 
+    def get_urls(self):
+        return [
+            path(
+                'utm-builder/',
+                self.admin_site.admin_view(self.utm_builder_view),
+                name='core_pageview_utm_builder',
+            ),
+        ] + super().get_urls()
+
+    def utm_builder_view(self, request):
+        """Static tool: build a UTM-tagged shareable link (client-side)."""
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'UTM link yasagich',
+            'default_base': 'https://jaysonkhan.com/',
+        }
+        return render(request, 'admin/core/utm_builder.html', context)
+
     def has_add_permission(self, request):
         return False
 
