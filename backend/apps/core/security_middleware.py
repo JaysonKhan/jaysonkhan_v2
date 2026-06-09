@@ -15,13 +15,21 @@ def _get_client_ip(request):
     """
     Return the real client IP.
 
-    Nginx is the single trusted reverse proxy and sets REMOTE_ADDR to the real
-    client IP. The raw X-Forwarded-For header is client-controlled (Nginx
-    *appends* to it via $proxy_add_x_forwarded_for), so it must NOT be trusted
-    for security checks — using it allows admin IP-restriction and rate-limit
+    Nginx is the single trusted reverse proxy and *overwrites* X-Real-IP with
+    the real client IP ($remote_addr), so a client cannot spoof it. The raw
+    X-Forwarded-For header, by contrast, is client-controlled (Nginx *appends*
+    to it via $proxy_add_x_forwarded_for), so it must NOT be trusted for
+    security checks — using it allows admin IP-restriction and rate-limit
     bypass via a spoofed leftmost entry.
+
+    REMOTE_ADDR is empty here because Gunicorn binds a unix socket (no TCP
+    peer), so X-Real-IP is the authoritative source.
     """
-    return request.META.get('REMOTE_ADDR', '0.0.0.0')
+    return (
+        request.META.get('HTTP_X_REAL_IP')
+        or request.META.get('REMOTE_ADDR')
+        or '0.0.0.0'
+    )
 
 
 class SecurityHeadersMiddleware:
