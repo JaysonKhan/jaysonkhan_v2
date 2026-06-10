@@ -10,18 +10,18 @@ msgstr ""
 #: apps/core/templates/admin/core/utm_builder.html:4
 #: presentation/web/templates/admin/index.html:4
 msgid "JK-DinAdmin"
-msgstr ""
+msgstr "Boshqoruv paneli"
 
 #: presentation/web/templates/admin/login.html:6
 #: presentation/web/templates/admin/login.html:235
 msgid "Log in"
-msgstr ""
+msgstr "Girish"
 
 #: presentation/web/templates/admin/login.html:205
 msgid ""
 "Please enter the correct username and password. Note that both fields may be"
 " case-sensitive."
-msgstr ""
+msgstr "Iltimos do'g'ri login parol giriting..."
 
 #: presentation/web/templates/admin/login.html:213
 #, python-format
@@ -32,7 +32,7 @@ msgstr ""
 
 #: presentation/web/templates/admin/login.html:242
 msgid "Forgotten your password or username?"
-msgstr ""
+msgstr "Parolingni yoddan chiqardingmi?"
 
 #: presentation/web/templates/web/base.html:199
 #: presentation/web/templates/web/base.html:226
