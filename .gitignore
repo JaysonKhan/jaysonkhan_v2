@@ -50,7 +50,10 @@ Thumbs.db
 # Media and Static
 /static/
 /media/
-backend/static/
+# backend/static is deploy-time content EXCEPT css/ — XIVA INK tokens/site.css
+# are hand-written source (v4) and must ship via git.
+backend/static/*
+!backend/static/css/
 backend/media/
 
 # Node
