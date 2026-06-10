@@ -1,85 +1,52 @@
 {% extends 'web/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}{% if query %}Search: {{ query }}{% else %}Search{% endif %} | {{ site_settings.site_author }}{% endblock %}
-{% block meta_description %}Search results for "{{ query }}" on {{ site_settings.site_author }}'s journal.{% endblock %}
+{% block title %}{% trans "Search" %}{% if query %}: {{ query }}{% endif %} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{% trans "Search" %} — {{ query }}{% endblock %}
 
 {% block content %}
 <main>
-    {# ========================== HEADER ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
-                <a href="{% url 'blog_list' %}" class="row gap-2" style="align-items: center; color: var(--fg-3);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">All journal</span>
-                </a>
-                {% if query %}<span class="tag">{{ posts|length }} match{% if posts|length != 1 %}es{% endif %}</span>{% endif %}
-            </div>
-
-            <span class="eyebrow" style="margin-bottom: 24px;">Search · Journal index</span>
-            <h1 class="display-lg serif" style="margin-top: 16px;">
-                {% if query %}Results for <em style="font-weight: 300;">"{{ query }}"</em>{% else %}Search the <em style="font-weight: 300;">journal.</em>{% endif %}
-            </h1>
-
-            <form action="{% url 'blog_search' %}" method="get" class="reveal" style="margin-top: 40px; max-width: 560px;">
-                <div style="position: relative;">
-                    <input type="text" name="q" value="{{ query }}" placeholder="Search articles..." autocomplete="off" class="input" style="padding-left: 32px; padding-right: 100px; font-size: 18px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: var(--fg-3);">
-                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                    </svg>
-                    <button type="submit" class="btn btn-primary" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); --pad-y: 8px; --pad-x: 18px;">Search</button>
-                </div>
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'blog_list' %}" class="back-link">← {% trans "Back to journal" %}</a>
+            <h1 class="display-lg fade-up" style="margin-top: 24px;">{% trans "Search" %}<em class="serif-i" style="color: var(--accent);">.</em></h1>
+            <form action="{% url 'blog_search' %}" method="get" class="blog-search fade-up" style="margin-top: 28px; max-width: 420px; animation-delay: .15s;">
+                <input type="text" name="q" value="{{ query }}" placeholder="{% trans 'Search...' %}" autocomplete="off" autofocus>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
             </form>
+            {% if query %}
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">«{{ query }}» — {{ posts|length }} {% trans "results" %}</p>
+            {% endif %}
         </div>
     </section>
 
     {# ========================== RESULTS ========================== #}
-    {% if query %}
-    <section class="section">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
-                {% for post in posts %}
-                <a href="{% url 'blog_detail' post.slug %}" class="reveal article-card" style="padding: 40px; border-top: 1px solid var(--line-1); {% if forloop.counter|divisibleby:3 %}{% else %}border-right: 1px solid var(--line-1);{% endif %} min-height: 360px; display: flex; flex-direction: column; gap: 20px; transition: background .4s var(--ease-out);">
-                    <div class="between" style="align-items: flex-start;">
-                        <span class="numeral" style="font-size: 48px; line-height: 1; color: var(--fg-4);">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">{{ post.created_at|date:"M Y" }}</span>
-                    </div>
-                    {% if post.category %}<span class="tag" style="align-self: flex-start;">{{ post.category.name }}</span>{% endif %}
-                    <h3 class="display-sm serif article-title" style="flex: 1; transition: color .3s;"><em style="font-weight: 300;">{{ post.title }}</em></h3>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:20 }}</p>
-                    <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.reading_time }} MIN ↗</span>
-                    </div>
-                </a>
-                {% empty %}
-                <div style="grid-column: 1 / -1; padding: 80px 24px; text-align: center;">
-                    <div class="numeral" style="font-size: 120px; color: var(--fg-4); line-height: 1; margin-bottom: 24px;">∅</div>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3);">No matches for "{{ query }}"</span>
-                    <p class="serif" style="font-size: 24px; font-style: italic; font-weight: 300; color: var(--fg-1); margin-top: 16px;">Try a different angle.</p>
+    <section class="section" style="padding-top: 40px;">
+        <div class="container blog-rows">
+            {% for post in posts %}
+            <a href="{% url 'blog_detail' post.slug %}" class="blog-row reveal">
+                <div class="blog-row__meta">
+                    <span class="blog-row__date">{{ post.created_at|date:"Y-m-d" }}</span>
+                    {% if post.category %}<span class="tag">{{ post.category.name }}</span>{% endif %}
                 </div>
-                {% endfor %}
+                <div class="blog-row__body">
+                    <h2 class="blog-row__title">{{ post.title }}</h2>
+                    <p class="blog-row__excerpt">{{ post.excerpt|default:post.title|truncatewords:24 }}</p>
+                </div>
+                <span class="blog-row__read">{{ post.reading_time }} {% trans "MIN" %} ↗</span>
+            </a>
+            {% empty %}
+            <div class="empty-state">
+                <span class="mono-label">— {% trans "Nothing found" %} —</span>
             </div>
-
-            {% if is_paginated %}
-            <div class="between" style="margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
-                {% if page_obj.has_previous %}
-                <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}" class="btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Previous</a>
-                {% else %}<span></span>{% endif %}
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                <a href="?q={{ query }}&page={{ page_obj.next_page_number }}" class="btn btn-arrow">Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-                {% else %}<span></span>{% endif %}
-            </div>
-            {% endif %}
+            {% endfor %}
         </div>
     </section>
-    {% endif %}
 </main>
-
-<style>
-    .article-card:hover { background: var(--bg-2); }
-    .article-card:hover .article-title { color: var(--accent); }
-</style>
 {% endblock %}

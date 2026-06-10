@@ -1,59 +1,46 @@
 {% extends 'web/base.html' %}
 {% load i18n %}
 
-{% block title %}Contact | {{ site_settings.site_author }}{% endblock %}
+{% block title %}{% trans "Contact" %} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.contact_page_subtitle }}{% endblock %}
-{% block og_title %}Contact | {{ site_settings.site_author }}{% endblock %}
+{% block og_title %}{% trans "Contact" %} | {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ site_settings.contact_page_subtitle }}{% endblock %}
 
 {% block content %}
 <main>
-    {# ========================== HERO ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
-                <div class="row gap-3">
-                    <span class="tag">{{ site_settings.contact_section_label }}</span>
-                    <span class="tag">{{ site_settings.contact_section_channels }}</span>
-                </div>
-                <span class="tag"><span class="dot-live"></span> {% trans "Avg. response · 4–6h" %}</span>
-            </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Contact · Open the channel" %}</div>
-            <h1 class="display-xl">
-                {{ site_settings.contact_page_title|default:"Let's build" }}<br>
-                {% trans "something" %} <em style="font-weight: 300; font-style: italic;">{% trans "real." %}</em>
-            </h1>
-            {% if site_settings.contact_page_subtitle %}
-            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">{{ site_settings.contact_page_subtitle }}</p>
-            {% endif %}
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">{{ site_settings.cta_eyebrow }}</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ site_settings.contact_page_title|default:_("Contact.") }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ site_settings.contact_page_subtitle }}</p>
         </div>
     </section>
 
     {# ========================== FORM + CHANNELS ========================== #}
-    <section class="section">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 80px;" class="grid-2-mobile-1">
-                {# Form #}
-                <form method="POST" class="reveal col gap-8">
+    <section class="section" style="padding-top: 56px;">
+        <div class="container contact-grid">
+            <div>
+                {% if success %}
+                <div class="card contact-sent">
+                    <span class="contact-sent__icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    </span>
+                    <p class="contact-sent__msg">{% trans "Thanks for your message! We'll be in touch soon." %}</p>
+                    <a href="{% url 'contact' %}" class="btn btn-sm">← {% trans "Contact" %}</a>
+                </div>
+                {% else %}
+                <form method="POST" class="contact-form">
                     {% csrf_token %}
-
-                    <div>
-                        <span class="eyebrow">{{ site_settings.contact_form_label }}</span>
-                        <h2 class="display-md serif" style="margin-top: 16px;"><em style="font-weight: 300;">{{ site_settings.contact_form_title }}</em></h2>
-                    </div>
-
-                    {% if success %}
-                    <div class="brackets" style="padding: 24px; background: var(--bg-2); border: 1px solid var(--accent);">
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--accent);">● {% trans "TRANSMISSION RECEIVED" %}</span>
-                        <p style="margin-top: 8px; color: var(--fg-1);">{% trans "Message sent. I'll reply within 24 hours — usually faster." %}</p>
-                    </div>
-                    {% endif %}
 
                     {% if messages %}
                     {% for msg in messages %}
-                    <div class="brackets" style="padding: 20px; border: 1px solid {% if msg.tags == 'error' %}var(--danger){% else %}var(--accent){% endif %}; background: var(--bg-2);">
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: {% if msg.tags == 'error' %}var(--danger){% else %}var(--accent){% endif %}; text-transform: uppercase;">{% if msg.tags == 'error' %}● Error{% else %}● Notice{% endif %}</span>
-                        <p style="margin-top: 6px; color: var(--fg-1); font-size: 14px;">{{ msg }}</p>
+                    <div class="form-alert{% if msg.tags == 'error' %} form-alert--error{% endif %}">
+                        <span class="mono-label">{% if msg.tags == 'error' %}● Error{% else %}● Notice{% endif %}</span>
+                        <p style="margin-top: 6px;">{{ msg }}</p>
                     </div>
                     {% endfor %}
                     {% endif %}
@@ -63,116 +50,62 @@
                         <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;" class="grid-2-mobile-1">
-                        <div>
-                            <label class="label" for="id_name">{% trans "Name" %}</label>
-                            <input type="text" name="name" id="id_name" required class="input" placeholder="{% trans 'Your name' %}" value="{{ form_data.name }}">
+                    <div class="contact-form__row">
+                        <div class="field">
+                            <label for="id_name">{% trans "Your name" %}</label>
+                            <input type="text" name="name" id="id_name" required placeholder="Aziz Rahimov" value="{{ form_data.name }}">
                         </div>
-                        <div>
-                            <label class="label" for="id_email">Email</label>
-                            <input type="email" name="email" id="id_email" required class="input" placeholder="you@company.com" value="{{ form_data.email }}">
+                        <div class="field">
+                            <label for="id_email">{% trans "Email or Telegram" %}</label>
+                            <input type="text" name="email" id="id_email" required placeholder="@username / email" value="{{ form_data.email }}">
                         </div>
                     </div>
-
-                    <div>
-                        <label class="label" for="id_subject">{% trans "Subject" %}</label>
-                        <input type="text" name="subject" id="id_subject" required class="input" placeholder="{% trans 'What are we building?' %}" value="{{ form_data.subject }}">
+                    <div class="field">
+                        <label for="id_message">{% trans "About your project" %}</label>
+                        <textarea name="message" id="id_message" rows="6" required placeholder="...">{{ form_data.message }}</textarea>
                     </div>
-
-                    <div>
-                        <label class="label" for="id_message">{% trans "The brief" %}</label>
-                        <textarea name="message" id="id_message" rows="6" required class="input" placeholder="{% trans 'Tell me about the project, the timeline, what success looks like…' %}" style="resize: vertical;">{{ form_data.message }}</textarea>
-                        <span class="mono" style="font-size: 10px; color: var(--fg-4); letter-spacing: 0.14em; margin-top: 6px; display: block;" id="char-counter">0 CHARS</span>
-                    </div>
-
-                    <div class="between" style="padding-top: 24px; border-top: 1px solid var(--line-2); flex-wrap: wrap; gap: 16px;">
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{% if success %}✓ {% trans "TRANSMITTED" %}{% else %}{% trans "AWAITING INPUT" %}{% endif %}</span>
-                        <button type="submit" class="btn btn-primary btn-arrow" style="--pad-y: 18px; --pad-x: 32px;">
-                            {% trans "Send brief" %}
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-primary">{% trans "Send" %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
                 </form>
-
-                {# Channels aside #}
-                <aside class="reveal col gap-6" style="transition-delay: 0.1s;">
-                    <div>
-                        <span class="eyebrow">{% trans "Direct channels" %}</span>
-                        <p class="serif" style="font-size: 22px; color: var(--fg-1); margin-top: 16px; font-style: italic; font-weight: 300; line-height: 1.4;">
-                            {% trans "Prefer not to fill out a form? Pick a faster channel — they all reach me." %}
-                        </p>
-                    </div>
-
-                    {% if site_settings.email %}
-                    <a href="mailto:{{ site_settings.email }}" class="brackets" style="padding: 24px; border: 1px solid var(--line-1); display: block;">
-                        <div class="between">
-                            <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Email</span>
-                            <span class="mono" style="font-size: 11px; color: var(--accent);">↗</span>
-                        </div>
-                        <span class="serif" style="font-size: 22px; color: var(--fg-0); display: block; margin-top: 8px; font-style: italic; font-weight: 300; word-break: break-word;">{{ site_settings.email }}</span>
-                        <span style="font-size: 13px; color: var(--fg-3); margin-top: 4px; display: block;">{% trans "Replies within 24h" %}</span>
-                    </a>
-                    {% endif %}
-
-                    {% if site_settings.telegram_url %}
-                    <a href="{{ site_settings.telegram_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 24px; border: 1px solid var(--line-1); display: block;">
-                        <div class="between">
-                            <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Telegram</span>
-                            <span class="mono" style="font-size: 11px; color: var(--accent);">↗</span>
-                        </div>
-                        <span class="serif" style="font-size: 22px; color: var(--fg-0); display: block; margin-top: 8px; font-style: italic; font-weight: 300;">@{{ site_settings.telegram_handle|default:"jaysonkhan" }}</span>
-                        <span style="font-size: 13px; color: var(--fg-3); margin-top: 4px; display: block;">{% trans "Faster, async" %}</span>
-                    </a>
-                    {% endif %}
-
-                    {% if site_settings.github_url %}
-                    <a href="{{ site_settings.github_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 24px; border: 1px solid var(--line-1); display: block;">
-                        <div class="between">
-                            <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">GitHub</span>
-                            <span class="mono" style="font-size: 11px; color: var(--accent);">↗</span>
-                        </div>
-                        <span class="serif" style="font-size: 22px; color: var(--fg-0); display: block; margin-top: 8px; font-style: italic; font-weight: 300;">/jaysonkhan</span>
-                        <span style="font-size: 13px; color: var(--fg-3); margin-top: 4px; display: block;">{% trans "Code & issues" %}</span>
-                    </a>
-                    {% endif %}
-
-                    {% if site_settings.linkedin_url %}
-                    <a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 24px; border: 1px solid var(--line-1); display: block;">
-                        <div class="between">
-                            <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">LinkedIn</span>
-                            <span class="mono" style="font-size: 11px; color: var(--accent);">↗</span>
-                        </div>
-                        <span class="serif" style="font-size: 22px; color: var(--fg-0); display: block; margin-top: 8px; font-style: italic; font-weight: 300;">LinkedIn</span>
-                        <span style="font-size: 13px; color: var(--fg-3); margin-top: 4px; display: block;">{% trans "Long-form, professional" %}</span>
-                    </a>
-                    {% endif %}
-
-                    <div style="padding: 24px; background: var(--bg-3); border: 1px solid var(--line-2);">
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.18em; color: var(--accent);">● CURRENT STATUS</span>
-                        <p class="display-sm serif" style="margin-top: 12px;"><em>{{ site_settings.contact_availability_status }}</em></p>
-                        <p style="font-size: 13px; color: var(--fg-3); margin-top: 8px;">{{ site_settings.contact_availability_note }}</p>
-                    </div>
-                </aside>
+                {% endif %}
             </div>
+
+            <aside class="contact-aside">
+                <span class="mono-label">{% trans "Or directly" %}</span>
+
+                {% if site_settings.telegram_url %}
+                <a href="{{ site_settings.telegram_url }}" target="_blank" rel="noopener" class="card channel-card">
+                    <span class="channel-card__icon channel-card__icon--tg">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.6c.3-1.3-.8-1.9-1.7-1.5L2.7 9.9c-1.2.5-1.1 1.6-.2 1.9l4.5 1.4 10.4-6.6c.5-.3.9-.1.6.2l-8.4 7.6-.3 4.6c.5 0 .7-.2 1-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3-14.4z"/></svg>
+                    </span>
+                    <div class="channel-card__body">
+                        <div class="channel-card__title">{% trans "Message on Telegram" %}</div>
+                        <div class="channel-card__handle">@{{ site_settings.telegram_url|cut:"https://t.me/"|cut:"/" }}</div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
+                </a>
+                {% endif %}
+
+                {% if site_settings.email %}
+                <a href="mailto:{{ site_settings.email }}" class="card channel-card">
+                    <span class="channel-card__icon channel-card__icon--mail">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6L22 7"/></svg>
+                    </span>
+                    <div class="channel-card__body">
+                        <div class="channel-card__title">Email</div>
+                        <div class="channel-card__handle">{{ site_settings.email }}</div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
+                </a>
+                {% endif %}
+
+                <div class="resp-box">
+                    <span class="mono-label">{{ site_settings.cta_response_label }}</span>
+                    <span>{{ site_settings.hero_location }} · <span class="mono" data-clock>--:--:-- UTC+5</span></span>
+                </div>
+            </aside>
         </div>
     </section>
 </main>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function() {
-    var msg = document.getElementById('id_message');
-    var counter = document.getElementById('char-counter');
-    if (!msg || !counter) return;
-    var labelChars = "{% trans 'CHARS' %}";
-    var labelMin = "{% trans 'MIN' %}";
-    function update() {
-        var n = msg.value.length;
-        counter.textContent = n + ' ' + labelChars + (n < 20 ? ' · ' + labelMin + ' 20' : '');
-    }
-    msg.addEventListener('input', update);
-    update();
-})();
-</script>
 {% endblock %}

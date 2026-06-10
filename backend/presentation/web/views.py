@@ -148,43 +148,34 @@ class ProjectListView(AppsGuardMixin, ListView):
     context_object_name = 'projects'
     paginate_by = 10
 
-    # Filter tabs — filtering is now done by URL fields, not the platform type field.
-    # 'cross'   = has both play_store_url AND app_store_url
-    # 'android' = has play_store_url (includes cross-platform)
-    # 'ios'     = has app_store_url  (includes cross-platform)
-    # 'web'     = has web_page_url
-    # 'bot'     = is_bot flag is True
+    # Filter tabs — XIVA INK design kinds, derived from URL fields:
+    # 'web'    = has web_page_url (and not a bot)
+    # 'bot'    = is_bot flag is True
+    # 'mobile' = has app_store_url OR play_store_url
 
     def get_queryset(self):
         queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies')
         f = self.request.GET.get('filter', '')
-        if f == 'cross':
-            # Must have both store URLs
-            queryset = queryset.filter(
-                play_store_url__gt='', app_store_url__gt=''
-            )
-        elif f == 'android':
-            queryset = queryset.filter(play_store_url__gt='')
-        elif f == 'ios':
-            queryset = queryset.filter(app_store_url__gt='')
-        elif f == 'web':
-            queryset = queryset.filter(web_page_url__gt='')
+        if f == 'web':
+            queryset = queryset.filter(web_page_url__gt='', is_bot=False)
         elif f == 'bot':
             queryset = queryset.filter(is_bot=True)
+        elif f == 'mobile':
+            queryset = queryset.filter(
+                Q(app_store_url__gt='') | Q(play_store_url__gt='')
+            )
         return queryset.order_by('order', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         f = self.request.GET.get('filter', '')
-        context['active_filter'] = f if f in ('cross', 'android', 'ios', 'web', 'bot') else 'all'
+        context['active_filter'] = f if f in ('web', 'bot', 'mobile') else 'all'
         base = reverse('projects')
         context['filter_tabs'] = [
-            {'key': 'all',     'label': _('All'),            'url': base},
-            {'key': 'cross',   'label': _('Cross-platform'), 'url': base + '?filter=cross'},
-            {'key': 'android', 'label': 'Android',           'url': base + '?filter=android'},
-            {'key': 'ios',     'label': 'iOS',               'url': base + '?filter=ios'},
-            {'key': 'web',     'label': _('Web'),             'url': base + '?filter=web'},
-            {'key': 'bot',     'label': 'Telegram Bot',      'url': base + '?filter=bot'},
+            {'key': 'all',    'label': _('All'),    'url': base},
+            {'key': 'web',    'label': 'Web',       'url': base + '?filter=web'},
+            {'key': 'bot',    'label': _('Bots'),   'url': base + '?filter=bot'},
+            {'key': 'mobile', 'label': _('Mobile'), 'url': base + '?filter=mobile'},
         ]
         return context
 
@@ -201,6 +192,15 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_interactions_context(self.request, self.object))
+        # "Next project" footer link — next visible project in display order, wraps around
+        ordered = list(
+            Project.objects.filter(is_visible=True)
+            .order_by('order', '-created_at')
+            .values_list('pk', flat=True)
+        )
+        if len(ordered) > 1:
+            idx = ordered.index(self.object.pk) if self.object.pk in ordered else 0
+            context['next_project'] = Project.objects.get(pk=ordered[(idx + 1) % len(ordered)])
         # Channel share info (admin only)
         if self.request.user.is_staff:
             from interactions.notifications.channel_share import ChannelShareService
@@ -307,10 +307,11 @@ class ContactView(TemplateView):
         # -- Normal processing --
         name = request.POST.get('name', '').strip()
         email = request.POST.get('email', '').strip()
-        subject = request.POST.get('subject', '').strip()
         message = request.POST.get('message', '').strip()
+        # v4 form has no subject field — derive one from the message head
+        subject = request.POST.get('subject', '').strip() or message[:80]
 
-        if not all([name, email, subject, message]):
+        if not all([name, email, message]):
             messages.error(request, "Please fill in all required fields.")
             return self.render_to_response(self.get_context_data(form_data=request.POST))
 

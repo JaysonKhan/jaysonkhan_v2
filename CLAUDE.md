@@ -17,7 +17,7 @@ psutil-based server monitor.
 | Auth         | Email-based custom User + Telegram Login Widget (HMAC)   |
 | Admin        | django-unfold (8-tab SiteSettings)                       |
 | API          | DRF 3.16 + SimpleJWT                                     |
-| Templates    | Django SSR + Tailwind CSS 4 (CLI build)                  |
+| Templates    | Django SSR + XIVA INK design system (hand-written CSS: `static/css/tokens.css` + `site.css`, NO Tailwind/node build) — law: [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) |
 | Rich text    | TinyMCE 6 (CDN) + bleach sanitizer                       |
 | i18n         | django-modeltranslation (9 models, 4 langs, hreflang)    |
 | Charts       | Chart.js 4 (CDN)                                         |
@@ -50,16 +50,14 @@ jaysonkhan_v2/
 │   │   └── web/              SSR class-based views
 │   │       └── templates/web/  base.html, home, projects, blog, contact, partials
 │   ├── locale/               .po/.mo (xo, uz, ru, en)
-│   ├── static/ staticfiles/  Tailwind output (`output.css`), JS, images
+│   ├── static/               css/tokens.css + css/site.css (XIVA INK), JS, images
 │   └── media/                user uploads (rich-text inline media, project covers)
-├── docs/                     human docs
+├── docs/                     human docs — DESIGN-SYSTEM.md = UI qonuni
 ├── security/
 │   └── nginx/jaysonkhan.conf nginx config (kept in sync with server)
 ├── presentation/             additional templates / partials
 ├── server-manager.sh         server health / restart helpers
 ├── deploy.sh                 unified deploy (web / --bot / --all)
-├── tailwind.config.js        + tailwind.input.css
-├── package.json              Tailwind 4 CLI build only
 └── requirements.txt
 ```
 
@@ -72,6 +70,9 @@ jaysonkhan_v2/
 - **Visibility flags** — `Project.is_visible`, `is_featured`, `is_bot`; `Post.is_published`; `SiteSettings.apps_section_visible` (toggles entire Apps section via `AppsGuardMixin`).
 - **Project filtering** — by URL fields (`app_store_url`, `play_store_url`, `web_page_url`, `is_bot`). No `platform` field.
 - **Rich text** — TinyMCE 6 CDN → `/api/admin/media-upload/` → bleach sanitization on `save()`. CSRF token read from a hidden input (NOT cookie, because `CSRF_COOKIE_HTTPONLY=True`).
+- **XIVA INK design system (v4)** — single universal dark-ink scheme (no light/dark toggle), Schibsted Grotesk + IBM Plex Mono, terracotta/turquoise accents. ALL UI changes must follow [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md): tokens only, no new hex colors/fonts, 4-language strings. Admin uses the same scheme via `editorial.css` + `UNFOLD["THEME"]="dark"`.
+- **WakaTime widget** — homepage About section reads `SiteSettings.wakatime_stats` JSON; filled by `manage.py fetch_wakatime` (env `WAKATIME_API_KEY`, cron). Empty dict → widget hidden, falls back to `about_image`.
+- **v4 copy seeder** — `manage.py apply_xiva_copy` writes the approved 4-language design copy into SiteSettings (one-shot, explicit).
 - **Infinite scroll** — `ProjectListSerializer` / `PostListSerializer` (lightweight) consumed by `static/js/infinite-scroll.js`.
 - **Telegram auth** — Login Widget → HMAC verify with `TELEGRAM_BOT_TOKEN` → session-based `TelegramProfile`.
 - **Comments / likes / reactions** — generic FK (ContentType), works on both `Post` and `Project`.
@@ -83,7 +84,6 @@ jaysonkhan_v2/
 ### Local dev
 
 ```bash
-# 1. Backend
 cd backend
 python3.12 -m venv venv
 source venv/bin/activate
@@ -91,11 +91,7 @@ pip install -r ../requirements.txt
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
 # (default settings module = config.settings.dev)
-
-# 2. Tailwind (separate terminal)
-npm install
-npm run css:watch         # dev
-npm run css:build         # one-shot prod build
+# CSS is plain static files (XIVA INK) — no node/Tailwind build step.
 ```
 
 ### Common Django commands
@@ -184,5 +180,8 @@ TELEGRAM_BOT_USERNAME
 
 # Email
 EMAIL_HOST EMAIL_PORT EMAIL_HOST_USER EMAIL_HOST_PASSWORD
+
+# Integrations
+WAKATIME_API_KEY                # fetch_wakatime cron (homepage widget)
 
 ```

@@ -7,11 +7,16 @@ Each translatable field becomes one column per language in core_sitesettings:
 Default `xo` (Khorezm) is the canonical column. Existing values are migrated
 into `field_xo` automatically by the auto-generated migration.
 """
-from modeltranslation.translator import register, TranslationOptions
+from modeltranslation.translator import TranslationOptions, register
+
 from .models import (
-    SiteSettings, Asset,
-    SiteSettingsBranding, SiteSettingsSEO, SiteSettingsNavigation,
-    SiteSettingsHomepage, SiteSettingsEditorial,
+    Asset,
+    SiteSettings,
+    SiteSettingsBranding,
+    SiteSettingsEditorial,
+    SiteSettingsHomepage,
+    SiteSettingsNavigation,
+    SiteSettingsSEO,
 )
 
 
@@ -36,6 +41,7 @@ class SiteSettingsTranslation(TranslationOptions):
 
         # ── Hero ────────────────────────────────────────────────────────────
         'hero_title',
+        'hero_title_em',
         'hero_subtitle',
 
         # ── About + Stats ───────────────────────────────────────────────────

@@ -46,12 +46,14 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
     created_at = serializers.DateTimeField(format='%Y-%m-%d', read_only=True)
 
+    kind = serializers.CharField(read_only=True)
+
     class Meta:
         model = Project
         fields = ('id', 'title', 'slug', 'description', 'image_url',
                   'tech_tags', 'created_at', 'is_featured',
                   'app_store_url', 'play_store_url', 'web_page_url',
-                  'is_bot', 'github_url')
+                  'is_bot', 'github_url', 'stats', 'kind')
 
     def get_image_url(self, obj):
         if obj.image:
@@ -101,7 +103,7 @@ class PostListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for infinite scroll list responses."""
     image_url = serializers.SerializerMethodField()
     category_name = serializers.CharField(source='category.name', default='')
-    created_at = serializers.DateTimeField(format='%b %d, %Y')
+    created_at = serializers.DateTimeField(format='%Y-%m-%d')
 
     class Meta:
         model = Post

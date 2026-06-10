@@ -85,6 +85,13 @@ class Project(models.Model):
         blank=True, default='',
         help_text="Case Study — Results/Outcomes"
     )
+    stats = models.JSONField(
+        blank=True, default=list,
+        help_text=(
+            "Key metrics for cards/case-study hero — list of {\"v\": \"500k+\", \"l\": \"downloads\"} "
+            "objects (max 3 shown)"
+        )
+    )
 
     class Meta:
         ordering = ['order', '-created_at']
@@ -100,6 +107,19 @@ class Project(models.Model):
     @property
     def has_case_study(self):
         return bool(self.case_study_challenge or self.case_study_solution or self.case_study_results)
+
+    @property
+    def kind(self):
+        """Project kind for the XIVA INK KindBadge: 'bot' | 'mobile' | 'web'."""
+        if self.is_bot:
+            return 'bot'
+        if self.app_store_url or self.play_store_url:
+            return 'mobile'
+        return 'web'
+
+    @property
+    def kind_label(self):
+        return {'web': 'WEB', 'bot': 'TG BOT', 'mobile': 'MOBILE'}[self.kind]
 
     def save(self, *args, **kwargs):
         if not self.slug:

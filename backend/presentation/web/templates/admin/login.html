@@ -1,21 +1,10 @@
 {% load i18n static %}<!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% trans 'Log in' %} | {{ site_title|default:"JK-DinAdmin" }}</title>
     <meta name="robots" content="noindex, nofollow">
-
-    <script>
-    (function() {
-        try {
-            var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
-            var r = document.documentElement;
-            if (t.theme) r.setAttribute('data-theme', t.theme);
-            if (t.accent) r.style.setProperty('--accent', t.accent);
-        } catch (e) {}
-    })();
-    </script>
 
     <link rel="stylesheet" href="{% static 'admin/css/editorial.css' %}">
     <style>
@@ -149,7 +138,7 @@
         }
     </style>
 </head>
-<body data-font-set="A">
+<body>
     <main class="login-grid fade-in">
         {# ========================== LEFT: BRAND ASIDE ========================== #}
         <aside class="login-aside">
@@ -157,7 +146,7 @@
                 <div class="brand-mark">JK</div>
                 <div class="brand-cluster-text">
                     <span class="brand-cluster-name">Jaysonkhan</span>
-                    <span class="brand-cluster-sub">DIN-ADMIN · v3.2</span>
+                    <span class="brand-cluster-sub">DIN-ADMIN · V4 · XIVA INK</span>
                 </div>
             </div>
 
@@ -246,39 +235,10 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
                     <a href="/" class="label-mono" style="color: var(--fg-3); text-decoration: none;">← Back to site</a>
-                    <button type="button" id="theme-toggle" aria-label="Toggle theme" style="width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--line-2); background: transparent; color: var(--fg-2); display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                        <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z"/></svg>
-                    </button>
+                    <span class="label-mono" style="color: var(--fg-4);">XIVA INK</span>
                 </div>
             </div>
         </div>
     </main>
-
-    <script>
-    (function() {
-        var btn = document.getElementById('theme-toggle');
-        if (!btn) return;
-        function updateIcon(theme) {
-            var icon = document.getElementById('theme-icon');
-            if (!icon) return;
-            icon.innerHTML = theme === 'dark'
-                ? '<circle cx="12" cy="12" r="4"/><path d="M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22 M4.5 4.5 L6.5 6.5 M17.5 17.5 L19.5 19.5 M4.5 19.5 L6.5 17.5 M17.5 6.5 L19.5 4.5"/>'
-                : '<path d="M20 14 A8 8 0 1 1 10 4 A6 6 0 0 0 20 14 Z"/>';
-        }
-        updateIcon(document.documentElement.getAttribute('data-theme'));
-        btn.addEventListener('click', function() {
-            var r = document.documentElement;
-            var current = r.getAttribute('data-theme') || 'light';
-            var next = current === 'light' ? 'dark' : 'light';
-            r.setAttribute('data-theme', next);
-            updateIcon(next);
-            try {
-                var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
-                t.theme = next;
-                localStorage.setItem('jk-tweaks', JSON.stringify(t));
-            } catch (e) {}
-        });
-    })();
-    </script>
 </body>
 </html>

@@ -35,182 +35,140 @@
 
 {% block content %}
 <main>
-    {# ========================== HEADER ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
-                <a href="{% url 'projects' %}" class="row gap-2" style="align-items: center; color: var(--fg-3);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">{% trans "All work" %}</span>
-                </a>
-                <div class="row gap-3" style="flex-wrap: wrap;">
-                    <span class="tag">{% if project.app_store_url and project.play_store_url %}{% trans "Cross-platform" %}{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}Telegram{% else %}{% trans "Mobile" %}{% endif %}</span>
-                    <span class="tag">{{ project.created_at|date:"Y" }}</span>
-                    {% if project.is_featured %}<span class="tag" style="color: var(--accent); border-color: var(--accent);">● {% trans "Featured" %}</span>{% endif %}
+    {# ========================== CASE HERO ========================== #}
+    <section class="case-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container case-hero__inner">
+            <a href="{% url 'projects' %}" class="back-link">← {% trans "Back to work" %}</a>
+            <div class="case-hero__meta">
+                <span class="tag kind-badge--{{ project.kind }}">{{ project.kind_label }}</span>
+                <span class="mono" style="font-size: 11.5px; color: var(--fg-4); letter-spacing: 0.1em;">{{ project.created_at|date:"Y" }}</span>
+                {% if project.is_featured %}<span class="tag" style="color: var(--accent); border-color: color-mix(in oklab, var(--accent) 35%, transparent);">{% trans "Featured" %}</span>{% endif %}
+            </div>
+            <h1 class="display-xl fade-up case-hero__title">{{ project.title }}</h1>
+            {% if project.short_description %}
+            <p class="case-hero__sub fade-up" style="animation-delay: .15s;">{{ project.short_description }}</p>
+            {% endif %}
+            {% if project.stats %}
+            <div class="case-hero__stats fade-up" style="animation-delay: .25s;">
+                {% for s in project.stats %}
+                <div class="case-stat">
+                    <span class="case-stat__v">{{ s.v }}</span>
+                    <span class="mono-label">{{ s.l }}</span>
                 </div>
+                {% endfor %}
             </div>
-
-            <div class="reveal">
-                <div class="eyebrow" style="margin-bottom: 24px;">Case study · {{ project.created_at|date:"F Y" }}</div>
-                <h1 class="display-xl"><em style="font-weight: 300;">{{ project.title }}</em>.</h1>
-                {% if project.short_description %}
-                <p style="margin-top: 32px; font-size: 20px; color: var(--fg-2); max-width: 760px; line-height: 1.5;">{{ project.short_description }}</p>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
     </section>
 
-    {# ========================== MEDIA + META ========================== #}
+    {# ========================== CASE STUDY + ASIDE ========================== #}
     <section class="section">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 60px; align-items: flex-start;" class="grid-2-mobile-1">
-                {# Visual #}
+        <div class="container case-grid">
+            <div class="case-blocks">
                 {% if project.image %}
-                <div class="reveal brackets" style="background: var(--bg-2); border: 1px solid var(--line-1); padding: 24px;">
-                    <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy" style="width: 100%; display: block; border: 1px solid var(--line-1);">
-                </div>
-                {% else %}
-                <div class="reveal brackets" style="background: var(--bg-3); border: 1px solid var(--line-1); padding: 80px; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;">
-                    <span class="serif" style="font-size: 200px; font-style: italic; color: var(--accent); opacity: 0.5; line-height: 1;">{{ project.title|slice:":1" }}</span>
+                <div class="card case-media reveal" style="margin-bottom: 28px;">
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}" loading="lazy">
                 </div>
                 {% endif %}
-
-                {# Meta panel #}
-                <aside class="reveal col gap-6" style="transition-delay: 0.1s;">
-                    <div>
-                        <span class="label">{% trans "Stack" %}</span>
-                        <div class="row gap-2" style="flex-wrap: wrap;">
-                            {% for tech in project.technologies.all %}
-                            <span class="tag" style="border-color: var(--accent); color: var(--accent);">{{ tech.name }}</span>
-                            {% empty %}
-                            <span class="muted" style="font-size: 14px;">—</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <span class="label">{% trans "Channels" %}</span>
-                        <div class="col gap-3">
-                            {% if project.app_store_url %}
-                            <a href="{{ project.app_store_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 16px 20px; border: 1px solid var(--line-1); display: block;">
-                                <div class="between">
-                                    <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">App Store</span>
-                                    <span class="mono" style="font-size: 12px; color: var(--accent);">↗</span>
-                                </div>
-                                <span class="serif" style="font-size: 18px; color: var(--fg-0); display: block; margin-top: 4px; font-style: italic; font-weight: 300;">{% trans "Open in iOS" %}</span>
-                            </a>
-                            {% endif %}
-                            {% if project.play_store_url %}
-                            <a href="{{ project.play_store_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 16px 20px; border: 1px solid var(--line-1); display: block;">
-                                <div class="between">
-                                    <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Google Play</span>
-                                    <span class="mono" style="font-size: 12px; color: var(--accent);">↗</span>
-                                </div>
-                                <span class="serif" style="font-size: 18px; color: var(--fg-0); display: block; margin-top: 4px; font-style: italic; font-weight: 300;">{% trans "Open in Android" %}</span>
-                            </a>
-                            {% endif %}
-                            {% if project.web_page_url %}
-                            <a href="{{ project.web_page_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 16px 20px; border: 1px solid var(--line-1); display: block;">
-                                <div class="between">
-                                    <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Web</span>
-                                    <span class="mono" style="font-size: 12px; color: var(--accent);">↗</span>
-                                </div>
-                                <span class="serif" style="font-size: 18px; color: var(--fg-0); display: block; margin-top: 4px; font-style: italic; font-weight: 300;">{% trans "Visit web app" %}</span>
-                            </a>
-                            {% endif %}
-                            {% if project.github_url %}
-                            <a href="{{ project.github_url }}" target="_blank" rel="noopener" class="brackets" style="padding: 16px 20px; border: 1px solid var(--line-1); display: block;">
-                                <div class="between">
-                                    <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">GitHub</span>
-                                    <span class="mono" style="font-size: 12px; color: var(--accent);">↗</span>
-                                </div>
-                                <span class="serif" style="font-size: 18px; color: var(--fg-0); display: block; margin-top: 4px; font-style: italic; font-weight: 300;">{% trans "Source code" %}</span>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </aside>
-            </div>
-        </div>
-    </section>
-
-    {# ========================== CONTENT ========================== #}
-    {% if project.description_rich or project.has_case_study %}
-    <section class="section" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
-        <div class="container-narrow">
-            <div class="project-content">
-                {% if project.description_rich %}
-                <div class="reveal rich-content">
-                    {{ project.description_rich|safe }}
-                </div>
-                {% endif %}
-
-                {% if project.has_case_study %}
-                <div class="reveal" style="margin-top: 80px;">
-                    <span class="eyebrow" style="margin-bottom: 16px;">Case study · Notes from production</span>
-                    <h2 class="display-md serif"><em style="font-weight: 300;">{% trans "Behind" %}</em> {% trans "the build." %}</h2>
-                </div>
 
                 {% if project.case_study_challenge %}
-                <div class="reveal" style="margin-top: 48px; padding: 32px; border: 1px solid var(--line-1); background: var(--bg-2);">
-                    <div class="row gap-3" style="align-items: center; margin-bottom: 16px;">
-                        <span class="numeral" style="font-size: 32px; color: var(--fg-4);">01</span>
-                        <h3 class="display-sm serif" id="challenge"><em>{% trans "Challenge" %}</em></h3>
+                <div class="case-block case-block--challenge reveal">
+                    <div class="case-block__head">
+                        <span class="case-block__dot"></span>
+                        <span class="mono-label" style="color: var(--fg-2);">{% trans "Challenge" %}</span>
                     </div>
-                    <div class="rich-content" style="margin-top: 12px;">{{ project.case_study_challenge|linebreaksbr }}</div>
+                    <p class="case-block__text">{{ project.case_study_challenge|linebreaksbr }}</p>
                 </div>
                 {% endif %}
 
                 {% if project.case_study_solution %}
-                <div class="reveal" style="margin-top: 24px; padding: 32px; border: 1px solid var(--line-1); background: var(--bg-2);">
-                    <div class="row gap-3" style="align-items: center; margin-bottom: 16px;">
-                        <span class="numeral" style="font-size: 32px; color: var(--fg-4);">02</span>
-                        <h3 class="display-sm serif" id="solution"><em>{% trans "Solution" %}</em></h3>
+                <div class="case-block case-block--solution reveal">
+                    <div class="case-block__head">
+                        <span class="case-block__dot"></span>
+                        <span class="mono-label" style="color: var(--fg-2);">{% trans "Solution" %}</span>
                     </div>
-                    <div class="rich-content" style="margin-top: 12px;">{{ project.case_study_solution|linebreaksbr }}</div>
+                    <p class="case-block__text">{{ project.case_study_solution|linebreaksbr }}</p>
                 </div>
                 {% endif %}
 
                 {% if project.case_study_results %}
-                <div class="reveal" style="margin-top: 24px; padding: 32px; border: 1px solid var(--accent); background: var(--bg-2);">
-                    <div class="row gap-3" style="align-items: center; margin-bottom: 16px;">
-                        <span class="numeral" style="font-size: 32px; color: var(--accent);">03</span>
-                        <h3 class="display-sm serif" id="results"><em>{% trans "Results" %}</em></h3>
+                <div class="case-block case-block--results reveal">
+                    <div class="case-block__head">
+                        <span class="case-block__dot"></span>
+                        <span class="mono-label" style="color: var(--fg-2);">{% trans "Results" %}</span>
                     </div>
-                    <div class="rich-content" style="margin-top: 12px;">{{ project.case_study_results|linebreaksbr }}</div>
+                    <p class="case-block__text">{{ project.case_study_results|linebreaksbr }}</p>
                 </div>
                 {% endif %}
+
+                {% if project.description_rich %}
+                <div class="case-block reveal">
+                    <div class="post-body">{{ project.description_rich|safe }}</div>
+                </div>
                 {% endif %}
             </div>
+
+            <aside class="case-aside">
+                <div class="card case-aside__card">
+                    <span class="mono-label">{% trans "Stack" %}</span>
+                    <div class="case-aside__tags">
+                        {% for tech in project.technologies.all %}<span class="tag">{{ tech.name }}</span>{% empty %}<span class="muted">—</span>{% endfor %}
+                    </div>
+                </div>
+
+                {% if project.app_store_url or project.play_store_url or project.web_page_url or project.github_url %}
+                <div class="card case-aside__card">
+                    <span class="mono-label">{% trans "Channels" %}</span>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+                        {% if project.web_page_url %}
+                        <a href="{{ project.web_page_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">{% trans "Visit live" %} <span class="mono" style="color: var(--accent-2);">↗</span></a>
+                        {% endif %}
+                        {% if project.app_store_url %}
+                        <a href="{{ project.app_store_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">App Store <span class="mono" style="color: var(--accent-2);">↗</span></a>
+                        {% endif %}
+                        {% if project.play_store_url %}
+                        <a href="{{ project.play_store_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">Google Play <span class="mono" style="color: var(--accent-2);">↗</span></a>
+                        {% endif %}
+                        {% if project.github_url %}
+                        <a href="{{ project.github_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">GitHub <span class="mono" style="color: var(--accent-2);">↗</span></a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <a href="{% url 'contact' %}" class="btn btn-primary">{{ site_settings.cta_button_text }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </aside>
         </div>
     </section>
-    {% endif %}
 
     {# ========================== INTERACTIONS ========================== #}
-    <section class="section-sm">
-        <div class="container-narrow">
+    <section style="padding-bottom: clamp(48px, 6vw, 80px);">
+        <div class="container">
             {% include 'web/partials/channel_share.html' with content_type='project' slug=project.slug %}
             {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id comments=comments like_count=like_count user_liked=user_liked %}
         </div>
     </section>
 
-    {# ========================== NEXT CTA ========================== #}
-    <section class="section surface-ink">
-        <div class="container">
-            <div class="between" style="flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
-                    <span class="eyebrow">— {% trans "End of dispatch" %}</span>
-                    <h2 class="display-lg serif">{% trans "Got a brief like" %}<br><em style="font-weight: 300;">{% trans "this one?" %}</em></h2>
+    {# ========================== NEXT PROJECT ========================== #}
+    {% if next_project %}
+    <section>
+        <a href="{% url 'project_detail' next_project.slug %}" class="next-proj">
+            <div class="container next-proj__inner">
+                <div class="next-proj__label">
+                    <span class="mono-label">{% trans "Next project" %}</span>
+                    <span class="next-proj__title">{{ next_project.title }}</span>
                 </div>
-                <div class="col gap-3" style="align-items: flex-end;">
-                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 18px; --pad-x: 32px;">
-                        {% trans "Open a channel" %}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <a href="{% url 'projects' %}" class="mono" style="font-size: 11px; letter-spacing: 0.18em; opacity: 0.7; text-transform: uppercase;">← {% trans "Back to all work" %}</a>
-                </div>
+                <span class="next-proj__arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </span>
             </div>
-        </div>
+        </a>
     </section>
+    {% endif %}
 </main>
 {% endblock %}

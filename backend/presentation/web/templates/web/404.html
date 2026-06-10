@@ -1,50 +1,37 @@
 {% load static %}<!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 — Page not found | {% if site_settings %}{{ site_settings.site_title }}{% else %}Jaysonkhan{% endif %}</title>
     <meta name="robots" content="noindex, nofollow">
-
-    <script>
-    (function() {
-        try {
-            var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
-            var r = document.documentElement;
-            if (t.theme) r.setAttribute('data-theme', t.theme);
-            if (t.accent) r.style.setProperty('--accent', t.accent);
-        } catch (e) {}
-    })();
-    </script>
-
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
 <body>
     <main>
-        <section style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 24px; position: relative;">
-            <div class="container-narrow" style="text-align: center;">
-                <div class="fade-up">
-                    <span class="numeral" style="font-size: clamp(160px, 24vw, 320px); color: var(--accent); display: block; line-height: 1; font-style: italic;">404</span>
-                </div>
-
-                <div class="fade-up" style="animation-delay: 0.2s;">
-                    <span class="eyebrow" style="margin-top: 40px; justify-content: center;">Error · Transmission lost</span>
-                    <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_404_headline|safe|default:"Bu sahifa xaritadan chiqib ketgan." }}</h1>
-                    <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ site_settings.error_404_description|default:"Qidirayotgan sahifa ko'chirilgan, arxivlangan yoki umuman bo'lmagan." }}</p>
-                </div>
-
-                <div class="row gap-3 fade-up" style="justify-content: center; margin-top: 40px; flex-wrap: wrap; animation-delay: 0.4s;">
-                    <a href="/" class="btn btn-primary btn-arrow">
-                        Back home
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <section class="error-hero">
+            <div class="aurora aurora--page" aria-hidden="true">
+                <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+            </div>
+            <div class="container error-hero__inner">
+                <span class="error-code fade-up">404</span>
+                <span class="eyebrow fade-up" style="animation-delay: .1s;">Error · Transmission lost</span>
+                <h1 class="display-md fade-up" style="animation-delay: .15s;">{{ site_settings.error_404_headline|safe|default:"Bu sahifa xaritadan chiqib ketgan." }}</h1>
+                <p class="fade-up" style="animation-delay: .2s;">{{ site_settings.error_404_description|default:"Qidirayotgan sahifa ko'chirilgan, arxivlangan yoki umuman bo'lmagan." }}</p>
+                <div class="fade-up" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; animation-delay: .3s;">
+                    <a href="/" class="btn btn-primary">Bosh sahifa
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
-                    <a href="/projects/" class="btn">View work</a>
-                    <a href="/blog/" class="btn">Read journal</a>
+                    <a href="/projects/" class="btn">Ishlar</a>
+                    <a href="/blog/" class="btn">Jurnal</a>
                 </div>
-
-                <div class="row" style="justify-content: center; margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 24px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">Status · 404</span>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">Path · {{ request.path|default:"/" }}</span>
+                <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line-1); width: 100%;">
+                    <span class="mono-label">Status · 404</span>
+                    <span class="mono-label">Path · {{ request.path|default:"/" }}</span>
                 </div>
             </div>
         </section>

@@ -19,7 +19,7 @@
                 <span>Boshqaruv markazi · {{ jk_dashboard.site_title|default:"Studio Console" }}</span>
             </div>
             <h1 class="page-title">Xush kelibsiz, <em>operator.</em></h1>
-            <p class="page-sub">Saytingiz, blog yozuvlaringiz va Asset kutubxonasining bir kunlik holati. Hammasi joyida — qora siyoh, qog'ozda.</p>
+            <p class="page-sub">Saytingiz, blog yozuvlaringiz va Asset kutubxonasining bir kunlik holati. Hammasi joyida — tungi siyoh, Xiva ohangida.</p>
         </div>
         <div class="page-actions">
             <a href="{% url 'admin:core_asset_manager' %}" class="btn">
@@ -82,7 +82,7 @@
             <div>
                 <div class="label-mono" style="color: rgba(243,239,230,0.6); margin-bottom: 14px;">OPERATSION ESLATMA · {% now "d.m.Y" %}</div>
                 <div class="banner-quote">
-                    "Production <em>tirik</em>. {% if jk_dashboard.tiles_secondary %}{{ jk_dashboard.tiles_secondary.0.value }} ta loyiha, {{ jk_dashboard.tiles_secondary.1.value }} ta jamoa a'zosi.{% endif %} Hammasi <em>siyohda yozilgan</em> — o'qishga tayyor."
+                    "Production <em>tirik</em>. {% if jk_dashboard.tiles_secondary %}{{ jk_dashboard.tiles_secondary.0.value }} ta loyiha, {{ jk_dashboard.tiles_secondary.1.value }} ta jamoa a'zosi.{% endif %} Hammasi <em>XIVA INK</em>da — o'qishga tayyor."
                 </div>
                 <div class="banner-meta">→ JAYSONKHAN.COM · BY: jaysonkhan · {% now "H:i" %} UTC+5</div>
             </div>
@@ -111,7 +111,7 @@
                 <div style="height: 220px; display: flex; align-items: flex-end; gap: 8px;">
                     {% for b in jk_dashboard.traffic %}
                     <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                        <div style="width: 100%; height: {{ b.height }}px; background: {% if b.is_today %}var(--accent){% else %}var(--bg-3){% endif %}; border-radius: 2px 2px 0 0; transition: opacity .3s;" title="{{ b.count }} on day {{ b.day }}"></div>
+                        <div style="width: 100%; height: {{ b.height }}px; background: {% if b.is_today %}var(--accent){% else %}var(--accent-2-soft){% endif %}; border-radius: 2px 2px 0 0; transition: opacity .3s;" title="{{ b.count }} on day {{ b.day }}"></div>
                         <span class="mono" style="font-size: 9px; color: var(--fg-4);">{{ b.day }}</span>
                     </div>
                     {% endfor %}

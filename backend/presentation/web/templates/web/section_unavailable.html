@@ -1,23 +1,24 @@
 {% extends 'web/base.html' %}
+{% load i18n %}
 
 {% block title %}Section unavailable — {{ site_settings.site_title }}{% endblock %}
 
 {% block content %}
 <main>
-    <section style="min-height: calc(100vh - 84px); display: flex; align-items: center; justify-content: center; padding: 80px 0;">
-        <div class="container-narrow" style="text-align: center;">
-            <div class="reveal in">
-                <span class="numeral" style="font-size: clamp(120px, 18vw, 220px); color: var(--accent); display: block; line-height: 1; font-style: italic;">∅</span>
-                <span class="eyebrow" style="margin-top: 32px; justify-content: center;">— Transmission paused</span>
-                <h1 class="display-md serif" style="margin-top: 24px;">{{ site_settings.error_unavailable_headline|safe }}</h1>
-                <p style="margin-top: 32px; color: var(--fg-2); font-size: 17px; line-height: 1.6; max-width: 520px; margin-left: auto; margin-right: auto;">{{ message|default:site_settings.error_unavailable_description }}</p>
-                <div class="row gap-3" style="justify-content: center; margin-top: 40px; flex-wrap: wrap;">
-                    <a href="{% url 'home' %}" class="btn btn-primary btn-arrow">
-                        Back home
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <a href="{% url 'contact' %}" class="btn">Open a channel</a>
-                </div>
+    <section class="error-hero" style="min-height: calc(100vh - 72px);">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container error-hero__inner" style="align-items: center; text-align: center;">
+            <span class="error-code fade-up" style="font-size: clamp(80px, 14vw, 160px);">∅</span>
+            <span class="eyebrow fade-up" style="animation-delay: .1s;">— Transmission paused</span>
+            <h1 class="display-md fade-up" style="animation-delay: .15s;">{{ site_settings.error_unavailable_headline|safe }}</h1>
+            <p class="fade-up" style="animation-delay: .2s;">{{ message|default:site_settings.error_unavailable_description }}</p>
+            <div class="fade-up" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 12px; animation-delay: .3s;">
+                <a href="{% url 'home' %}" class="btn btn-primary">{% trans "Home" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{% url 'contact' %}" class="btn">{% trans "Contact" %}</a>
             </div>
         </div>
     </section>

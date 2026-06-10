@@ -5,36 +5,34 @@
 
 {% block content %}
 <main>
-    {# ========================== HERO ========================== #}
-    <section style="position: relative; overflow: hidden; min-height: calc(100vh - 84px); display: flex; flex-direction: column;">
-        <div class="container hud-only" style="padding-top: 24px; padding-bottom: 24px;">
-            <div class="between" style="flex-wrap: wrap; gap: 16px;">
-                <div class="row gap-3" style="flex-wrap: wrap;">
-                    <span class="tag">{{ site_settings.hero_volume_label }}</span>
-                    <span class="tag">{{ site_settings.hero_location }}</span>
-                    <span class="tag mono" id="hero-clock">— UTC+5</span>
-                </div>
-                <div class="row gap-3">
-                    <span class="tag"><span class="dot-live"></span> {{ site_settings.availability_badge }}</span>
-                </div>
-            </div>
+    {# ========================== HERO (editorial) ========================== #}
+    <section class="hero">
+        <div class="aurora aurora--hero" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
         </div>
-
-        <div class="container flex-1" style="display: flex; flex-direction: column; justify-content: center; padding-top: 60px; padding-bottom: 80px;">
-            <div class="eyebrow fade-up" style="margin-bottom: 32px; animation-delay: 0.1s;">{{ site_settings.hero_eyebrow }}</div>
-            <h1 class="display-xl fade-up" style="animation-delay: 0.2s; max-width: 95%;">
-                {% if site_settings.hero_title %}{{ site_settings.hero_title|safe }}{% else %}Mobile experiences,<br>engineered with<br><span style="font-style: italic; font-weight: 300; position: relative; display: inline-block;">intent.<svg style="position: absolute; left: -8%; bottom: -8%; width: 116%; height: 60%; pointer-events: none;" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M2,18 Q 30,2 60,16 T 98,12" stroke="var(--accent)" stroke-width="1.2" fill="none" stroke-linecap="round" pathLength="1" style="stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.6s var(--ease-out) 0.8s forwards;"/></svg></span>{% endif %}
+        <div class="container hero__meta">
+            <div class="hero__meta-group">
+                {% if site_settings.hero_location %}<span class="tag">{{ site_settings.hero_location }}</span>{% endif %}
+                <span class="tag mono" data-clock>--:--:-- UTC+5</span>
+            </div>
+            <span class="tag"><span class="dot-live"></span> {{ site_settings.availability_badge }}</span>
+        </div>
+        <div class="container hero__body">
+            <span class="eyebrow hero__eyebrow fade-up" style="animation-delay: .05s;">{{ site_settings.hero_eyebrow }}</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .15s;">
+                {{ site_settings.hero_title|safe }}{% if site_settings.hero_title_em %}<br>
+                <em class="serif-i hero__em">
+                    {{ site_settings.hero_title_em }}
+                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M2,18 Q 30,2 60,16 T 98,12" stroke="var(--accent-2)" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+                    </svg>
+                </em>{% endif %}
             </h1>
-
-            <div class="row between fade-up" style="margin-top: 60px; animation-delay: 0.4s; flex-wrap: wrap; gap: 24px;">
-                <p style="max-width: 560px; font-size: 18px; line-height: 1.55; color: var(--fg-2);">
-                    {% if site_settings.hero_subtitle %}{{ site_settings.hero_subtitle }}{% else %}I'm <strong style="color: var(--fg-0);">{{ site_settings.site_author }}</strong> — a VibeCoder running a build studio in Tashkent. I ship production web apps, Telegram bots, and AI-augmented systems.{% endif %}
-                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" class="link">{% trans "See the work →" %}</a>{% endif %}
-                </p>
-                <div class="row gap-3" style="align-items: center; flex-wrap: wrap;">
-                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow">
-                        {% trans "Start a project" %}
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <div class="hero__sub-row fade-up" style="animation-delay: .3s;">
+                <p class="hero__sub">{{ site_settings.hero_subtitle }}</p>
+                <div class="hero__ctas">
+                    <a href="{% url 'contact' %}" class="btn btn-primary">{% trans "Start a project" %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
                     {% if site_settings.apps_section_visible %}
                     <a href="{% url 'projects' %}" class="btn">{% trans "View case studies" %}</a>
@@ -42,11 +40,10 @@
                 </div>
             </div>
         </div>
-
-        <div class="container hud-only" style="padding-bottom: 40px;">
-            <div class="between" style="padding-top: 24px; border-top: 1px solid var(--line-1); flex-wrap: wrap; gap: 16px;">
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.hero_scroll_label }}</span>
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.hero_section_count }}</span>
+        <div class="container hero__foot">
+            <div class="hero__foot-line">
+                <span class="mono-label">{{ site_settings.hero_scroll_label }} ↓</span>
+                <span class="mono-label">{{ site_settings.hero_section_count }}</span>
             </div>
         </div>
     </section>
@@ -54,13 +51,9 @@
     {# ========================== TICKER ========================== #}
     {% with ticker=site_settings.ticker_items_resolved %}
     {% if ticker %}
-    <div class="ticker hud-only" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1); padding: 14px 0; background: var(--bg-0);">
-        <div class="ticker-track mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-3);">
-            {% for _ in "12" %}
-                {% for item in ticker %}
-                <span style="display: inline-flex; align-items: center; gap: 60px;">{{ item }}<span style="color: var(--accent);">✦</span></span>
-                {% endfor %}
-            {% endfor %}
+    <div class="ticker ticker-band">
+        <div class="ticker-track mono">
+            {% for _ in "12" %}{% for item in ticker %}<span>{{ item }}<span class="star">✦</span></span>{% endfor %}{% endfor %}
         </div>
     </div>
     {% endif %}
@@ -69,111 +62,116 @@
     {# ========================== MANIFESTO ========================== #}
     {% with principles=site_settings.manifesto_principles_resolved %}
     {% if principles %}
-    <section class="section" style="border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 80px;" class="grid-2-mobile-1">
-                <div class="col gap-4 reveal">
-                    <span class="eyebrow">{{ site_settings.manifesto_eyebrow }}</span>
-                    <h2 class="display-md serif">{{ site_settings.manifesto_title }}</h2>
-                    <p class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-4); text-transform: uppercase; margin-top: 16px;">{{ site_settings.manifesto_label }}</p>
-                </div>
-                <div class="col gap-10">
-                    {% for p in principles %}
-                    <div class="reveal" style="{% if not forloop.last %}padding-bottom: 40px; border-bottom: 1px solid var(--line-1);{% endif %} transition-delay: {{ forloop.counter0 }}00ms;">
-                        <div class="row" style="gap: 32px; align-items: baseline; flex-wrap: wrap;">
-                            <span class="numeral" style="font-size: 56px; color: var(--fg-4); min-width: 80px;">{{ p.n }}</span>
-                            <div class="col gap-3 flex-1">
-                                <h3 class="display-sm serif"><em style="font-weight: 300;">{{ p.title }}</em></h3>
-                                <p style="color: var(--fg-2); font-size: 16px; line-height: 1.6; max-width: 620px;">{{ p.description }}</p>
-                            </div>
-                        </div>
+    <section class="section">
+        <div class="container manifesto-grid">
+            <div class="manifesto-head reveal">
+                <span class="eyebrow">{{ site_settings.manifesto_eyebrow }}</span>
+                <h2 class="display-md">{{ site_settings.manifesto_title }}</h2>
+            </div>
+            <div>
+                {% for p in principles %}
+                <div class="manifesto-item reveal" style="transition-delay: {{ forloop.counter0 }}90ms;">
+                    <span class="manifesto-item__num">{{ p.n }}</span>
+                    <div class="manifesto-item__body">
+                        <h3 class="display-sm serif-i">{{ p.title }}</h3>
+                        <p>{{ p.description }}</p>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
         </div>
     </section>
     {% endif %}
     {% endwith %}
 
-    {# ========================== METRICS (ink) ========================== #}
-    <section class="surface-ink section">
+    {# ========================== METRICS (ink band) ========================== #}
+    <section class="band">
         <div class="container">
-            <div class="between reveal" style="margin-bottom: 80px; flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
+            <div class="band__head reveal">
+                <div class="band__head-titles">
                     <span class="eyebrow">{{ site_settings.metrics_eyebrow }}</span>
-                    <h2 class="display-md serif">{{ site_settings.metrics_title|safe }}</h2>
+                    <h2 class="display-md">{{ site_settings.metrics_title|safe }}</h2>
                 </div>
-                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">{{ site_settings.metrics_description }}</p>
+                <p class="band__desc">{{ site_settings.metrics_description }}</p>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-4-mobile-2">
-                {% if site_settings.stat_1_count %}
-                <div class="reveal" style="padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
-                    <div class="row" style="align-items: baseline; gap: 8px;">
-                        <span class="numeral" data-count="{{ site_settings.stat_1_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_1_count }}</span>
-                        {% if site_settings.stat_1_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_1_suffix }}</span>{% endif %}
-                    </div>
-                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_1_label }}</p>
+            <div class="stats-grid">
+                {% if site_settings.stat_1_label %}
+                <div class="stat-cell reveal">
+                    <span class="stat-cell__value"><span class="stat-cell__num mono" data-count="{{ site_settings.stat_1_count }}">0</span><span class="stat-cell__suffix">{{ site_settings.stat_1_suffix }}</span></span>
+                    <p class="stat-cell__label">{{ site_settings.stat_1_label }}</p>
                 </div>
                 {% endif %}
-                {% if site_settings.stat_2_count %}
-                <div class="reveal" style="transition-delay: 0.08s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
-                    <div class="row" style="align-items: baseline; gap: 8px;">
-                        <span class="numeral" data-count="{{ site_settings.stat_2_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_2_count }}</span>
-                        {% if site_settings.stat_2_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_2_suffix }}</span>{% endif %}
-                    </div>
-                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_2_label }}</p>
+                {% if site_settings.stat_2_label %}
+                <div class="stat-cell reveal" style="transition-delay: 80ms;">
+                    <span class="stat-cell__value"><span class="stat-cell__num mono" data-count="{{ site_settings.stat_2_count }}">0</span><span class="stat-cell__suffix">{{ site_settings.stat_2_suffix }}</span></span>
+                    <p class="stat-cell__label">{{ site_settings.stat_2_label }}</p>
                 </div>
                 {% endif %}
-                {% if site_settings.stat_3_count %}
-                <div class="reveal" style="transition-delay: 0.16s; padding: 40px 32px 40px 0; border-right: 1px solid rgba(243,239,230,0.12);">
-                    <div class="row" style="align-items: baseline; gap: 8px;">
-                        <span class="numeral" data-count="{{ site_settings.stat_3_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_3_count }}</span>
-                        {% if site_settings.stat_3_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_3_suffix }}</span>{% endif %}
-                    </div>
-                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_3_label }}</p>
+                {% if site_settings.stat_3_label %}
+                <div class="stat-cell reveal" style="transition-delay: 160ms;">
+                    <span class="stat-cell__value"><span class="stat-cell__num mono" data-count="{{ site_settings.stat_3_count }}">0</span><span class="stat-cell__suffix">{{ site_settings.stat_3_suffix }}</span></span>
+                    <p class="stat-cell__label">{{ site_settings.stat_3_label }}</p>
                 </div>
                 {% endif %}
-                {% if site_settings.stat_4_count %}
-                <div class="reveal" style="transition-delay: 0.24s; padding: 40px 32px 40px 0;">
-                    <div class="row" style="align-items: baseline; gap: 8px;">
-                        <span class="numeral" data-count="{{ site_settings.stat_4_count }}" style="font-size: clamp(56px, 7vw, 96px);">{{ site_settings.stat_4_count }}</span>
-                        {% if site_settings.stat_4_suffix %}<span class="serif" style="font-size: 32px; color: var(--accent); font-style: italic;">{{ site_settings.stat_4_suffix }}</span>{% endif %}
-                    </div>
-                    <p style="font-size: 14px; margin-top: 16px;">{{ site_settings.stat_4_label }}</p>
+                {% if site_settings.stat_4_label %}
+                <div class="stat-cell reveal" style="transition-delay: 240ms;">
+                    <span class="stat-cell__value"><span class="stat-cell__num mono" data-count="{{ site_settings.stat_4_count }}">0</span><span class="stat-cell__suffix">{{ site_settings.stat_4_suffix }}</span></span>
+                    <p class="stat-cell__label">{{ site_settings.stat_4_label }}</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </section>
 
-    {# ========================== ABOUT ========================== #}
+    {# ========================== ABOUT + WAKATIME ========================== #}
     {% if site_settings.about_title or site_settings.about_description %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;" class="grid-2-mobile-1">
-                <div class="col gap-5 reveal">
-                    <span class="eyebrow">{{ site_settings.about_section_eyebrow }}</span>
-                    <h2 class="display-md serif">{{ site_settings.about_title|default:"Studio · Operator" }}</h2>
-                    <p style="color: var(--fg-2); font-size: 17px; line-height: 1.7; max-width: 540px;">{{ site_settings.about_description }}</p>
+    <section class="section">
+        <div class="container about-grid">
+            <div class="about-copy reveal">
+                <span class="eyebrow">{{ site_settings.about_section_eyebrow }}</span>
+                <h2 class="display-md">{{ site_settings.about_title }}</h2>
+                <p>{{ site_settings.about_description }}</p>
+                <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                    <a href="{% url 'team' %}" class="btn">{% trans "Team" %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
                     {% if site_settings.resume_file %}
-                    <div class="row gap-3" style="margin-top: 12px;">
-                        <a href="{{ site_settings.resume_file.url }}" download class="btn btn-arrow">
-                            {{ site_settings.resume_button_text|default:"Download CV" }}
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </a>
-                    </div>
+                    <a href="{{ site_settings.resume_file.url }}" download class="btn">{{ site_settings.resume_button_text|default:_("Download CV") }}</a>
                     {% endif %}
                 </div>
-                <div class="reveal brackets" style="padding: 24px; background: var(--bg-2); border: 1px solid var(--line-1); transition-delay: 0.1s;">
-                    {% if site_settings.about_image %}
-                    <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; display: block;">
-                    {% else %}
-                    <div style="width: 100%; aspect-ratio: 4/5; background: var(--bg-3); display: flex; align-items: center; justify-content: center;">
-                        <span style="font-family: var(--font-display); font-style: italic; font-size: 200px; color: var(--accent); opacity: 0.6;">{{ site_settings.site_author_initials|default:"J" }}</span>
+            </div>
+            <div class="reveal" style="transition-delay: .1s;">
+                {% with waka=site_settings.wakatime_stats %}
+                {% if waka.days %}
+                <div class="card waka">
+                    <div class="waka__head">
+                        <span class="mono-label">{% trans "WakaTime · this week" %}</span>
+                        <span class="waka__total">{{ waka.total }} <small>{% trans "hrs coded" %}</small></span>
                     </div>
-                    {% endif %}
+                    <div class="waka__bars">
+                        {% for d in waka.days %}
+                        <div class="waka__col">
+                            <div class="waka__bar-area"><div class="waka__bar{% if d.peak %} waka__bar--peak{% endif %}" style="height: {{ d.pct }}%;" title="{{ d.h }}h"></div></div>
+                            <span class="waka__day">{{ d.d }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="waka__langs">
+                        {% for l in waka.langs|slice:":3" %}
+                        <div class="waka__lang">
+                            <span class="waka__lang-name">{{ l.name }}</span>
+                            <div class="waka__lang-track"><div class="waka__lang-fill" style="width: {{ l.pct }}%;"></div></div>
+                            <span class="waka__lang-pct">{{ l.pct }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
+                {% elif site_settings.about_image %}
+                <div class="card about-photo">
+                    <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" loading="lazy">
+                </div>
+                {% endif %}
+                {% endwith %}
             </div>
         </div>
     </section>
@@ -181,126 +179,93 @@
 
     {# ========================== EXPERIENCE ========================== #}
     {% if portfolio.experience %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+    <section class="section" style="padding-top: 0;">
         <div class="container">
-            <div class="reveal" style="margin-bottom: 60px; max-width: 720px;">
-                <span class="eyebrow" style="margin-bottom: 24px;">{% trans "Career · Track record" %}</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">{% trans "Where I've shipped." %}</h2>
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "Career · Track record" %}</span>
+                    <h2 class="display-md">{% trans "Where I've shipped." %}</h2>
+                </div>
             </div>
-            <div class="col">
+            <div>
                 {% for exp in portfolio.experience %}
-                <div class="reveal">
-                    <div style="display: grid; grid-template-columns: 80px 1.5fr 2fr 220px; gap: 32px; padding: 32px 0; border-top: 1px solid var(--line-1); align-items: baseline;" class="grid-3-mobile-1">
-                        <span class="numeral" style="font-size: 32px; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <div class="col gap-2">
-                            <h3 class="serif" style="font-size: 24px;"><em style="font-weight: 300;">{{ exp.position }}</em></h3>
-                            <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
-                                {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener" class="link">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}
-                                {% if exp.location %} · {{ exp.location }}{% endif %}
-                            </span>
-                        </div>
-                        <p style="color: var(--fg-2); font-size: 15px; line-height: 1.6;">{{ exp.description|truncatewords:30 }}</p>
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); justify-self: end;">
-                            {{ exp.start_date|date:"M Y"|upper }} —
-                            {% if exp.is_current %}<span style="color: var(--accent);">{% trans "PRESENT" %}</span>{% else %}{{ exp.end_date|date:"M Y"|upper }}{% endif %}
+                <div class="exp-row reveal">
+                    <span class="exp-row__num">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <div class="exp-row__who">
+                        <h3 class="exp-row__title">{{ exp.position }}</h3>
+                        <span class="mono-label">
+                            {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}{% if exp.location %} · {{ exp.location }}{% endif %}
                         </span>
                     </div>
+                    <p class="exp-row__desc">{{ exp.description|truncatewords:30 }}</p>
+                    <span class="exp-row__dates">
+                        {{ exp.start_date|date:"Y" }} — {% if exp.is_current %}<span class="present">{% trans "PRESENT" %}</span>{% else %}{{ exp.end_date|date:"Y" }}{% endif %}
+                    </span>
                 </div>
                 {% endfor %}
-                <div style="border-top: 1px solid var(--line-1);"></div>
+                <div class="rows-end"></div>
             </div>
         </div>
     </section>
     {% endif %}
 
     {# ========================== FEATURED WORK ========================== #}
-    {% if site_settings.apps_section_visible and portfolio.featured_projects %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+    {% if site_settings.apps_section_visible %}
+    {% with featured=portfolio.featured_projects|default:portfolio.projects %}
+    {% if featured %}
+    <section class="section surface-raised">
         <div class="container">
-            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
                     <span class="eyebrow">{% trans "04 — Selected work" %}</span>
-                    <h2 class="display-md serif">{{ site_settings.featured_projects_title|default:"A handful of recent builds." }}</h2>
+                    <h2 class="display-md">{{ site_settings.featured_projects_title }}</h2>
                 </div>
-                <a href="{% url 'projects' %}" class="btn btn-arrow">
-                    {% trans "View all projects" %}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <a href="{% url 'projects' %}" class="btn">{% trans "View all projects" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
             </div>
-            <div class="col gap-2">
-                {% for project in portfolio.featured_projects|slice:":6" %}
-                <a href="{% url 'project_detail' project.slug %}" class="reveal featured-row">
-                    <div style="display: grid; grid-template-columns: 80px 1fr 2fr 200px 60px; gap: 32px; align-items: center;" class="grid-3-mobile-1">
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <div class="col gap-2">
-                            <h3 class="serif featured-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
-                            {% with techs=project.technologies.all %}
-                            {% if techs %}
-                            <span class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">{{ techs.0.name }}{% if techs|length > 1 %} · {{ techs.1.name }}{% endif %}</span>
-                            {% endif %}
-                            {% endwith %}
-                        </div>
-                        <p style="color: var(--fg-2); font-size: 16px; line-height: 1.5; max-width: 540px;">{{ project.get_card_description|truncatewords:25 }}</p>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">
-                            {% if project.app_store_url and project.play_store_url %}iOS · Android{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}{% trans "Telegram bot" %}{% else %}—{% endif %}
-                        </span>
-                        <span class="featured-arrow" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s var(--ease-out);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </span>
+            <div>
+                {% for project in featured|slice:":6" %}
+                <a href="{% url 'project_detail' project.slug %}" class="feat-row reveal">
+                    <span class="feat-row__num">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <div class="feat-row__who">
+                        <h3 class="feat-title">{{ project.title }}</h3>
+                        {% with techs=project.technologies.all %}
+                        {% if techs %}<span class="mono-label">{{ techs.0.name }}{% if techs|length > 1 %} · {{ techs.1.name }}{% endif %}</span>{% endif %}
+                        {% endwith %}
                     </div>
+                    <p class="feat-row__desc">{{ project.get_card_description|truncatewords:25 }}</p>
+                    <span class="tag kind-badge--{{ project.kind }}">{{ project.kind_label }}</span>
+                    <span class="feat-arrow">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
                 </a>
                 {% endfor %}
-                <div style="border-top: 1px solid var(--line-1);"></div>
+                <div class="rows-end"></div>
             </div>
         </div>
     </section>
-    {% elif site_settings.apps_section_visible and portfolio.projects %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
-                    <span class="eyebrow">{% trans "04 — Recent work" %}</span>
-                    <h2 class="display-md serif">{% trans "A handful of recent builds." %}</h2>
-                </div>
-                <a href="{% url 'projects' %}" class="btn btn-arrow">
-                    {% trans "View all projects" %}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </a>
-            </div>
-            <div class="col gap-2">
-                {% for project in portfolio.projects|slice:":3" %}
-                <a href="{% url 'project_detail' project.slug %}" class="reveal featured-row">
-                    <div style="display: grid; grid-template-columns: 80px 1fr 2fr 60px; gap: 32px; align-items: center;" class="grid-3-mobile-1">
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <h3 class="serif featured-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
-                        <p style="color: var(--fg-2); font-size: 16px; line-height: 1.5;">{{ project.get_card_description|truncatewords:25 }}</p>
-                        <span class="featured-arrow" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </span>
-                    </div>
-                </a>
-                {% endfor %}
-                <div style="border-top: 1px solid var(--line-1);"></div>
-            </div>
-        </div>
-    </section>
+    {% endif %}
+    {% endwith %}
     {% endif %}
 
     {# ========================== PROCESS ========================== #}
     {% with steps=site_settings.process_steps_resolved %}
     {% if steps %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+    <section class="section">
         <div class="container">
-            <div class="reveal" style="margin-bottom: 80px; max-width: 720px;">
-                <span class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.process_eyebrow }}</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">{{ site_settings.process_title|safe }}</h2>
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{{ site_settings.process_eyebrow }}</span>
+                    <h2 class="display-md">{{ site_settings.process_title|safe }}</h2>
+                </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat({{ steps|length }}, 1fr); gap: 0;" class="grid-3-mobile-1">
+            <div class="process-grid">
                 {% for s in steps %}
-                <div class="reveal" style="transition-delay: {{ forloop.counter0 }}00ms; padding: 24px; border-left: 1px solid var(--line-1); {% if forloop.last %}border-right: 1px solid var(--line-1);{% endif %} position: relative; min-height: 280px;">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--accent); position: absolute; top: 24px;">{{ s.n }}</span>
-                    <h4 class="display-sm serif" style="margin-top: 60px;"><em>{{ s.title }}</em></h4>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.6; margin-top: 16px;">{{ s.description }}</p>
+                <div class="process-step reveal" style="transition-delay: {{ forloop.counter0 }}90ms;">
+                    <span class="process-step__num">{{ s.n }}</span>
+                    <h4 class="display-sm serif-i process-step__title">{{ s.title }}</h4>
+                    <p>{{ s.description }}</p>
                 </div>
                 {% endfor %}
             </div>
@@ -311,31 +276,28 @@
 
     {# ========================== JOURNAL TEASER ========================== #}
     {% if latest_posts %}
-    <section class="section" style="border-bottom: 1px solid var(--line-1);">
+    <section class="section" style="padding-top: 0;">
         <div class="container">
-            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
                     <span class="eyebrow">{% trans "06 — From the journal" %}</span>
-                    <h2 class="display-md serif">{% trans "Latest" %}<br><em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
+                    <h2 class="display-md">{% trans "Latest dispatches." %}</h2>
                 </div>
-                <a href="{% url 'blog_list' %}" class="btn btn-arrow">
-                    {% trans "All entries" %}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <a href="{% url 'blog_list' %}" class="btn">{% trans "All entries" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
+            <div class="journal-grid">
                 {% for post in latest_posts %}
-                <a href="{% url 'blog_detail' post.slug %}" class="reveal journal-card" style="padding: 40px; border-top: 1px solid var(--line-1); {% if not forloop.last %}border-right: 1px solid var(--line-1);{% endif %} min-height: 320px; display: flex; flex-direction: column; gap: 20px; transition: background .4s var(--ease-out);">
-                    <div class="between" style="align-items: flex-start;">
-                        <span class="numeral" style="font-size: 48px; color: var(--fg-4); line-height: 1;">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">{{ post.created_at|date:"M Y" }}</span>
+                <a href="{% url 'blog_detail' post.slug %}" class="card journal-card reveal" style="transition-delay: {{ forloop.counter0 }}80ms;">
+                    <div class="journal-card__top">
+                        <span class="journal-card__num">{{ forloop.counter|stringformat:"02d" }}</span>
+                        {% if post.category %}<span class="tag">{{ post.category.name }}</span>{% endif %}
                     </div>
-                    {% if post.category %}<span class="tag" style="align-self: flex-start;">{{ post.category.name }}</span>{% endif %}
-                    <h3 class="display-sm serif" style="flex: 1;"><em style="font-weight: 300;">{{ post.title }}</em></h3>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:18 }}</p>
-                    <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.reading_time|default:5 }} {% trans "MIN" %} ↗</span>
+                    <h3 class="journal-card__title">{{ post.title }}</h3>
+                    <div class="journal-card__foot">
+                        <span class="mono">{{ post.created_at|date:"Y-m-d" }}</span>
+                        <span class="mono">{{ post.reading_time|default:5 }} {% trans "MIN" %} ↗</span>
                     </div>
                 </a>
                 {% endfor %}
@@ -345,61 +307,21 @@
     {% endif %}
 
     {# ========================== CTA ========================== #}
-    <section class="section">
-        <div class="container">
-            <div class="reveal" style="display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;" class="grid-2-mobile-1">
-                <div class="col gap-6">
-                    <span class="eyebrow">{{ site_settings.cta_eyebrow }}</span>
-                    <h2 class="display-lg serif">
-                        {{ site_settings.cta_title_pre|safe }}
-                        <em style="font-weight: 300; color: var(--accent);">{{ site_settings.cta_title_em }}</em>
-                    </h2>
-                    <p style="color: var(--fg-2); font-size: 18px; max-width: 540px; line-height: 1.5;">{{ site_settings.cta_description }}</p>
-                </div>
-                <div class="col gap-3" style="align-items: flex-end;">
-                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 20px; --pad-x: 32px; font-size: 13px;">
-                        {{ site_settings.cta_button_text }}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ site_settings.cta_response_label }}</span>
-                </div>
+    <section class="cta-section">
+        <div class="aurora aurora--cta" aria-hidden="true">
+            <div class="blob"></div><div class="blob" style="display: none;"></div><div class="blob"></div>
+        </div>
+        <div class="container cta-section__inner">
+            <span class="eyebrow reveal">{{ site_settings.cta_eyebrow }}</span>
+            <h2 class="display-lg reveal">{{ site_settings.cta_title_pre|safe }} <em class="serif-i" style="color: var(--accent);">{{ site_settings.cta_title_em }}</em></h2>
+            <p class="cta-section__desc reveal">{{ site_settings.cta_description }}</p>
+            <div class="cta-section__action reveal">
+                <a href="{% url 'contact' %}" class="btn btn-primary btn--cta">{{ site_settings.cta_button_text }}
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <span class="cta-section__resp">{{ site_settings.cta_response_label }}</span>
             </div>
         </div>
     </section>
 </main>
-
-<style>
-    .featured-row {
-        padding: 40px 0;
-        border-top: 1px solid var(--line-1);
-        display: block;
-        transition: padding .4s var(--ease-out);
-        position: relative;
-    }
-    .featured-row .featured-title {
-        font-size: 32px;
-        color: var(--fg-0);
-        transition: color .3s var(--ease-out);
-    }
-    .featured-row:hover .featured-title { color: var(--accent); }
-    .featured-row:hover .featured-arrow { background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0); }
-    .journal-card:hover { background: var(--bg-2); }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function() {
-    var clock = document.getElementById('hero-clock');
-    if (!clock) return;
-    function tick() {
-        var d = new Date();
-        var hh = (d.getUTCHours() + 5) % 24;
-        var pad = function(n) { return String(n).padStart(2, '0'); };
-        clock.textContent = pad(hh) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + ' UTC+5';
-    }
-    tick();
-    setInterval(tick, 1000);
-})();
-</script>
 {% endblock %}

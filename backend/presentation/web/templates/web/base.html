@@ -1,30 +1,8 @@
 {% load static i18n %}{% get_current_language as LANGUAGE_CODE %}{% get_available_languages as LANGUAGES %}<!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE|default:'xo' }}" data-theme="light" data-density="comfortable" data-hud="on" data-noise="on" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
+<html lang="{{ LANGUAGE_CODE|default:'xo' }}" data-tg-logged-in="{% if tg_profile %}true{% else %}false{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    {# Apply persisted theme before paint to avoid FOUC #}
-    <script>
-    (function() {
-        try {
-            var t = JSON.parse(localStorage.getItem('jk-tweaks') || '{}');
-            var r = document.documentElement;
-            if (t.theme)   r.setAttribute('data-theme',   t.theme);
-            if (t.density) r.setAttribute('data-density', t.density);
-            if (t.hud)     r.setAttribute('data-hud',     t.hud);
-            if (t.noise === false) r.setAttribute('data-noise', 'off');
-            if (t.accent) {
-                r.style.setProperty('--accent', t.accent);
-                var h = t.accent.replace('#','');
-                if (h.length === 6) {
-                    r.style.setProperty('--accent-rgb',
-                        parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16));
-                }
-            }
-        } catch (e) {}
-    })();
-    </script>
 
     <title>{% block title %}{{ site_settings.site_title }}{% endblock %}</title>
 
@@ -173,7 +151,12 @@
     }
     </script>
 
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    {# XIVA INK design system — tokens first, then components #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -203,77 +186,48 @@
 </head>
 
 <body>
-    <div id="scroll-progress"></div>
-
     <header class="site-header" id="main-nav">
-        <div class="container between" style="height: 84px;">
-            <a href="{% url 'home' %}" class="row gap-3" style="align-items: center; color: var(--fg-0);">
-                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1"/>
-                    <text x="20" y="26" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="20" font-style="italic" font-weight="700" fill="currentColor">J</text>
-                    <circle cx="32" cy="8" r="2" fill="var(--accent)"/>
-                </svg>
-                <span class="col" style="line-height: 1; gap: 2px;">
-                    <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
-                    <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; color: var(--fg-3); text-transform: uppercase;">{{ site_settings.brand_tagline }}</span>
-                </span>
-            </a>
-
-            <nav class="row gap-8 desktop-nav" style="align-items: center;">
-                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Index" %}</a>
-                {% if site_settings.apps_section_visible %}
-                <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
-                {% endif %}
-                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Studio" %}</a>
-                <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
-                <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
-            </nav>
-
-            <div class="row gap-3" style="align-items: center;">
-                <span class="tag hud-only hide-mobile"><span class="dot-live"></span> Available · Q2</span>
-
-                {# ── Language switcher (XO · UZ · RU · EN) ── #}
-                {# Direct URL-prefix links — LocaleMiddleware reads prefix, not cookie #}
-                <div class="row" style="gap: 4px; align-items: center; margin: 0;">
-                    {% for code, name in LANGUAGES %}
-                    <a href="/{{ code }}{{ request.path|slice:'4:' }}"
-                       class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
-                       aria-label="{{ name }}">{{ code|upper }}</a>
-                    {% endfor %}
-                </div>
-
-                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" type="button">
-                    <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                    <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4"/>
-                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-                    </svg>
-                </button>
-                {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
-                <a href="{{ site_settings.nav_cta_url }}" class="btn btn-ghost hide-mobile" style="--pad-y: 10px; --pad-x: 18px;">{{ site_settings.nav_cta_text }}</a>
-                {% endif %}
-                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav" type="button">
-                    <svg id="menu-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
         <div class="container">
+            <div class="site-header__bar">
+                <a href="{% url 'home' %}" class="brand">
+                    <span class="brand__badge">J</span>
+                    <span class="brand__word">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span class="dot">.</span></span>
+                </a>
+
+                <nav class="site-nav">
+                    {% if site_settings.apps_section_visible %}
+                    <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
+                    {% endif %}
+                    <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
+                    <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Team" %}</a>
+                    <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
+                </nav>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="lang-switch">
+                        {% for code, name in LANGUAGES %}
+                        <a href="/{{ code }}{{ request.path|slice:'4:' }}"
+                           class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
+                           aria-label="{{ name }}">{{ code|upper }}</a>
+                        {% endfor %}
+                    </div>
+                    <a href="{% if site_settings.nav_cta_url %}{{ site_settings.nav_cta_url }}{% else %}{% url 'contact' %}{% endif %}" class="btn btn-primary btn-sm hide-m">{{ site_settings.nav_cta_text|default:_("Hire the studio") }}</a>
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav" type="button">
+                        <svg id="menu-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
             <div class="mobile-nav" id="mobile-nav">
-                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Index" %}</a>
+                <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Home" %}</a>
                 {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                 {% endif %}
-                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Studio" %}</a>
                 <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
+                <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Team" %}</a>
                 <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
-                {% if site_settings.nav_cta_text and site_settings.nav_cta_url %}
-                <a href="{{ site_settings.nav_cta_url }}" class="btn btn-primary" style="margin-top: 16px; align-self: flex-start;">{{ site_settings.nav_cta_text }}</a>
-                {% endif %}
             </div>
         </div>
     </header>
@@ -286,67 +240,56 @@
         </svg>
     </button>
 
-    <footer class="surface-ink" style="margin-top: 0;">
-        <div class="container" style="padding-top: 100px; padding-bottom: 48px;">
-            <div class="reveal" style="margin-bottom: 80px;">
-                <span class="eyebrow" style="margin-bottom: 24px; display: inline-flex;">{{ site_settings.footer_cta_eyebrow }}</span>
-                <h2 class="display-lg" style="max-width: 1100px; margin-top: 16px;">
-                    {{ site_settings.footer_cta_headline|safe }}<br>
-                    <em style="font-weight: 300;">{% trans "Let's" %} </em><a href="{% url 'contact' %}" style="border-bottom: 2px solid var(--accent);">{% trans "open a channel." %}</a>
-                </h2>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; padding-top: 60px; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-4-mobile-2">
-                <div class="col gap-5">
-                    <div class="row gap-3" style="align-items: center;">
-                        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-                            <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1"/>
-                            <text x="20" y="26" text-anchor="middle" font-family="Montserrat, sans-serif" font-size="20" font-style="italic" font-weight="700" fill="currentColor">J</text>
-                            <circle cx="32" cy="8" r="2" fill="var(--accent)"/>
-                        </svg>
-                        <span class="col" style="line-height: 1; gap: 2px;">
-                            <span style="font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="font-style: italic; color: var(--accent);">.</span></span>
-                            <span class="mono" style="font-size: 9px; letter-spacing: 0.22em; opacity: 0.5; text-transform: uppercase;">{{ site_settings.brand_tagline }}</span>
-                        </span>
-                    </div>
-                    <p style="opacity: 0.7; max-width: 380px; font-size: 14px; line-height: 1.6;">
-                        {{ site_settings.footer_display_description|default:"A small studio engineering production-grade mobile experiences." }}
-                    </p>
-                    <div class="row gap-2" style="flex-wrap: wrap;">
-                        {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" class="tag" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212-.07-.062-.174-.041-.249-.024-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>Telegram</a>{% endif %}
-                        {% if site_settings.footer_display_github %}<a href="{{ site_settings.footer_display_github }}" class="tag" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.305-5.467-1.334-5.467-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a>{% endif %}
-                        {% if site_settings.footer_display_linkedin %}<a href="{{ site_settings.footer_display_linkedin }}" class="tag" target="_blank" rel="noopener"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0h.002z"/></svg>LinkedIn</a>{% endif %}
-                        {% if site_settings.footer_display_twitter %}<a href="{{ site_settings.footer_display_twitter }}" class="tag" target="_blank" rel="noopener"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>X</a>{% endif %}
+    <footer class="site-footer">
+        <div class="container site-footer__inner">
+            <div class="site-footer__grid">
+                <div class="site-footer__about">
+                    <span class="site-footer__brand">{{ site_settings.display_logo_text|default:site_settings.site_author|default:"Jaysonkhan" }}<span style="color: var(--accent);">.</span></span>
+                    <p class="site-footer__tagline">{{ site_settings.footer_display_description|default:site_settings.site_tagline }}</p>
+                    <div class="site-footer__socials">
+                        {% if site_settings.footer_display_telegram %}
+                        <a href="{{ site_settings.footer_display_telegram }}" class="social-circle" target="_blank" rel="noopener" aria-label="Telegram">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.6c.3-1.3-.8-1.9-1.7-1.5L2.7 9.9c-1.2.5-1.1 1.6-.2 1.9l4.5 1.4 10.4-6.6c.5-.3.9-.1.6.2l-8.4 7.6-.3 4.6c.5 0 .7-.2 1-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3-14.4z"/></svg>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.footer_display_github %}
+                        <a href="{{ site_settings.footer_display_github }}" class="social-circle" target="_blank" rel="noopener" aria-label="GitHub">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.6.5.5 5.6.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.6-3.9-1.6-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.2 4.7 18.2 5 18.2 5c.6 1.6.2 2.8.1 3.1.7.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.6 18.4.5 12 .5z"/></svg>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.footer_display_linkedin %}
+                        <a href="{{ site_settings.footer_display_linkedin }}" class="social-circle" target="_blank" rel="noopener" aria-label="LinkedIn">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.4 20.4h-3.6v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.4V9h3.4v1.6h.1c.5-.9 1.6-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.4H3.5V9h3.6v11.4z"/></svg>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.email %}
+                        <a href="mailto:{{ site_settings.email }}" class="social-circle" aria-label="Email">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6L22 7"/></svg>
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 
-                <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Index" %}</div>
-                    <a href="{% url 'home' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Home" %}</a>
-                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Work" %}</a>{% endif %}
-                    <a href="{% url 'team' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Studio" %}</a>
-                    <a href="{% url 'blog_list' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Journal" %}</a>
-                    <a href="{% url 'contact' %}" style="opacity: 0.85; font-size: 14px;">{% trans "Contact" %}</a>
+                <div class="site-footer__col">
+                    <span class="mono-label">{% trans "Home" %}</span>
+                    {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}">{% trans "Work" %}</a>{% endif %}
+                    <a href="{% url 'blog_list' %}">{% trans "Journal" %}</a>
+                    <a href="{% url 'team' %}">{% trans "Team" %}</a>
+                    <a href="{% url 'contact' %}">{% trans "Contact" %}</a>
                 </div>
 
-                <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Practice" %}</div>
-                    {% for item in site_settings.footer_practice_items_resolved %}
-                    <span style="opacity: 0.85; font-size: 14px;">{{ item }}</span>
-                    {% endfor %}
-                </div>
-
-                <div class="col gap-3">
-                    <div class="mono" style="font-size: 10px; letter-spacing: 0.2em; opacity: 0.5; text-transform: uppercase; margin-bottom: 8px;">{% trans "Channels" %}</div>
-                    {% if site_settings.footer_display_email %}<a href="mailto:{{ site_settings.footer_display_email }}" style="opacity: 0.85; font-size: 14px;">{{ site_settings.footer_display_email }}</a>{% endif %}
-                    {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">t.me/jaysonkhan</a>{% endif %}
-                    {% if site_settings.footer_display_github %}<a href="{{ site_settings.footer_display_github }}" target="_blank" rel="noopener" style="opacity: 0.85; font-size: 14px;">github/jaysonkhan</a>{% endif %}
+                <div class="site-footer__col">
+                    <span class="mono-label">{% trans "Contact" %}</span>
+                    {% if site_settings.email %}<a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>{% endif %}
+                    {% if site_settings.footer_display_telegram %}<a href="{{ site_settings.footer_display_telegram }}" target="_blank" rel="noopener">@{{ site_settings.footer_display_telegram|cut:"https://t.me/"|cut:"/" }}</a>{% endif %}
+                    {% if site_settings.hero_location %}<span class="muted">{{ site_settings.hero_location }}</span>{% endif %}
+                    {% if request.user.is_staff %}<a href="{% url 'admin:index' %}" class="footer-admin-link">⌘ ADMIN →</a>{% endif %}
                 </div>
             </div>
 
-            <div class="between" style="margin-top: 60px; padding-top: 24px; border-top: 1px solid rgba(243,239,230,0.12); flex-wrap: wrap; gap: 16px;">
-                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em; text-transform: uppercase;">{{ site_settings.footer_text|default:"© 2026 Jaysonkhan Studio · Tashkent, UZ · All rights reserved" }}</span>
-                <span class="mono" style="font-size: 10px; opacity: 0.5; letter-spacing: 0.18em;">{{ site_settings.footer_volume }}</span>
+            <div class="site-footer__bottom">
+                <span class="mono">{{ site_settings.footer_text|default:"© 2026 JAYSONKHAN · Barcha huquqlar himoyalangan." }}</span>
+                <span class="mono">XIVA INK DESIGN SYSTEM · <span data-clock>--:--:-- UTC+5</span></span>
             </div>
         </div>
     </footer>
@@ -354,53 +297,11 @@
     <script src="{% static 'js/infinite-scroll.js' %}"></script>
 
     <script>
-    /* Tweaks store + theme toggle */
+    /* Nav scrolled-state, scroll-top, mobile menu, reveal, count-up, live clocks */
     (function() {
-        var KEY = 'jk-tweaks';
-        var DEFAULTS = { theme: 'light', density: 'comfortable', hud: 'on', noise: true };
-        function load() { try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return Object.assign({}, DEFAULTS); } }
-        function save(t) { localStorage.setItem(KEY, JSON.stringify(t)); apply(t); }
-        function apply(t) {
-            var r = document.documentElement;
-            r.setAttribute('data-theme', t.theme || 'light');
-            r.setAttribute('data-density', t.density || 'comfortable');
-            r.setAttribute('data-hud', t.hud || 'on');
-            r.setAttribute('data-noise', t.noise === false ? 'off' : 'on');
-            if (t.accent) {
-                r.style.setProperty('--accent', t.accent);
-                var h = String(t.accent).replace('#','');
-                if (h.length === 6) {
-                    r.style.setProperty('--accent-rgb',
-                        parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16));
-                }
-            }
-        }
-        var tweaks = load();
-        apply(tweaks);
-        window.JKTweaks = {
-            get: function() { return Object.assign({}, tweaks); },
-            update: function(p) { tweaks = Object.assign({}, tweaks, p); save(tweaks); },
-            toggleTheme: function() { tweaks.theme = tweaks.theme === 'light' ? 'dark' : 'light'; save(tweaks); }
-        };
-        var btn = document.getElementById('theme-toggle');
-        if (btn) btn.addEventListener('click', function() { window.JKTweaks.toggleTheme(); });
-    })();
-    </script>
-
-    <script>
-    /* Sticky nav scrolled-state, scroll-progress, scroll-top, reveal-on-scroll, mobile menu */
-    (function() {
-        var nav = document.getElementById('main-nav');
-        var progress = document.getElementById('scroll-progress');
         var topBtn = document.getElementById('scroll-top-btn');
         function onScroll() {
-            var sy = window.scrollY;
-            if (nav) nav.classList.toggle('scrolled', sy > 20);
-            if (progress) {
-                var h = document.documentElement.scrollHeight - window.innerHeight;
-                progress.style.width = (h > 0 ? (sy / h) * 100 : 0) + '%';
-            }
-            if (topBtn) topBtn.classList.toggle('visible', sy > 450);
+            if (topBtn) topBtn.classList.toggle('visible', window.scrollY > 450);
         }
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
@@ -420,7 +321,7 @@
                     : '<path d="M4 6h16M4 12h16M4 18h16"/>';
             });
             window.addEventListener('resize', function() {
-                if (window.innerWidth >= 980 && mNav.classList.contains('open')) {
+                if (window.innerWidth > 900 && mNav.classList.contains('open')) {
                     mNav.classList.remove('open');
                     mBtn.setAttribute('aria-expanded', 'false');
                     if (mIcon) mIcon.innerHTML = '<path d="M4 6h16M4 12h16M4 18h16"/>';
@@ -432,29 +333,44 @@
         if ('IntersectionObserver' in window) {
             var io = new IntersectionObserver(function(entries) {
                 entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-            }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+            }, { threshold: 0.12 });
             document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
         } else {
             document.querySelectorAll('.reveal').forEach(function(el) { el.classList.add('in'); });
         }
 
-        /* Count-up */
+        /* Count-up (numbers always mono) */
         if ('IntersectionObserver' in window) {
             var co = new IntersectionObserver(function(entries) {
                 entries.forEach(function(e) {
                     if (!e.isIntersecting) return;
                     var el = e.target, target = parseFloat(el.dataset.count);
-                    if (isNaN(target)) return;
-                    var suffix = el.dataset.suffix || '', start = 0, dur = 1400, steps = dur / 16, step = target / steps;
-                    var t = setInterval(function() {
-                        start += step;
-                        if (start >= target) { el.textContent = (Number.isInteger(target) ? target : target.toFixed(1)) + suffix; clearInterval(t); }
-                        else { el.textContent = (Number.isInteger(target) ? Math.floor(start) : start.toFixed(1)) + suffix; }
-                    }, 16);
                     co.unobserve(el);
+                    if (isNaN(target)) return;
+                    var t0 = performance.now(), dur = 1400;
+                    function step(now) {
+                        var p = Math.min(1, (now - t0) / dur);
+                        var v = target * (1 - Math.pow(1 - p, 3));
+                        el.textContent = Number.isInteger(target) ? Math.round(v) : v.toFixed(1);
+                        if (p < 1) requestAnimationFrame(step);
+                    }
+                    requestAnimationFrame(step);
                 });
-            }, { threshold: 0.5 });
+            }, { threshold: 0.4 });
             document.querySelectorAll('[data-count]').forEach(function(el) { co.observe(el); });
+        }
+
+        /* Live UTC+5 clock(s) */
+        var clocks = document.querySelectorAll('[data-clock]');
+        if (clocks.length) {
+            var tick = function() {
+                var d = new Date();
+                var p = function(n) { return String(n).padStart(2, '0'); };
+                var s = p((d.getUTCHours() + 5) % 24) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds()) + ' UTC+5';
+                clocks.forEach(function(c) { c.textContent = s; });
+            };
+            tick();
+            setInterval(tick, 1000);
         }
     })();
     </script>

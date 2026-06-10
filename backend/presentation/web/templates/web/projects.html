@@ -1,87 +1,63 @@
 {% extends 'web/base.html' %}
 {% load static i18n %}
 
-{% block title %}Work | {{ site_settings.site_author }}{% endblock %}
+{% block title %}{{ site_settings.projects_page_title|default:_("Work") }} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
-{% block og_title %}{{ site_settings.projects_page_title|default:"Work" }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_title %}{{ site_settings.projects_page_title|default:_("Work") }} | {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ site_settings.projects_page_subtitle }}{% endblock %}
 
 {% block content %}
 <main>
-    {# ========================== HERO ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
-                <div class="row gap-3">
-                    <span class="tag">{{ site_settings.projects_section_label }}</span>
-                    <span class="tag">{{ paginator.count|default:0 }} {% trans "entries" %} · 2022–2026</span>
-                </div>
-                <span class="tag"><span class="dot-live"></span> {% trans "Production builds" %}</span>
-            </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Selected work · Production builds" %}</div>
-            <h1 class="display-xl">
-                <em style="font-weight: 300;">{{ site_settings.projects_page_title|default:"Things I've shipped," }}</em><br>
-                {% trans "and what they" %}<br>
-                {% trans "taught me." %}
-            </h1>
-            {% if site_settings.projects_page_subtitle %}
-            <p class="reveal" style="margin-top: 40px; font-size: 18px; color: var(--fg-2); max-width: 720px; line-height: 1.55;">
-                {{ site_settings.projects_page_subtitle }}
-            </p>
-            {% else %}
-            <p class="reveal" style="margin-top: 40px; font-size: 18px; color: var(--fg-2); max-width: 720px; line-height: 1.55;">
-                Every entry is a real production app — paying users, App Store reviews, telemetry I check on Mondays. No concept work, no portfolio fillers.
-            </p>
-            {% endif %}
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">Portfolio</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ site_settings.projects_page_title|default:_("Work.") }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ site_settings.projects_page_subtitle }}</p>
         </div>
     </section>
 
-    {# ========================== INDEX ========================== #}
-    <section class="section">
+    {# ========================== GRID + FILTERS ========================== #}
+    <section class="section" style="padding-top: 48px;">
         <div class="container">
-            <div class="between reveal" style="margin-bottom: 48px; flex-wrap: wrap; gap: 24px;">
-                <h2 class="display-md serif">{% trans "The full" %} <em style="font-weight: 300;">{% trans "index." %}</em></h2>
-                <div class="row gap-2" style="flex-wrap: wrap;">
-                    {% for tab in filter_tabs %}
-                    <a href="{{ tab.url }}" class="tag" style="padding: 8px 16px; {% if active_filter == tab.key %}background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0);{% endif %}">{{ tab.label }}</a>
-                    {% endfor %}
-                </div>
+            <div class="filter-bar">
+                {% for tab in filter_tabs %}
+                <a href="{{ tab.url }}" class="filter-btn{% if active_filter == tab.key %} active{% endif %}">{{ tab.label }}</a>
+                {% endfor %}
             </div>
 
-            <div style="display: grid; grid-template-columns: 60px 2fr 1fr 100px 1.5fr 80px 60px; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line-2);" class="hide-mobile">
-                <span class="mono index-head">Nº</span>
-                <span class="mono index-head">{% trans "Project" %}</span>
-                <span class="mono index-head">{% trans "Category" %}</span>
-                <span class="mono index-head">{% trans "Year" %}</span>
-                <span class="mono index-head">{% trans "Stack" %}</span>
-                <span class="mono index-head">{% trans "Result" %}</span>
-                <span></span>
-            </div>
-
-            <div id="items-grid" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
+            <div id="items-grid" class="proj-grid" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
                 {% for project in projects %}
-                <a href="{% url 'project_detail' project.slug %}" class="reveal index-row" style="transition-delay: {{ forloop.counter0|stringformat:'s' }}0ms; display: block; border-bottom: 1px solid var(--line-1); transition: background .4s var(--ease-out);">
-                    <div style="display: grid; grid-template-columns: 60px 2fr 1fr 100px 1.5fr 80px 60px; gap: 20px; padding: 28px 0; align-items: center;" class="grid-3-mobile-1">
-                        <span class="numeral index-num" style="font-size: 32px; color: var(--fg-3); transition: color .3s;">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <h3 class="serif index-title"><em style="font-weight: 300;">{{ project.title }}</em></h3>
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
-                            {% if project.app_store_url and project.play_store_url %}{% trans "Cross-platform" %}{% elif project.app_store_url %}iOS{% elif project.play_store_url %}Android{% elif project.web_page_url %}{% trans "Web" %}{% elif project.is_bot %}Telegram{% else %}{% trans "Mobile" %}{% endif %}
-                        </span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ project.created_at|date:"Y" }}</span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.12em;">
-                            {% with techs=project.technologies.all %}{% for tech in techs|slice:":3" %}{{ tech.name }}{% if not forloop.last %} · {% endif %}{% endfor %}{% endwith %}
-                        </span>
-                        <span class="mono" style="font-size: 10px; color: var(--accent); letter-spacing: 0.14em;">
-                            {% if project.is_featured %}● {% trans "Featured" %}{% else %}● {% trans "Live" %}{% endif %}
-                        </span>
-                        <span class="index-arrow" style="width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-3); display: inline-flex; align-items: center; justify-content: center; transition: all .3s; justify-self: end;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <a href="{% url 'project_detail' project.slug %}" class="card proj-card reveal" style="transition-delay: {{ forloop.counter0|divisibleby:2|yesno:'0,70' }}ms;">
+                    <div class="proj-card__top">
+                        <span class="tag kind-badge--{{ project.kind }}">{{ project.kind_label }}</span>
+                        <span class="proj-card__year">{{ project.created_at|date:"Y" }}</span>
+                    </div>
+                    <h3 class="proj-title">{{ project.title }}</h3>
+                    <p class="proj-card__desc">{{ project.get_card_description|truncatewords:28 }}</p>
+                    <div class="proj-card__tech">
+                        {% for tech in project.technologies.all|slice:":4" %}<span class="tag">{{ tech.name }}</span>{% endfor %}
+                    </div>
+                    <div class="proj-card__foot">
+                        <div class="proj-card__stats">
+                            {% for s in project.stats|slice:":3" %}
+                            <div class="proj-stat">
+                                <span class="proj-stat__v">{{ s.v }}</span>
+                                <span class="proj-stat__l">{{ s.l }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <span class="proj-card__arrow">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
                         </span>
                     </div>
                 </a>
                 {% empty %}
-                <div style="padding: 80px 0; text-align: center; color: var(--fg-3);">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— {% trans "No entries yet" %} —</span>
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <span class="mono-label">— {% trans "No entries yet" %} —</span>
                 </div>
                 {% endfor %}
             </div>
@@ -93,23 +69,6 @@
         </div>
     </section>
 </main>
-
-<style>
-    .index-head { font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase; }
-    .index-row {
-        margin-left: 0; margin-right: 0;
-        padding-left: 0; padding-right: 0;
-    }
-    .index-row .index-title {
-        font-size: 28px;
-        color: var(--fg-0);
-        transition: color .3s var(--ease-out);
-    }
-    .index-row:hover { background: var(--bg-2); padding-left: 16px; padding-right: 16px; margin-left: -16px; margin-right: -16px; }
-    .index-row:hover .index-title { color: var(--accent); }
-    .index-row:hover .index-num { color: var(--accent); }
-    .index-row:hover .index-arrow { background: var(--fg-0); color: var(--bg-1); border-color: var(--fg-0); }
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -124,13 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var projectsBase = "{% url 'projects' %}";
-    var L = {
-        cross: "{% trans 'Cross-platform' %}",
-        web:   "{% trans 'Web' %}",
-        mob:   "{% trans 'Mobile' %}",
-        feat:  "● {% trans 'Featured' %}",
-        live:  "● {% trans 'Live' %}"
-    };
+    var KIND_LABELS = { web: 'WEB', bot: 'TG BOT', mobile: 'MOBILE' };
 
     var urlParams = new URLSearchParams(window.location.search);
     var filterKey = urlParams.get('filter') || '';
@@ -144,26 +97,26 @@ document.addEventListener('DOMContentLoaded', function() {
         spinnerId: 'scroll-spinner',
         extraParams: extraParams,
         renderItem: function(p) {
-            var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
+            var kind = p.kind || (p.is_bot ? 'bot' : (p.web_page_url ? 'web' : 'mobile'));
             var year = (p.created_at || '').slice(0, 4) || '';
-            var category = p.app_store_url && p.play_store_url ? L.cross
-                : p.app_store_url ? 'iOS'
-                : p.play_store_url ? 'Android'
-                : p.web_page_url ? L.web
-                : p.is_bot ? 'Telegram' : L.mob;
-            var stack = esc((p.tech_tags || []).slice(0, 3).join(' · '));
-            var status = p.is_featured ? L.feat : L.live;
+            var tech = (p.tech_tags || []).slice(0, 4).map(function(t) {
+                return '<span class="tag">' + esc(t) + '</span>';
+            }).join('');
+            var stats = (p.stats || []).slice(0, 3).map(function(s) {
+                return '<div class="proj-stat"><span class="proj-stat__v">' + esc(s.v) + '</span><span class="proj-stat__l">' + esc(s.l) + '</span></div>';
+            }).join('');
             var href = projectsBase + esc(p.slug) + '/';
-            return '<a href="' + href + '" class="reveal in index-row" style="display:block;border-bottom:1px solid var(--line-1);">' +
-                '<div style="display:grid;grid-template-columns:60px 2fr 1fr 100px 1.5fr 80px 60px;gap:20px;padding:28px 0;align-items:center;" class="grid-3-mobile-1">' +
-                '<span class="numeral index-num" style="font-size:32px;color:var(--fg-3);">' + idx + '</span>' +
-                '<h3 class="serif index-title"><em style="font-weight:300;">' + esc(p.title) + '</em></h3>' +
-                '<span class="mono" style="font-size:11px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;">' + category + '</span>' +
-                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + esc(year) + '</span>' +
-                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.12em;">' + stack + '</span>' +
-                '<span class="mono" style="font-size:10px;color:var(--accent);letter-spacing:0.14em;">' + status + '</span>' +
-                '<span class="index-arrow" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line-3);display:inline-flex;align-items:center;justify-content:center;justify-self:end;">' +
-                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>' +
+            return '<a href="' + href + '" class="card proj-card reveal in">' +
+                '<div class="proj-card__top">' +
+                '<span class="tag kind-badge--' + esc(kind) + '">' + (KIND_LABELS[kind] || '—') + '</span>' +
+                '<span class="proj-card__year">' + esc(year) + '</span>' +
+                '</div>' +
+                '<h3 class="proj-title">' + esc(p.title) + '</h3>' +
+                '<p class="proj-card__desc">' + esc(p.description || '') + '</p>' +
+                '<div class="proj-card__tech">' + tech + '</div>' +
+                '<div class="proj-card__foot">' +
+                '<div class="proj-card__stats">' + stats + '</div>' +
+                '<span class="proj-card__arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span>' +
                 '</div></a>';
         }
     });

@@ -34,44 +34,40 @@
 
 {% block content %}
 <main>
-    {# ========================== HEADER ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container-narrow">
-            <div class="between hud-only" style="margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
-                <a href="{% url 'blog_list' %}" class="row gap-2" style="align-items: center; color: var(--fg-3);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">{% trans "All journal" %}</span>
-                </a>
-                <div class="row gap-3" style="flex-wrap: wrap;">
+    {# ========================== POST HERO ========================== #}
+    <section class="post-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container">
+            <div class="post-hero__inner">
+                <a href="{% url 'blog_list' %}" class="back-link">← {% trans "Back to journal" %}</a>
+                <div class="post-hero__meta">
                     {% if post.category %}<span class="tag">{{ post.category.name }}</span>{% endif %}
-                    <span class="tag">{{ post.reading_time }} {% trans "min read" %}</span>
+                    <span class="mono" style="font-size: 11.5px; color: var(--fg-3); letter-spacing: 0.08em;">{{ post.created_at|date:"Y-m-d" }} · {{ post.reading_time }} {% trans "MIN" %}</span>
                 </div>
-            </div>
-
-            <div class="reveal">
-                <span class="eyebrow" style="margin-bottom: 24px;">Dispatch · {{ post.created_at|date:"F Y" }}</span>
-                <h1 class="display-lg serif" style="margin-top: 16px;"><em style="font-weight: 300;">{{ post.title }}</em></h1>
-                {% if post.excerpt %}
-                <p style="margin-top: 32px; font-size: 20px; color: var(--fg-2); line-height: 1.5;">{{ post.excerpt }}</p>
-                {% endif %}
-
-                <div class="row gap-4" style="align-items: center; padding: 24px 0; margin-top: 40px; border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--line-2); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-style: italic; font-size: 20px;">{{ site_settings.site_author_initials|default:"J" }}</div>
-                    <div class="col flex-1">
-                        <span style="font-size: 15px; color: var(--fg-0);">{{ site_settings.site_author }}</span>
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }} · {{ post.reading_time }} MIN</span>
+                <h1 class="display-lg fade-up post-hero__title">{{ post.title }}</h1>
+                <div class="post-author">
+                    {% if site_settings.about_image %}
+                    <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" class="post-author__avatar">
+                    {% else %}
+                    <span class="post-author__avatar">{{ site_settings.site_author_initials|default:"J" }}</span>
+                    {% endif %}
+                    <div>
+                        <div class="post-author__name">{{ site_settings.site_author }}</div>
+                        <div class="post-author__handle">@jaysonkhan</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    {# ========================== HERO IMAGE ========================== #}
+    {# ========================== FEATURED IMAGE ========================== #}
     {% if post.featured_image %}
-    <section class="section-sm">
-        <div class="container-narrow">
-            <div class="reveal brackets" style="background: var(--bg-2); border: 1px solid var(--line-1); padding: 24px;">
-                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" style="width: 100%; max-height: 520px; object-fit: contain; display: block;">
+    <section style="padding-top: clamp(32px, 4vw, 56px);">
+        <div class="container post-narrow">
+            <div class="card case-media reveal">
+                <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" style="max-height: 520px; object-fit: cover;">
             </div>
         </div>
     </section>
@@ -79,17 +75,17 @@
 
     {# ========================== CONTENT ========================== #}
     {% if post.content_rich %}
-    <section class="section">
-        <div class="container-narrow">
-            <article class="reveal rich-content prose-content">
+    <section class="section" style="padding-top: 56px;">
+        <div class="container post-narrow">
+            <article class="post-body reveal">
                 {{ post.content_rich|safe }}
             </article>
 
             {# Tags #}
             {% if post.tags.all %}
             <div style="margin-top: 60px; padding-top: 32px; border-top: 1px solid var(--line-1);">
-                <span class="label">{% trans "Tags" %}</span>
-                <div class="row gap-2" style="flex-wrap: wrap;">
+                <span class="mono-label post-section-label">{% trans "Tags" %}</span>
+                <div class="share-row">
                     {% for tag in post.tags.all %}<span class="tag">#{{ tag.name }}</span>{% endfor %}
                 </div>
             </div>
@@ -97,22 +93,30 @@
 
             {# Share #}
             <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line-1);">
-                <span class="label">{% trans "Share" %}</span>
-                <div class="row gap-2" style="flex-wrap: wrap;">
+                <span class="mono-label post-section-label">{% trans "Share" %}</span>
+                <div class="share-row">
                     <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}" target="_blank" rel="noopener" class="tag">X / Twitter ↗</a>
                     <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}" target="_blank" rel="noopener" class="tag">LinkedIn ↗</a>
                     <a href="https://t.me/share/url?url={{ request.build_absolute_uri|urlencode }}&text={{ post.title|urlencode }}" target="_blank" rel="noopener" class="tag">Telegram ↗</a>
-                    <button type="button" id="copy-link-btn" class="tag" style="cursor: pointer;">{% trans "Copy link" %}</button>
+                    <button type="button" id="copy-link-btn" class="tag">{% trans "Copy link" %}</button>
                 </div>
                 {% include 'web/partials/channel_share.html' with content_type='post' slug=post.slug %}
+            </div>
+
+            {# CTA strip #}
+            <div class="post-cta reveal">
+                <p>{{ site_settings.cta_description }}</p>
+                <a href="{% url 'contact' %}" class="btn btn-primary btn-sm">{{ site_settings.cta_button_text }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
             </div>
         </div>
     </section>
     {% endif %}
 
     {# ========================== INTERACTIONS ========================== #}
-    <section class="section-sm" style="border-top: 1px solid var(--line-1);">
-        <div class="container-narrow">
+    <section style="border-top: 1px solid var(--line-1); padding: clamp(40px, 5vw, 64px) 0;">
+        <div class="container post-narrow">
             {% include 'web/partials/interactions.html' with app_label=app_label model_name=model_name object_id=object_id comments=comments like_count=like_count user_liked=user_liked %}
         </div>
     </section>
@@ -121,16 +125,24 @@
     {% if related_posts %}
     <section class="section" style="border-top: 1px solid var(--line-1);">
         <div class="container">
-            <div class="reveal" style="margin-bottom: 60px;">
-                <span class="eyebrow">— {% trans "Continue reading" %}</span>
-                <h2 class="display-md serif" style="margin-top: 16px;">{% trans "Related" %} <em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "Continue reading" %}</span>
+                    <h2 class="display-md">{% trans "Related dispatches." %}</h2>
+                </div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
+            <div class="journal-grid">
                 {% for rp in related_posts|slice:":3" %}
-                <a href="{% url 'blog_detail' rp.slug %}" class="reveal article-card" style="padding: 32px; border-top: 1px solid var(--line-1); {% if not forloop.last %}border-right: 1px solid var(--line-1);{% endif %} display: flex; flex-direction: column; gap: 16px; min-height: 280px; transition: background .4s var(--ease-out);">
-                    {% if rp.category %}<span class="tag" style="align-self: flex-start;">{{ rp.category.name }}</span>{% endif %}
-                    <h3 class="display-sm serif article-title" style="flex: 1;"><em style="font-weight: 300;">{{ rp.title }}</em></h3>
-                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ rp.created_at|date:"M d, Y"|upper }} · {{ rp.reading_time }} {% trans "MIN" %} ↗</span>
+                <a href="{% url 'blog_detail' rp.slug %}" class="card journal-card reveal" style="transition-delay: {{ forloop.counter0 }}80ms; min-height: 220px;">
+                    <div class="journal-card__top">
+                        <span class="journal-card__num">{{ forloop.counter|stringformat:"02d" }}</span>
+                        {% if rp.category %}<span class="tag">{{ rp.category.name }}</span>{% endif %}
+                    </div>
+                    <h3 class="journal-card__title">{{ rp.title }}</h3>
+                    <div class="journal-card__foot">
+                        <span class="mono">{{ rp.created_at|date:"Y-m-d" }}</span>
+                        <span class="mono">{{ rp.reading_time }} {% trans "MIN" %} ↗</span>
+                    </div>
                 </a>
                 {% endfor %}
             </div>
@@ -138,38 +150,17 @@
     </section>
     {% endif %}
 </main>
-
-<style>
-    .article-card:hover { background: var(--bg-2); }
-    .article-card:hover .article-title { color: var(--accent); }
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-window.__customProgressBar = true;
-(function() {
-    var bar = document.getElementById('scroll-progress');
-    var article = document.querySelector('.prose-content');
-    if (!bar || !article) return;
-    function update() {
-        var rect = article.getBoundingClientRect();
-        var start = rect.top + window.scrollY;
-        var h = rect.height;
-        var scrolled = window.scrollY - start + window.innerHeight * 0.3;
-        bar.style.width = Math.min(100, Math.max(0, (scrolled / h) * 100)) + '%';
-    }
-    window.addEventListener('scroll', update, { passive: true });
-    update();
-})();
-
 (function() {
     var btn = document.getElementById('copy-link-btn');
     if (!btn) return;
     btn.addEventListener('click', function() {
         var orig = btn.textContent;
         navigator.clipboard.writeText(window.location.href).then(function() {
-            btn.textContent = '✓ Copied';
+            btn.textContent = '✓';
             btn.style.color = 'var(--accent)';
             btn.style.borderColor = 'var(--accent)';
             setTimeout(function() {

@@ -110,15 +110,8 @@ if $DEPLOY_JK; then
     remote "source $JK_VENV && $JK_PIP install -r $JK_DIR/requirements.txt --quiet"
     ok "  Dependencies installed"
 
-    info "  Tailwind CSS build..."
-    remote "cd $JK_DIR && \
-        if command -v node >/dev/null 2>&1; then \
-            npm install --silent 2>/dev/null && \
-            npm run css:build 2>/dev/null && \
-            echo 'CSS_OK'; \
-        else \
-            echo 'SKIP_CSS'; \
-        fi"
+    # XIVA INK v4: CSS is hand-written (static/css/tokens.css + site.css),
+    # no Tailwind/node build step — collectstatic ships it as-is.
 
     info "  Django migrate + collectstatic..."
     remote "source $JK_VENV && \

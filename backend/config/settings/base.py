@@ -325,13 +325,15 @@ _A = '/' + _ADMIN_URL  # e.g. '/jk-dinadmin/'
 UNFOLD = {
     "SITE_TITLE": env("UNFOLD_SITE_TITLE", default="JK-DinAdmin"),
     "SITE_HEADER": env("UNFOLD_SITE_HEADER", default="JK-DinAdmin"),
-    "SITE_SUBHEADER": "v3.2 · OWNER",
+    "SITE_SUBHEADER": "v4 · XIVA INK · OWNER",
     "SITE_URL": "/",
     "SITE_SYMBOL": "auto_awesome",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
-    "BORDER_RADIUS": "4px",
-    # Editorial overlay loaded on top of Unfold's tailwind base
+    "BORDER_RADIUS": "6px",
+    # XIVA INK is a single universal dark-ink scheme — hide Unfold's toggle.
+    "THEME": "dark",
+    # XIVA INK overlay loaded on top of Unfold's tailwind base
     "STYLES": [
         lambda request: static("admin/css/editorial.css"),
     ],
@@ -343,21 +345,21 @@ UNFOLD = {
         "image": lambda r: static("images/hero.jpg"),
         "redirect_after": lambda r: "/" + env('ADMIN_URL', default='admin/'),
     },
-    # Editorial palette — terracotta accent (#c5532b) replaces violet primary.
+    # XIVA INK palette — Khiva terracotta oklch(0.71 0.135 45) as primary.
     # oklch format required by Unfold 0.67 + Tailwind v4 for opacity utilities.
     "COLORS": {
         "primary": {
-            "50":  "oklch(97% .012 36)",
-            "100": "oklch(93% .030 36)",
-            "200": "oklch(86% .060 36)",
-            "300": "oklch(78% .100 36)",
-            "400": "oklch(68% .135 36)",
-            "500": "oklch(58% .150 36)",   # ≈ #c5532b (terracotta)
-            "600": "oklch(50% .145 36)",
-            "700": "oklch(42% .125 36)",
-            "800": "oklch(35% .105 36)",
-            "900": "oklch(28% .085 36)",
-            "950": "oklch(20% .065 36)",
+            "50":  "oklch(97% .015 45)",
+            "100": "oklch(93% .035 45)",
+            "200": "oklch(86% .065 45)",
+            "300": "oklch(79% .105 45)",
+            "400": "oklch(75% .12 45)",
+            "500": "oklch(71% .135 45)",   # Khiva terracotta (design --accent)
+            "600": "oklch(64% .15 42)",    # --accent-strong
+            "700": "oklch(52% .13 42)",
+            "800": "oklch(42% .105 42)",
+            "900": "oklch(32% .08 42)",
+            "950": "oklch(22% .055 42)",
         },
     },
     "SIDEBAR": {

@@ -1,357 +1,310 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-26 09:25+0500\n"
+"POT-Creation-Date: 2026-06-10 18:52+0500\n"
 "Language: xo\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: backend/apps/core/templates/admin/core/asset_manager.html:4
-#: backend/presentation/web/templates/admin/index.html:4
+#: apps/core/templates/admin/core/asset_manager.html:4
+#: apps/core/templates/admin/core/utm_builder.html:4
+#: presentation/web/templates/admin/index.html:4
 msgid "JK-DinAdmin"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:6
-#: backend/presentation/web/templates/admin/login.html:235
+#: presentation/web/templates/admin/login.html:6
+#: presentation/web/templates/admin/login.html:235
 msgid "Log in"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:205
+#: presentation/web/templates/admin/login.html:205
 msgid ""
-"Please enter the correct username and password. Note that both fields may be "
-"case-sensitive."
+"Please enter the correct username and password. Note that both fields may be"
+" case-sensitive."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:213
+#: presentation/web/templates/admin/login.html:213
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this "
-"page."
+"You are authenticated as %(username)s, but are not authorized to access this"
+" page."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:242
+#: presentation/web/templates/admin/login.html:242
 msgid "Forgotten your password or username?"
 msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:160
-#: backend/presentation/web/templates/web/base.html:205
-#: backend/presentation/web/templates/web/base.html:262
-msgid "Index"
-msgstr "Bosh sahifa"
-
-#: backend/presentation/web/templates/web/base.html:162
-#: backend/presentation/web/templates/web/base.html:207
-#: backend/presentation/web/templates/web/base.html:264
+#: presentation/web/templates/web/base.html:199
+#: presentation/web/templates/web/base.html:226
+#: presentation/web/templates/web/base.html:275
+#: presentation/web/templates/web/projects.html:4
+#: presentation/web/templates/web/projects.html:6
 msgid "Work"
-msgstr "Loyihalar"
+msgstr "Ishlar"
 
-#: backend/presentation/web/templates/web/base.html:164
-#: backend/presentation/web/templates/web/base.html:209
-#: backend/presentation/web/templates/web/base.html:265
-msgid "Studio"
+#: presentation/web/templates/web/base.html:201
+#: presentation/web/templates/web/base.html:228
+#: presentation/web/templates/web/base.html:276
+#: presentation/web/templates/web/blog_list.html:4
+#: presentation/web/templates/web/blog_list.html:6
+msgid "Journal"
+msgstr "Jurnal"
+
+#: presentation/web/templates/web/base.html:202
+#: presentation/web/templates/web/base.html:229
+#: presentation/web/templates/web/base.html:277
+#: presentation/web/templates/web/home.html:135
+#: presentation/web/templates/web/team.html:4
+#: presentation/web/templates/web/team.html:6
+msgid "Team"
 msgstr "Jamoa"
 
-#: backend/presentation/web/templates/web/base.html:165
-#: backend/presentation/web/templates/web/base.html:210
-#: backend/presentation/web/templates/web/base.html:266
-msgid "Journal"
-msgstr "Yozuvlar"
-
-#: backend/presentation/web/templates/web/base.html:166
-#: backend/presentation/web/templates/web/base.html:211
-#: backend/presentation/web/templates/web/base.html:267
+#: presentation/web/templates/web/base.html:203
+#: presentation/web/templates/web/base.html:230
+#: presentation/web/templates/web/base.html:278
+#: presentation/web/templates/web/base.html:282
+#: presentation/web/templates/web/contact.html:4
+#: presentation/web/templates/web/contact.html:6
+#: presentation/web/templates/web/contact.html:33
+#: presentation/web/templates/web/section_unavailable.html:21
+#: presentation/web/templates/web/team.html:54
 msgid "Contact"
 msgstr "Aloqa"
 
-#: backend/presentation/web/templates/web/base.html:263
+#: presentation/web/templates/web/base.html:214
+#| msgid "View case studies"
+msgid "Hire the studio"
+msgstr "Gal, ishlashamiz"
+
+#: presentation/web/templates/web/base.html:224
+#: presentation/web/templates/web/base.html:274
+#: presentation/web/templates/web/section_unavailable.html:18
 msgid "Home"
-msgstr "Bosh sahifa"
+msgstr "Bosh bet"
 
-#: backend/presentation/web/templates/web/base.html:271
-msgid "Practice"
-msgstr "Yo'nalishlar"
+#: presentation/web/templates/web/blog_detail.html:44
+#: presentation/web/templates/web/blog_search.html:15
+#| msgid "Back to all work"
+msgid "Back to journal"
+msgstr "Jurnalga qaytish"
 
-#: backend/presentation/web/templates/web/base.html:278
-msgid "Channels"
-msgstr "Aloqa kanali"
-
-msgid "See the work →"
-msgstr "Ishlarni ko'rish →"
-
-msgid "Start a project"
-msgstr "Loyiha boshlash"
-
-msgid "View case studies"
-msgstr "Keyslarni ko'rish"
-
-msgid "Career · Track record"
-msgstr "Karyera · Ish tarixi"
-
-msgid "Where I've shipped."
-msgstr "Qayda ishlagan."
-
-msgid "PRESENT"
-msgstr "HOZIRGI VAQT"
-
-msgid "04 — Selected work"
-msgstr "04 — Tanlangan ishlar"
-
-msgid "View all projects"
-msgstr "Barcha loyihalar"
-
-msgid "Web"
-msgstr "Veb"
-
-msgid "Telegram bot"
-msgstr "Telegram-bot"
-
-msgid "04 — Recent work"
-msgstr "04 — So'nggi ishlar"
-
-msgid "A handful of recent builds."
-msgstr "Bir nechta so'nggi loyiha."
-
-msgid "06 — From the journal"
-msgstr "06 — Yozuvlardan"
-
-msgid "Latest"
-msgstr "So'nggi"
-
-msgid "dispatches."
-msgstr "maqolalar."
-
-msgid "All entries"
-msgstr "Barcha yozuvlar"
-
+#: presentation/web/templates/web/blog_detail.html:47
+#: presentation/web/templates/web/blog_detail.html:144
+#: presentation/web/templates/web/blog_list.html:46
+#: presentation/web/templates/web/blog_list.html:76
+#: presentation/web/templates/web/blog_search.html:42
+#: presentation/web/templates/web/home.html:300
 msgid "MIN"
-msgstr "DAQIQA"
+msgstr "MIN"
 
-msgid "Production builds"
-msgstr "Production loyihalari"
-
-msgid "Selected work · Production builds"
-msgstr "Tanlangan ishlar · Production loyihalari"
-
-msgid "and what they"
-msgstr "va ular"
-
-msgid "taught me."
-msgstr "o'rgatgan narsalar."
-
-msgid "The full"
-msgstr "To'liq"
-
-msgid "index."
-msgstr "ro'yxat."
-
-msgid "Project"
-msgstr "Loyiha"
-
-msgid "Category"
-msgstr "Kategoriya"
-
-msgid "Year"
-msgstr "Yil"
-
-msgid "Stack"
-msgstr "Stek"
-
-msgid "Result"
-msgstr "Natija"
-
-msgid "Cross-platform"
-msgstr "Kross-platforma"
-
-msgid "Mobile"
-msgstr "Mobil"
-
-msgid "Featured"
-msgstr "Tanlangan"
-
-msgid "Live"
-msgstr "Faol"
-
-msgid "No entries yet"
-msgstr "Hozircha yozuvlar yo'q"
-
-msgid "All work"
-msgstr "Barcha ishlar"
-
-msgid "Open in iOS"
-msgstr "iOS da ochish"
-
-msgid "Open in Android"
-msgstr "Android da ochish"
-
-msgid "Visit web app"
-msgstr "Veb-ilovani ochish"
-
-msgid "Source code"
-msgstr "Manba kodi"
-
-msgid "Behind"
-msgstr "Orqasida"
-
-msgid "the build."
-msgstr "loyihaning."
-
-msgid "Challenge"
-msgstr "Muammo"
-
-msgid "Solution"
-msgstr "Yechim"
-
-msgid "Results"
-msgstr "Natijalar"
-
-msgid "End of dispatch"
-msgstr "Maqola tugadi"
-
-msgid "Got a brief like"
-msgstr "Shunday"
-
-msgid "this one?"
-msgstr "loyiha bormi?"
-
-msgid "Open a channel"
-msgstr "Kanal ochish"
-
-msgid "Back to all work"
-msgstr "Barcha ishlarga qaytish"
-
-msgid "Journal · Field notes from the studio"
-msgstr "Jurnal · Studiyadan eslatmalar"
-
-msgid "from the field."
-msgstr "maydondan."
-
-msgid "All"
-msgstr "Barcha"
-
-msgid "Search..."
-msgstr "Qidirish..."
-
-msgid "No dispatches yet"
-msgstr "Hozircha maqolalar yo'q"
-
-msgid "All journal"
-msgstr "Barcha maqolalar"
-
-msgid "min read"
-msgstr "daqiqa o'qish"
-
+#: presentation/web/templates/web/blog_detail.html:87
 msgid "Tags"
 msgstr "Teglar"
 
+#: presentation/web/templates/web/blog_detail.html:96
 msgid "Share"
 msgstr "Ulashish"
 
+#: presentation/web/templates/web/blog_detail.html:101
 msgid "Copy link"
 msgstr "Havolani nusxalash"
 
+#: presentation/web/templates/web/blog_detail.html:130
 msgid "Continue reading"
 msgstr "O'qishni davom eting"
 
-msgid "Related"
-msgstr "O'xshash"
+#: presentation/web/templates/web/blog_detail.html:131
+#| msgid "dispatches."
+msgid "Related dispatches."
+msgstr "O'xshash yozuvlar."
 
-msgid "Avg. response · 4–6h"
-msgstr "O'rtacha javob · 4–6 soat"
+#: presentation/web/templates/web/blog_list.html:18
+#| msgid "Journal"
+msgid "Journal."
+msgstr "Jurnal."
 
-msgid "Contact · Open the channel"
-msgstr "Aloqa · Kanal ochish"
+#: presentation/web/templates/web/blog_list.html:28
+#: presentation/web/templates/web/blog_search.html:18
+msgid "Search..."
+msgstr "Qidirish..."
 
-msgid "TRANSMISSION RECEIVED"
-msgstr "XABAR OLINDI"
+#: presentation/web/templates/web/blog_list.html:50
+msgid "No dispatches yet"
+msgstr "Hozircha yozuvlar yo'q"
 
-msgid "Message sent. I'll reply within 24 hours — usually faster."
-msgstr "Xabar yuborildi. 24 soat ichida javob beraman — odatda tezroq."
+#: presentation/web/templates/web/blog_search.html:4
+#: presentation/web/templates/web/blog_search.html:5
+#: presentation/web/templates/web/blog_search.html:16
+#| msgid "Search..."
+msgid "Search"
+msgstr "Qidiruv"
 
-msgid "Name"
-msgstr "Ism"
+#: presentation/web/templates/web/blog_search.html:24
+#| msgid "Results"
+msgid "results"
+msgstr "natija"
 
+#: presentation/web/templates/web/blog_search.html:46
+msgid "Nothing found"
+msgstr "Hech narsa topilmadi"
+
+#: presentation/web/templates/web/contact.html:18
+#| msgid "Contact"
+msgid "Contact."
+msgstr "Aloqa."
+
+#: presentation/web/templates/web/contact.html:32
+msgid "Thanks for your message! We'll be in touch soon."
+msgstr "Xabaringiz uchun rahmat! Tez orada bog'lanamiz."
+
+#: presentation/web/templates/web/contact.html:55
 msgid "Your name"
 msgstr "Ismingiz"
 
-msgid "Subject"
-msgstr "Mavzu"
+#: presentation/web/templates/web/contact.html:59
+msgid "Email or Telegram"
+msgstr "Email yoki Telegram"
 
-msgid "What are we building?"
-msgstr "Nima quramiz?"
+#: presentation/web/templates/web/contact.html:64
+#| msgid "Start a project"
+msgid "About your project"
+msgstr "Loyihangiz haqida"
 
-msgid "The brief"
-msgstr "Brief"
+#: presentation/web/templates/web/contact.html:67
+msgid "Send"
+msgstr "Yuborish"
 
-msgid "Tell me about the project, the timeline, what success looks like…"
-msgstr "Loyiha, muddatlar va muvaffaqiyat haqida ayting…"
+#: presentation/web/templates/web/contact.html:75
+msgid "Or directly"
+msgstr "Yoki to'g'ridan-to'g'ri"
 
-msgid "TRANSMITTED"
-msgstr "YUBORILDI"
+#: presentation/web/templates/web/contact.html:83
+msgid "Message on Telegram"
+msgstr "Telegram orqali yozish"
 
-msgid "AWAITING INPUT"
-msgstr "KIRITISH KUTILMOQDA"
+#: presentation/web/templates/web/home.html:34
+msgid "Start a project"
+msgstr "Loyiha boshlaymizmi?"
 
-msgid "Send brief"
-msgstr "Brief yuborish"
+#: presentation/web/templates/web/home.html:38
+msgid "View case studies"
+msgstr "Ishlarga qarang"
 
-msgid "Direct channels"
-msgstr "To'g'ridan-to'g'ri kanallar"
+#: presentation/web/templates/web/home.html:139
+msgid "Download CV"
+msgstr "CV yuklab oling"
 
-msgid "Prefer not to fill out a form? Pick a faster channel — they all reach me."
-msgstr "Forma to'ldirishni xohlamaysizmi? Tezroq kanal tanlang — barchasi menga etib keladi."
+#: presentation/web/templates/web/home.html:148
+msgid "WakaTime · this week"
+msgstr "WakaTime · shu hafta"
 
-msgid "Replies within 24h"
-msgstr "24 soat ichida javob"
+#: presentation/web/templates/web/home.html:149
+#| msgid "Source code"
+msgid "hrs coded"
+msgstr "soat kod"
 
-msgid "Faster, async"
-msgstr "Tezroq, asinxron"
+#: presentation/web/templates/web/home.html:186
+msgid "Career · Track record"
+msgstr "Karyera · Iz"
 
-msgid "Code & issues"
-msgstr "Kod va muammolar"
+#: presentation/web/templates/web/home.html:187
+msgid "Where I've shipped."
+msgstr "Qayerlarda yetkazganman."
 
-msgid "Long-form, professional"
-msgstr "Professional"
+#: presentation/web/templates/web/home.html:202
+msgid "PRESENT"
+msgstr "HOZIR"
 
-msgid "PORTRAIT NO."
-msgstr "PORTRET №"
+#: presentation/web/templates/web/home.html:220
+msgid "04 — Selected work"
+msgstr "04 — Saralangan ishlar"
 
-msgid "skills · dossier"
-msgstr "ko'nikma · dossier"
+#: presentation/web/templates/web/home.html:223
+msgid "View all projects"
+msgstr "Hamma loyihalar"
 
-msgid "READ →"
-msgstr "O'QISH →"
+#: presentation/web/templates/web/home.html:283
+msgid "06 — From the journal"
+msgstr "06 — Jurnaldan"
 
-msgid "Crew manifest · pending"
-msgstr "Jamoa ro'yxati · yig'ilmoqda"
+#: presentation/web/templates/web/home.html:284
+#| msgid "dispatches."
+msgid "Latest dispatches."
+msgstr "So'nggi yozuvlar."
 
-msgid "The team page is being assembled."
-msgstr "Jamoa sahifasi tayyorlanmoqda."
+#: presentation/web/templates/web/home.html:286
+msgid "All entries"
+msgstr "Hamma yozuvlar"
 
-msgid "Want to work with us?"
-msgstr "Biz bilan ishlashni xohlaysizmi?"
+#: presentation/web/templates/web/project_detail.html:44
+#| msgid "Back to all work"
+msgid "Back to work"
+msgstr "Ishlarga qaytish"
 
-msgid "Bring the brief."
-msgstr "Brief keltiring."
+#: presentation/web/templates/web/project_detail.html:48
+msgid "Featured"
+msgstr "Asosiy"
 
-msgid "We'll bring the team."
-msgstr "Biz jamoani olib kelamiz."
+#: presentation/web/templates/web/project_detail.html:81
+msgid "Challenge"
+msgstr "Muammo"
 
-msgid "Let's"
-msgstr "Keling,"
+#: presentation/web/templates/web/project_detail.html:91
+msgid "Solution"
+msgstr "Yechim"
 
-msgid "open a channel."
-msgstr "kanal ochamiz."
+#: presentation/web/templates/web/project_detail.html:101
+msgid "Results"
+msgstr "Natija"
 
-msgid "something"
-msgstr "biror narsa"
+#: presentation/web/templates/web/project_detail.html:116
+msgid "Stack"
+msgstr "Stack"
 
-msgid "real."
-msgstr "haqiqiy."
+#: presentation/web/templates/web/project_detail.html:124
+msgid "Channels"
+msgstr "Havolalar"
 
-msgid "dispatches"
-msgstr "maqola"
+#: presentation/web/templates/web/project_detail.html:127
+#| msgid "Visit web app"
+msgid "Visit live"
+msgstr "Saytga o'tish"
 
-msgid "entries"
-msgstr "yozuv"
+#: presentation/web/templates/web/project_detail.html:163
+#| msgid "Start a project"
+msgid "Next project"
+msgstr "Keyingi loyiha"
 
-msgid "CHARS"
-msgstr "BELGI"
+#: presentation/web/templates/web/projects.html:18
+#| msgid "Work"
+msgid "Work."
+msgstr "Ishlar."
+
+#: presentation/web/templates/web/projects.html:60
+msgid "No entries yet"
+msgstr "Hozircha ishlar yo'q"
+
+#: presentation/web/templates/web/team.html:37
+msgid "y"
+msgstr "yil"
+
+#: presentation/web/templates/web/team.html:52
+msgid "Open position"
+msgstr "Ochiq o'rin"
+
+#: presentation/web/templates/web/team.html:53
+msgid "Looking for a strong full-stack or bot developer. Introduce yourself."
+msgstr ""
+"Kuchli full-stack yoki bot-developer izlayapmiz. O'zingizni tanitib yozing."
+
+#: presentation/web/views.py:175
+msgid "All"
+msgstr "Hammasi"
+
+#: presentation/web/views.py:177
+msgid "Bots"
+msgstr "Botlar"
+
+#: presentation/web/views.py:178
+msgid "Mobile"
+msgstr "Mobil"

@@ -1,332 +1,61 @@
 {% extends 'web/base.html' %}
 {% load static i18n %}
 
-{% block title %}Studio | {{ site_settings.site_author }}{% endblock %}
-{% block meta_description %}The team behind {{ site_settings.site_author }} — operators, builders, designers shipping production mobile apps from Tashkent.{% endblock %}
-{% block og_title %}Studio | {{ site_settings.site_author }}{% endblock %}
-{% block og_description %}Behind every strong product is a focused team. Meet the operators behind the work.{% endblock %}
+{% block title %}{% trans "Team" %} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ site_settings.team_intro }}{% endblock %}
+{% block og_title %}{% trans "Team" %} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ site_settings.team_intro }}{% endblock %}
 
 {% block content %}
 <main>
-    {# ========================== HERO ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
-                <div class="row gap-3">
-                    <span class="tag">{{ site_settings.team_section_label }}</span>
-                    <span class="tag">{{ team_members|length }} operators · Est. 2022</span>
-                </div>
-                <span class="tag"><span class="dot-live"></span> {{ site_settings.team_studio_label }}</span>
-            </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">{{ site_settings.team_hero_eyebrow }}</div>
-            <h1 class="display-xl">{{ site_settings.team_hero_headline|safe }}</h1>
-            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">{{ site_settings.team_intro }}</p>
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">Studio</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ site_settings.team_hero_headline|safe }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ site_settings.team_intro }}</p>
         </div>
     </section>
 
-    {# ========================== PORTRAIT GRID ========================== #}
-    {% if team_members %}
-    <section class="section">
-        <div class="container">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1">
-                {% for m in team_members %}
-                <article class="reveal portrait-card" data-member="{{ m.pk }}" style="transition-delay: {{ forloop.counter0|stringformat:'s' }}0ms; padding: 40px; border-top: 1px solid var(--line-1); {% if not forloop.counter|divisibleby:3 %}border-right: 1px solid var(--line-1);{% endif %} {% if forloop.counter > 3 %}{% endif %} cursor: pointer; transition: background .4s var(--ease-out); min-height: 460px; display: flex; flex-direction: column;">
-                    <div class="between" style="margin-bottom: 24px;">
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; color: var(--fg-3);">{{ forloop.counter|stringformat:"02d" }} / {{ team_members|length|stringformat:"02d" }}</span>
-                        {% if m.years_experience %}<span class="mono" style="font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3);">{{ m.years_experience }}y</span>{% endif %}
+    {# ========================== TEAM CARDS ========================== #}
+    <section class="section" style="padding-top: 56px;">
+        <div class="container team-grid">
+            {% for m in team_members %}
+            <div class="card team-card reveal" style="transition-delay: {{ forloop.counter0 }}70ms;">
+                <div class="team-card__head">
+                    {% if m.photo %}
+                    <img src="{{ m.photo.url }}" alt="{{ m.name }}" class="team-card__photo" loading="lazy">
+                    {% else %}
+                    <span class="team-card__photo team-card__photo--initials">{{ m.initials }}</span>
+                    {% endif %}
+                    <div class="team-card__who">
+                        <h3 class="team-card__name">{{ m.name }}</h3>
+                        <span class="mono-label team-card__role">{{ m.role }}</span>
+                        <span class="team-card__meta">{{ m.years_experience }} {% trans "y" %}</span>
                     </div>
-
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 0; position: relative;">
-                        <div class="portrait-blob" style="width: 200px; height: 220px; background: var(--bg-3); position: relative; transition: all .5s var(--ease-out); display: flex; align-items: center; justify-content: center; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; overflow: hidden;">
-                            {% if m.photo %}
-                            <img src="{{ m.photo.url }}" alt="{{ m.name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                            <span class="portrait-initials" style="font-family: var(--font-display); font-style: italic; font-size: 110px; color: var(--fg-2); font-weight: 300; transition: color .5s;">{{ m.initials }}</span>
-                            {% endif %}
-                            <span class="mono" style="position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.2em; color: var(--fg-3);">● {% trans "PORTRAIT NO." %} {{ forloop.counter }}</span>
-                        </div>
-                    </div>
-
-                    <div class="col gap-2">
-                        <h3 class="display-sm serif portrait-title"><em style="font-weight: 300;">{{ m.name }}</em></h3>
-                        <span class="mono" style="font-size: 11px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">{{ m.role }}</span>
-                        <p style="color: var(--fg-2); font-size: 14px; line-height: 1.5; margin-top: 12px;">{{ m.bio|truncatewords:24 }}</p>
-                        <div class="between" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-1);">
-                            <span class="mono" style="font-size: 10px; color: var(--fg-3); letter-spacing: 0.14em;">{{ m.skills_list|length }} {% trans "skills · dossier" %}</span>
-                            <span class="mono portrait-cta" style="font-size: 10px; letter-spacing: 0.14em; color: var(--fg-2); transition: color .3s;">{% trans "READ →" %}</span>
-                        </div>
-                    </div>
-                </article>
-                {% endfor %}
-                <div style="border-top: 1px solid var(--line-1); grid-column: 1 / -1;"></div>
-            </div>
-        </div>
-    </section>
-    {% else %}
-    <section class="section">
-        <div class="container">
-            <div style="padding: 80px 0; text-align: center; color: var(--fg-3); border-top: 1px solid var(--line-1); border-bottom: 1px solid var(--line-1);">
-                <span class="numeral" style="font-size: 120px; color: var(--accent); font-style: italic; display: block; line-height: 1;">∅</span>
-                <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 24px; display: block;">{% trans "Crew manifest · pending" %}</span>
-                <p class="serif" style="font-size: 24px; font-style: italic; font-weight: 300; color: var(--fg-1); margin-top: 12px;">{% trans "The team page is being assembled." %}</p>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    {# ========================== VALUES (ink) ========================== #}
-    {% with values=site_settings.team_values_resolved %}
-    {% if values %}
-    <section class="surface-ink section">
-        <div class="container">
-            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <div class="col gap-3">
-                    <span class="eyebrow">{{ site_settings.team_values_eyebrow }}</span>
-                    <h2 class="display-md serif">{{ site_settings.team_values_title|safe }}</h2>
                 </div>
-                <p style="max-width: 380px; opacity: 0.7; font-size: 16px; line-height: 1.6;">{{ site_settings.team_values_intro }}</p>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid rgba(243,239,230,0.12);" class="grid-3-mobile-1">
-                {% for v in values %}
-                <div class="reveal" style="transition-delay: {{ forloop.counter0 }}50ms; padding: 40px 32px 40px 0; {% if not forloop.counter|divisibleby:3 %}border-right: 1px solid rgba(243,239,230,0.12);{% endif %} {% if forloop.counter <= values|length|add:'-3' %}border-bottom: 1px solid rgba(243,239,230,0.12);{% endif %}">
-                    <span class="numeral" style="font-size: 60px; opacity: 0.3;">{{ forloop.counter|stringformat:"02d" }}</span>
-                    <h4 class="display-sm serif" style="margin-top: 16px;"><em>{{ v.title }}</em></h4>
-                    <p style="opacity: 0.7; font-size: 14px; line-height: 1.6; margin-top: 12px;">{{ v.description }}</p>
+                {% if m.quote %}
+                <p class="team-card__quote">"{{ m.quote }}"</p>
+                {% endif %}
+                <p class="team-card__bio">{{ m.bio }}</p>
+                <div class="team-card__skills">
+                    {% for s in m.skills_list %}<span class="tag">{{ s }}</span>{% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
-    </section>
-    {% endif %}
-    {% endwith %}
+            {% endfor %}
 
-    {# ========================== CTA ========================== #}
-    <section class="section">
-        <div class="container">
-            <div class="reveal" style="display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: end;" class="grid-2-mobile-1">
-                <div class="col gap-6">
-                    <span class="eyebrow">— {% trans "Want to work with us?" %}</span>
-                    <h2 class="display-lg serif">
-                        {% trans "Bring the brief." %}<br>
-                        <em style="font-weight: 300; color: var(--accent);">{% trans "We'll bring the team." %}</em>
-                    </h2>
-                </div>
-                <div class="col gap-3" style="align-items: flex-end;">
-                    <a href="{% url 'contact' %}" class="btn btn-primary btn-arrow" style="--pad-y: 20px; --pad-x: 32px;">
-                        {% trans "Open a channel" %}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </a>
-                    <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{% trans "Avg. response · 4–6h" %}</span>
-                </div>
+            <div class="open-card reveal" style="transition-delay: 0.1s;">
+                <span class="open-card__plus">+</span>
+                <h3 class="open-card__title">{% trans "Open position" %}</h3>
+                <p>{% trans "Looking for a strong full-stack or bot developer. Introduce yourself." %}</p>
+                <a href="{% url 'contact' %}" class="btn btn-sm">{% trans "Contact" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
             </div>
         </div>
     </section>
 </main>
-
-{# ========================== DOSSIER MODAL ========================== #}
-{% if team_members %}
-<div id="dossier-modal" class="dossier-modal" style="display: none;">
-    <div class="dossier-overlay"></div>
-    <div class="dossier-content brackets" id="dossier-body" role="dialog" aria-modal="true" aria-labelledby="dossier-name"></div>
-</div>
-
-{{ team_payload|json_script:"team-data" }}
-{% endif %}
-
-<style>
-    .portrait-card:hover { background: var(--bg-2); }
-    .portrait-card:hover .portrait-blob { background: var(--accent); }
-    .portrait-card:hover .portrait-initials { color: var(--bg-1); }
-    .portrait-card:hover .portrait-title { color: var(--accent); }
-    .portrait-card:hover .portrait-cta { color: var(--accent); }
-
-    .dossier-modal {
-        position: fixed; inset: 0; z-index: 1000;
-        display: flex; align-items: center; justify-content: center;
-        padding: 24px;
-        animation: fade-in .25s var(--ease-out) both;
-    }
-    .dossier-overlay {
-        position: absolute; inset: 0;
-        background: rgba(20,18,14,0.7);
-        backdrop-filter: blur(12px);
-    }
-    .dossier-content {
-        position: relative;
-        background: var(--bg-2);
-        border: 1px solid var(--line-2);
-        max-width: 920px;
-        width: 100%;
-        max-height: 90vh;
-        overflow: auto;
-    }
-    [data-theme="dark"] .dossier-overlay { background: rgba(243,239,230,0.15); }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function() {
-    var modal = document.getElementById('dossier-modal');
-    var body = document.getElementById('dossier-body');
-    if (!modal || !body) return;
-
-    var teamData = {};
-    var dataNode = document.getElementById('team-data');
-    if (dataNode) { try { teamData = JSON.parse(dataNode.textContent); } catch (e) {} }
-
-    // Only allow http(s) and root-relative URLs; reject javascript:/data: etc.
-    function safeUrl(url) {
-        if (typeof url !== 'string') return '';
-        var u = url.trim();
-        if (u.charAt(0) === '/') return u;
-        if (/^https?:\/\//i.test(u)) return u;
-        return '';
-    }
-
-    function el(tag, props, styleText) {
-        var node = document.createElement(tag);
-        if (props) {
-            for (var key in props) {
-                if (key === 'className') node.className = props[key];
-                else if (key === 'text') node.textContent = props[key];
-                else node.setAttribute(key, props[key]);
-            }
-        }
-        if (styleText) node.setAttribute('style', styleText);
-        return node;
-    }
-
-    function openMember(pk) {
-        var m = teamData[String(pk)];
-        if (!m) return;
-
-        body.textContent = '';
-
-        // --- Header ---
-        var header = el('div', { className: 'between' }, 'padding:24px 32px;border-bottom:1px solid var(--line-1);');
-        header.appendChild(el('span', {
-            className: 'mono',
-            text: 'Dossier · #' + String(m.id).padStart(2, '0')
-        }, 'font-size:11px;letter-spacing:0.18em;color:var(--fg-3);text-transform:uppercase;'));
-        header.appendChild(el('button', {
-            type: 'button', className: 'mono', id: 'dossier-close', text: 'CLOSE ✕'
-        }, 'font-size:11px;letter-spacing:0.18em;color:var(--fg-2);'));
-        body.appendChild(header);
-
-        var grid = el('div', { className: 'grid-2-mobile-1' }, 'display:grid;grid-template-columns:320px 1fr;gap:0;');
-
-        // --- Left column (portrait + tenure + channels) ---
-        var left = el('div', null, 'padding:32px;background:var(--bg-3);border-right:1px solid var(--line-1);');
-        var portraitBox = el('div', null, 'aspect-ratio:1;background:var(--bg-2);display:flex;align-items:center;justify-content:center;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;overflow:hidden;');
-        var photoUrl = safeUrl(m.photo);
-        if (photoUrl) {
-            portraitBox.appendChild(el('img', {
-                src: photoUrl, alt: m.name || ''
-            }, 'width:100%;height:100%;object-fit:cover;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;'));
-        } else {
-            portraitBox.appendChild(el('span', {
-                text: m.initials || ''
-            }, 'font-family:var(--font-display);font-style:italic;font-size:120px;color:var(--accent);'));
-        }
-        left.appendChild(portraitBox);
-
-        if (m.years) {
-            var tenure = el('div', { className: 'col gap-2' }, 'margin-top:24px;');
-            tenure.appendChild(el('span', { className: 'label', text: 'Tenure' }));
-            var tenureVal = el('span', { className: 'display-sm serif' });
-            var tenureEm = document.createElement('em');
-            tenureEm.textContent = m.years;
-            tenureVal.appendChild(tenureEm);
-            tenureVal.appendChild(document.createTextNode(' years'));
-            tenure.appendChild(tenureVal);
-            left.appendChild(tenure);
-        }
-
-        var channels = document.createDocumentFragment();
-        var channelCount = 0;
-        ['telegram', 'github', 'linkedin'].forEach(function(k) {
-            var href = safeUrl(m[k]);
-            if (!href) return;
-            channelCount++;
-            channels.appendChild(el('a', {
-                href: href, target: '_blank', rel: 'noopener', className: 'tag', text: k + ' ↗'
-            }));
-        });
-        if (channelCount) {
-            var channelsWrap = el('div', { className: 'col gap-2' }, 'margin-top:20px;');
-            channelsWrap.appendChild(el('span', { className: 'label', text: 'Channels' }));
-            var channelsRow = el('div', { className: 'row gap-2' }, 'flex-wrap:wrap;');
-            channelsRow.appendChild(channels);
-            channelsWrap.appendChild(channelsRow);
-            left.appendChild(channelsWrap);
-        }
-        grid.appendChild(left);
-
-        // --- Right column (name + role + bio + quote + skills) ---
-        var right = el('div', { className: 'col' }, 'padding:40px;gap:24px;');
-
-        var nameBlock = el('div');
-        var nameH2 = el('h2', { className: 'display-md serif', id: 'dossier-name' });
-        var nameEm = el('em', { text: m.name || '' }, 'font-weight:300;');
-        nameH2.appendChild(nameEm);
-        nameBlock.appendChild(nameH2);
-        nameBlock.appendChild(el('span', {
-            className: 'mono', text: m.role || ''
-        }, 'font-size:12px;letter-spacing:0.14em;color:var(--fg-3);text-transform:uppercase;margin-top:8px;display:block;'));
-        right.appendChild(nameBlock);
-
-        right.appendChild(el('p', {
-            text: m.bio || ''
-        }, 'font-size:16px;color:var(--fg-2);line-height:1.6;'));
-
-        if (m.quote) {
-            right.appendChild(el('blockquote', {
-                className: 'serif', text: '"' + m.quote + '"'
-            }, 'font-size:24px;font-style:italic;font-weight:300;color:var(--fg-0);border-left:2px solid var(--accent);padding-left:20px;line-height:1.4;margin:0;'));
-        }
-
-        var skills = m.skills || [];
-        if (skills.length) {
-            var skillsBlock = el('div');
-            skillsBlock.appendChild(el('span', { className: 'label', text: 'Skills' }));
-            var skillsRow = el('div', { className: 'row gap-2' }, 'flex-wrap:wrap;');
-            skills.forEach(function(s) {
-                skillsRow.appendChild(el('span', {
-                    className: 'tag', text: s
-                }, 'border-color:var(--accent);color:var(--accent);'));
-            });
-            skillsBlock.appendChild(skillsRow);
-            right.appendChild(skillsBlock);
-        }
-        grid.appendChild(right);
-
-        body.appendChild(grid);
-
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-
-        var closeBtn = document.getElementById('dossier-close');
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    }
-
-    function closeModal() {
-        modal.style.display = 'none';
-        body.innerHTML = '';
-        document.body.style.overflow = '';
-    }
-
-    document.querySelectorAll('.portrait-card').forEach(function(card) {
-        card.addEventListener('click', function() {
-            var pk = card.getAttribute('data-member');
-            if (pk) openMember(pk);
-        });
-    });
-
-    modal.querySelector('.dossier-overlay').addEventListener('click', closeModal);
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
-    });
-})();
-</script>
 {% endblock %}

@@ -127,6 +127,13 @@ class HeroMixin(models.Model):
         max_length=255, default="I ship production web apps and Telegram bots.",
         help_text="Main hero headline (HTML allowed; leave blank to use v3 default)"
     )
+    hero_title_em = models.CharField(
+        max_length=120, blank=True, default="",
+        help_text=(
+            "Accent word(s) rendered as the italic terracotta line with the "
+            "turquoise underline (XIVA INK hero signature). Leave blank to hide."
+        )
+    )
     hero_subtitle = models.TextField(
         max_length=500,
         default="VibeCoder shipping production-grade web applications, Telegram bots, "
@@ -161,6 +168,15 @@ class ContentSectionsMixin(models.Model):
     about_image = models.ImageField(
         upload_to='about/', blank=True, null=True,
         help_text="About section portrait/image"
+    )
+    wakatime_stats = models.JSONField(
+        blank=True, default=dict,
+        help_text=(
+            "Weekly coding stats for the homepage WakaTime widget — "
+            "{total, days: [{d, h, pct, peak}], langs: [{name, pct}]}. "
+            "Filled by `manage.py fetch_wakatime` (WAKATIME_API_KEY env); "
+            "empty dict hides the widget."
+        )
     )
 
     # ── Stats Bar

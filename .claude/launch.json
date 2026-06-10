@@ -6,12 +6,6 @@
       "runtimeExecutable": "backend/venv/bin/python",
       "runtimeArgs": ["backend/manage.py", "runserver", "--insecure", "0.0.0.0:8000"],
       "port": 8000
-    },
-    {
-      "name": "tailwind-watch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "css:watch"],
-      "port": 0
     }
   ]
 }

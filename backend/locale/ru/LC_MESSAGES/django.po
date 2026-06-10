@@ -1,371 +1,309 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-26 09:25+0500\n"
+"POT-Creation-Date: 2026-06-10 18:52+0500\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: backend/apps/core/templates/admin/core/asset_manager.html:4
-#: backend/presentation/web/templates/admin/index.html:4
+#: apps/core/templates/admin/core/asset_manager.html:4
+#: apps/core/templates/admin/core/utm_builder.html:4
+#: presentation/web/templates/admin/index.html:4
 msgid "JK-DinAdmin"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:6
-#: backend/presentation/web/templates/admin/login.html:235
+#: presentation/web/templates/admin/login.html:6
+#: presentation/web/templates/admin/login.html:235
 msgid "Log in"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:205
+#: presentation/web/templates/admin/login.html:205
 msgid ""
-"Please enter the correct username and password. Note that both fields may be "
-"case-sensitive."
+"Please enter the correct username and password. Note that both fields may be"
+" case-sensitive."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:213
+#: presentation/web/templates/admin/login.html:213
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this "
-"page."
+"You are authenticated as %(username)s, but are not authorized to access this"
+" page."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:242
+#: presentation/web/templates/admin/login.html:242
 msgid "Forgotten your password or username?"
 msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:160
-#: backend/presentation/web/templates/web/base.html:205
-#: backend/presentation/web/templates/web/base.html:262
-msgid "Index"
-msgstr "Главная"
-
-#: backend/presentation/web/templates/web/base.html:162
-#: backend/presentation/web/templates/web/base.html:207
-#: backend/presentation/web/templates/web/base.html:264
+#: presentation/web/templates/web/base.html:199
+#: presentation/web/templates/web/base.html:226
+#: presentation/web/templates/web/base.html:275
+#: presentation/web/templates/web/projects.html:4
+#: presentation/web/templates/web/projects.html:6
 msgid "Work"
-msgstr "Работы"
+msgstr "Проекты"
 
-#: backend/presentation/web/templates/web/base.html:164
-#: backend/presentation/web/templates/web/base.html:209
-#: backend/presentation/web/templates/web/base.html:265
-msgid "Studio"
-msgstr "Студия"
-
-#: backend/presentation/web/templates/web/base.html:165
-#: backend/presentation/web/templates/web/base.html:210
-#: backend/presentation/web/templates/web/base.html:266
+#: presentation/web/templates/web/base.html:201
+#: presentation/web/templates/web/base.html:228
+#: presentation/web/templates/web/base.html:276
+#: presentation/web/templates/web/blog_list.html:4
+#: presentation/web/templates/web/blog_list.html:6
 msgid "Journal"
 msgstr "Журнал"
 
-#: backend/presentation/web/templates/web/base.html:166
-#: backend/presentation/web/templates/web/base.html:211
-#: backend/presentation/web/templates/web/base.html:267
+#: presentation/web/templates/web/base.html:202
+#: presentation/web/templates/web/base.html:229
+#: presentation/web/templates/web/base.html:277
+#: presentation/web/templates/web/home.html:135
+#: presentation/web/templates/web/team.html:4
+#: presentation/web/templates/web/team.html:6
+msgid "Team"
+msgstr "Команда"
+
+#: presentation/web/templates/web/base.html:203
+#: presentation/web/templates/web/base.html:230
+#: presentation/web/templates/web/base.html:278
+#: presentation/web/templates/web/base.html:282
+#: presentation/web/templates/web/contact.html:4
+#: presentation/web/templates/web/contact.html:6
+#: presentation/web/templates/web/contact.html:33
+#: presentation/web/templates/web/section_unavailable.html:21
+#: presentation/web/templates/web/team.html:54
 msgid "Contact"
 msgstr "Контакт"
 
-#: backend/presentation/web/templates/web/base.html:263
+#: presentation/web/templates/web/base.html:214
+#| msgid "View case studies"
+msgid "Hire the studio"
+msgstr "Сотрудничество"
+
+#: presentation/web/templates/web/base.html:224
+#: presentation/web/templates/web/base.html:274
+#: presentation/web/templates/web/section_unavailable.html:18
 msgid "Home"
 msgstr "Главная"
 
-#: backend/presentation/web/templates/web/base.html:271
-msgid "Practice"
-msgstr "Практика"
+#: presentation/web/templates/web/blog_detail.html:44
+#: presentation/web/templates/web/blog_search.html:15
+#| msgid "Back to all work"
+msgid "Back to journal"
+msgstr "К журналу"
 
-#: backend/presentation/web/templates/web/base.html:278
-msgid "Channels"
-msgstr "Каналы"
-
-# ── home.html ──────────────────────────────────────────────────────────────
-
-msgid "See the work →"
-msgstr "Смотреть работы →"
-
-msgid "Start a project"
-msgstr "Начать проект"
-
-msgid "View case studies"
-msgstr "Смотреть кейсы"
-
-msgid "Career · Track record"
-msgstr "Карьера · Послужной список"
-
-msgid "Where I've shipped."
-msgstr "Где я работал."
-
-msgid "PRESENT"
-msgstr "ПО СЕЙ ДЕНЬ"
-
-msgid "04 — Selected work"
-msgstr "04 — Избранные работы"
-
-msgid "View all projects"
-msgstr "Все проекты"
-
-msgid "Web"
-msgstr "Веб"
-
-msgid "Telegram bot"
-msgstr "Telegram-бот"
-
-msgid "04 — Recent work"
-msgstr "04 — Недавние работы"
-
-msgid "A handful of recent builds."
-msgstr "Несколько последних проектов."
-
-msgid "06 — From the journal"
-msgstr "06 — Из журнала"
-
-msgid "Latest"
-msgstr "Последние"
-
-msgid "dispatches."
-msgstr "статьи."
-
-msgid "All entries"
-msgstr "Все записи"
-
+#: presentation/web/templates/web/blog_detail.html:47
+#: presentation/web/templates/web/blog_detail.html:144
+#: presentation/web/templates/web/blog_list.html:46
+#: presentation/web/templates/web/blog_list.html:76
+#: presentation/web/templates/web/blog_search.html:42
+#: presentation/web/templates/web/home.html:300
 msgid "MIN"
 msgstr "МИН"
 
-# ── projects.html ──────────────────────────────────────────────────────────
-
-msgid "Production builds"
-msgstr "Production проекты"
-
-msgid "Selected work · Production builds"
-msgstr "Избранные работы · Production проекты"
-
-msgid "and what they"
-msgstr "и чему они"
-
-msgid "taught me."
-msgstr "меня научили."
-
-msgid "The full"
-msgstr "Полный"
-
-msgid "index."
-msgstr "каталог."
-
-msgid "Project"
-msgstr "Проект"
-
-msgid "Category"
-msgstr "Категория"
-
-msgid "Year"
-msgstr "Год"
-
-msgid "Stack"
-msgstr "Стек"
-
-msgid "Result"
-msgstr "Результат"
-
-msgid "Cross-platform"
-msgstr "Кросс-платформа"
-
-msgid "Mobile"
-msgstr "Мобильный"
-
-msgid "Featured"
-msgstr "Выбранное"
-
-msgid "Live"
-msgstr "Активный"
-
-msgid "No entries yet"
-msgstr "Записей пока нет"
-
-# ── project_detail.html ────────────────────────────────────────────────────
-
-msgid "All work"
-msgstr "Все работы"
-
-msgid "Open in iOS"
-msgstr "Открыть в iOS"
-
-msgid "Open in Android"
-msgstr "Открыть в Android"
-
-msgid "Visit web app"
-msgstr "Открыть веб-приложение"
-
-msgid "Source code"
-msgstr "Исходный код"
-
-msgid "Behind"
-msgstr "За кулисами"
-
-msgid "the build."
-msgstr "проекта."
-
-msgid "Challenge"
-msgstr "Задача"
-
-msgid "Solution"
-msgstr "Решение"
-
-msgid "Results"
-msgstr "Результаты"
-
-msgid "End of dispatch"
-msgstr "Конец статьи"
-
-msgid "Got a brief like"
-msgstr "Есть похожий"
-
-msgid "this one?"
-msgstr "проект?"
-
-msgid "Open a channel"
-msgstr "Связаться"
-
-msgid "Back to all work"
-msgstr "Ко всем работам"
-
-# ── blog_list.html ─────────────────────────────────────────────────────────
-
-msgid "Journal · Field notes from the studio"
-msgstr "Журнал · Заметки из студии"
-
-msgid "from the field."
-msgstr "с поля."
-
-msgid "All"
-msgstr "Все"
-
-msgid "Search..."
-msgstr "Поиск..."
-
-msgid "No dispatches yet"
-msgstr "Статей пока нет"
-
-# ── blog_detail.html ───────────────────────────────────────────────────────
-
-msgid "All journal"
-msgstr "Все статьи"
-
-msgid "min read"
-msgstr "мин чтения"
-
+#: presentation/web/templates/web/blog_detail.html:87
 msgid "Tags"
 msgstr "Теги"
 
+#: presentation/web/templates/web/blog_detail.html:96
 msgid "Share"
 msgstr "Поделиться"
 
+#: presentation/web/templates/web/blog_detail.html:101
 msgid "Copy link"
 msgstr "Скопировать ссылку"
 
+#: presentation/web/templates/web/blog_detail.html:130
 msgid "Continue reading"
-msgstr "Читать далее"
+msgstr "Продолжить чтение"
 
-msgid "Related"
-msgstr "Похожие"
+#: presentation/web/templates/web/blog_detail.html:131
+#| msgid "dispatches."
+msgid "Related dispatches."
+msgstr "Похожие записи."
 
-# ── contact.html ───────────────────────────────────────────────────────────
+#: presentation/web/templates/web/blog_list.html:18
+#| msgid "Journal"
+msgid "Journal."
+msgstr "Журнал."
 
-msgid "Avg. response · 4–6h"
-msgstr "Среднее время ответа · 4–6 ч"
+#: presentation/web/templates/web/blog_list.html:28
+#: presentation/web/templates/web/blog_search.html:18
+msgid "Search..."
+msgstr "Поиск..."
 
-msgid "Contact · Open the channel"
-msgstr "Контакт · Открыть канал"
+#: presentation/web/templates/web/blog_list.html:50
+msgid "No dispatches yet"
+msgstr "Пока нет записей"
 
-msgid "TRANSMISSION RECEIVED"
-msgstr "СООБЩЕНИЕ ПОЛУЧЕНО"
+#: presentation/web/templates/web/blog_search.html:4
+#: presentation/web/templates/web/blog_search.html:5
+#: presentation/web/templates/web/blog_search.html:16
+#| msgid "Search..."
+msgid "Search"
+msgstr "Поиск"
 
-msgid "Message sent. I'll reply within 24 hours — usually faster."
-msgstr "Сообщение отправлено. Отвечу в течение 24 часов — обычно быстрее."
+#: presentation/web/templates/web/blog_search.html:24
+#| msgid "Results"
+msgid "results"
+msgstr "результатов"
 
-msgid "Name"
-msgstr "Имя"
+#: presentation/web/templates/web/blog_search.html:46
+msgid "Nothing found"
+msgstr "Ничего не найдено"
 
+#: presentation/web/templates/web/contact.html:18
+#| msgid "Contact"
+msgid "Contact."
+msgstr "Контакт."
+
+#: presentation/web/templates/web/contact.html:32
+msgid "Thanks for your message! We'll be in touch soon."
+msgstr "Спасибо за сообщение! Скоро свяжемся."
+
+#: presentation/web/templates/web/contact.html:55
 msgid "Your name"
 msgstr "Ваше имя"
 
-msgid "Subject"
-msgstr "Тема"
+#: presentation/web/templates/web/contact.html:59
+msgid "Email or Telegram"
+msgstr "Email или Telegram"
 
-msgid "What are we building?"
-msgstr "Что строим?"
+#: presentation/web/templates/web/contact.html:64
+#| msgid "Start a project"
+msgid "About your project"
+msgstr "О вашем проекте"
 
-msgid "The brief"
-msgstr "Бриф"
+#: presentation/web/templates/web/contact.html:67
+msgid "Send"
+msgstr "Отправить"
 
-msgid "Tell me about the project, the timeline, what success looks like…"
-msgstr "Расскажите о проекте, сроках, как выглядит успех…"
+#: presentation/web/templates/web/contact.html:75
+msgid "Or directly"
+msgstr "Или напрямую"
 
-msgid "TRANSMITTED"
-msgstr "ОТПРАВЛЕНО"
+#: presentation/web/templates/web/contact.html:83
+msgid "Message on Telegram"
+msgstr "Написать в Telegram"
 
-msgid "AWAITING INPUT"
-msgstr "ОЖИДАНИЕ ВВОДА"
+#: presentation/web/templates/web/home.html:34
+msgid "Start a project"
+msgstr "Начать проект"
 
-msgid "Send brief"
-msgstr "Отправить бриф"
+#: presentation/web/templates/web/home.html:38
+msgid "View case studies"
+msgstr "Кейсы"
 
-msgid "Direct channels"
-msgstr "Прямые каналы"
+#: presentation/web/templates/web/home.html:139
+msgid "Download CV"
+msgstr "Скачать CV"
 
-msgid "Prefer not to fill out a form? Pick a faster channel — they all reach me."
-msgstr "Не хотите заполнять форму? Выберите быстрый канал — все они достигают меня."
+#: presentation/web/templates/web/home.html:148
+msgid "WakaTime · this week"
+msgstr "WakaTime · эта неделя"
 
-msgid "Replies within 24h"
-msgstr "Ответ в течение 24 ч"
+#: presentation/web/templates/web/home.html:149
+#| msgid "Source code"
+msgid "hrs coded"
+msgstr "часов кода"
 
-msgid "Faster, async"
-msgstr "Быстрее, асинхронно"
+#: presentation/web/templates/web/home.html:186
+msgid "Career · Track record"
+msgstr "Карьера · История"
 
-msgid "Code & issues"
-msgstr "Код и задачи"
+#: presentation/web/templates/web/home.html:187
+msgid "Where I've shipped."
+msgstr "Где я доставлял."
 
-msgid "Long-form, professional"
-msgstr "Профессиональный"
+#: presentation/web/templates/web/home.html:202
+msgid "PRESENT"
+msgstr "СЕЙЧАС"
 
-# ── team.html ──────────────────────────────────────────────────────────────
+#: presentation/web/templates/web/home.html:220
+msgid "04 — Selected work"
+msgstr "04 — Избранные работы"
 
-msgid "PORTRAIT NO."
-msgstr "ПОРТРЕТ №"
+#: presentation/web/templates/web/home.html:223
+msgid "View all projects"
+msgstr "Все проекты"
 
-msgid "skills · dossier"
-msgstr "навыков · досье"
+#: presentation/web/templates/web/home.html:283
+msgid "06 — From the journal"
+msgstr "06 — Из журнала"
 
-msgid "READ →"
-msgstr "ЧИТАТЬ →"
+#: presentation/web/templates/web/home.html:284
+#| msgid "dispatches."
+msgid "Latest dispatches."
+msgstr "Последние записи."
 
-msgid "Crew manifest · pending"
-msgstr "Состав команды · в сборке"
+#: presentation/web/templates/web/home.html:286
+msgid "All entries"
+msgstr "Все записи"
 
-msgid "The team page is being assembled."
-msgstr "Страница команды собирается."
+#: presentation/web/templates/web/project_detail.html:44
+#| msgid "Back to all work"
+msgid "Back to work"
+msgstr "К проектам"
 
-msgid "Want to work with us?"
-msgstr "Хотите работать с нами?"
+#: presentation/web/templates/web/project_detail.html:48
+msgid "Featured"
+msgstr "Главная"
 
-msgid "Bring the brief."
-msgstr "Приносите бриф."
+#: presentation/web/templates/web/project_detail.html:81
+msgid "Challenge"
+msgstr "Проблема"
 
-msgid "We'll bring the team."
-msgstr "Мы приведём команду."
+#: presentation/web/templates/web/project_detail.html:91
+msgid "Solution"
+msgstr "Решение"
 
-msgid "Let's"
-msgstr "Давайте"
+#: presentation/web/templates/web/project_detail.html:101
+msgid "Results"
+msgstr "Результат"
 
-msgid "open a channel."
-msgstr "пообщаемся."
+#: presentation/web/templates/web/project_detail.html:116
+msgid "Stack"
+msgstr "Стек"
 
-msgid "something"
-msgstr "что-то"
+#: presentation/web/templates/web/project_detail.html:124
+msgid "Channels"
+msgstr "Ссылки"
 
-msgid "real."
-msgstr "настоящее."
+#: presentation/web/templates/web/project_detail.html:127
+#| msgid "Visit web app"
+msgid "Visit live"
+msgstr "Открыть сайт"
 
-msgid "dispatches"
-msgstr "материалов"
+#: presentation/web/templates/web/project_detail.html:163
+#| msgid "Start a project"
+msgid "Next project"
+msgstr "Следующий проект"
 
-msgid "entries"
-msgstr "записей"
+#: presentation/web/templates/web/projects.html:18
+#| msgid "Work"
+msgid "Work."
+msgstr "Проекты."
 
-msgid "CHARS"
-msgstr "СИМВ"
+#: presentation/web/templates/web/projects.html:60
+msgid "No entries yet"
+msgstr "Пока нет проектов"
+
+#: presentation/web/templates/web/team.html:37
+msgid "y"
+msgstr "лет"
+
+#: presentation/web/templates/web/team.html:52
+msgid "Open position"
+msgstr "Открытая позиция"
+
+#: presentation/web/templates/web/team.html:53
+msgid "Looking for a strong full-stack or bot developer. Introduce yourself."
+msgstr "Ищем сильного full-stack или бот-разработчика. Напишите о себе."
+
+#: presentation/web/views.py:175
+msgid "All"
+msgstr "Все"
+
+#: presentation/web/views.py:177
+msgid "Bots"
+msgstr "Боты"
+
+#: presentation/web/views.py:178
+msgid "Mobile"
+msgstr "Мобильные"

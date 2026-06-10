@@ -1,67 +1,53 @@
 {% extends 'web/base.html' %}
 {% load static i18n %}
 
-{% block title %}Journal | {{ site_settings.site_author }}{% endblock %}
+{% block title %}{{ site_settings.blog_page_title|default:_("Journal") }} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.blog_page_subtitle }}{% endblock %}
-{% block og_title %}{{ site_settings.blog_page_title|default:"Journal" }} | {{ site_settings.site_author }}{% endblock %}
+{% block og_title %}{{ site_settings.blog_page_title|default:_("Journal") }} | {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ site_settings.blog_page_subtitle }}{% endblock %}
 
 {% block content %}
 <main>
-    {# ========================== HERO ========================== #}
-    <section class="section-sm" style="border-bottom: 1px solid var(--line-1);">
-        <div class="container">
-            <div class="between hud-only" style="margin-bottom: 40px; flex-wrap: wrap; gap: 16px;">
-                <div class="row gap-3">
-                    <span class="tag">{{ site_settings.blog_section_label }}</span>
-                    <span class="tag">{{ paginator.count|default:0 }} {% trans "dispatches" %}</span>
-                </div>
-                <span class="tag"><span class="dot-live"></span> {{ site_settings.blog_section_status }}</span>
-            </div>
-            <div class="eyebrow" style="margin-bottom: 24px;">{% trans "Journal · Field notes from the studio" %}</div>
-            <h1 class="display-xl">
-                {{ site_settings.blog_page_title|default:"Long-form notes," }}<br>
-                <em style="font-weight: 300; font-style: italic;">{% trans "from the field." %}</em>
-            </h1>
-            <p style="margin-top: 32px; font-size: 18px; color: var(--fg-2); max-width: 640px; line-height: 1.55;">
-                {{ site_settings.blog_page_subtitle|default:"Things I figured out the hard way, written up so you don't have to. No tutorials. No \"10 things.\" Just engineering essays from production." }}
-            </p>
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">Journal</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ site_settings.blog_page_title|default:_("Journal.") }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ site_settings.blog_page_subtitle }}</p>
         </div>
     </section>
 
-    {# ========================== INDEX ========================== #}
-    <section class="section">
-        <div class="container">
-            <div class="between reveal" style="margin-bottom: 60px; flex-wrap: wrap; gap: 24px;">
-                <h2 class="display-md serif">{% trans "All" %} <em style="font-weight: 300;">{% trans "dispatches." %}</em></h2>
-                <form action="{% url 'blog_search' %}" method="get" class="row" style="max-width: 320px; flex: 1;">
-                    <div style="position: relative; width: 100%;">
-                        <input type="text" name="q" placeholder="{% trans 'Search...' %}" autocomplete="off" class="input" style="padding-left: 28px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: var(--fg-3);">
-                            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                        </svg>
-                    </div>
+    {# ========================== ROWS ========================== #}
+    <section class="section" style="padding-top: 40px;">
+        <div class="container blog-rows">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                <form action="{% url 'blog_search' %}" method="get" class="blog-search">
+                    <input type="text" name="q" placeholder="{% trans 'Search...' %}" autocomplete="off">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                    </svg>
                 </form>
             </div>
 
-            <div id="items-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;" class="grid-3-mobile-1" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
+            <div id="items-grid" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
                 {% for post in posts %}
-                <a href="{% url 'blog_detail' post.slug %}" class="reveal article-card" style="padding: 40px; border-top: 1px solid var(--line-1); {% if forloop.counter|divisibleby:3 %}{% else %}border-right: 1px solid var(--line-1);{% endif %} min-height: 380px; display: flex; flex-direction: column; gap: 20px; transition: background .4s var(--ease-out);">
-                    <div class="between" style="align-items: flex-start;">
-                        <span class="numeral article-num" style="font-size: 56px; line-height: 1; color: var(--fg-4); transition: color .3s;">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="mono" style="font-size: 10px; letter-spacing: 0.16em; color: var(--fg-3); text-transform: uppercase;">Vol. 03 / {{ forloop.counter|stringformat:"02d" }}</span>
+                <a href="{% url 'blog_detail' post.slug %}" class="blog-row reveal">
+                    <div class="blog-row__meta">
+                        <span class="blog-row__date">{{ post.created_at|date:"Y-m-d" }}</span>
+                        {% if post.category %}<span class="tag">{{ post.category.name }}</span>{% endif %}
                     </div>
-                    {% if post.category %}<span class="tag" style="align-self: flex-start;">{{ post.category.name }}</span>{% endif %}
-                    <h3 class="display-sm serif article-title" style="flex: 1; transition: color .3s;"><em style="font-weight: 300;">{{ post.title }}</em></h3>
-                    <p style="color: var(--fg-2); font-size: 14px; line-height: 1.55;">{{ post.excerpt|default:post.title|truncatewords:20 }}</p>
-                    <div class="between" style="padding-top: 16px; border-top: 1px solid var(--line-1);">
-                        <span class="mono" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em;">{{ post.created_at|date:"M d, Y"|upper }}</span>
-                        <span class="mono article-meta" style="font-size: 11px; color: var(--fg-3); letter-spacing: 0.14em; transition: color .3s;">{{ post.reading_time }} {% trans "MIN" %} ↗</span>
+                    <div class="blog-row__body">
+                        <h2 class="blog-row__title">{{ post.title }}</h2>
+                        <p class="blog-row__excerpt">{{ post.excerpt|default:post.title|truncatewords:24 }}</p>
                     </div>
+                    <span class="blog-row__read">{{ post.reading_time }} {% trans "MIN" %} ↗</span>
                 </a>
                 {% empty %}
-                <div style="grid-column: 1 / -1; padding: 80px 0; text-align: center; color: var(--fg-3);">
-                    <span class="mono" style="font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;">— {% trans "No dispatches yet" %} —</span>
+                <div class="empty-state">
+                    <span class="mono-label">— {% trans "No dispatches yet" %} —</span>
                 </div>
                 {% endfor %}
             </div>
@@ -73,13 +59,6 @@
         </div>
     </section>
 </main>
-
-<style>
-    .article-card:hover { background: var(--bg-2); }
-    .article-card:hover .article-title { color: var(--accent); }
-    .article-card:hover .article-num { color: var(--accent); }
-    .article-card:hover .article-meta { color: var(--accent); }
-</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -102,24 +81,19 @@ document.addEventListener('DOMContentLoaded', function() {
         sentinelId: 'scroll-sentinel',
         spinnerId: 'scroll-spinner',
         renderItem: function(post) {
-            var idx = (document.querySelectorAll('#items-grid > a').length + 1).toString().padStart(2, '0');
-            var num = parseInt(idx, 10);
-            var cat = post.category_name ? '<span class="tag" style="align-self:flex-start;">' + esc(post.category_name) + '</span>' : '';
+            var cat = post.category_name ? '<span class="tag">' + esc(post.category_name) + '</span>' : '';
             var date = (post.created_at || '').slice(0, 10);
             var href = blogBase + esc(post.slug) + '/';
-            return '<a href="' + href + '" class="reveal in article-card" style="padding:40px;border-top:1px solid var(--line-1);' +
-                (num % 3 !== 0 ? 'border-right:1px solid var(--line-1);' : '') +
-                'min-height:380px;display:flex;flex-direction:column;gap:20px;">' +
-                '<div class="between" style="align-items:flex-start;">' +
-                '<span class="numeral article-num" style="font-size:56px;line-height:1;color:var(--fg-4);">' + idx + '</span>' +
-                '<span class="mono" style="font-size:10px;letter-spacing:0.16em;color:var(--fg-3);text-transform:uppercase;">Vol. 03 / ' + idx + '</span>' +
-                '</div>' + cat +
-                '<h3 class="display-sm serif article-title" style="flex:1;"><em style="font-weight:300;">' + esc(post.title) + '</em></h3>' +
-                '<p style="color:var(--fg-2);font-size:14px;line-height:1.55;">' + esc(post.excerpt || '') + '</p>' +
-                '<div class="between" style="padding-top:16px;border-top:1px solid var(--line-1);">' +
-                '<span class="mono" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + esc(date).toUpperCase() + '</span>' +
-                '<span class="mono article-meta" style="font-size:11px;color:var(--fg-3);letter-spacing:0.14em;">' + (post.reading_time || 5) + ' ' + minLabel + ' ↗</span>' +
-                '</div></a>';
+            return '<a href="' + href + '" class="blog-row reveal in">' +
+                '<div class="blog-row__meta">' +
+                '<span class="blog-row__date">' + esc(date) + '</span>' + cat +
+                '</div>' +
+                '<div class="blog-row__body">' +
+                '<h2 class="blog-row__title">' + esc(post.title) + '</h2>' +
+                '<p class="blog-row__excerpt">' + esc(post.excerpt || '') + '</p>' +
+                '</div>' +
+                '<span class="blog-row__read">' + (post.reading_time || 5) + ' ' + minLabel + ' ↗</span>' +
+                '</a>';
         }
     });
 });

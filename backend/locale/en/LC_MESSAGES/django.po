@@ -1,83 +1,298 @@
+#
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-26 09:25+0500\n"
+"POT-Creation-Date: 2026-06-10 18:52+0500\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
-#: backend/apps/core/templates/admin/core/asset_manager.html:4
-#: backend/presentation/web/templates/admin/index.html:4
+#: apps/core/templates/admin/core/asset_manager.html:4
+#: apps/core/templates/admin/core/utm_builder.html:4
+#: presentation/web/templates/admin/index.html:4
 msgid "JK-DinAdmin"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:6
-#: backend/presentation/web/templates/admin/login.html:235
+#: presentation/web/templates/admin/login.html:6
+#: presentation/web/templates/admin/login.html:235
 msgid "Log in"
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:205
+#: presentation/web/templates/admin/login.html:205
 msgid ""
-"Please enter the correct username and password. Note that both fields may be "
-"case-sensitive."
+"Please enter the correct username and password. Note that both fields may be"
+" case-sensitive."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:213
+#: presentation/web/templates/admin/login.html:213
 #, python-format
 msgid ""
-"You are authenticated as %(username)s, but are not authorized to access this "
-"page."
+"You are authenticated as %(username)s, but are not authorized to access this"
+" page."
 msgstr ""
 
-#: backend/presentation/web/templates/admin/login.html:242
+#: presentation/web/templates/admin/login.html:242
 msgid "Forgotten your password or username?"
 msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:160
-#: backend/presentation/web/templates/web/base.html:205
-#: backend/presentation/web/templates/web/base.html:262
-msgid "Index"
-msgstr "Index"
-
-#: backend/presentation/web/templates/web/base.html:162
-#: backend/presentation/web/templates/web/base.html:207
-#: backend/presentation/web/templates/web/base.html:264
+#: presentation/web/templates/web/base.html:199
+#: presentation/web/templates/web/base.html:226
+#: presentation/web/templates/web/base.html:275
+#: presentation/web/templates/web/projects.html:4
+#: presentation/web/templates/web/projects.html:6
 msgid "Work"
-msgstr "Work"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:164
-#: backend/presentation/web/templates/web/base.html:209
-#: backend/presentation/web/templates/web/base.html:265
-msgid "Studio"
-msgstr "Studio"
-
-#: backend/presentation/web/templates/web/base.html:165
-#: backend/presentation/web/templates/web/base.html:210
-#: backend/presentation/web/templates/web/base.html:266
+#: presentation/web/templates/web/base.html:201
+#: presentation/web/templates/web/base.html:228
+#: presentation/web/templates/web/base.html:276
+#: presentation/web/templates/web/blog_list.html:4
+#: presentation/web/templates/web/blog_list.html:6
 msgid "Journal"
-msgstr "Journal"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:166
-#: backend/presentation/web/templates/web/base.html:211
-#: backend/presentation/web/templates/web/base.html:267
+#: presentation/web/templates/web/base.html:202
+#: presentation/web/templates/web/base.html:229
+#: presentation/web/templates/web/base.html:277
+#: presentation/web/templates/web/home.html:135
+#: presentation/web/templates/web/team.html:4
+#: presentation/web/templates/web/team.html:6
+msgid "Team"
+msgstr ""
+
+#: presentation/web/templates/web/base.html:203
+#: presentation/web/templates/web/base.html:230
+#: presentation/web/templates/web/base.html:278
+#: presentation/web/templates/web/base.html:282
+#: presentation/web/templates/web/contact.html:4
+#: presentation/web/templates/web/contact.html:6
+#: presentation/web/templates/web/contact.html:33
+#: presentation/web/templates/web/section_unavailable.html:21
+#: presentation/web/templates/web/team.html:54
 msgid "Contact"
-msgstr "Contact"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:263
+#: presentation/web/templates/web/base.html:214
+msgid "Hire the studio"
+msgstr ""
+
+#: presentation/web/templates/web/base.html:224
+#: presentation/web/templates/web/base.html:274
+#: presentation/web/templates/web/section_unavailable.html:18
 msgid "Home"
-msgstr "Home"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:271
-msgid "Practice"
-msgstr "Practice"
+#: presentation/web/templates/web/blog_detail.html:44
+#: presentation/web/templates/web/blog_search.html:15
+msgid "Back to journal"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:278
+#: presentation/web/templates/web/blog_detail.html:47
+#: presentation/web/templates/web/blog_detail.html:144
+#: presentation/web/templates/web/blog_list.html:46
+#: presentation/web/templates/web/blog_list.html:76
+#: presentation/web/templates/web/blog_search.html:42
+#: presentation/web/templates/web/home.html:300
+msgid "MIN"
+msgstr ""
+
+#: presentation/web/templates/web/blog_detail.html:87
+msgid "Tags"
+msgstr ""
+
+#: presentation/web/templates/web/blog_detail.html:96
+msgid "Share"
+msgstr ""
+
+#: presentation/web/templates/web/blog_detail.html:101
+msgid "Copy link"
+msgstr ""
+
+#: presentation/web/templates/web/blog_detail.html:130
+msgid "Continue reading"
+msgstr ""
+
+#: presentation/web/templates/web/blog_detail.html:131
+msgid "Related dispatches."
+msgstr ""
+
+#: presentation/web/templates/web/blog_list.html:18
+#| msgid "Journal"
+msgid "Journal."
+msgstr ""
+
+#: presentation/web/templates/web/blog_list.html:28
+#: presentation/web/templates/web/blog_search.html:18
+msgid "Search..."
+msgstr ""
+
+#: presentation/web/templates/web/blog_list.html:50
+msgid "No dispatches yet"
+msgstr ""
+
+#: presentation/web/templates/web/blog_search.html:4
+#: presentation/web/templates/web/blog_search.html:5
+#: presentation/web/templates/web/blog_search.html:16
+msgid "Search"
+msgstr ""
+
+#: presentation/web/templates/web/blog_search.html:24
+msgid "results"
+msgstr ""
+
+#: presentation/web/templates/web/blog_search.html:46
+msgid "Nothing found"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:18
+#| msgid "Contact"
+msgid "Contact."
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:32
+msgid "Thanks for your message! We'll be in touch soon."
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:55
+msgid "Your name"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:59
+msgid "Email or Telegram"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:64
+msgid "About your project"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:67
+msgid "Send"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:75
+msgid "Or directly"
+msgstr ""
+
+#: presentation/web/templates/web/contact.html:83
+msgid "Message on Telegram"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:34
+msgid "Start a project"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:38
+msgid "View case studies"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:139
+msgid "Download CV"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:148
+msgid "WakaTime · this week"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:149
+msgid "hrs coded"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:186
+msgid "Career · Track record"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:187
+msgid "Where I've shipped."
+msgstr ""
+
+#: presentation/web/templates/web/home.html:202
+msgid "PRESENT"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:220
+msgid "04 — Selected work"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:223
+msgid "View all projects"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:283
+msgid "06 — From the journal"
+msgstr ""
+
+#: presentation/web/templates/web/home.html:284
+msgid "Latest dispatches."
+msgstr ""
+
+#: presentation/web/templates/web/home.html:286
+msgid "All entries"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:44
+msgid "Back to work"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:48
+msgid "Featured"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:81
+msgid "Challenge"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:91
+msgid "Solution"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:101
+msgid "Results"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:116
+msgid "Stack"
+msgstr ""
+
+#: presentation/web/templates/web/project_detail.html:124
 msgid "Channels"
-msgstr "Channels"
+msgstr ""
 
-#: backend/presentation/web/templates/web/project_detail.html:206
-msgid "Open a channel"
-msgstr "Get in touch"
+#: presentation/web/templates/web/project_detail.html:127
+msgid "Visit live"
+msgstr ""
 
-#: backend/presentation/web/templates/web/base.html:295
-msgid "open a channel."
-msgstr "chat."
+#: presentation/web/templates/web/project_detail.html:163
+msgid "Next project"
+msgstr ""
+
+#: presentation/web/templates/web/projects.html:18
+#| msgid "Work"
+msgid "Work."
+msgstr ""
+
+#: presentation/web/templates/web/projects.html:60
+msgid "No entries yet"
+msgstr ""
+
+#: presentation/web/templates/web/team.html:37
+msgid "y"
+msgstr ""
+
+#: presentation/web/templates/web/team.html:52
+msgid "Open position"
+msgstr ""
+
+#: presentation/web/templates/web/team.html:53
+msgid "Looking for a strong full-stack or bot developer. Introduce yourself."
+msgstr ""
+
+#: presentation/web/views.py:175
+msgid "All"
+msgstr ""
+
+#: presentation/web/views.py:177
+msgid "Bots"
+msgstr ""
+
+#: presentation/web/views.py:178
+msgid "Mobile"
+msgstr ""

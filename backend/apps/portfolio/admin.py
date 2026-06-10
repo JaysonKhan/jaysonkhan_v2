@@ -1,12 +1,14 @@
+from core.widgets import RichTextWidget
+from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from django.utils.text import Truncator
-from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from modeltranslation.admin import TranslationAdmin
-from .models import Skill, Project, Experience, TeamMember
-from django import forms
-from core.widgets import RichTextWidget
 from django.utils.safestring import mark_safe
+from django.utils.text import Truncator
+from modeltranslation.admin import TranslationAdmin
+from unfold.admin import ModelAdmin as UnfoldModelAdmin
+
+from .models import Experience, Project, Skill, TeamMember
+
 
 @admin.register(Skill)
 class SkillAdmin(TranslationAdmin, UnfoldModelAdmin):
@@ -71,10 +73,12 @@ class ProjectAdmin(TranslationAdmin, UnfoldModelAdmin):
                 'case_study_challenge',
                 'case_study_solution',
                 'case_study_results',
+                'stats',
             ),
             'description': (
                 'Optional structured case study. '
-                'Fill any field to show a Case Study section on the detail page.'
+                'Fill any field to show a Case Study section on the detail page. '
+                'Stats: [{"v": "500k+", "l": "downloads"}, ...] — shown on cards and the case-study hero.'
             ),
             'classes': ('collapse',),
         }),
