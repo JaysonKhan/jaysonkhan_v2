@@ -130,7 +130,8 @@ Classes (use these, don't restyle):
 - Easing: always `var(--ease-out)` = `cubic-bezier(0.16, 1, 0.3, 1)`. Durations: hover ~0.3s, reveals 0.8–0.9s.
 - Scroll reveal: add class `reveal` (+ optional `transition-delay` stagger ≤ 100ms steps); base.html JS flips to `.in`. Gated behind `prefers-reduced-motion: no-preference` — base style is the visible end-state.
 - Hero entrances: `fade-up` class with `animation-delay` 0.05–0.3s.
-- Infinite loops allowed only for: `dot-live` pulse, ticker scroll, terminal cursor. Nothing else loops forever.
+- Infinite loops allowed only for: `dot-live` pulse, ticker scroll, terminal cursor,
+  and the Khiva starfield canvas (home page, rAF; honors `prefers-reduced-motion`). Nothing else loops forever.
 
 ---
 
@@ -139,6 +140,7 @@ Classes (use these, don't restyle):
 | Pattern | Where | Use for |
 |---|---|---|
 | Aurora (`.aurora` + `.aurora--hero/--page/--cta`) | site.css | section background glow |
+| Khiva starfield (`static/js/starfield.js` + `.sf-wrap`, `.*--sf` modifiers) | home only | scroll-morph canvas background — law: [starfield-implementation.md](starfield-implementation.md) |
 | `.section-head` | site.css | every web section header (eyebrow + display-md + side action) |
 | `.page-hero` | site.css | every inner page top |
 | `[data-count]` counter | base.html JS | animated stat numbers |

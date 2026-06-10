@@ -1757,6 +1757,25 @@
   animation-delay: 0.3s;
 }
 
+/* ════════════════ HOME · XIVA STARFIELD LAYERING ════════════════
+   starfield.js canvas: fixed, z-0. Home content sits in .sf-wrap (z-1);
+   three band backgrounds go translucent (surface tokens + alpha) so the
+   stars shine through. Keep AFTER the base .ticker-band/.band/.surface-raised
+   rules — same specificity, last one wins. See docs/starfield-implementation.md. */
+.sf-wrap {
+  position: relative;
+  z-index: 1;
+}
+.ticker-band--sf {
+  background: oklch(0.215 0.018 268 / 0.55);
+}
+.band--sf {
+  background: oklch(0.155 0.018 268 / 0.62);
+}
+.surface-raised--sf {
+  background: oklch(0.215 0.018 268 / 0.5);
+}
+
 /* ════════════════════════ MISC ════════════════════════ */
 .muted {
   color: var(--fg-3);

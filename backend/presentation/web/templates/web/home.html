@@ -5,6 +5,8 @@
 
 {% block content %}
 <main>
+    {# Xiva yulduz turkumi: starfield.js canvas'ni body boshiga qo'shadi (z-0), kontent .sf-wrap (z-1) ichida #}
+    <div class="sf-wrap">
     {# ========================== HERO (editorial) ========================== #}
     <section class="hero">
         <div class="aurora aurora--hero" aria-hidden="true">
@@ -51,7 +53,7 @@
     {# ========================== TICKER ========================== #}
     {% with ticker=site_settings.ticker_items_resolved %}
     {% if ticker %}
-    <div class="ticker ticker-band">
+    <div class="ticker ticker-band ticker-band--sf">
         <div class="ticker-track mono">
             {% for _ in "12" %}{% for item in ticker %}<span>{{ item }}<span class="star">✦</span></span>{% endfor %}{% endfor %}
         </div>
@@ -85,7 +87,7 @@
     {% endwith %}
 
     {# ========================== METRICS (ink band) ========================== #}
-    <section class="band">
+    <section class="band band--sf">
         <div class="container">
             <div class="band__head reveal">
                 <div class="band__head-titles">
@@ -213,7 +215,7 @@
     {% if site_settings.apps_section_visible %}
     {% with featured=portfolio.featured_projects|default:portfolio.projects %}
     {% if featured %}
-    <section class="section surface-raised">
+    <section class="section surface-raised surface-raised--sf">
         <div class="container">
             <div class="section-head reveal">
                 <div class="section-head__titles">
@@ -323,5 +325,11 @@
             </div>
         </div>
     </section>
+    </div>{# /.sf-wrap #}
 </main>
+{% endblock %}
+
+{% block extra_js %}
+{# Xiva yulduz turkumi — scroll-morph canvas foni (docs/starfield-implementation.md) #}
+<script src="{% static 'js/starfield.js' %}"></script>
 {% endblock %}
