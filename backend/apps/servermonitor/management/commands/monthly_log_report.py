@@ -226,10 +226,13 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
         for ip, cnt in top_ips:
             lines.append(f'• <code>{ip}</code> ×{cnt}')
 
+    span = ''
+    if err['first_date'] and err['last_date']:
+        span = f'{err["first_date"]} — {err["last_date"]} · '
     lines.append('')
     lines.append(
         f'<i>Loglar arxivlandi va tozalandi. '
-        f'{err["lines"] + sec["lines"]:,} qator.</i>'
+        f'{span}{err["lines"] + sec["lines"]:,} qator.</i>'
     )
     return '\n'.join(lines)
 
@@ -261,9 +264,12 @@ class Command(BaseCommand):
         sec = parse_log(sec_path)
 
         # Period label = the month that just ended (cron fires on the 1st).
+        # Computed arithmetically (no timedelta import — keeps the formatter
+        # from stripping it, and sidesteps any DST edge).
         now = timezone.localtime()
-        prev = (now.replace(day=1) - timedelta(days=1))
-        period_label = f'{UZ_MONTHS[prev.month]} {prev.year}'
+        prev_year = now.year if now.month > 1 else now.year - 1
+        prev_month = now.month - 1 if now.month > 1 else 12
+        period_label = f'{UZ_MONTHS[prev_month]} {prev_year}'
         host = os.uname().nodename
 
         summary = build_summary(period_label, host, err, sec)
@@ -284,7 +290,7 @@ class Command(BaseCommand):
 
         api = TelegramBotAPI()
         tg_id = site.telegram_owner_id
-        stamp = prev.strftime('%Y%m')
+        stamp = f'{prev_year}{prev_month:02d}'
 
         # 1) summary message
         msg_resp = api.send_message(tg_id, summary)
