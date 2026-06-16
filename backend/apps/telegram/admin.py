@@ -1,6 +1,6 @@
 """Admin configuration for unified Telegram entities."""
 from django.contrib import admin
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from unfold.admin import ModelAdmin, TabularInline
 
 from .models import EntitySource, TelegramEntity
@@ -128,20 +128,23 @@ class TelegramEntityAdmin(ModelAdmin):
         sources = obj.sources.all()
         if not sources:
             return "-"
-        badges = []
         colors = {
             "site": "#3b82f6",
             "osint": "#f59e0b",
             "talabaovozi": "#10b981",
         }
-        for src in sources:
-            color = colors.get(src.service, "#6b7280")
-            badges.append(
-                f'<span style="background:{color};color:#fff;padding:2px 8px;'
-                f'border-radius:10px;font-size:11px;font-weight:600;">'
-                f"{src.get_service_display()}</span>"
-            )
-        return format_html(" ".join(badges))
+        # format_html_join escapes each dynamic value AND is valid on every
+        # Django version (a bare format_html(joined) 500s on Django 5+ with
+        # "args or kwargs must be provided").
+        return format_html_join(
+            " ",
+            '<span style="background:{};color:#fff;padding:2px 8px;'
+            'border-radius:10px;font-size:11px;font-weight:600;">{}</span>',
+            (
+                (colors.get(src.service, "#6b7280"), src.get_service_display())
+                for src in sources
+            ),
+        )
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("sources")

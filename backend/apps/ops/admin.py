@@ -21,11 +21,10 @@ from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from ops.models import CronRun, CronStatus, ManagedCron
 from unfold.admin import ModelAdmin as UnfoldAdmin
 from unfold.decorators import action, display
-
-from ops.models import CronRun, CronStatus, ManagedCron
-
 
 STATUS_COLOR = {
     CronStatus.RUNNING: 'info',
@@ -95,7 +94,7 @@ class ManagedCronAdmin(UnfoldAdmin):
     @display(description='Jadval')
     def schedule_display(self, obj: ManagedCron) -> str:
         if not obj.schedule:
-            return format_html('<span style="color:#999">—</span>')
+            return mark_safe('<span style="color:#999">—</span>')
         return format_html('<code>{}</code>', obj.schedule)
 
     @display(description="So\u2019nggi yurish")
@@ -105,7 +104,7 @@ class ManagedCronAdmin(UnfoldAdmin):
             .order_by('-started_at').first()
         )
         if not run:
-            return format_html('<span style="color:#999">hech qachon</span>')
+            return mark_safe('<span style="color:#999">hech qachon</span>')
         colors = {
             'success': '#16a34a', 'failed': '#dc2626', 'running': '#2563eb',
         }
@@ -125,7 +124,7 @@ class ManagedCronAdmin(UnfoldAdmin):
         runs = CronRun.objects.filter(command=obj.command, started_at__gte=since)
         total = runs.count()
         if total == 0:
-            return format_html('<span style="color:#999">\u2014</span>')
+            return mark_safe('<span style="color:#999">\u2014</span>')
         ok = runs.filter(status=CronStatus.SUCCESS).count()
         pct = ok * 100 // total
         color = '#16a34a' if pct >= 95 else '#f59e0b' if pct >= 70 else '#dc2626'
@@ -138,11 +137,11 @@ class ManagedCronAdmin(UnfoldAdmin):
     @display(description='Holat')
     def enabled_badge(self, obj: ManagedCron) -> str:
         if obj.enabled:
-            return format_html(
+            return mark_safe(
                 '<span style="background:#dcfce7;color:#15803d;padding:2px 8px;'
                 'border-radius:10px;font-size:11px;font-weight:600">YOQILGAN</span>'
             )
-        return format_html(
+        return mark_safe(
             '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;'
             'border-radius:10px;font-size:11px;font-weight:600">O\u02bcCHIRILGAN</span>'
         )
@@ -150,7 +149,7 @@ class ManagedCronAdmin(UnfoldAdmin):
     @display(description='Amallar')
     def run_now_button(self, obj: ManagedCron) -> str:
         if not obj.enabled:
-            return format_html('<span style="color:#999">\u2014</span>')
+            return mark_safe('<span style="color:#999">\u2014</span>')
         url = reverse('admin:ops_managedcron_run_now', args=[obj.pk])
         return format_html(
             '<a href="{}" class="button" style="background:#2563eb;color:#fff;'
@@ -282,7 +281,7 @@ class CronRunAdmin(UnfoldAdmin):
     @display(description='Stdout')
     def stdout_pre(self, obj: CronRun) -> str:
         if not obj.stdout:
-            return format_html('<em style="color:#999">(bo\u02bcsh)</em>')
+            return mark_safe('<em style="color:#999">(bo\u02bcsh)</em>')
         return format_html(
             '<pre style="background:#0f172a;color:#e2e8f0;padding:12px;'
             'border-radius:6px;max-height:400px;overflow:auto;'
@@ -292,7 +291,7 @@ class CronRunAdmin(UnfoldAdmin):
     @display(description='Stderr')
     def stderr_pre(self, obj: CronRun) -> str:
         if not obj.stderr:
-            return format_html('<em style="color:#999">(bo\u02bcsh)</em>')
+            return mark_safe('<em style="color:#999">(bo\u02bcsh)</em>')
         return format_html(
             '<pre style="background:#450a0a;color:#fecaca;padding:12px;'
             'border-radius:6px;max-height:400px;overflow:auto;'
