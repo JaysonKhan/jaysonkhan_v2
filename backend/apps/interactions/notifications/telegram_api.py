@@ -158,6 +158,50 @@ class TelegramBotAPI:
             'reply_markup': reply_markup,
         })
 
+    def send_document(
+        self,
+        chat_id: int,
+        document_path: str,
+        *,
+        caption: str = '',
+        parse_mode: str = 'HTML',
+    ) -> Optional[dict]:
+        """Multipart /sendDocument upload of a local file.
+
+        Used for log archives / DB backups. Mirrors the multipart photo
+        upload: httpx's ``files=`` builds the body, ``data=`` carries the
+        text fields. Filename is forced ASCII-safe (Telegram's multipart
+        Content-Disposition parser chokes on non-ASCII). 120s timeout for
+        multi-MB gzips over slow links.
+        """
+        if not self._token:
+            logger.warning('TELEGRAM_BOT_TOKEN not configured -- skipping sendDocument')
+            return None
+        url = f'{self._base}/sendDocument'
+        data = {'chat_id': str(chat_id), 'parse_mode': parse_mode}
+        if caption:
+            data['caption'] = caption
+        try:
+            with open(document_path, 'rb') as fh:
+                filename = os.path.basename(document_path) or 'file.bin'
+                safe_name = filename.encode('ascii', errors='replace').decode('ascii')
+                files = {'document': (safe_name, fh, 'application/octet-stream')}
+                with httpx.Client(timeout=120.0) as client:
+                    resp = client.post(url, data=data, files=files)
+            result = resp.json()
+            if not result.get('ok'):
+                logger.warning(
+                    'Telegram sendDocument error: %s',
+                    result.get('description', result),
+                )
+            return result
+        except FileNotFoundError:
+            logger.error('sendDocument: file not found: %s', document_path)
+            return None
+        except Exception as exc:  # noqa: BLE001
+            logger.error('sendDocument failed: %s', exc)
+            return None
+
     def send_chat_action(self, chat_id: int, action: str = 'typing') -> Optional[dict]:
         """POST /sendChatAction. Shows typing/uploading indicator."""
         return self._post('sendChatAction', {

@@ -4,7 +4,7 @@
 # Replaces (or inserts) the block delimited by the markers
 #   # JK_SERVERMONITOR_BEGIN ... # JK_SERVERMONITOR_END
 # in the *current user's* crontab. Also strips legacy direct-call lines
-# for any of the four monitored commands so we never end up with both
+# for any of the five monitored commands so we never end up with both
 # a wrapped and an unwrapped scheduled run.
 #
 # Run on the deploy user — it owns the relevant crontab.
@@ -37,6 +37,7 @@ $BEGIN
 1,6,11,16,21,26,31,36,41,46,51,56 * * * * cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
 2 * * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run cron_health_check >> $LOG 2>&1
 0 9 * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
+5 0 1 * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run monthly_log_report >> $LOG 2>&1
 $END
 EOF
 )
@@ -44,12 +45,12 @@ EOF
 EXISTING=$(crontab -l 2>/dev/null || true)
 
 # Strip the old marker block (if any) and any legacy bare-command lines
-# for the four monitored crons, so we start from a clean slate.
+# for the five monitored crons, so we start from a clean slate.
 CLEANED=$(printf '%s\n' "$EXISTING" | awk -v B="$BEGIN" -v E="$END" '
     $0 == B { skip = 1; next }
     $0 == E { skip = 0; next }
     !skip   { print }
-' | grep -vE 'check_cpu_alert|service_health_check|cron_health_check|server_health_report' || true)
+' | grep -vE 'check_cpu_alert|service_health_check|cron_health_check|server_health_report|monthly_log_report' || true)
 
 # Re-emit: cleaned crontab, blank separator, fresh managed block.
 {
