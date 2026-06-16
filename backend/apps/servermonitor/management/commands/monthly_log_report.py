@@ -133,8 +133,10 @@ def parse_log(path: str) -> dict:
                     if p:
                         stats['scan_paths'][p.group(1)[:80]] += 1
 
-            if level in ('ERROR', 'CRITICAL'):
-                # start a new error block; first line is the message itself
+            # Start an error-signature block for real app errors only.
+            # 'hosthdr' (Invalid HTTP_HOST from bots) is ERROR-level but benign
+            # noise — counted separately, kept OUT of the "top errors" list.
+            if level in ('ERROR', 'CRITICAL') and bucket != 'hosthdr':
                 pending_err = [msg]
 
     if pending_err is not None:
@@ -188,6 +190,9 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
     real_5xx = st.get('500', 0)
     total_4xx = st.get('404', 0) + st.get('403', 0) + st.get('401', 0) + st.get('400', 0)
     blocked = err['blocked'] + sec['blocked']
+    hosthdr = st.get('hosthdr', 0)
+    # ERROR total minus benign Invalid-HTTP_HOST noise → real error count
+    real_errors = max(0, err['levels'].get('ERROR', 0) - hosthdr)
     verdict = '✅ Server sog‘lom' if real_5xx == 0 else '⚠️ Diqqat: real xatolar bor'
 
     lines = [
@@ -201,7 +206,8 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
         f'<i>(404:{st.get("404", 0)} · 403:{st.get("403", 0)} · '
         f'401:{st.get("401", 0)} · 400:{st.get("400", 0)})</i>',
         f'🛡 <b>Bloklangan skanerlar:</b> {blocked}',
-        f'📊 <b>Jami:</b> ERROR {err["levels"].get("ERROR", 0)} · '
+        f'🌐 <b>Host-header probe:</b> {hosthdr} <i>(benign)</i>',
+        f'📊 <b>Jami:</b> real ERROR {real_errors} · '
         f'WARNING {err["levels"].get("WARNING", 0)}',
     ]
 
