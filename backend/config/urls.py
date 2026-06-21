@@ -13,12 +13,11 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
-from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -79,7 +78,12 @@ urlpatterns = [
     # A 302 language-prefix redirect would drop that fragment → broken auto-login.
     # Keep this route prefix-free so it serves 200 directly (the trampoline then
     # reverse()s its localized target/login URLs itself).
+    #
+    # /app/ is the URL actually configured in @BotFather (menu button + Mini App);
+    # /tg-app/ is the canonical name. Serve BOTH so every Telegram entry point
+    # resolves without manual BotFather changes (was 404 → broken webview).
     path('tg-app/', TgAppRouterView.as_view(), name='tg_app'),
+    path('app/', TgAppRouterView.as_view(), name='tg_app_alias'),
 ]
 
 # ── Legacy URL redirects (pre-i18n migration) ─────────────────────────────────
