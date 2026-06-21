@@ -13,11 +13,12 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
-from presentation.web.views import custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -72,6 +73,13 @@ urlpatterns = [
         TelegramWebhookView.as_view(),
         name='telegram_webhook',
     ),
+
+    # ── Telegram Mini App trampoline (NON-i18n on purpose) ───────────────────
+    # Telegram delivers WebApp initData in the URL fragment (#tgWebAppData=…).
+    # A 302 language-prefix redirect would drop that fragment → broken auto-login.
+    # Keep this route prefix-free so it serves 200 directly (the trampoline then
+    # reverse()s its localized target/login URLs itself).
+    path('tg-app/', TgAppRouterView.as_view(), name='tg_app'),
 ]
 
 # ── Legacy URL redirects (pre-i18n migration) ─────────────────────────────────

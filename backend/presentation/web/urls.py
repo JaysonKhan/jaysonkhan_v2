@@ -1,12 +1,21 @@
 from django.urls import path
+
 from .views import (
-    HomeView, ProjectListView, ProjectDetailView,
-    BlogListView, BlogDetailView, BlogSearchView, ContactView,
-    TeamView, TgAppRouterView,
+    BlogDetailView,
+    BlogListView,
+    BlogSearchView,
+    ContactView,
+    HomeView,
+    ProjectDetailView,
+    ProjectListView,
+    TeamView,
 )
 
+# NOTE: tg-app/ (Telegram Mini App trampoline) is intentionally registered
+# in config/urls.py OUTSIDE i18n_patterns — a language-prefix 302 redirect
+# would drop Telegram's #tgWebAppData fragment and break initData auto-login.
+
 urlpatterns = [
-    path('tg-app/', TgAppRouterView.as_view(), name='tg_app'),
     path('', HomeView.as_view(), name='home'),
     path('projects/', ProjectListView.as_view(), name='projects'),
     path('projects/<slug:slug>/', ProjectDetailView.as_view(), name='project_detail'),
