@@ -26,7 +26,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Max
 from interactions.notifications.telegram_api import TelegramBotAPI
 from servermonitor.formatters import format_service_alert
-from servermonitor.metrics import MONITORED_SERVICES, collect_service_status
+from servermonitor.metrics import MONITORED_SERVICES, collect_all_service_status
 from servermonitor.models import ServiceCheckResult
 
 # Status values where we couldn't actually reach systemctl. Treating
@@ -82,14 +82,14 @@ class Command(BaseCommand):
             ).only('service_unit', 'is_active')
         } if latest_ts else {}
 
+        # One batched sweep (2 systemctl calls) instead of 3 per unit.
+        statuses = {
+            s.name: s for s in collect_all_service_status(MONITORED_SERVICES)
+        }
+
         for cfg in MONITORED_SERVICES:
             unit = cfg['unit']
-            status = collect_service_status(
-                unit,
-                group=cfg['group'],
-                display=cfg['display'],
-                critical=cfg.get('critical', True),
-            )
+            status = statuses[unit]
 
             prev = prev_rows.get(unit)
             prev_active = prev.is_active if prev else None

@@ -25,8 +25,9 @@ LOG=/var/log/jaysonkhan/cron.log
 # Every 10 minutes — CPU core overload alert (≥85% / 5s sustained sample)
 3,13,23,33,43,53 * * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run check_cpu_alert      >> $LOG 2>&1
 
-# Every 5 minutes — per-service state-change detection + Telegram alert
-1,6,11,16,21,26,31,36,41,46,51,56 * * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
+# Every 2 minutes (odd minutes — never :00) — per-service state-change
+# detection + Telegram alert. Near-real-time; cheap (batched systemctl).
+1-59/2 * * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
 
 # Hourly at :02 — failed and overdue managed crons
 2 * * * *     cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run cron_health_check    >> $LOG 2>&1

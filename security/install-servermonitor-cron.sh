@@ -33,8 +33,11 @@ $BEGIN
 # Managed by deploy.sh — do not edit manually
 # Staggered: no job fires at :00 (avoids thundering-herd CPU spike when
 # UzExam hourly jobs also start at :00, causing all-cores-100% burst).
+# service_health_check runs every 2 min (odd minutes, never :00) for
+# near-real-time DOWN/UP alerts — cheap now that the check batches its
+# systemctl probes into 2 calls (~0.06s).
 3,13,23,33,43,53 * * * * cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run check_cpu_alert >> $LOG 2>&1
-1,6,11,16,21,26,31,36,41,46,51,56 * * * * cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
+1-59/2 * * * * cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run service_health_check >> $LOG 2>&1
 2 * * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run cron_health_check >> $LOG 2>&1
 0 9 * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
 5 0 1 * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run monthly_log_report >> $LOG 2>&1

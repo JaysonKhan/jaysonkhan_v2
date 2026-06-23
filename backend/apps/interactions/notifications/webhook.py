@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from datetime import timedelta
 from typing import Optional
 
 from core.emoji import ce
 from core.services import SiteSettingsService
 from django.conf import settings
+from django.db import connections
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -66,11 +68,32 @@ class TelegramWebhookView(View):
             return HttpResponse(status=400)
 
         if 'message' in update:
-            self._handle_message(update['message'])
+            self._dispatch_async(self._handle_message, update['message'])
         elif 'callback_query' in update:
-            self._handle_callback(update['callback_query'])
+            self._dispatch_async(self._handle_callback, update['callback_query'])
 
         return HttpResponse('ok')
+
+    def _dispatch_async(self, handler, payload):
+        """Run *handler* in a daemon thread and let post() return 200 now.
+
+        Telegram waits for the webhook's 200 and **redelivers the same
+        update** if it doesn't arrive quickly. With only 3 sync gunicorn
+        workers, a /status handler that blocks on systemctl for seconds
+        ties up a worker and triggers Telegram's retry storm — the 1-2 min
+        "stuck" feeling. Handing the work to a thread frees the worker in
+        milliseconds. Each thread owns its DB connections, so close them on
+        exit or we leak one per update.
+        """
+        def _runner():
+            try:
+                handler(payload)
+            except Exception as exc:  # noqa: BLE001
+                logger.error('Async webhook handler failed: %s', exc, exc_info=True)
+            finally:
+                connections.close_all()
+
+        threading.Thread(target=_runner, daemon=True).start()
 
     # ── Message routing ──────────────────────────────────────────────────────
 

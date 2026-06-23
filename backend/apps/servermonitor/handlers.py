@@ -22,12 +22,12 @@ from .formatters import (
 )
 from .metrics import (
     MONITORED_SERVICES,
+    collect_all_service_status,
     collect_cpu,
     collect_disk,
     collect_full_snapshot,
     collect_memory,
     collect_partitions,
-    collect_service_status,
 )
 
 logger = logging.getLogger('servermonitor')
@@ -41,16 +41,8 @@ _UNIT_NAMES = tuple(cfg['unit'] for cfg in MONITORED_SERVICES)
 
 
 def _collect_all_services() -> list:
-    """Collect status for every monitored service, unpacking the config dicts."""
-    return [
-        collect_service_status(
-            cfg['unit'],
-            group=cfg['group'],
-            display=cfg['display'],
-            critical=cfg.get('critical', True),
-        )
-        for cfg in MONITORED_SERVICES
-    ]
+    """Collect status for every monitored service (batched: 2 systemctl calls)."""
+    return collect_all_service_status(MONITORED_SERVICES)
 
 
 def is_owner(telegram_id: int) -> bool:

@@ -292,6 +292,83 @@ MONITORED_SERVICES: list[dict] = [
 ]
 
 
+def collect_all_service_status(
+    configs: Optional[list[dict]] = None,
+) -> list[ServiceStatus]:
+    """Batched status for many units — 2 systemctl calls total, not 3N.
+
+    The per-unit ``collect_service_status`` spawns 3 subprocesses (is-active
+    + 2× show); for the 11 monitored units that is 33 spawns (~1s wall) on
+    every /status and every health-check run. ``systemctl`` takes many units
+    per call:
+
+      - ``is-active u1 u2 …``   → one status line per unit, in order
+      - ``show u1 u2 … -p …``   → one blank-line-separated block per unit
+
+    so the whole sweep collapses to 2 spawns (~0.06s). Unprobeable results
+    ('no-systemctl' when the binary is unreachable) are reported per unit
+    exactly as the single-unit path does, so the health-check's
+    flap-suppression logic is unchanged.
+    """
+    cfgs = configs if configs is not None else MONITORED_SERVICES
+    units = [c['unit'] for c in cfgs]
+    if not units:
+        return []
+
+    raw = _systemctl('is-active', *units)
+    lines = raw.split('\n') if raw else []
+    # Empty output AND no systemctl binary → every unit is unprobeable.
+    no_systemctl = (not raw) and (not _systemctl('--version'))
+
+    statuses: list[str] = []
+    for i in range(len(units)):
+        if no_systemctl:
+            statuses.append('no-systemctl')
+        elif i < len(lines) and lines[i].strip():
+            statuses.append(lines[i].strip())
+        else:
+            statuses.append('unknown')
+
+    # Memory + uptime only for active units — one show call for all of them.
+    active_units = [u for u, s in zip(units, statuses) if s == 'active']
+    mem_by_unit: dict[str, float] = {}
+    up_by_unit: dict[str, str] = {}
+    if active_units:
+        shown = _systemctl(
+            'show', *active_units,
+            '--property=MemoryCurrent,ActiveEnterTimestamp',
+        )
+        # `systemctl show` emits one property block per unit, in argument
+        # order, separated by a blank line. Parse by key, not position.
+        for unit, block in zip(active_units, shown.split('\n\n')):
+            for ln in block.splitlines():
+                if ln.startswith('MemoryCurrent='):
+                    val = ln.split('=', 1)[1].strip()
+                    if val.isdigit():
+                        mem_bytes = int(val)
+                        if 0 < mem_bytes < (1 << 62):
+                            up_mb = round(mem_bytes / (1024 * 1024), 1)
+                            mem_by_unit[unit] = up_mb
+                elif ln.startswith('ActiveEnterTimestamp='):
+                    stamp = ln.split('=', 1)[1].strip()
+                    if stamp:
+                        up_by_unit[unit] = stamp
+
+    return [
+        ServiceStatus(
+            name=cfg['unit'],
+            active=(status_text == 'active'),
+            status=status_text,
+            group=cfg.get('group', ''),
+            display=cfg.get('display') or cfg['unit'],
+            critical=cfg.get('critical', True),
+            uptime=up_by_unit.get(cfg['unit']),
+            memory_mb=mem_by_unit.get(cfg['unit']),
+        )
+        for cfg, status_text in zip(cfgs, statuses)
+    ]
+
+
 def collect_top_processes(n: int = 5) -> list[dict]:
     """Top N processes by CPU usage."""
     procs = []
@@ -326,15 +403,7 @@ def collect_full_snapshot(*, cpu_interval: float = 1.0) -> ServerSnapshot:
     cpu_interval=1 (default) for interactive /status.
     cpu_interval=5 for cron-driven reports to avoid false-positive spikes.
     """
-    services = [
-        collect_service_status(
-            cfg['unit'],
-            group=cfg['group'],
-            display=cfg['display'],
-            critical=cfg.get('critical', True),
-        )
-        for cfg in MONITORED_SERVICES
-    ]
+    services = collect_all_service_status(MONITORED_SERVICES)
     return ServerSnapshot(
         timestamp=datetime.now(),
         hostname=collect_hostname(),

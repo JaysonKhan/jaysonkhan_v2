@@ -39,6 +39,17 @@ from servermonitor.models import ServiceCheckResult
 from .cron_health_check import _expected_interval
 
 REPORT_WINDOW = timedelta(hours=24)
+# Retention for the raw per-check history. The 2-min health check writes
+# 11 rows/run (~240k rows at 30 days); restart counts only look back 24h,
+# so 30 days is ample history for the admin view. Daily report = janitor.
+PRUNE_AFTER = timedelta(days=30)
+
+
+def _prune_old_results() -> int:
+    """Delete ServiceCheckResult rows older than the retention window."""
+    cutoff = timezone.now() - PRUNE_AFTER
+    deleted, _ = ServiceCheckResult.objects.filter(checked_at__lt=cutoff).delete()
+    return deleted
 
 
 def _restart_counts_24h() -> dict[str, int]:
@@ -105,6 +116,12 @@ class Command(BaseCommand):
 
         api = TelegramBotAPI()
         tg_id = site.telegram_owner_id
+
+        # Janitor: keep the per-check history bounded (runs daily, before the
+        # alert-only early return, so it always fires).
+        pruned = _prune_old_results()
+        if pruned:
+            self.stdout.write(f'Pruned {pruned} old ServiceCheckResult rows (>{PRUNE_AFTER.days}d)')
 
         self.stdout.write('Collecting server metrics...')
         snapshot = collect_full_snapshot(cpu_interval=5.0)
