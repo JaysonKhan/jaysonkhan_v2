@@ -715,6 +715,16 @@ class EditorialContentMixin(models.Model):
         help_text="List of practice/service strings, e.g. ['Web apps · Django', 'Telegram bots · Aiogram', ...]",
     )
 
+    # ── FAQ (homepage section + FAQPage schema for Google + LLM answer engines) ─
+    faq_title = models.CharField(
+        max_length=200, blank=True, default="Frequently asked questions",
+        help_text="Heading for the homepage FAQ section.",
+    )
+    faq_items = models.JSONField(
+        blank=True, default=list,
+        help_text="List of {q, a} dicts. Rendered as a visible FAQ + FAQPage structured data.",
+    )
+
     # ── Error page copy (was hardcoded in 404/500/section_unavailable) ────────
     error_404_headline = models.CharField(
         max_length=300, blank=True,
@@ -801,6 +811,26 @@ def _default_practice():
         "Telegram bots · Aiogram",
         "AI-augmented systems",
         "Design systems",
+    ]
+
+
+def _default_faq():
+    return [
+        {"q": "Who is Jayson Khan?",
+         "a": "Jayson Khan (Jahongir Qo'ziboyev) is an AI EdTech specialist and founder of "
+              "UzExam and Edustats, based in Tashkent, Uzbekistan. He builds testing platforms, "
+              "education analytics and AI mentor systems."},
+        {"q": "What is UzExam?",
+         "a": "UzExam (uzexam.uz) is a universal exam and testing platform for Uzbekistan, "
+              "founded by Jayson Khan."},
+        {"q": "What is Edustats?",
+         "a": "Edustats (edustats.uz) is an education analytics product that tracks student "
+              "progress for learners and institutions."},
+        {"q": "What does Jayson Khan specialize in?",
+         "a": "AI in education, testing and exam platforms, education analytics, student "
+              "progress tracking, AI mentors and product strategy."},
+        {"q": "How can I contact Jayson Khan?",
+         "a": "Through the contact page on jaysonkhan.com or via Telegram (@jaysonkhan)."},
     ]
 
 
@@ -891,6 +921,10 @@ class SiteSettings(
     @property
     def footer_practice_items_resolved(self):
         return self.footer_practice_items if self.footer_practice_items else _default_practice()
+
+    @property
+    def faq_items_resolved(self):
+        return self.faq_items if self.faq_items else _default_faq()
 
     @property
     def footer_display_github(self):

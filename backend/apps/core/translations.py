@@ -87,6 +87,10 @@ class SiteSettingsTranslation(TranslationOptions):
         'process_steps',
         'team_values',
         'footer_practice_items',
+
+        # ── FAQ ─────────────────────────────────────────────────────────────
+        'faq_title',
+        'faq_items',
     )
 
 
@@ -144,6 +148,7 @@ class SiteSettingsEditorialTranslation(TranslationOptions):
         'error_unavailable_headline', 'error_unavailable_description',
         'ticker_items', 'manifesto_principles', 'process_steps',
         'team_values', 'footer_practice_items',
+        'faq_title', 'faq_items',
     )
 
 

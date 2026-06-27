@@ -308,6 +308,43 @@
     </section>
     {% endif %}
 
+    {# ========================== FAQ ========================== #}
+    {% with faqs=site_settings.faq_items_resolved %}
+    {% if faqs %}
+    <section class="section" id="faq" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "FAQ" %}</span>
+                    <h2 class="display-md">{{ site_settings.faq_title }}</h2>
+                </div>
+            </div>
+            <div class="faq-list">
+                {% for item in faqs %}
+                <details class="faq-item reveal"{% if forloop.first %} open{% endif %}>
+                    <summary class="faq-item__q">{{ item.q }}</summary>
+                    <p class="faq-item__a">{{ item.a }}</p>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{% for item in faqs %}
+        {
+          "@type": "Question",
+          "name": "{{ item.q|escapejs }}",
+          "acceptedAnswer": {"@type": "Answer", "text": "{{ item.a|escapejs }}"}
+        }{% if not forloop.last %},{% endif %}{% endfor %}
+      ]
+    }
+    </script>
+    {% endif %}
+    {% endwith %}
+
     {# ========================== CTA ========================== #}
     <section class="cta-section">
         <div class="aurora aurora--cta" aria-hidden="true">

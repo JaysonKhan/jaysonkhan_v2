@@ -2086,3 +2086,46 @@
 .focus\:ring-0:focus {
   box-shadow: none;
 }
+
+/* ── FAQ (homepage) ──────────────────────────────────────────────── */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 32px;
+}
+.faq-item {
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--bg-1);
+  padding: 18px 22px;
+}
+.faq-item__q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.98rem;
+  color: var(--fg-0);
+}
+.faq-item__q::-webkit-details-marker {
+  display: none;
+}
+.faq-item__q::after {
+  content: "+";
+  color: var(--accent);
+  font-size: 1.4em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.faq-item[open] .faq-item__q::after {
+  content: "\2013";
+}
+.faq-item__a {
+  margin-top: 14px;
+  color: var(--fg-2);
+  max-width: 70ch;
+}

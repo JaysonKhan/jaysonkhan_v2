@@ -132,6 +132,42 @@ COPY = {
         "ru": "Jayson Khan — основатель UzExam и Edustats. AI-продукты для EdTech, тестов и образовательной аналитики.",
         "en": "Jayson Khan — founder of UzExam and Edustats. Building AI-powered EdTech, testing platforms and education analytics.",
     },
+    "faq_title": {
+        "xo": "Ko'p so'raladigan savollar",
+        "uz": "Ko'p so'raladigan savollar",
+        "ru": "Часто задаваемые вопросы",
+        "en": "Frequently asked questions",
+    },
+    "faq_items": {
+        "xo": [
+            {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va Edustats asoschisi. Test platformalari, ta'lim analitikasi va AI mentor tizimlarini quradi."},
+            {"q": "UzExam nima?", "a": "UzExam (uzexam.uz) — O'zbekiston uchun universal test va imtihon platformasi, Jayson Khan asos solgan."},
+            {"q": "Edustats nima?", "a": "Edustats (edustats.uz) — o'quvchilar va ta'lim muassasalari uchun o'quvchi progressini kuzatadigan ta'lim analitikasi mahsuloti."},
+            {"q": "Jayson Khan nimaga ixtisoslashgan?", "a": "Ta'limda AI, test va imtihon platformalari, ta'lim analitikasi, o'quvchi progressi, AI mentorlar va mahsulot strategiyasi."},
+            {"q": "Jayson Khan bilan qanday bog'lanish mumkin?", "a": "jaysonkhan.com saytidagi kontakt sahifasi yoki Telegram (@jaysonkhan) orqali."},
+        ],
+        "uz": [
+            {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va Edustats asoschisi. Test platformalari, ta'lim analitikasi va AI mentor tizimlarini quradi."},
+            {"q": "UzExam nima?", "a": "UzExam (uzexam.uz) — O'zbekiston uchun universal test va imtihon platformasi, Jayson Khan asos solgan."},
+            {"q": "Edustats nima?", "a": "Edustats (edustats.uz) — o'quvchilar va ta'lim muassasalari uchun o'quvchi progressini kuzatadigan ta'lim analitikasi mahsuloti."},
+            {"q": "Jayson Khan nimaga ixtisoslashgan?", "a": "Ta'limda AI, test va imtihon platformalari, ta'lim analitikasi, o'quvchi progressi, AI mentorlar va mahsulot strategiyasi."},
+            {"q": "Jayson Khan bilan qanday bog'lanish mumkin?", "a": "jaysonkhan.com saytidagi kontakt sahifasi yoki Telegram (@jaysonkhan) orqali."},
+        ],
+        "ru": [
+            {"q": "Кто такой Jayson Khan?", "a": "Jayson Khan (Жахонгир Кузибоев) — AI EdTech специалист, основатель UzExam и Edustats из Ташкента, Узбекистан. Строит тестовые платформы, образовательную аналитику и системы AI-менторов."},
+            {"q": "Что такое UzExam?", "a": "UzExam (uzexam.uz) — универсальная платформа тестов и экзаменов для Узбекистана, основанная Jayson Khan."},
+            {"q": "Что такое Edustats?", "a": "Edustats (edustats.uz) — продукт образовательной аналитики, отслеживающий прогресс студентов для учащихся и учебных заведений."},
+            {"q": "На чём специализируется Jayson Khan?", "a": "AI в образовании, тестовые и экзаменационные платформы, образовательная аналитика, отслеживание прогресса студентов, AI-менторы и продуктовая стратегия."},
+            {"q": "Как связаться с Jayson Khan?", "a": "Через страницу контактов на jaysonkhan.com или в Telegram (@jaysonkhan)."},
+        ],
+        "en": [
+            {"q": "Who is Jayson Khan?", "a": "Jayson Khan (Jahongir Qo'ziboyev) is an AI EdTech specialist and founder of UzExam and Edustats, based in Tashkent, Uzbekistan. He builds testing platforms, education analytics and AI mentor systems."},
+            {"q": "What is UzExam?", "a": "UzExam (uzexam.uz) is a universal exam and testing platform for Uzbekistan, founded by Jayson Khan."},
+            {"q": "What is Edustats?", "a": "Edustats (edustats.uz) is an education analytics product that tracks student progress for learners and institutions."},
+            {"q": "What does Jayson Khan specialize in?", "a": "AI in education, testing and exam platforms, education analytics, student progress tracking, AI mentors and product strategy."},
+            {"q": "How can I contact Jayson Khan?", "a": "Through the contact page on jaysonkhan.com or via Telegram (@jaysonkhan)."},
+        ],
+    },
 }
 
 PLAIN = {
