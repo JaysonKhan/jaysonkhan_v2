@@ -1,7 +1,8 @@
 """Apply jaysonkhan.com AI EdTech founder positioning.
 
 Idempotent production command. Keeps `xo` as the default Khorezm dialect locale,
-and updates the SiteSettings singleton in all four locales: xo, uz, ru, en.
+updates the SiteSettings singleton in all four locales (xo, uz, ru, en), and
+rewrites any legacy "VibeCoder" Experience-timeline title to the AI EdTech wording.
 """
 from __future__ import annotations
 
@@ -30,10 +31,10 @@ COPY = {
         "en": "Jayson Khan is an AI EdTech specialist and founder of UzExam and Edustats, building testing platforms and education analytics in Uzbekistan.",
     },
     "meta_keywords": {
-        "xo": "AI EdTech Uzbekistan, UzExam founder, Edustats, test platform Uzbekistan, education analytics, AI mentor, Jayson Khan",
-        "uz": "AI EdTech Uzbekistan, UzExam founder, Edustats, test platform Uzbekistan, education analytics, AI mentor, Jayson Khan",
-        "ru": "AI EdTech Узбекистан, основатель UzExam, Edustats, тестовая платформа, образовательная аналитика, AI mentor, Jayson Khan",
-        "en": "AI EdTech Uzbekistan, UzExam founder, Edustats, test platform Uzbekistan, education analytics, AI mentor, Jayson Khan",
+        "xo": "Jayson Khan, JaysonKhan, Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam asoschisi, Edustats, test platforma O'zbekiston, ta'lim analitikasi, AI mentor, sun'iy intellekt mutaxassis O'zbekiston",
+        "uz": "Jayson Khan, JaysonKhan, Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam asoschisi, Edustats, test platforma O'zbekiston, ta'lim analitikasi, AI mentor, sun'iy intellekt mutaxassis O'zbekiston",
+        "ru": "Jayson Khan, JaysonKhan, Жахонгир Кузибоев, Кузибоев Жахонгир, Джахонгир Кузибоев, AI EdTech Узбекистан, основатель UzExam, Edustats, тестовая платформа, образовательная аналитика, AI mentor, AI специалист Узбекистан",
+        "en": "Jayson Khan, JaysonKhan, Jahongir Qoziboyev, Qoziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam founder, Edustats, test platform Uzbekistan, education analytics, AI mentor, AI specialist Uzbekistan",
     },
     "hero_eyebrow": {
         "xo": "AI EdTech · UzExam · Edustats · O'zbekiston",
@@ -183,3 +184,25 @@ class Command(BaseCommand):
 
         obj.save()
         self.stdout.write(self.style.SUCCESS("AI EdTech founder positioning applied to SiteSettings."))
+
+        # Rewrite legacy "VibeCoder" identity in Experience timeline rows.
+        # position is a translated field → patch every language column present.
+        from portfolio.models import Experience
+
+        suffixes = ("", "_xo", "_uz", "_ru", "_en")
+        fixed = 0
+        for exp in Experience.objects.all():
+            changed = False
+            for suffix in suffixes:
+                attr = f"position{suffix}"
+                val = getattr(exp, attr, None)
+                if val and "VibeCoder" in val:
+                    setattr(exp, attr, val.replace("VibeCoder", "AI EdTech Specialist"))
+                    changed = True
+            if changed:
+                exp.save()
+                fixed += 1
+        if fixed:
+            self.stdout.write(self.style.SUCCESS(
+                f"Updated {fixed} Experience row(s): VibeCoder → AI EdTech Specialist."
+            ))

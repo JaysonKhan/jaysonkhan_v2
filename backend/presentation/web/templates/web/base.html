@@ -13,14 +13,14 @@
     <meta name="description" content="{% block meta_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     <meta name="author" content="{{ site_settings.site_author }}">
-    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 
     {# i18n hreflang — tells search engines about other language variants #}
     {% load i18n %}{% get_available_languages as ALL_LANGS %}
     {% for code, name in ALL_LANGS %}
-    <link rel="alternate" hreflang="{{ code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ code }}{{ request.path|slice:'4:' }}">
+    <link rel="alternate" hreflang="{{ code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ code }}{{ request.path|slice:'3:' }}">
     {% endfor %}
-    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/xo{{ request.path|slice:'4:' }}">
+    <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/xo{{ request.path|slice:'3:' }}">
 
     {% if site_settings.google_site_verification %}
     <meta name="google-site-verification" content="{{ site_settings.google_site_verification }}">
@@ -75,13 +75,27 @@
             "Quziboyev Jahongir",
             "Jahongir Quziboyev",
             "Betta347",
-            "Jayson"
+            "Jayson",
+            "Жейсон Хан",
+            "Жейсонхан",
+            "Жахонгир Кузибоев",
+            "Кузибоев Жахонгир",
+            "Джахонгир Кузибоев",
+            "Жахонгир Кузибаев",
+            "Жаҳонгир Қўзибоев",
+            "Қўзибоев Жаҳонгир"
           ],
           "givenName": "Jahongir",
           "familyName": "Qo'ziboyev",
           "additionalName": "JaysonKhan",
           "url": "{{ site_settings.og_url }}",
           "jobTitle": "AI EdTech Specialist · Founder of UzExam and Edustats",
+          "hasOccupation": {
+            "@type": "Occupation",
+            "name": "AI EdTech Specialist",
+            "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
+            "skills": "AI in education, testing platforms, education analytics, AI mentors, product strategy"
+          },
           "description": "{{ site_settings.meta_description|escapejs }}",
           "email": "{{ site_settings.email }}",
           "nationality": {"@type": "Country", "name": "Uzbekistan"},
@@ -208,7 +222,7 @@
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="lang-switch">
                         {% for code, name in LANGUAGES %}
-                        <a href="/{{ code }}{{ request.path|slice:'4:' }}"
+                        <a href="/{{ code }}{{ request.path|slice:'3:' }}"
                            class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
                            aria-label="{{ name }}">{{ code|upper }}</a>
                         {% endfor %}

@@ -2,7 +2,7 @@ import environ
 from blog.feeds import LatestPostsAtomFeed, LatestPostsFeed
 from core.emoji_views import emoji_manager
 from core.sitemaps import SITEMAPS
-from core.views import health_check, humans_txt, robots_txt, upload_media_view
+from core.views import health_check, humans_txt, llms_txt, robots_txt, upload_media_view
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
@@ -13,11 +13,12 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
-from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -46,6 +47,8 @@ urlpatterns = [
     path('robots.txt', cache_page(86400)(robots_txt), name='robots_txt'),
     # humans.txt — E-E-A-T signal (real human team behind the site)
     path('humans.txt', cache_page(86400)(humans_txt), name='humans_txt'),
+    # llms.txt — GEO: entity brief for AI answer engines (ChatGPT/Perplexity/Claude)
+    path('llms.txt', cache_page(86400)(llms_txt), name='llms_txt'),
     # /sitemap.xml — sitemap-index pointing to per-section sub-sitemaps.
     # Search Console shows coverage per section; debug index issues per-segment.
     path('sitemap.xml',
