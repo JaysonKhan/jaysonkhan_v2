@@ -119,6 +119,18 @@ if $DEPLOY_JK; then
         DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE collectstatic --noinput"
     ok "  Migrate + collectstatic done"
 
+    info "  Applying AI EdTech founder copy..."
+    remote "source $JK_VENV && \
+        DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE apply_edtech_founder_copy" \
+        && ok "  AI EdTech founder copy applied" \
+        || warn "  AI EdTech founder copy skipped — run manage.py apply_edtech_founder_copy manually"
+
+    info "  Applying featured EdTech projects..."
+    remote "source $JK_VENV && \
+        DJANGO_SETTINGS_MODULE=$JK_SETTINGS $JK_PY $JK_MANAGE apply_edtech_projects" \
+        && ok "  Featured EdTech projects applied" \
+        || warn "  Featured EdTech projects skipped — run manage.py apply_edtech_projects manually"
+
     info "  Restarting jaysonkhan + nginx..."
     remote "sudo systemctl daemon-reload && \
         sudo systemctl restart $JK_SERVICE && \
