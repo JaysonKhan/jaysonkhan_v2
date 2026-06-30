@@ -15,12 +15,32 @@ Usage:
     python manage.py check_cpu_alert --threshold 90   # custom threshold
     python manage.py check_cpu_alert --interval 1     # tighter sample
 """
-from django.core.management.base import BaseCommand
-
 from core.services import SiteSettingsService
+from django.core.management.base import BaseCommand
 from interactions.notifications.telegram_api import TelegramBotAPI
 from servermonitor.formatters import format_cpu_alert
 from servermonitor.metrics import collect_cpu
+
+# Konsekutiv yuqori-CPU holati fayli (cron jarayonlar orasida saqlanadi —
+# LocMem cache fresh-process'da yo'qoladi). Deploy build+warmup = bir martalik
+# spike (bitta cron run); haqiqiy overload = ketma-ket bir necha run.
+_STATE_FILE = '/var/tmp/cpu_alert_consec'
+
+
+def _read_consec() -> int:
+    try:
+        with open(_STATE_FILE) as f:
+            return int(f.read().strip() or 0)
+    except (OSError, ValueError):
+        return 0
+
+
+def _write_consec(n: int) -> None:
+    try:
+        with open(_STATE_FILE, 'w') as f:
+            f.write(str(n))
+    except OSError:
+        pass
 
 
 class Command(BaseCommand):
@@ -35,17 +55,36 @@ class Command(BaseCommand):
             '--interval', type=float, default=5.0,
             help='psutil sample window in seconds (default: 5 — sustained)',
         )
+        parser.add_argument(
+            '--consecutive', type=int, default=2,
+            help="Ketma-ket necha cron-run yuqori bo'lsa page (default: 2 — "
+                 "deploy build/warmup bir martalik spike'ni filtrlaydi)",
+        )
 
     def handle(self, *args, **options):
         threshold = options['threshold']
         interval = options['interval']
+        need = options['consecutive']
         cpu = collect_cpu(interval=interval)
 
         alert_text = format_cpu_alert(cpu, threshold=threshold)
         if not alert_text:
+            _write_consec(0)  # tushdi → hisoblagich reset
             self.stdout.write(self.style.SUCCESS(
                 f'All {cpu.core_count} cores below {threshold}% '
                 f'(sampled over {interval}s) — no alert'
+            ))
+            return
+
+        # Yuqori CPU — lekin DARHOL page qilmaymiz. Deploy build+warmup bir
+        # martalik spike (bitta run). Faqat KETMA-KET `need` run yuqori bo'lsa
+        # = haqiqiy sustained overload → page.
+        consec = _read_consec() + 1
+        _write_consec(consec)
+        if consec < need:
+            self.stdout.write(self.style.WARNING(
+                f'High CPU ({consec}/{need} ketma-ket) — deploy-burst guard, '
+                f'hali page qilinmadi'
             ))
             return
 
@@ -56,4 +95,6 @@ class Command(BaseCommand):
 
         api = TelegramBotAPI()
         api.send_message(site.telegram_owner_id, alert_text)
-        self.stdout.write(self.style.WARNING(f'CPU alert sent to {site.telegram_owner_id}'))
+        _write_consec(0)  # page qilindi → reset (har run spam qilmaslik)
+        self.stdout.write(self.style.WARNING(
+            f'CPU alert sent to {site.telegram_owner_id} ({consec} ketma-ket run)'))
