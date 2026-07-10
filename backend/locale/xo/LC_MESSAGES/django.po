@@ -188,7 +188,7 @@ msgstr "Loyiha boshlaymizmi?"
 
 #: presentation/web/templates/web/home.html:38
 msgid "View case studies"
-msgstr "Ishlarga qarang"
+msgstr "Ishlani ko'rila"
 
 #: presentation/web/templates/web/home.html:139
 msgid "Download CV"
@@ -209,7 +209,7 @@ msgstr "Karyera · Iz"
 
 #: presentation/web/templates/web/home.html:187
 msgid "Where I've shipped."
-msgstr "Qayerlarda yetkazganman."
+msgstr "Qayerlada yetkazganman."
 
 #: presentation/web/templates/web/home.html:202
 msgid "PRESENT"
@@ -217,11 +217,11 @@ msgstr "HOZIR"
 
 #: presentation/web/templates/web/home.html:220
 msgid "04 — Selected work"
-msgstr "04 — Saralangan ishlar"
+msgstr "04 — Saralangan ishla"
 
 #: presentation/web/templates/web/home.html:223
 msgid "View all projects"
-msgstr "Hamma loyihalar"
+msgstr "Hamma loyihala"
 
 #: presentation/web/templates/web/home.html:283
 msgid "06 — From the journal"
@@ -230,11 +230,11 @@ msgstr "06 — Jurnaldan"
 #: presentation/web/templates/web/home.html:284
 #| msgid "dispatches."
 msgid "Latest dispatches."
-msgstr "So'nggi yozuvlar."
+msgstr "So'nggi yozuvla."
 
 #: presentation/web/templates/web/home.html:286
 msgid "All entries"
-msgstr "Hamma yozuvlar"
+msgstr "Hamma yozuvla"
 
 #: presentation/web/templates/web/project_detail.html:44
 #| msgid "Back to all work"
