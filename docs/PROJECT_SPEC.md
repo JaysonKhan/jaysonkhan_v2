@@ -1,4 +1,10 @@
-## 1?? Texnologiyalar (eng ko‘p ishlatiladigan va ishonchli stack)
+> **HISTORICAL â€” original 2024 build spec / Codex prompt. DO NOT follow for current work.**
+> The shipped reality differs: Django 4.2 (not 5), Python 3.12 on server, hand-written
+> XIVA INK CSS (no Tailwind/HTMX), no `domain/` or `infrastructure/` dirs.
+> Current truth: [`../CLAUDE.md`](../CLAUDE.md) + [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md).
+> Kept only as project-genesis reference.
+
+## 1?? Texnologiyalar (eng koï¿½p ishlatiladigan va ishonchli stack)
 
 ### Backend (Python)
 
@@ -14,7 +20,7 @@
 
 ### Frontend
 
-> “frontini pythonga mos” deganing uchun:
+> ï¿½frontini pythonga mosï¿½ deganing uchun:
 
 * **Django Templates + HTMX**
 * **TailwindCSS**
@@ -27,38 +33,38 @@
 
 ## 2?? Arxitektura (Clean Architecture ga yaqin)
 
-Django’da **Feature-based + Clean separation**
+Djangoï¿½da **Feature-based + Clean separation**
 
 ```
 backend/
 +-- config/                  # project config
-¦   +-- settings/
-¦   ¦   +-- base.py
-¦   ¦   +-- dev.py
-¦   ¦   +-- prod.py
-¦   +-- urls.py
-¦   +-- wsgi.py
-¦
+ï¿½   +-- settings/
+ï¿½   ï¿½   +-- base.py
+ï¿½   ï¿½   +-- dev.py
+ï¿½   ï¿½   +-- prod.py
+ï¿½   +-- urls.py
+ï¿½   +-- wsgi.py
+ï¿½
 +-- apps/
-¦   +-- users/               # auth, roles
-¦   +-- portfolio/           # projects, skills
-¦   +-- blog/                # posts
-¦   +-- contact/             # messages
-¦   +-- core/                # utils, base models
-¦
+ï¿½   +-- users/               # auth, roles
+ï¿½   +-- portfolio/           # projects, skills
+ï¿½   +-- blog/                # posts
+ï¿½   +-- contact/             # messages
+ï¿½   +-- core/                # utils, base models
+ï¿½
 +-- domain/                  # biznes logika
-¦   +-- entities/
-¦   +-- services/
-¦   +-- repositories/
-¦
+ï¿½   +-- entities/
+ï¿½   +-- services/
+ï¿½   +-- repositories/
+ï¿½
 +-- infrastructure/          # db, external services
-¦   +-- db/
-¦   +-- email/
-¦
+ï¿½   +-- db/
+ï¿½   +-- email/
+ï¿½
 +-- presentation/            # api + views
-¦   +-- api/
-¦   +-- web/
-¦
+ï¿½   +-- api/
+ï¿½   +-- web/
+ï¿½
 +-- manage.py
 +-- requirements.txt
 ```
@@ -76,7 +82,7 @@ Asosiy jadvallar:
 * ContactMessage
 * SocialLinks
 
-Hammasi **DB’da saqlanadi** ?
+Hammasi **DBï¿½da saqlanadi** ?
 
 ---
 
@@ -235,7 +241,7 @@ certbot --nginx -d jaysonkhan.com -d www.jaysonkhan.com
 
 ## 6?? CODEx uchun ASOSIY PROMPT (eng muhim qism)
 
-> **Buni to‘liq nusxa ko‘chirib Codex / Cursor / GPT ga ber**
+> **Buni toï¿½liq nusxa koï¿½chirib Codex / Cursor / GPT ga ber**
 
 ```text
 You are a senior Python backend architect.

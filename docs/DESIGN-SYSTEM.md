@@ -190,6 +190,12 @@ buttons get a trailing arrow SVG. One primary per view region.
 [ ] reveal/fade-up gated by prefers-reduced-motion, base = visible end-state
 [ ] Responsive at 900px (single column collapse); hit targets ≥44px
 [ ] Numbers/dates in mono
+[ ] Inline <script> JS uses DOUBLE-quoted strings only (Prettier turns 'x' into curly quotes
+    -> SyntaxError; check: perl -CSD -ne 'print if /[\x{2018}\x{2019}]/' the file — stock macOS grep has no -P)
+    AND the page was exercised in a real browser
+[ ] Multi-line template comments use {% comment %} blocks (multi-line {# #} leaks raw text into the page)
+[ ] Fixed-position modals inside the admin .fade-in wrapper are portaled to <body>
+    (ancestor transform re-roots position:fixed — see CLAUDE.md gotcha #8)
 [ ] If a new token/pattern was unavoidable → tokens.css updated AND this doc updated
 ```
 

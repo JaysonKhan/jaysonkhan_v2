@@ -1,8 +1,8 @@
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-
 from blog.models import Post
-from blog.services import BlogService, BlogRepository
+from blog.services import BlogRepository, BlogService
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
 
 
 class BlogServiceTest(TestCase):
@@ -67,15 +67,15 @@ class BlogWebViewTest(TestCase):
         )
 
     def test_blog_detail_returns_200_for_published_post(self):
-        response = self.client.get(f'/blog/{self.published.slug}/')
+        response = self.client.get(reverse('blog_detail', kwargs={'slug': self.published.slug}))
         self.assertEqual(response.status_code, 200)
 
     def test_blog_detail_returns_404_for_missing_slug(self):
-        response = self.client.get('/blog/missing-post/')
+        response = self.client.get(reverse('blog_detail', kwargs={'slug': 'missing-post'}))
         self.assertEqual(response.status_code, 404)
 
     def test_blog_detail_returns_404_for_unpublished_post(self):
-        response = self.client.get(f'/blog/{self.draft.slug}/')
+        response = self.client.get(reverse('blog_detail', kwargs={'slug': self.draft.slug}))
         self.assertEqual(response.status_code, 404)
 
 

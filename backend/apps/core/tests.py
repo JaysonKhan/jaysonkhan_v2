@@ -2,12 +2,15 @@
 Tests for blog Markdown rendering, contact spam protection, and core model integrity.
 Run with: python manage.py test
 """
-from django.test import TestCase, RequestFactory
-from django.template import Template, Context
-
 from blog.templatetags.markdown_extras import render_markdown
-from contact.spam_protection import is_honeypot_filled, is_rate_limited, RATE_LIMIT_MAX_SUBMISSIONS
+from contact.spam_protection import (
+    RATE_LIMIT_MAX_SUBMISSIONS,
+    is_honeypot_filled,
+    is_rate_limited,
+)
 from core.models import SiteSettings
+from django.template import Context, Template
+from django.test import RequestFactory, TestCase
 
 
 class MarkdownRenderingTest(TestCase):
@@ -137,14 +140,13 @@ class SiteSettingsModelTest(TestCase):
         settings.footer_description = 'Custom footer desc'
         self.assertEqual(settings.footer_display_description, 'Custom footer desc')
 
-    def test_footer_email_fallback(self):
-        """footer_display_email falls back to main email."""
+    def test_footer_email_always_uses_main_email(self):
+        """footer_email field was removed — footer_display_email is always the main email."""
         settings = SiteSettings.load()
-        settings.footer_email = ''
         self.assertEqual(settings.footer_display_email, settings.email)
 
-        settings.footer_email = 'footer@example.com'
-        self.assertEqual(settings.footer_display_email, 'footer@example.com')
+        settings.email = 'owner@example.com'
+        self.assertEqual(settings.footer_display_email, 'owner@example.com')
 
     def test_footer_social_fallbacks(self):
         """Footer social URLs fall back to main social URLs."""

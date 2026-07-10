@@ -1,9 +1,9 @@
-from django.test import TestCase
 from unittest.mock import patch
-from django.contrib.auth import get_user_model
 
 from contact.models import ContactMessage
-from contact.services import ContactService, ContactRepository
+from contact.services import ContactRepository, ContactService
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 
 
 class ContactServiceTest(TestCase):
@@ -49,9 +49,10 @@ class ContactApiPermissionsTest(TestCase):
         anon_response = self.client.get('/api/contact/')
         self.assertIn(anon_response.status_code, (401, 403))
 
+        # USERNAME_FIELD is email (custom User) — SimpleJWT expects it, not username
         token_response = self.client.post(
             '/api/token/',
-            {'username': 'apiadmin', 'password': 'secret123'},
+            {'email': 'apiadmin@example.com', 'password': 'secret123'},
             content_type='application/json',
         )
         self.assertEqual(token_response.status_code, 200)

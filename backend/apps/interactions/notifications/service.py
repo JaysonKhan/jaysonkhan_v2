@@ -9,6 +9,7 @@ caller (Django view / signal handler) is never blocked.
 from __future__ import annotations
 
 import logging
+import sys
 import threading
 from html import escape
 from typing import Optional
@@ -27,7 +28,15 @@ DEFAULT_DOMAIN = 'https://jaysonkhan.com'
 # ── Thread helper ────────────────────────────────────────────────────────────
 
 def fire_and_forget(fn, *args, **kwargs):
-    """Run *fn* in a daemon thread.  Exceptions are logged, never raised."""
+    """Run *fn* in a daemon thread.  Exceptions are logged, never raised.
+
+    Skipped entirely under `manage.py test`: daemon threads race the test
+    database (SQLite "table is locked", flaky ERRORs in unrelated tests)
+    and would hit the real Telegram API if a local token is configured.
+    """
+    if 'test' in sys.argv:
+        return
+
     def _wrapper():
         try:
             fn(*args, **kwargs)

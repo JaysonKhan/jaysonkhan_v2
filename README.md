@@ -2,19 +2,23 @@
 
 A production-ready portfolio web platform built with Python, Django, and Clean Architecture.
 
+> **WARNING — historical setup guide.** The production server is already provisioned and hardened.
+> For day-to-day work read [`CLAUDE.md`](CLAUDE.md). Deploy ONLY via `./deploy.sh`
+> (local edit -> commit -> deploy) — never re-run the manual server steps below against the live server.
+
 ## Features
 - **Clean Architecture**: Separation of concerns with domain, services, and repositories.
 - **REST API**: Django REST Framework endpoints for all modules.
-- **SSR Frontend**: Django Templates + TailwindCSS for high performance and SEO.
+- **SSR Frontend**: Django Templates + hand-written XIVA INK CSS for high performance and SEO.
 - **JWT Authentication**: Secure API access.
 - **PostgreSQL**: Production-grade database.
-- **Responsive Design**: Modern glassmorphism UI.
+- **Design**: single dark-ink XIVA INK design system — see [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md).
 
 ## Tech Stack
-- **Backend**: Python 3.9+, Django 4.2 LTS, DRF
+- **Backend**: Python 3.12, Django 4.2 LTS, DRF
 - **Database**: PostgreSQL (Production), SQLite (Development)
-- **Frontend**: TailwindCSS, HTMX
-- **DevOps**: Gunicorn, Nginx, Docker-ready
+- **Frontend**: Django SSR + XIVA INK CSS (`static/css/tokens.css` + `site.css`) — no Tailwind/HTMX/node build
+- **DevOps**: Gunicorn, Nginx
 
 ---
 
@@ -28,18 +32,18 @@ A production-ready portfolio web platform built with Python, Django, and Clean A
 
 2. **Setup virtual environment**
    ```bash
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate  # Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**
    ```bash
-   pip install -r ..\requirements.txt
+   pip install -r ../requirements.txt
    ```
 
 4. **Environment Variables**
    ```bash
-   cp .env.example .env
+   cp ../.env.example .env   # .env.example lives at the repo root
    # Edit .env with your local settings
    ```
 
@@ -57,7 +61,7 @@ A production-ready portfolio web platform built with Python, Django, and Clean A
 
 ---
 
-## Server Deployment (Ubuntu 22.04)
+## Server Deployment (Ubuntu 24.04 — HISTORICAL, see warning above)
 
 **Server IP**: 144.91.69.225  
 **Domain**: jaysonkhan.com
