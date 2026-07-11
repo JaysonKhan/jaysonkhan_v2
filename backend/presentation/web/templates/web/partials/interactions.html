@@ -1333,8 +1333,16 @@
         const wk = Math.floor(day / 7);
         if (wk < 5)     return I18N.weekAgo.replace("{n}", wk);
         const d = new Date(isoString);
+        const sameYear = d.getFullYear() === new Date().getFullYear();
+        // Ba'zi brauzerlarda uz uchun CLDR oy nomlari yo'q ("M03" fallback) —
+        // uz/xo'da raqamli format ishlatamiz: 16.03 (mono uslubga mos).
+        if (INTL_LANG === "uz") {
+            const dd = String(d.getDate()).padStart(2, "0");
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            return sameYear ? `${dd}.${mm}` : `${dd}.${mm}.${d.getFullYear()}`;
+        }
         const opts = { month: "short", day: "numeric" };
-        if (d.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+        if (!sameYear) opts.year = "numeric";
         try {
             return new Intl.DateTimeFormat(INTL_LANG, opts).format(d);
         } catch (e) {
