@@ -140,13 +140,11 @@ Komponent React'ga deyarli bog'liq emas — faqat mount/unmount uchun ishlatilad
 
 ## 10. 2026-07-12 reviziyasi (portret + yomg'ir + xiralik)
 
-- **Yakuniy shakl (index 4)** endi galaktika emas — **egasining yulduz-portreti**.
-  Manba: `static/images/sf-portrait.png` (oldindan tayyorlangan oq-nuqtali PNG;
-  asl foto: `static/images/jayson-orbit.jpg` = Telegram avatar tarixidagi
-  ko'zoynakli surat). PNG async yuklanadi; yuklanguncha galaktika fallback.
-  Qayta generatsiya: PIL bilan tonal-kontur (58/100/145 threshold chegaralari) +
-  qo'lda figura-maskasi + pastga so'nish — retsept commit tarixida
-  (`sf-portrait_try*.png` iteratsiyalari scratchpad'da edi).
+- **Yakuniy shakl (index 4)** endi galaktika emas — **KHAN 天 logotipi**
+  (egasining kanal-brendi). Manba: `static/images/sf-portrait.png` —
+  kanal avataridan PIL threshold (lum > 110) bilan olingan oq-nuqtali PNG.
+  PNG async yuklanadi; yuklanguncha galaktika fallback. (Avval yuz-portret
+  sinab ko'rilgan edi — egasi logotipni tanladi, 2026-07-12.)
 - **Yorug'lik**: `home.html` da `window.XIVA_STARFIELD = { intensity: 0.7 }` —
   yulduzlar matn bilan aralashmasligi uchun -30%.
 - **Uchar yulduzlar**: bitta meteor → **pool (5 tagacha parallel)**, spawn
