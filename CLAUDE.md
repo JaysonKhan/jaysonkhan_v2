@@ -161,6 +161,7 @@ python manage.py register_bot_commands
 9. **TinyMCE CSRF** — read from hidden input (`{% csrf_token %}`), not cookie (cookie is HttpOnly).
 10. **Inline `<script>` JS in templates: DOUBLE-quoted strings only** — Prettier can turn `'POST'` into curly quotes (U+2018/2019) → SyntaxError → every function in the block becomes undefined. `manage.py check` and deploy health checks stay green; only a real browser catches it. Detect: `perl -CSD -ne 'print "$.:$_" if /[\x{2018}\x{2019}]/' file.html` (stock macOS grep has no -P; without `-CSD` perl reads raw bytes and silently misses them).
 11. **Multi-line template comments: `{% comment %}` only** — multi-line `{# ... #}` leaks raw text into the rendered page. Never put a literal endcomment tag inside the comment body.
+12. **AJAX endpoint URL'lari FAQAT `{% url %}` orqali** — interactions (va boshqa app) URL'lari `i18n_patterns` ichida, ya'ni til-prefiksli. JS'da qo'lda yozilgan `/interactions/...` yo'l LocaleMiddleware'da 302 oladi, fetch POST'ni GET'ga aylantiradi → 405, va bu jimgina sinadi (2026-07-10 da webdan komment/reaction yuborish shu sabab buzuq edi). Template'dan data-atributda prefiksli URL uzating.
 
 ### Deploy / production
 12. **`deploy` user owns the git pull** (GitHub SSH key is on this user only). Do not run as root.
