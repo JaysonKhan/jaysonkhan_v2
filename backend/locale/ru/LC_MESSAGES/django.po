@@ -438,3 +438,17 @@ msgstr "Комментарий на модерации — скоро появи
 
 msgid "Your comment has been posted successfully."
 msgstr "Комментарий опубликован!"
+
+# ── Orbit section (2026-07-12) ──
+
+msgid "Orbit · Visitors"
+msgstr "Орбита · Гости"
+
+msgid "Who's in my orbit."
+msgstr "Кто на моей орбите."
+
+msgid "Telegram guests orbiting around Jayson Khan"
+msgstr "Гости из Telegram на орбите вокруг Jayson Khan"
+
+msgid "Signed in with Telegram — each one orbits at their own pace."
+msgstr "Гости, вошедшие через Telegram — каждый вращается со своей скоростью."

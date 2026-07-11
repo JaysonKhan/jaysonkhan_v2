@@ -144,3 +144,15 @@ widget yashirinadi, `about_image` chiqadi.
 *Yaratilgan: 2026-07-10. Kontent-fakt manbalari: resume (2026-07), UzExam PTA-2026
 hujjatlari, EduStats rate card. Yangi katta fakt (foydalanuvchi soni, mukofot va h.k.)
 paydo bo'lsa — seeder raqamlarini yangilang va bu faylning §2 jadvalini ham yangilang.*
+
+## 10. Orbit seksiyasi (kontakt sahifasi, 2026-07-12)
+
+Kontakt sahifasi pastida "quyosh sistemasi": markazda egasining rasmi
+(`static/images/jayson-orbit.jpg`), atrofida saytga Telegram orqali kirgan
+mehmonlar (TelegramEntity, `sources__service='site'`) aylanadi — eng so'nggi
+12 rasmli = sayyora, keyingi 6 = mini-yo'ldosh. Mantiq: `ContactView.get_context_data`
+(presentation/web/views.py) + `static/js/orbit.js` + `site.css` `.orbit-*` bloklari.
+Mehmon ko'paygani sari ro'yxat o'zi yangilanadi; hech narsa sozlash shart emas.
+Egasining markaziy rasmini almashtirish = `jayson-orbit.jpg` faylini yangilash
+(+ xohlasangiz `sf-portrait.png` yulduz-portretini ham qayta generatsiya qiling,
+qarang: docs/starfield-implementation.md §10).

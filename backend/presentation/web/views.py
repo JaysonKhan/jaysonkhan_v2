@@ -328,6 +328,20 @@ class ContactView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # "Quyosh sistemasi": saytga Telegram orqali kirgan mehmonlar.
+        # Rasmlilardan 12 tasi — sayyoralar; keyingi 6 tasi — mini-yo'ldoshlar
+        # (yo'ldosh rasmsiz bo'lsa initial harf ko'rinadi).
+        from telegram.models import TelegramEntity
+
+        site_users = list(
+            TelegramEntity.objects.filter(
+                sources__service='site', entity_type='user',
+            ).order_by('-updated_at').distinct()[:30]
+        )
+        with_photo = [u for u in site_users if u.photo_url]
+        without_photo = [u for u in site_users if not u.photo_url]
+        context['orbit_guests'] = with_photo[:12]
+        context['orbit_moons'] = (with_photo[12:] + without_photo)[:6]
         return context
 
 

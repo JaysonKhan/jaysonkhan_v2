@@ -2129,3 +2129,116 @@
   color: var(--fg-2);
   max-width: 70ch;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ORBIT — "Quyosh sistemasi" mehmonlar seksiyasi (kontakt sahifasi)
+   Markazda egasi (quyosh), mehmonlar sayyoralardek aylanadi (orbit.js).
+   ══════════════════════════════════════════════════════════════ */
+.orbit-stage {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  height: clamp(300px, 52vw, 430px);
+  margin: 8px auto 0;
+  overflow: visible;
+}
+/* Orbita yo'l-chizig'i (ellips) */
+.orbit-guide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scaleY(0.42);
+  pointer-events: none;
+}
+/* Quyosh — egasining rasmi */
+.orbit-sun {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(76px, 15vw, 104px);
+  height: clamp(76px, 15vw, 104px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--accent);
+  z-index: 20;
+  box-shadow:
+    0 0 0 6px var(--accent-soft),
+    0 0 42px 8px var(--accent-soft);
+  animation: orbit-sun-pulse 5.5s ease-in-out infinite;
+}
+.orbit-sun img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@keyframes orbit-sun-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px var(--accent-soft), 0 0 38px 6px var(--accent-soft); }
+  50%      { box-shadow: 0 0 0 9px var(--accent-soft), 0 0 58px 14px var(--accent-soft); }
+}
+/* Sayyora — mehmon avatari */
+.orbit-planet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(38px, 7.2vw, 52px);
+  height: clamp(38px, 7.2vw, 52px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--line-3);
+  background: var(--bg-2);
+  will-change: transform, opacity;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.orbit-planet:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  z-index: 40 !important;
+}
+.orbit-planet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Yo'ldosh — rasmsiz mehmon (initial harf) */
+.orbit-moon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent-2);
+  background: var(--bg-3);
+  border: 1px solid var(--line-2);
+  will-change: transform, opacity;
+  user-select: none;
+}
+.orbit-note {
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 0.85rem;
+  margin-top: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbit-sun { animation: none; }
+}
+.orbit-moon {
+  overflow: hidden;
+}
+.orbit-moon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

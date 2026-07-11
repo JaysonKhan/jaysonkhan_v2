@@ -439,3 +439,17 @@ msgstr "Kommentingiz moderatsiyada — tez orada chiqadi."
 
 msgid "Your comment has been posted successfully."
 msgstr "Komment joylandi!"
+
+# ── Orbit section (2026-07-12) ──
+
+msgid "Orbit · Visitors"
+msgstr "Orbita · Mehmonlar"
+
+msgid "Who's in my orbit."
+msgstr "Mening orbitamdagilar."
+
+msgid "Telegram guests orbiting around Jayson Khan"
+msgstr "Jayson Khan atrofida aylanayotgan Telegram mehmonlar"
+
+msgid "Signed in with Telegram — each one orbits at their own pace."
+msgstr "Saytga Telegram orqali kirganlar — har biri o'z tezligida aylanadi."

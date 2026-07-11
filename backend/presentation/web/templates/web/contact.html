@@ -1,5 +1,5 @@
 {% extends 'web/base.html' %}
-{% load i18n %}
+{% load static i18n %}
 
 {% block title %}{% trans "Contact" %} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ site_settings.contact_page_subtitle }}{% endblock %}
@@ -107,5 +107,43 @@
             </aside>
         </div>
     </section>
+
+    {# ========================== ORBIT — mehmonlar quyosh sistemasi ========================== #}
+    {% if orbit_guests %}
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% translate "Orbit · Visitors" %}</span>
+                    <h2 class="display-md">{% translate "Who's in my orbit." %}</h2>
+                </div>
+            </div>
+            <div class="orbit-stage reveal" id="orbit-stage" role="img"
+                 aria-label="{% translate 'Telegram guests orbiting around Jayson Khan' %}">
+                <div class="orbit-guide" style="width: 42%; aspect-ratio: 1/1;" aria-hidden="true"></div>
+                <div class="orbit-guide" style="width: 65%; aspect-ratio: 1/1;" aria-hidden="true"></div>
+                <div class="orbit-guide" style="width: 88%; aspect-ratio: 1/1;" aria-hidden="true"></div>
+                <div class="orbit-sun">
+                    <img src="{% static 'images/jayson-orbit.jpg' %}" alt="{{ site_settings.site_author }}">
+                </div>
+                {% for g in orbit_guests %}
+                <a class="orbit-planet"
+                   {% if g.username %}href="https://t.me/{{ g.username }}" target="_blank" rel="noopener"{% endif %}
+                   title="{{ g.safe_display_name }}">
+                    <img src="{{ g.photo_url }}" alt="{{ g.safe_display_name }}" loading="lazy" referrerpolicy="no-referrer">
+                </a>
+                {% endfor %}
+                {% for m in orbit_moons %}
+                <span class="orbit-moon" title="{{ m.safe_display_name }}" aria-hidden="true">{% if m.photo_url %}<img src="{{ m.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}{{ m.safe_initial }}{% endif %}</span>
+                {% endfor %}
+            </div>
+            <p class="orbit-note reveal">{% translate "Signed in with Telegram — each one orbits at their own pace." %}</p>
+        </div>
+    </section>
+    {% endif %}
 </main>
+{% endblock %}
+
+{% block extra_js %}
+{% if orbit_guests %}<script src="{% static 'js/orbit.js' %}" defer></script>{% endif %}
 {% endblock %}

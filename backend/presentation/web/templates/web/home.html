@@ -368,5 +368,7 @@
 
 {% block extra_js %}
 {# Xiva yulduz turkumi — scroll-morph canvas foni (docs/starfield-implementation.md) #}
+{# intensity 0.7: yulduzlar matn bilan aralashmasligi uchun -30% yorug'lik (2026-07-12) #}
+<script>window.XIVA_STARFIELD = { intensity: 0.7 };</script>
 <script src="{% static 'js/starfield.js' %}"></script>
 {% endblock %}
