@@ -1,4 +1,21 @@
-{% load static %}
+{% load static i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% translate "just now" as t_just_now %}
+{% translate "yesterday" as t_yesterday %}
+{% translate "View 1 reply" as t_view_reply %}
+{% translate "View {n} replies" as t_view_replies %}
+{% translate "Reply" as t_reply %}
+{% translate "Loading…" as t_loading %}
+{% translate "No comments yet — be the first to share your thoughts." as t_empty %}
+{% translate "Couldn't load comments." as t_load_failed %}
+{% translate "Retry" as t_retry %}
+{% translate "Sign in with Telegram to like." as t_login_like %}
+{% translate "Sign in with Telegram to react." as t_login_react %}
+{% translate "Something went wrong. Please try again." as t_generic_err %}
+{% translate "Network error. Please try again." as t_net_err %}
+{% translate "Signing in…" as t_signing_in %}
+{% translate "Add reaction" as t_add_reaction %}
+{% translate "A comment needs at least 3 characters" as t_min_chars %}
 
 <style>
     /* ══════════════════════════════════════════════════════════════
@@ -30,13 +47,13 @@
     #tg-chat-container {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 16px;
         width: 100%;
         padding: 0;
     }
 
-    /* ── Empty State ── */
-    #comments-empty {
+    /* ── Empty / error state ── */
+    #comments-empty, .comments-error {
         padding: 20px;
         text-align: center;
         color: var(--fg-3);
@@ -44,8 +61,37 @@
         border: 1px dashed var(--line-2);
         font-size: 0.875rem;
     }
+    .comments-error button {
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-left: 10px;
+    }
+    .comments-error button:hover { text-decoration: underline; }
 
     .fetch-sentinel { width:100%; height:1px; opacity:0; pointer-events:none; }
+
+    /* ── Toast (alert() o'rnini bosadi) ── */
+    #ix-toast {
+        position: fixed;
+        left: 50%; bottom: 28px;
+        transform: translateX(-50%) translateY(12px);
+        max-width: min(90vw, 480px);
+        background: var(--fg-0);
+        color: var(--bg-1);
+        border: 1px solid var(--fg-0);
+        padding: 12px 18px;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        z-index: 300;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    #ix-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #ix-toast.is-error { background: var(--danger, #b3402a); border-color: var(--danger, #b3402a); color: #fff; }
 
     /* ── Message Row Layout ── */
     .message-row {
@@ -69,6 +115,13 @@
         border-color: var(--accent);
     }
     .message-avatar img { width:100%; height:100%; object-fit:cover; }
+    .avatar-fallback {
+        width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 10px;
+        font-family: var(--font-display); font-style: italic;
+        color: var(--accent); background: var(--bg-3);
+    }
 
     /* ── Bubble Header (avatar + name inline) ── */
     .bubble-header {
@@ -78,21 +131,15 @@
         margin-bottom: 6px;
     }
 
-    /* ── Content Wrapper ── */
+    /* ── Content Wrapper — uniform card width (ragged fit-content edi) ── */
     .message-content-wrapper {
         display: flex;
         flex-direction: column;
-        max-width: 100%;
+        min-width: 0;
+        width: min(100%, 560px);
     }
-    .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; max-width: min(72vw, 460px); }
-    .message--other .message-content-wrapper { align-items: flex-start; max-width: min(72vw, 460px); }
-    .message-content-wrapper.has-image-wrapper { max-width: min(82vw, 420px); }
-
-    /* When wrapper contains replies, expand so reply thread has room */
-    .message-content-wrapper:has(> .tg-replies-container) {
-        width: 100%;
-        min-width: min(70%, 420px);
-    }
+    .message--own .message-content-wrapper   { align-items: flex-end; margin-left: auto; }
+    .message--other .message-content-wrapper { align-items: flex-start; }
 
     /* ── Bubble Base ── */
     .tg-bubble {
@@ -100,20 +147,18 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
-        padding: 12px 16px 22px;
+        padding: 12px 16px 24px;
         position: relative;
         word-break: break-word;
         overflow-wrap: anywhere;
         line-height: 1.5;
         isolation: isolate;
-        transition: box-shadow 0.2s ease;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
-    /* Compact: qisqa xabar — timestamp bottom-right */
-    .tg-bubble.is-compact { padding: 10px 14px 22px; }
-
-    /* Rasmli bubble: kenglik rasmga qarab */
-    .tg-bubble.has-image  { padding: 6px 6px 18px; max-width: min(82vw, 420px); }
+    /* Rasmli bubble */
+    .tg-bubble.has-image { padding: 6px 6px 20px; }
+    .tg-bubble.has-image .bubble-header { padding: 6px 10px 0; }
 
     /* ── Incoming Bubble ── */
     .message--other .tg-bubble {
@@ -133,14 +178,10 @@
         border-radius: 4px;
         color: var(--bg-1);
     }
-    .message--own .tg-bubble:hover {
-        background: var(--accent);
-        border-color: var(--accent);
-    }
 
     /* ── Author Name (inline with avatar) ── */
     .tg-author-name {
-        display: inline;
+        display: inline-block;
         font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.16em;
@@ -150,9 +191,11 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        line-height: 1;
+        max-width: 100%;
+        line-height: 1.2;
     }
-    .message--own .tg-author-name { color: rgba(243,239,230,0.8); }
+    .message--own .tg-author-name { color: rgba(243,239,230,0.85); }
+    .tg-author-name.is-owner { color: var(--accent-2); }
 
     /* ── Bubble Text ── */
     .tg-bubble-text {
@@ -163,40 +206,39 @@
         word-break: break-word;
         color: inherit;
     }
+    .tg-bubble.has-image .tg-bubble-text { padding: 0 10px; }
 
     /* ── Timestamp inline ── */
     .tg-meta-inline {
         position: absolute;
-        right: 10px; bottom: 5px;
+        right: 10px; bottom: 6px;
         display: inline-flex; align-items: center; gap: 3px;
         font-size: 0.62rem;
         color: var(--time-in);
         user-select: none; line-height: 1; letter-spacing: 0.01em;
     }
     .message--own .tg-meta-inline { color: var(--time-out); }
-    /* Compact bubbles: timestamp always stays at bottom-right (absolute) */
-    .tg-meta-inline .fa-check-double { font-size: 0.58rem; }
 
     /* ── Image in Bubble ── */
     .tg-comment-image {
         display: block;
-        border-radius: 10px;
+        border-radius: 3px;
         margin-top: 6px;
         margin-bottom: 4px;
         max-width: 100%;
         max-height: min(42vh, 300px);
         object-fit: cover;
         cursor: zoom-in;
-        border: 1px solid rgba(255,255,255,0.1);
-        transition: opacity 0.2s ease, transform 0.2s ease;
+        border: 1px solid var(--line-1);
+        transition: opacity 0.2s ease;
     }
-    .tg-comment-image:hover { opacity: 0.9; transform: scale(1.01); }
+    .tg-comment-image:hover { opacity: 0.9; }
 
     /* ── Reaction Bar ── */
     .tg-reaction-bar {
-        display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;
-        width: fit-content;
-        max-width: min(72vw, 460px);
+        display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+        margin-top: 8px;
+        width: 100%;
     }
     .tg-reaction-bar:empty { display:none; margin-top:0; }
     .message--own .tg-reaction-bar { justify-content: flex-end; }
@@ -211,6 +253,7 @@
         letter-spacing: 0.06em;
         line-height: 1.3;
         color: var(--fg-2);
+        cursor: pointer;
         transition: all 0.18s ease;
     }
     .tg-reaction-btn:hover {
@@ -230,7 +273,8 @@
         position: absolute;
         pointer-events: none;
     }
-    .comment-wrapper:hover .tg-reaction-trigger {
+    .comment-wrapper:hover .tg-reaction-trigger,
+    .comment-wrapper:focus-within .tg-reaction-trigger {
         opacity: 1;
         position: static;
         pointer-events: auto;
@@ -250,59 +294,33 @@
         font-size: 1.2rem; cursor: pointer; padding: 5px;
         border-radius: 4px; transition: background 0.15s, transform 0.15s;
         text-align: center; display: flex; align-items: center; justify-content: center;
+        border: 0; background: transparent;
     }
     .tg-emoji-item:hover { background: var(--bg-3); transform: scale(1.15); }
 
-    /* ── Reply Thread Lines (Slack-style bordered) ── */
+    /* ── Reply Thread — avatar ostidan tushadigan chiziq ── */
     .tg-replies-container {
-        margin-top: 12px;
-        width: 100%;
+        margin-top: 10px;
+        margin-left: 13px;
+        width: calc(100% - 13px);
         display: flex;
         flex-direction: column;
         gap: 10px;
         padding-left: 20px;
         border-left: 2px solid var(--reply-line);
-        position: relative;
-    }
-    /* Decorative dot at the top of the thread line */
-    .tg-replies-container::before {
-        content: '';
-        position: absolute;
-        left: -4px; top: 0;
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        background: var(--action-color);
     }
 
     /* ── Nested reply rows: uniform with parent ── */
     .tg-replies-container .message-row { gap: 0; }
-    .tg-replies-container .message-avatar {
-        width: 26px; height: 26px;
-    }
-    .tg-replies-container .message-content-wrapper {
-        max-width: 100%;
-    }
-    .tg-replies-container .tg-bubble {
-        max-width: 100%;
-        padding: 12px 16px 22px;
-    }
-    .tg-replies-container .tg-bubble.is-compact { padding: 10px 14px 22px; }
+    .tg-replies-container .message-avatar { width: 26px; height: 26px; }
+    .tg-replies-container .message-content-wrapper { width: 100%; }
+    .tg-replies-container .tg-bubble { padding: 12px 16px 24px; }
     .tg-replies-container .tg-bubble-text { font-size: 0.9rem; }
-    .tg-replies-container .tg-author-name { font-size: 0.72rem; }
     .tg-replies-container .bubble-header { gap: 7px; margin-bottom: 5px; }
-    /* Reply images: same size as parent */
-    .tg-replies-container .tg-comment-image {
-        max-height: min(42vh, 300px);
-        max-width: 100%;
-    }
-    .tg-replies-container .tg-bubble.has-image {
-        padding: 6px 6px 18px;
-        max-width: min(82vw, 420px);
-    }
+    .tg-replies-container .tg-comment-image { max-height: min(42vh, 300px); max-width: 100%; }
 
-    /* ── Deeper nesting (depth ≥ 2): hide avatar, tighter ── */
-    .tg-replies-container .tg-replies-container .message-avatar { display: none; }
-    .tg-replies-container .tg-replies-container { padding-left: 12px; }
+    /* ── Deeper nesting (depth ≥ 2): tighter ── */
+    .tg-replies-container .tg-replies-container { padding-left: 12px; margin-left: 12px; width: calc(100% - 12px); }
 
     .tg-view-replies {
         display: inline-flex; align-items: center; gap: 6px;
@@ -311,6 +329,7 @@
         font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
         font-weight: 500;
         color: var(--action-color);
+        cursor: pointer;
         transition: color 0.2s ease;
     }
     .tg-view-replies:hover { color: var(--fg-0); text-decoration: underline; }
@@ -320,20 +339,24 @@
         font-family: var(--font-mono);
         font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
         font-weight: 500;
+        border: 0; background: transparent; padding: 3px 0;
         color: var(--action-color); cursor: pointer;
-        transition: color 0.2s ease;
+        opacity: 0;
+        transition: color 0.2s ease, opacity 0.2s ease;
     }
+    .comment-wrapper:hover .tg-reply-link,
+    .comment-wrapper:focus-within .tg-reply-link { opacity: 1; }
     .tg-reply-link:hover { color: var(--fg-0); text-decoration: underline; }
 
-    .tg-action-link {
-        font-family: var(--font-mono);
-        font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-        color: var(--fg-3);
-        font-weight: 500; opacity: 0;
-        transition: opacity 0.2s, color 0.2s; cursor: pointer; margin-right: 8px;
+    /* Touch qurilmalar: hover yo'q — boshqaruvlar doim ko'rinadi */
+    @media (hover: none) {
+        .tg-reaction-trigger {
+            opacity: 0.7;
+            position: static;
+            pointer-events: auto;
+        }
+        .tg-reply-link { opacity: 0.85; }
     }
-    .comment-wrapper:hover .tg-action-link { opacity: 0.8; }
-    .tg-action-link:hover { opacity: 1 !important; color: var(--accent); }
 
     /* ── Compose Shell ── */
     #comment-text {
@@ -443,26 +466,17 @@
     /* ── Mobile ── */
     @media (max-width: 640px) {
         .interactions-panel { padding-left:10px !important; padding-right:10px !important; }
-        #tg-chat-container  { gap: 10px; }
-        .message-row        { gap: 0; }
-        .message--own .message-content-wrapper,
-        .message--other .message-content-wrapper { max-width: 85vw; }
-        .message-content-wrapper.has-image-wrapper { max-width: 82vw; }
-        .tg-bubble          { padding: 10px 12px 18px; }
-        .tg-reaction-bar    { max-width: 85vw; gap: 4px; margin-top: 6px; }
-        .tg-bubble.is-compact { padding: 8px 12px 20px; }
+        #tg-chat-container  { gap: 12px; }
+        .tg-bubble          { padding: 10px 12px 22px; }
         .message-avatar     { width:24px; height:24px; }
-        .tg-meta-inline     { right:8px; bottom:4px; font-size:0.59rem; }
+        .tg-meta-inline     { right:8px; bottom:5px; font-size:0.59rem; }
         .tg-bubble-text     { font-size:0.875rem; }
-        .tg-author-name     { font-size:0.67rem; }
+        .tg-reaction-bar    { gap: 4px; margin-top: 6px; }
         .tg-emoji-menu      { right:0; left:auto; }
         .bubble-header      { gap: 6px; margin-bottom: 5px; }
-        /* Reply tweaks — uniform with parent */
+        .tg-replies-container { padding-left: 14px; margin-left: 11px; width: calc(100% - 11px); gap: 8px; margin-top: 8px; }
         .tg-replies-container .message-avatar { width:22px; height:22px; }
-        .tg-replies-container { padding-left: 14px; gap: 8px; margin-top: 10px; }
-        .tg-replies-container .tg-bubble { padding: 10px 12px 18px; }
-        .tg-replies-container .tg-bubble.is-compact { padding: 8px 12px 18px; }
-        .tg-replies-container .tg-bubble-text { font-size: 0.875rem; }
+        .tg-replies-container .tg-bubble { padding: 10px 12px 22px; }
     }
 </style>
 
@@ -486,13 +500,9 @@
     .like-btn.liked {
         background: var(--accent); color: var(--bg-1); border-color: var(--accent);
     }
-    .like-btn.disabled {
-        cursor: default;
-        opacity: 0.6;
-    }
     .like-btn .like-count { font-weight: 600; }
 
-    /* inline-svg spinner (Tailwind animate-spin may be purged by JIT) */
+    /* inline-svg spinner */
     .ix-spin { animation: ix-spin 0.7s linear infinite; transform-origin: center; }
     @keyframes ix-spin { to { transform: rotate(360deg); } }
 
@@ -536,15 +546,22 @@
     .reply-context {
         background: var(--bg-2);
         border: 1px solid var(--line-1);
+        border-left: 2px solid var(--accent);
         padding: 12px 14px;
     }
+    .reply-context.show { display: flex; }
     .reply-context .reply-author { color: var(--accent); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
     .reply-context .reply-preview { color: var(--fg-3); font-size: 13px; }
 </style>
 
-<section class="interactions-panel max-w-4xl mx-auto px-6 mt-8 pt-6" style="border-top: 1px solid var(--line-1);" id="comments-section" data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}">
+{# data-list-url / data-react-tpl: i18n_patterns prefiksli URLlar ({% url %} dan). #}
+{# Qo'lda yozilgan prefikssiz "/interactions/..." yo'llar 302 → GET bo'lib POSTlarni sindirardi. #}
+<section class="interactions-panel max-w-4xl mx-auto px-6 mt-8 pt-6" style="border-top: 1px solid var(--line-1);" id="comments-section"
+    data-app="{{ app_label }}" data-model="{{ model_name }}" data-oid="{{ object_id }}"
+    data-list-url="{% url 'interactions:list_comments' %}"
+    data-react-tpl="{% url 'interactions:toggle_comment_reaction' 0 %}">
 
-    {# ── Like Header ─────────────────────────────────────────────────────────── #}
+    {# ── Like Header ── #}
     <div class="flex items-center gap-4 mb-4">
         {% if tg_profile %}
         <button id="like-btn" data-url="{% url 'interactions:toggle_like' app_label model_name object_id %}"
@@ -552,20 +569,20 @@
             class="like-btn{% if user_liked %} liked{% endif %}">
             <svg id="like-icon" width="15" height="15" viewBox="0 0 24 24" fill="{% if user_liked %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"/></svg>
             <span id="like-count" class="like-count">{{ like_count }}</span>
-            <span style="opacity: 0.7;">likes</span>
+            <span style="opacity: 0.7;">{% translate "likes" %}</span>
         </button>
         {% else %}
-        <div class="like-btn disabled">
+        <button type="button" class="like-btn" id="like-btn-anon" title="{% translate 'Sign in with Telegram to like' %}">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"/></svg>
             <span class="like-count">{{ like_count }}</span>
-            <span style="opacity: 0.7;">likes</span>
-        </div>
+            <span style="opacity: 0.7;">{% translate "likes" %}</span>
+        </button>
         {% endif %}
     </div>
 
     <div class="flex items-center justify-between mb-2">
         <h3 class="comments-h3">
-            Comments
+            {% translate "Comments" %}
             <span id="comments-counter" class="comments-counter">0</span>
         </h3>
 
@@ -573,19 +590,19 @@
         <div id="sort-wrap" class="relative">
             <button id="sort-toggle" type="button" class="sort-toggle inline-flex items-center gap-1"
                 onclick="toggleSortDropdown(event)">
-                <span id="active-sort">Top Comments</span>
+                <span id="active-sort">{% translate "Top comments" %}</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6;" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div id="sort-dropdown" class="sort-dropdown hidden absolute top-full mt-2 right-0 py-2 w-44 z-50">
-                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('top', 'Top Comments', event)">Top Comments</button>
-                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('newest', 'Newest First', event)">Newest First</button>
+                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('top', this, event)">{% translate "Top comments" %}</button>
+                <button type="button" class="w-full text-left px-4 py-1.5" onclick="selectSort('newest', this, event)">{% translate "Newest first" %}</button>
             </div>
-            <select id="sort-selector" class="hidden"><option value="top"></option><option value="newest"></option></select>
+            <select id="sort-selector" class="hidden" aria-hidden="true"><option value="top"></option><option value="newest"></option></select>
         </div>
     </div>
     <div class="interactions-divider mb-6"></div>
 
-    {# ── Composer Always At Top Like YouTube ── #}
+    {# ── Composer (always at top, YouTube-style) ── #}
     {% if tg_profile %}
     <div class="mb-8" id="comment-form-container">
         <!-- Reply Context -->
@@ -596,7 +613,7 @@
             </div>
             <button onclick="clearReply()"
                     class="hover:opacity-100 transition" style="color: var(--fg-3); opacity: 0.7;"
-                    aria-label="Cancel reply">
+                    aria-label="{% translate 'Cancel reply' %}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
@@ -604,7 +621,7 @@
         <!-- Image Preview -->
         <div id="image-preview-container" class="hidden relative inline-block mb-3 p-1 overflow-hidden" style="background: var(--bg-2); border: 1px solid var(--line-2);">
             <img id="image-preview" src="" class="max-h-40 object-contain" alt="">
-            <button onclick="clearImage()" class="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition" style="background: var(--fg-0); color: var(--bg-1);" aria-label="Remove image">
+            <button onclick="clearImage()" class="absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition" style="background: var(--fg-0); color: var(--bg-1);" aria-label="{% translate 'Remove image' %}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
         </div>
@@ -616,7 +633,7 @@
                 <!-- Attachment -->
                 <label for="image-upload"
                        class="tg-compose-attach"
-                       aria-label="Attach file">
+                       aria-label="{% translate 'Attach image' %}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <input type="file" id="image-upload" class="hidden" accept="image/*" onchange="previewImage(this)">
                 </label>
@@ -626,10 +643,10 @@
                           rows="1"
                           wrap="soft"
                           spellcheck="false"
-                          placeholder="Message"
+                          placeholder="{% translate 'Write a comment…' %}"
                           class="bg-transparent border-none text-[16px] resize-none outline-none py-0 focus:ring-0"
                           style="color: var(--fg-0); font-family: var(--font-sans);"
-                          aria-label="Write a comment"
+                          aria-label="{% translate 'Write a comment…' %}"
                           oninput="onCommentInput(this)"></textarea>
 
                 <!-- Send -->
@@ -637,7 +654,7 @@
                         disabled
                         data-url="{% url 'interactions:add_comment' app_label model_name object_id %}"
                         class="tg-compose-send"
-                        aria-label="Send comment">
+                        aria-label="{% translate 'Send comment' %}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
                 </button>
             </div>
@@ -647,12 +664,12 @@
         <div class="tg-compose-meta">
             <span id="char-counter" class="whitespace-nowrap" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3);">0 / 1000</span>
             <div style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--fg-3); text-transform: uppercase;">
-                Logged in as
-                <span style="color: var(--fg-0); font-weight: 500;">{{ tg_profile.display_name }}</span>
+                {% translate "Signed in as" %}
+                <span style="color: var(--fg-0); font-weight: 500;">{{ tg_profile.safe_display_name }}</span>
                 <form method="post" action="{% url 'interactions:telegram_logout' %}" class="inline">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit" style="color: var(--accent); font-weight: 500;">Logout</button>
+                    <button type="submit" style="color: var(--accent); font-weight: 500;">{% translate "Log out" %}</button>
                 </form>
             </div>
         </div>
@@ -661,43 +678,43 @@
         <p id="comment-error" class="hidden mt-1 px-1" style="font-size: 11px; color: var(--danger);"></p>
     </div>
     {% else %}
-    <div class="tg-login-card">
+    <div class="tg-login-card" id="tg-login-card">
         <div class="tg-login-badge">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212-.07-.062-.174-.041-.249-.024-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
         </div>
-        <h4 class="tg-login-title">Join the Discussion</h4>
-        <p class="tg-login-subtitle">Komment qoldirish uchun Telegram orqali kiring.</p>
+        <h4 class="tg-login-title">{% translate "Join the discussion" %}</h4>
+        <p class="tg-login-subtitle">{% translate "Sign in with Telegram to leave a comment." %}</p>
         <div class="tg-widget-wrap" id="tg-widget-wrap">
             {% if telegram_bot_username %}
             {# onTelegramAuth must be a named global function before the widget script loads #}
             <script>
             window.onTelegramAuth = function(user) {
-                var btn = document.getElementById('tg-login-btn-wrap');
-                if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--accent);"><svg class="ix-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:4px;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>Logging in…</span>';
+                var btn = document.getElementById("tg-login-btn-wrap");
+                if (btn) btn.innerHTML = "<span class=\"text-sm\" style=\"color: var(--accent);\"><svg class=\"ix-spin\" width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" style=\"display:inline-block;vertical-align:-2px;margin-right:4px;\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\" stroke-linecap=\"round\"/></svg>{{ t_signing_in|escapejs }}</span>";
 
                 // Convert all values to strings (widget may send integers for id/auth_date)
                 var payload = {};
                 for (var k in user) { payload[k] = String(user[k]); }
 
                 fetch("{% url 'interactions:telegram_login' %}", {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json", "Accept-Language": document.documentElement.lang || "xo" },
                     body: JSON.stringify({ telegram_payload: payload })
                 })
                 .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
                 .then(function(res) {
-                    if (res.ok && res.data.status === 'ok') {
+                    if (res.ok && res.data.status === "ok") {
                         window.location.reload();
                     } else {
-                        var msg = (res.data && res.data.error) ? res.data.error : 'Unknown error';
-                        if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:4px;" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>' + msg + '</span>';
-                        console.error('[TelegramAuth] Failed:', msg);
+                        var msg = (res.data && res.data.error) ? res.data.error : "{{ t_generic_err|escapejs }}";
+                        if (btn) btn.textContent = msg;
+                        console.error("[TelegramAuth] Failed:", msg);
                     }
                 })
                 .catch(function(err) {
-                    if (btn) btn.innerHTML = '<span class="text-sm" style="color: var(--danger);">Network error. Please try again.</span>';
-                    console.error('[TelegramAuth] Network error:', err);
+                    if (btn) btn.textContent = "{{ t_net_err|escapejs }}";
+                    console.error("[TelegramAuth] Network error:", err);
                 });
             };
             </script>
@@ -705,13 +722,13 @@
                 <script async src="https://telegram.org/js/telegram-widget.js?22"
                     data-telegram-login="{{ telegram_bot_username }}"
                     data-size="large"
-                    data-lang="en"
+                    data-lang="{% if LANGUAGE_CODE == 'ru' %}ru{% elif LANGUAGE_CODE == 'en' %}en{% else %}uz{% endif %}"
                     data-onauth="onTelegramAuth(user)"
                     data-request-access="write"
                     data-radius="12"></script>
             </div>
             {% else %}
-            <span class="text-sm" style="color: var(--fg-3);">Telegram login hozircha mavjud emas.</span>
+            <span class="text-sm" style="color: var(--fg-3);">{% translate "Telegram sign-in is temporarily unavailable." %}</span>
             {% endif %}
         </div>
     </div>
@@ -720,6 +737,7 @@
     {# ── Render Area ── #}
     <div id="tg-chat-container"></div>
     <div id="loading-spinner" class="text-center py-6 hidden" style="color: var(--fg-3);"><svg class="ix-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg></div>
+    <div id="ix-toast" role="status" aria-live="polite"></div>
 </section>
 
 <script>
@@ -728,10 +746,48 @@
     let isFetching = false;
     let parentCommentId = null;
     let selectedFile = null;
-    let reactionLocks = {}; 
+    let reactionLocks = {};
 
-    const chatContainer = document.getElementById('tg-chat-container');
-    const panel = document.getElementById('comments-section');
+    const chatContainer = document.getElementById("tg-chat-container");
+    const panel = document.getElementById("comments-section");
+    const LIST_URL = panel.dataset.listUrl;      // /<lang>/interactions/comments/
+    const REACT_TPL = panel.dataset.reactTpl;    // /<lang>/interactions/comment/0/react/
+    const PAGE_LANG = document.documentElement.lang || "xo";
+    // Intl month names: xo (Khorezm dialect) is not an ISO locale — use uz forms
+    const INTL_LANG = PAGE_LANG === "xo" ? "uz" : PAGE_LANG;
+
+    const I18N = {
+        justNow: "{{ t_just_now|escapejs }}",
+        minAgo: "{n}m",
+        hrAgo: "{n}h",
+        dayAgo: "{n}d",
+        weekAgo: "{n}w",
+        yesterday: "{{ t_yesterday|escapejs }}",
+        viewReply: "{{ t_view_reply|escapejs }}",
+        viewReplies: "{{ t_view_replies|escapejs }}",
+        reply: "{{ t_reply|escapejs }}",
+        loading: "{{ t_loading|escapejs }}",
+        empty: "{{ t_empty|escapejs }}",
+        loadFailed: "{{ t_load_failed|escapejs }}",
+        retry: "{{ t_retry|escapejs }}",
+        loginToLike: "{{ t_login_like|escapejs }}",
+        loginToReact: "{{ t_login_react|escapejs }}",
+        genericError: "{{ t_generic_err|escapejs }}",
+        networkError: "{{ t_net_err|escapejs }}"
+    };
+
+    const REACTION_EMOJIS = ["👍", "❤", "🔥", "😂", "👏", "😱", "👎", "⚡"];
+
+    // ── Toast (alert o'rnida) ──
+    let toastTimer = null;
+    function showToast(message, isError = false) {
+        const el = document.getElementById("ix-toast");
+        el.textContent = message;
+        el.classList.toggle("is-error", isError);
+        el.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove("show"), 4000);
+    }
 
     // Init Logic & Intersection Observer limit
     const observer = new IntersectionObserver((entries) => {
@@ -740,44 +796,54 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         fetchComments();
-        
+
+        // Anonim like tugmasi: login kartaga olib boradi
+        const likeAnon = document.getElementById("like-btn-anon");
+        if (likeAnon) {
+            likeAnon.addEventListener("click", () => {
+                const card = document.getElementById("tg-login-card");
+                if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+                showToast(I18N.loginToLike);
+            });
+        }
+
         // Setup Likes
-        const likeBtn = document.getElementById('like-btn');
+        const likeBtn = document.getElementById("like-btn");
         if (likeBtn) {
-            likeBtn.addEventListener('click', async function() {
+            likeBtn.addEventListener("click", async function() {
                 const url = this.dataset.url;
-                const isLiked = this.dataset.liked === 'true';
                 try {
                     const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                        method: "POST",
+                        headers: { "Accept-Language": PAGE_LANG }
                     });
                     if (resp.status === 401) {
-                        alert("Please login with Telegram to like.");
+                        showToast(I18N.loginToLike);
                         return;
                     }
                     const data = await resp.json();
-                    
+
                     this.dataset.liked = data.liked;
-                    document.getElementById('like-count').innerText = data.count;
-                    const icon = document.getElementById('like-icon');
-                    
+                    document.getElementById("like-count").innerText = data.count;
+                    const icon = document.getElementById("like-icon");
+
                     if (data.liked) {
-                        this.classList.add('liked');
-                        icon.setAttribute('fill', 'currentColor');
+                        this.classList.add("liked");
+                        icon.setAttribute("fill", "currentColor");
                     } else {
-                        this.classList.remove('liked');
-                        icon.setAttribute('fill', 'none');
+                        this.classList.remove("liked");
+                        icon.setAttribute("fill", "none");
                     }
                 } catch (e) {
                     console.error("Like failed", e);
+                    showToast(I18N.networkError, true);
                 }
             });
         }
     });
 
     function resetAndFetchComments() {
-        chatContainer.innerHTML = '';
+        chatContainer.innerHTML = "";
         currentPage = 1;
         hasNext = true;
         fetchComments();
@@ -786,146 +852,259 @@
     async function fetchComments() {
         if (isFetching || !hasNext) return;
         isFetching = true;
-        document.getElementById('loading-spinner').classList.remove('hidden');
+        document.getElementById("loading-spinner").classList.remove("hidden");
 
         try {
             const qs = new URLSearchParams({
                 app_label: panel.dataset.app,
                 model: panel.dataset.model,
                 object_id: panel.dataset.oid,
-                sort: document.getElementById('sort-selector').value,
+                sort: document.getElementById("sort-selector").value,
                 page: currentPage
             });
-            const req = await fetch(`/interactions/comments/?${qs.toString()}`);
+            const req = await fetch(`${LIST_URL}?${qs.toString()}`, { headers: { "Accept-Language": PAGE_LANG } });
+            if (!req.ok) throw new Error(`HTTP ${req.status}`);
             const res = await req.json();
 
-            document.getElementById('comments-counter').textContent = res.total_count || 0;
+            document.getElementById("comments-counter").textContent = res.total_count || 0;
             const comments = Array.isArray(res.comments) ? res.comments : [];
 
             if (currentPage === 1 && comments.length === 0) {
-                const canCompose = !!document.getElementById('submit-comment');
-                chatContainer.innerHTML = canCompose
-                    ? '<div id="comments-empty">Hozircha komment yo‘q. Birinchi bo‘lib fikr qoldiring.</div>'
-                    : '';
+                const canCompose = !!document.getElementById("submit-comment");
+                chatContainer.replaceChildren();
+                if (canCompose) {
+                    const empty = document.createElement("div");
+                    empty.id = "comments-empty";
+                    empty.textContent = I18N.empty;
+                    chatContainer.appendChild(empty);
+                }
                 hasNext = false;
                 return;
             }
 
-            const emptyState = document.getElementById('comments-empty');
+            const emptyState = document.getElementById("comments-empty");
             if (emptyState) emptyState.remove();
 
             comments.forEach(c => chatContainer.appendChild(createCommentDOM(c)));
 
             hasNext = res.has_next;
-            chatContainer.querySelectorAll('.fetch-sentinel').forEach((el) => {
+            chatContainer.querySelectorAll(".fetch-sentinel").forEach((el) => {
                 observer.unobserve(el);
                 el.remove();
             });
             if (hasNext) {
                 currentPage++;
-                const sentinel = document.createElement('div');
-                sentinel.className = 'fetch-sentinel';
+                const sentinel = document.createElement("div");
+                sentinel.className = "fetch-sentinel";
                 chatContainer.appendChild(sentinel);
                 observer.observe(sentinel);
             }
+        } catch (err) {
+            console.error("Comments fetch failed", err);
+            hasNext = false; // scroll-loop to'xtaydi; Retry qayta yoqadi
+            const box = document.createElement("div");
+            box.className = "comments-error";
+            box.append(document.createTextNode(I18N.loadFailed));
+            const retry = document.createElement("button");
+            retry.type = "button";
+            retry.textContent = I18N.retry;
+            retry.addEventListener("click", () => { box.remove(); hasNext = true; fetchComments(); });
+            box.appendChild(retry);
+            chatContainer.appendChild(box);
         } finally {
             isFetching = false;
-            document.getElementById('loading-spinner').classList.add('hidden');
+            document.getElementById("loading-spinner").classList.add("hidden");
         }
     }
 
     async function loadReplies(parentId, btnElem, currentDepth = 0) {
-        btnElem.innerHTML = `<svg class="ix-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg> Loading...`;
+        btnElem.textContent = I18N.loading;
         try {
-            const req = await fetch(`/interactions/comments/${parentId}/replies/?page=1`);
+            const req = await fetch(`${LIST_URL}${parentId}/replies/?page=1`, { headers: { "Accept-Language": PAGE_LANG } });
+            if (!req.ok) throw new Error(`HTTP ${req.status}`);
             const res = await req.json();
             const container = document.getElementById(`replies-${parentId}`);
-            container.innerHTML = '';
+            container.replaceChildren();
             res.replies.forEach(c => container.appendChild(createCommentDOM(c, currentDepth + 1)));
-            btnElem.style.display = 'none'; // hide once loaded
-        } catch(e) { console.error('Failed fetching replies'); }
+        } catch(e) {
+            console.error("Failed fetching replies", e);
+            btnElem.textContent = I18N.retry;
+        }
     }
 
-    // Generates DOM dynamically keeping template purity
+    // ── Icon helpers (static markup only — never receives user data) ──
+    function svgIcon(pathMarkup, size = 13) {
+        const span = document.createElement("span");
+        span.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;" aria-hidden="true">${pathMarkup}</svg>`;
+        return span.firstChild;
+    }
+
+    // ── Comment DOM — user data goes through textContent ONLY (XSS-safe) ──
     function createCommentDOM(comment, depth = 0) {
-        const row = document.createElement('div');
-        row.className = `message-row comment-wrapper group ${comment.is_own ? 'message--own' : 'message--other'}`;
+        const row = document.createElement("div");
+        row.className = `message-row comment-wrapper group ${comment.is_own ? "message--own" : "message--other"}`;
         row.id = `comment-${comment.id}`;
 
-        const commentText = (comment.text || '').toString();
-        const compactLen = commentText.replace(/\s+/g, ' ').trim().length;
-        const isCompactBubble = !comment.image_url && !/[\r\n]/.test(commentText) && compactLen > 0 && compactLen <= 30;
+        const commentText = (comment.text || "").toString();
 
-        const avatarInner = comment.author.photo_url
-            ? `<img src="${comment.author.photo_url}" alt="">`
-            : `<div class="w-full h-full flex items-center justify-center text-[10px]" style="font-family: var(--font-display); font-style: italic; color: var(--accent); background: var(--bg-3);">${comment.author.initial}</div>`;
+        const wrapper = document.createElement("div");
+        wrapper.className = "message-content-wrapper min-w-0";
 
-        const imgHtml = comment.image_url ? `<img src="${comment.image_url}" class="tg-comment-image" onclick="window.open(this.src)">` : '';
+        // ── Bubble ──
+        const bubble = document.createElement("div");
+        bubble.className = `tg-bubble ${comment.image_url ? "has-image" : ""}`;
 
-        const repliesLabel = comment.reply_count === 1 ? 'reply' : 'replies';
-        const repliesHtml = comment.reply_count > 0 ? `
-            <div class="tg-replies-container" id="replies-${comment.id}">
-                <button onclick="loadReplies(${comment.id}, this, ${depth})" class="tg-view-replies">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;" aria-hidden="true"><path d="m9 17-5-5 5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> View ${comment.reply_count} ${repliesLabel}
-                </button>
-            </div>` : '';
+        const header = document.createElement("div");
+        header.className = "bubble-header";
 
-        const emojisHtml = Object.entries(comment.reaction_counts).map(([emj, cnt]) => `
-            <button class="tg-reaction-btn ${comment.user_reaction === emj ? 'active' : ''}" onclick="toggleReaction(${comment.id}, '${emj}', this)">
-                ${emj} <span class="count">${cnt}</span>
-            </button>`).join('');
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        if (comment.author.photo_url) {
+            const img = document.createElement("img");
+            img.src = comment.author.photo_url;
+            img.alt = "";
+            img.loading = "lazy";
+            avatar.appendChild(img);
+        } else {
+            const fb = document.createElement("div");
+            fb.className = "avatar-fallback";
+            fb.textContent = comment.author.initial || "U";
+            avatar.appendChild(fb);
+        }
 
-        const authorNameSafe = comment.author.display_name.replace(/'/g, "\\'");
-        const commentSnippetSafe = commentText.slice(0, 50).replace(/'/g, "\\'");
+        const nameEl = document.createElement("span");
+        nameEl.className = "tg-author-name" + (comment.is_own ? " is-owner" : "");
+        nameEl.textContent = comment.author.display_name;
+        nameEl.title = comment.author.display_name;
 
-        const authorLabel = comment.is_own
-            ? `<span class="tg-author-name" style="color:#6ee7b7;">me</span>`
-            : `<span class="tg-author-name">${comment.author.display_name}</span>`;
+        header.append(avatar, nameEl);
+        bubble.appendChild(header);
 
-        row.innerHTML = `
-            <div class="message-content-wrapper min-w-0 ${comment.image_url ? 'has-image-wrapper' : ''}">
-                <div class="tg-bubble ${comment.image_url ? 'has-image' : ''} ${isCompactBubble ? 'is-compact' : ''}">
-                    <div class="bubble-header">
-                        <div class="message-avatar">${avatarInner}</div>
-                        ${authorLabel}
-                    </div>
-                    ${imgHtml}
-                    <div class="tg-bubble-text">${commentText}<span class="tg-meta-inline">${comment.is_reviewed ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-1px;" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7 7-1.5-1.5"/></svg>` : ''}${timeAgo(comment.created_at)}</span></div>
-                </div>
+        if (comment.image_url) {
+            const img = document.createElement("img");
+            img.className = "tg-comment-image";
+            img.src = comment.image_url;
+            img.alt = "";
+            img.loading = "lazy";
+            img.addEventListener("click", () => window.open(comment.image_url));
+            bubble.appendChild(img);
+        }
 
-                <div class="tg-reaction-bar" id="reactions-${comment.id}">
-                    ${emojisHtml}
-                    ${document.getElementById('submit-comment') ? `
-                        <div class="relative emoji-menu-wrapper">
-                            <button class="tg-reaction-btn tg-reaction-trigger" onclick="toggleEmojiMenu(${comment.id}, event)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
-                            <div class="tg-emoji-menu" id="emoji-menu-${comment.id}" style="${comment.is_own ? 'right: 0; left: auto;' : 'left: 0; right: auto;'}">
-                                ${['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'].map(e => `<div class="tg-emoji-item" onclick="toggleReaction(${comment.id}, '${e}', this)">${e}</div>`).join('')}
-                            </div>
-                        </div>
-                        ${depth < 1 ? `<span class="tg-reply-link" onclick="setReply(${comment.id}, '${authorNameSafe}', '${commentSnippetSafe}')">Reply</span>` : ''}
-                    ` : ''}
-                </div>
-                ${repliesHtml}
-            </div>
-        `;
+        const textEl = document.createElement("div");
+        textEl.className = "tg-bubble-text";
+        textEl.textContent = commentText;
+
+        const meta = document.createElement("span");
+        meta.className = "tg-meta-inline";
+        if (comment.is_reviewed) {
+            meta.appendChild(svgIcon("<path d=\"M18 6 7 17l-5-5\"/><path d=\"m22 10-7 7-1.5-1.5\"/>", 12));
+        }
+        meta.appendChild(document.createTextNode(timeAgo(comment.created_at)));
+        textEl.appendChild(meta);
+        bubble.appendChild(textEl);
+        wrapper.appendChild(bubble);
+
+        // ── Reaction bar ──
+        const bar = document.createElement("div");
+        bar.className = "tg-reaction-bar";
+        bar.id = `reactions-${comment.id}`;
+
+        Object.entries(comment.reaction_counts || {}).forEach(([emj, cnt]) => {
+            bar.appendChild(reactionChip(comment.id, emj, cnt, comment.user_reaction === emj));
+        });
+
+        const canCompose = !!document.getElementById("submit-comment");
+        if (canCompose) {
+            // Emoji trigger + menu
+            const menuWrap = document.createElement("div");
+            menuWrap.className = "relative emoji-menu-wrapper";
+
+            const trigger = document.createElement("button");
+            trigger.type = "button";
+            trigger.className = "tg-reaction-btn tg-reaction-trigger";
+            trigger.setAttribute("aria-label", "{{ t_add_reaction|escapejs }}");
+            trigger.appendChild(svgIcon("<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", 15));
+            trigger.addEventListener("click", (ev) => toggleEmojiMenu(comment.id, ev));
+
+            const menu = document.createElement("div");
+            menu.className = "tg-emoji-menu";
+            menu.id = `emoji-menu-${comment.id}`;
+            menu.style.cssText = comment.is_own ? "right: 0; left: auto;" : "left: 0; right: auto;";
+            REACTION_EMOJIS.forEach((e) => {
+                const item = document.createElement("button");
+                item.type = "button";
+                item.className = "tg-emoji-item";
+                item.textContent = e;
+                item.addEventListener("click", () => toggleReaction(comment.id, e));
+                menu.appendChild(item);
+            });
+
+            menuWrap.append(trigger, menu);
+            bar.appendChild(menuWrap);
+
+            if (depth < 1) {
+                const replyBtn = document.createElement("button");
+                replyBtn.type = "button";
+                replyBtn.className = "tg-reply-link";
+                replyBtn.textContent = I18N.reply;
+                replyBtn.addEventListener("click", () =>
+                    setReply(comment.id, comment.author.display_name, commentText.slice(0, 50))
+                );
+                bar.appendChild(replyBtn);
+            }
+        }
+        wrapper.appendChild(bar);
+
+        // ── Replies thread ──
+        if (comment.reply_count > 0) {
+            const replies = document.createElement("div");
+            replies.className = "tg-replies-container";
+            replies.id = `replies-${comment.id}`;
+
+            const viewBtn = document.createElement("button");
+            viewBtn.type = "button";
+            viewBtn.className = "tg-view-replies";
+            viewBtn.appendChild(svgIcon("<path d=\"m9 17-5-5 5-5\"/><path d=\"M20 18v-2a4 4 0 0 0-4-4H4\"/>"));
+            viewBtn.appendChild(document.createTextNode(
+                " " + (comment.reply_count === 1 ? I18N.viewReply : I18N.viewReplies.replace("{n}", comment.reply_count))
+            ));
+            viewBtn.addEventListener("click", () => loadReplies(comment.id, viewBtn, depth));
+            replies.appendChild(viewBtn);
+            wrapper.appendChild(replies);
+        }
+
+        row.appendChild(wrapper);
         return row;
+    }
+
+    function reactionChip(commentId, emoji, count, isActive) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tg-reaction-btn" + (isActive ? " active" : "");
+        btn.textContent = emoji + " ";
+        const cnt = document.createElement("span");
+        cnt.className = "count";
+        cnt.textContent = count;
+        btn.appendChild(cnt);
+        btn.addEventListener("click", () => toggleReaction(commentId, emoji));
+        return btn;
     }
 
     // ── Reply Logic ──
     window.setReply = function (id, name, snippet) {
         parentCommentId = id;
-        document.getElementById('reply-author-name').textContent = name;
-        document.getElementById('reply-text-preview').textContent = snippet;
-        document.getElementById('reply-context').style.display = 'flex';
-        document.getElementById('comment-text').focus();
-        document.getElementById('comment-form-container').scrollIntoView({ behavior: 'smooth', block: 'end' });
+        document.getElementById("reply-author-name").textContent = name;
+        document.getElementById("reply-text-preview").textContent = snippet;
+        document.getElementById("reply-context").classList.add("show");
+        document.getElementById("comment-text").focus();
+        document.getElementById("comment-form-container").scrollIntoView({ behavior: "smooth", block: "end" });
     }
 
     window.clearReply = function () {
         parentCommentId = null;
-        document.getElementById('reply-context').style.display = 'none';
-        document.getElementById('reply-author-name').textContent = '';
-        document.getElementById('reply-text-preview').textContent = '';
+        document.getElementById("reply-context").classList.remove("show");
+        document.getElementById("reply-author-name").textContent = "";
+        document.getElementById("reply-text-preview").textContent = "";
     }
 
     // ── Image Preview ──
@@ -934,55 +1113,58 @@
             selectedFile = input.files[0];
             const reader = new FileReader();
             reader.onload = e => {
-                document.getElementById('image-preview').src = e.target.result;
-                document.getElementById('image-preview-container').style.display = 'inline-block';
+                document.getElementById("image-preview").src = e.target.result;
+                document.getElementById("image-preview-container").style.display = "inline-block";
             };
             reader.readAsDataURL(selectedFile);
+            onCommentInput(document.getElementById("comment-text"));
         }
     }
 
     window.clearImage = function () {
         selectedFile = null;
-        document.getElementById('image-upload').value = '';
-        document.getElementById('image-preview').src = '';
-        document.getElementById('image-preview-container').style.display = 'none';
+        document.getElementById("image-upload").value = "";
+        document.getElementById("image-preview").src = "";
+        document.getElementById("image-preview-container").style.display = "none";
+        const textElem = document.getElementById("comment-text");
+        if (textElem) onCommentInput(textElem);
     }
 
     // ── Reactions ──
     window.toggleEmojiMenu = function (id, event) {
         event.stopPropagation();
         const menu = document.getElementById(`emoji-menu-${id}`);
-        const allMenus = document.querySelectorAll('.tg-emoji-menu');
-        allMenus.forEach(m => m !== menu && m.classList.remove('show'));
-        menu.classList.toggle('show');
+        const allMenus = document.querySelectorAll(".tg-emoji-menu");
+        allMenus.forEach(m => m !== menu && m.classList.remove("show"));
+        menu.classList.toggle("show");
     }
 
-    window.toggleReaction = async function (commentId, emoji, btnElem = null) {
+    window.toggleReaction = async function (commentId, emoji) {
         if (reactionLocks[commentId]) return;
         reactionLocks[commentId] = true;
 
-        document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+        document.querySelectorAll(".tg-emoji-menu").forEach(m => m.classList.remove("show"));
 
-        const url = `/interactions/comment/${commentId}/react/`;
+        const url = REACT_TPL.replace("/0/", `/${commentId}/`);
         try {
             const resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Accept-Language": PAGE_LANG },
                 body: JSON.stringify({ emoji })
             });
 
             if (resp.status === 401) {
-                alert("Please login with Telegram to react.");
-                reactionLocks[commentId] = false;
+                showToast(I18N.loginToReact);
                 return;
             }
 
             const data = await resp.json();
-            if (resp.ok && data.status === 'ok') {
+            if (resp.ok && data.status === "ok") {
                 updateReactionDOM(commentId, data.reactions, data.action, emoji);
             }
         } catch (e) {
             console.error("Reaction failed", e);
+            showToast(I18N.networkError, true);
         } finally {
             reactionLocks[commentId] = false;
         }
@@ -992,22 +1174,12 @@
         const container = document.getElementById(`reactions-${commentId}`);
         if (!container) return;
 
-        const triggerEl = container.querySelector('.emoji-menu-wrapper');
-        
-        const reactionBtns = container.querySelectorAll('.tg-reaction-btn:not(.opacity-0)');
-        reactionBtns.forEach(btn => btn.remove());
+        const triggerEl = container.querySelector(".emoji-menu-wrapper");
+        container.querySelectorAll(":scope > .tg-reaction-btn").forEach(btn => btn.remove());
 
         Object.entries(reactions).forEach(([emoji, count]) => {
-            const btn = document.createElement('button');
-            btn.className = 'tg-reaction-btn';
-            
-            if (emoji === currentEmoji && action !== 'removed') {
-                btn.classList.add('active');
-            }
-
-            btn.onclick = () => window.toggleReaction(commentId, emoji, btn);
-            btn.innerHTML = `${emoji} <span class="count">${count}</span>`;
-            if(triggerEl) {
+            const btn = reactionChip(commentId, emoji, count, emoji === currentEmoji && action !== "removed");
+            if (triggerEl) {
                 container.insertBefore(btn, triggerEl);
             } else {
                 container.appendChild(btn);
@@ -1015,107 +1187,103 @@
         });
     }
 
-    // ── Form Submit ──
-    // ── Form Submit ──
+    // ── Composer input ──
     window.onCommentInput = function (elem) {
         // Auto-resize
         const maxHeight = 180;
-        elem.style.height = 'auto';
-        elem.style.height = Math.min(elem.scrollHeight, maxHeight) + 'px';
-        elem.style.overflowY = elem.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        elem.style.height = "auto";
+        elem.style.height = Math.min(elem.scrollHeight, maxHeight) + "px";
+        elem.style.overflowY = elem.scrollHeight > maxHeight ? "auto" : "hidden";
 
         const text = elem.value.trim();
-        const counter = document.getElementById('char-counter');
-        const error = document.getElementById('comment-error');
-        const submitBtn = document.getElementById('submit-comment');
+        const counter = document.getElementById("char-counter");
+        const error = document.getElementById("comment-error");
+        const submitBtn = document.getElementById("submit-comment");
 
         // Character Counting
         const len = elem.value.length;
         counter.textContent = `${len} / 1000`;
-        
+
         if (len >= 1000) {
-            counter.style.color = 'var(--danger)';
+            counter.style.color = "var(--danger)";
         } else if (len >= 900) {
-            counter.style.color = 'var(--warning)';
+            counter.style.color = "var(--warning)";
         } else {
-            counter.style.color = 'var(--fg-3)';
+            counter.style.color = "var(--fg-3)";
         }
 
         // Validation & Error state
         if (text.length > 0 && text.length < 3) {
-            error.textContent = "Komment kamida 3ta belgidan iborat bo'lishi kerak";
-            error.classList.remove('hidden');
+            error.textContent = "{{ t_min_chars|escapejs }}";
+            error.classList.remove("hidden");
         } else {
-            error.classList.add('hidden');
+            error.classList.add("hidden");
         }
 
         // Send button disabled state
         submitBtn.disabled = (text.length < 3 && !selectedFile);
     }
 
-    const commentTextarea = document.getElementById('comment-text');
+    const commentTextarea = document.getElementById("comment-text");
     if (commentTextarea) {
-        commentTextarea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        commentTextarea.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (!document.getElementById('submit-comment').disabled) {
-                    document.getElementById('submit-comment').click();
+                if (!document.getElementById("submit-comment").disabled) {
+                    document.getElementById("submit-comment").click();
                 }
             }
         });
     }
 
-    const submitBtn = document.getElementById('submit-comment');
+    const submitBtn = document.getElementById("submit-comment");
     if (submitBtn) {
-        submitBtn.addEventListener('click', async () => {
-            const textElem = document.getElementById('comment-text');
-            const text = (textElem.value || '').trim();
+        submitBtn.addEventListener("click", async () => {
+            const textElem = document.getElementById("comment-text");
+            const text = (textElem.value || "").trim();
             if (!text && !selectedFile) return;
 
             submitBtn.disabled = true;
             const originalContent = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<svg class="ix-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>';
+            submitBtn.innerHTML = "<svg class=\"ix-spin\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" style=\"display:inline-block;\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\" stroke-linecap=\"round\"/></svg>";
 
             const formData = new FormData();
-            formData.append('text', text);
-            if (parentCommentId) formData.append('parent_id', parentCommentId);
-            if (selectedFile) formData.append('image', selectedFile);
+            formData.append("text", text);
+            if (parentCommentId) formData.append("parent_id", parentCommentId);
+            if (selectedFile) formData.append("image", selectedFile);
 
             try {
                 const resp = await fetch(submitBtn.dataset.url, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    method: "POST",
+                    headers: { "Accept-Language": PAGE_LANG },
                     body: formData
                 });
                 const data = await resp.json();
                 if (resp.status === 201) {
-                    // Update global counter UI instantly
-                    const globalCounter = document.getElementById('comments-counter');
-                    if (globalCounter) {
-                        globalCounter.textContent = parseInt(globalCounter.textContent) + 1;
+                    if (data.status === "pending") {
+                        // Moderatsiyada — ro'yxatda ko'rinmaydi, counter oshirilmaydi
+                        showToast(data.message);
+                    } else {
+                        showToast(data.message);
                     }
 
-                    if (data.status === 'pending') {
-                        alert(data.message);
-                    }
-                    
                     // Reset composer
-                    textElem.value = '';
-                    textElem.style.height = 'auto';
+                    textElem.value = "";
+                    textElem.style.height = "auto";
                     clearImage();
                     clearReply();
-                    
+
                     // Reset counter
-                    const counter = document.getElementById('char-counter');
-                    if (counter) counter.textContent = '0 / 1000';
-                    
-                    // Refresh parent list
+                    const counter = document.getElementById("char-counter");
+                    if (counter) counter.textContent = "0 / 1000";
+
+                    // Refresh list (counter ham serverdan keladi)
                     resetAndFetchComments();
                 } else {
-                    alert(data.error || "Error sending comment");
+                    showToast(data.error || I18N.genericError, true);
                 }
             } catch (e) {
-                alert("Network error");
+                showToast(I18N.networkError, true);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalContent;
@@ -1126,54 +1294,51 @@
     }
 
     // ── Global Document Click ──
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.emoji-menu-wrapper')) {
-            document.querySelectorAll('.tg-emoji-menu').forEach(m => m.classList.remove('show'));
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".emoji-menu-wrapper")) {
+            document.querySelectorAll(".tg-emoji-menu").forEach(m => m.classList.remove("show"));
         }
-        if (!e.target.closest('#sort-wrap')) {
-            document.getElementById('sort-dropdown').classList.add('hidden');
+        if (!e.target.closest("#sort-wrap")) {
+            document.getElementById("sort-dropdown").classList.add("hidden");
         }
     });
 
     window.toggleSortDropdown = function(event) {
         if (event) event.stopPropagation();
-        document.getElementById('sort-dropdown').classList.toggle('hidden');
+        document.getElementById("sort-dropdown").classList.toggle("hidden");
     }
 
-    window.selectSort = function(val, label, event) {
+    window.selectSort = function(val, btnElem, event) {
         if (event) event.stopPropagation();
-        document.getElementById('sort-selector').value = val;
-        document.getElementById('active-sort').textContent = label;
-        document.getElementById('sort-dropdown').classList.add('hidden');
+        document.getElementById("sort-selector").value = val;
+        document.getElementById("active-sort").textContent = btnElem.textContent.trim();
+        document.getElementById("sort-dropdown").classList.add("hidden");
         resetAndFetchComments();
     }
 
-    // ── Relative Time ──
+    // ── Relative Time (locale-aware) ──
     function timeAgo(isoString) {
         const now = Date.now();
         const then = new Date(isoString).getTime();
         const diff = Math.max(0, now - then);
         const sec = Math.floor(diff / 1000);
-        if (sec < 60)   return 'just now';
+        if (sec < 60)   return I18N.justNow;
         const min = Math.floor(sec / 60);
-        if (min < 60)   return `${min}m ago`;
+        if (min < 60)   return I18N.minAgo.replace("{n}", min);
         const hr = Math.floor(min / 60);
-        if (hr < 24)    return `${hr}h ago`;
+        if (hr < 24)    return I18N.hrAgo.replace("{n}", hr);
         const day = Math.floor(hr / 24);
-        if (day === 1)   return 'yesterday';
-        if (day < 7)    return `${day}d ago`;
+        if (day === 1)  return I18N.yesterday;
+        if (day < 7)    return I18N.dayAgo.replace("{n}", day);
         const wk = Math.floor(day / 7);
-        if (wk < 5)     return `${wk}w ago`;
+        if (wk < 5)     return I18N.weekAgo.replace("{n}", wk);
         const d = new Date(isoString);
-        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const thisYear = new Date().getFullYear();
-        if (d.getFullYear() === thisYear) return `${months[d.getMonth()]} ${d.getDate()}`;
-        return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-    }
-
-    // ── Util ──
-    function getCookie(name) {
-        const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-        return m ? m.pop() : '';
+        const opts = { month: "short", day: "numeric" };
+        if (d.getFullYear() !== new Date().getFullYear()) opts.year = "numeric";
+        try {
+            return new Intl.DateTimeFormat(INTL_LANG, opts).format(d);
+        } catch (e) {
+            return d.toISOString().slice(0, 10);
+        }
     }
 </script>

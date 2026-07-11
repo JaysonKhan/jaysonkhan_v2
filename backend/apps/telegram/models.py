@@ -6,12 +6,47 @@ topilganligini EntitySource orqali kuzatadi.
 """
 from __future__ import annotations
 
+import re
+import unicodedata
 from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+_ALNUM_RE = re.compile(r"[^\W_]", re.UNICODE)
+
+
+def clean_public_name(raw: str, username: str = "", fallback: str = "User", max_len: int = 40) -> str:
+    """Sanitize a Telegram display name for public rendering.
+
+    Telegram allows arbitrary Unicode in names; in practice that means
+    decorative combining-mark runs (e.g. U+0823 Samaritan marks) that render
+    as tofu boxes, invisible format characters, and punctuation-only names.
+
+    NFKC-normalizes (folds 𝕗𝕒𝕟𝕔𝕪 math alphabets to ASCII), drops
+    control/format/unassigned chars and combining marks that don't follow a
+    letter, collapses whitespace, caps length. A name with fewer than two
+    letters/digits falls back to @username, then to `fallback`.
+    """
+    name = unicodedata.normalize("NFKC", str(raw or ""))
+    kept: list[str] = []
+    prev_is_letter = False
+    for ch in name:
+        cat = unicodedata.category(ch)
+        if cat in ("Cc", "Cf", "Co", "Cs", "Cn"):
+            continue
+        if cat in ("Mn", "Me") and not prev_is_letter:
+            continue  # orphan combining mark — the tofu-box source
+        kept.append(ch)
+        prev_is_letter = cat.startswith("L")
+    name = re.sub(r"\s+", " ", "".join(kept)).strip()
+    if len(_ALNUM_RE.findall(name)) < 2:
+        username = (username or "").strip()
+        return f"@{username}" if username else fallback
+    return name[:max_len].rstrip()
+
 
 # ── TelegramEntity ───────────────────────────────────────────────────────────
 
@@ -112,6 +147,29 @@ class TelegramEntity(models.Model):
     @property
     def display_name(self) -> str:
         return self.full_name
+
+    @property
+    def safe_display_name(self) -> str:
+        """Public-display variant of display_name.
+
+        Telegram names arrive with decorative Unicode that breaks rendering
+        (orphan combining-mark runs → tofu boxes, invisible format chars,
+        single-punctuation names like "."). Cleaned + length-capped; falls
+        back to @username, then "User #id".
+        """
+        return clean_public_name(
+            self.display_name,
+            username=self.username,
+            fallback=f"User #{str(self.telegram_id)[-4:]}",
+        )
+
+    @property
+    def safe_initial(self) -> str:
+        """First letter/digit of the safe name — avatar fallback badge."""
+        for ch in self.safe_display_name.lstrip("@"):
+            if ch.isalnum():
+                return ch.upper()
+        return "U"
 
     @property
     def is_photo_stale(self) -> bool:

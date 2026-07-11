@@ -307,3 +307,134 @@ msgstr "Боты"
 #: presentation/web/views.py:178
 msgid "Mobile"
 msgstr "Мобильные"
+
+# ── Interactions / comments (2026-07-10) ──
+
+msgid "likes"
+msgstr "лайков"
+
+msgid "Sign in with Telegram to like"
+msgstr "Войдите через Telegram, чтобы поставить лайк"
+
+msgid "Comments"
+msgstr "Комментарии"
+
+msgid "Top comments"
+msgstr "Топ комментарии"
+
+msgid "Newest first"
+msgstr "Сначала новые"
+
+msgid "Cancel reply"
+msgstr "Отменить ответ"
+
+msgid "Remove image"
+msgstr "Удалить изображение"
+
+msgid "Attach image"
+msgstr "Прикрепить изображение"
+
+msgid "Write a comment…"
+msgstr "Напишите комментарий…"
+
+msgid "Send comment"
+msgstr "Отправить"
+
+msgid "Signed in as"
+msgstr "Вы вошли как"
+
+msgid "Log out"
+msgstr "Выйти"
+
+msgid "Join the discussion"
+msgstr "Присоединяйтесь к обсуждению"
+
+msgid "Sign in with Telegram to leave a comment."
+msgstr "Войдите через Telegram, чтобы оставить комментарий."
+
+msgid "Signing in…"
+msgstr "Входим…"
+
+msgid "Something went wrong. Please try again."
+msgstr "Что-то пошло не так. Попробуйте ещё раз."
+
+msgid "Network error. Please try again."
+msgstr "Ошибка сети. Попробуйте ещё раз."
+
+msgid "Telegram sign-in is temporarily unavailable."
+msgstr "Вход через Telegram временно недоступен."
+
+msgid "just now"
+msgstr "только что"
+
+msgid "yesterday"
+msgstr "вчера"
+
+msgid "View 1 reply"
+msgstr "Показать 1 ответ"
+
+msgid "View {n} replies"
+msgstr "Показать ответы: {n}"
+
+msgid "Reply"
+msgstr "Ответить"
+
+msgid "Loading…"
+msgstr "Загрузка…"
+
+msgid "No comments yet — be the first to share your thoughts."
+msgstr "Пока нет комментариев — будьте первым."
+
+msgid "Couldn't load comments."
+msgstr "Не удалось загрузить комментарии."
+
+msgid "Retry"
+msgstr "Повторить"
+
+msgid "Sign in with Telegram to like."
+msgstr "Войдите через Telegram, чтобы ставить лайки."
+
+msgid "Sign in with Telegram to react."
+msgstr "Войдите через Telegram, чтобы реагировать."
+
+msgid "Add reaction"
+msgstr "Добавить реакцию"
+
+msgid "A comment needs at least 3 characters"
+msgstr "Комментарий должен быть не короче 3 символов"
+
+msgid "Login with Telegram first"
+msgstr "Сначала войдите через Telegram"
+
+msgid "Comment must have text or an image"
+msgstr "Комментарий должен содержать текст или изображение"
+
+#, python-format
+msgid "Comment must be at least %(n)d characters"
+msgstr "Комментарий должен быть не короче %(n)d символов"
+
+#, python-format
+msgid "Comment too long (max %(n)d chars)"
+msgstr "Комментарий слишком длинный (макс. %(n)d символов)"
+
+#, python-format
+msgid "Image is too large (max %(n)dMB)"
+msgstr "Изображение слишком большое (макс. %(n)dМБ)"
+
+msgid "Invalid image format (must be JPG, PNG, GIF, WEBP)"
+msgstr "Неверный формат изображения (JPG, PNG, GIF, WEBP)"
+
+msgid "Uploaded file is corrupted or not a valid image"
+msgstr "Файл повреждён или не является изображением"
+
+msgid "You are posting too fast. Please wait a moment."
+msgstr "Слишком часто. Подождите немного."
+
+msgid "Duplicate comment detected."
+msgstr "Такой комментарий уже отправлен."
+
+msgid "Your comment is pending admin review."
+msgstr "Комментарий на модерации — скоро появится."
+
+msgid "Your comment has been posted successfully."
+msgstr "Комментарий опубликован!"

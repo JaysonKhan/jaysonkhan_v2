@@ -308,3 +308,134 @@ msgstr "Botlar"
 #: presentation/web/views.py:178
 msgid "Mobile"
 msgstr "Mobil"
+
+# ── Interactions / comments (2026-07-10) ──
+
+msgid "likes"
+msgstr "layk"
+
+msgid "Sign in with Telegram to like"
+msgstr "Layk bosish uchun Telegram orqali kiring"
+
+msgid "Comments"
+msgstr "Kommentlar"
+
+msgid "Top comments"
+msgstr "Top kommentlar"
+
+msgid "Newest first"
+msgstr "Eng yangilari avval"
+
+msgid "Cancel reply"
+msgstr "Javobni bekor qilish"
+
+msgid "Remove image"
+msgstr "Rasmni olib tashlash"
+
+msgid "Attach image"
+msgstr "Rasm biriktirish"
+
+msgid "Write a comment…"
+msgstr "Komment yozing…"
+
+msgid "Send comment"
+msgstr "Yuborish"
+
+msgid "Signed in as"
+msgstr "Kirdingiz:"
+
+msgid "Log out"
+msgstr "Chiqish"
+
+msgid "Join the discussion"
+msgstr "Muhokamaga qo'shiling"
+
+msgid "Sign in with Telegram to leave a comment."
+msgstr "Komment qoldirish uchun Telegram orqali kiring."
+
+msgid "Signing in…"
+msgstr "Kirilmoqda…"
+
+msgid "Something went wrong. Please try again."
+msgstr "Nimadir xato ketdi. Qayta urinib ko'ring."
+
+msgid "Network error. Please try again."
+msgstr "Tarmoq xatosi. Qayta urining."
+
+msgid "Telegram sign-in is temporarily unavailable."
+msgstr "Telegram orqali kirish hozircha ishlamayapti."
+
+msgid "just now"
+msgstr "hozirgina"
+
+msgid "yesterday"
+msgstr "kecha"
+
+msgid "View 1 reply"
+msgstr "1 javobni ko'rish"
+
+msgid "View {n} replies"
+msgstr "{n} javobni ko'rish"
+
+msgid "Reply"
+msgstr "Javob"
+
+msgid "Loading…"
+msgstr "Yuklanmoqda…"
+
+msgid "No comments yet — be the first to share your thoughts."
+msgstr "Hozircha komment yo'q — birinchi bo'lib fikr qoldiring."
+
+msgid "Couldn't load comments."
+msgstr "Kommentlar yuklanmadi."
+
+msgid "Retry"
+msgstr "Qayta urinish"
+
+msgid "Sign in with Telegram to like."
+msgstr "Layk uchun Telegram orqali kiring."
+
+msgid "Sign in with Telegram to react."
+msgstr "Reaksiya uchun Telegram orqali kiring."
+
+msgid "Add reaction"
+msgstr "Reaksiya qo'shish"
+
+msgid "A comment needs at least 3 characters"
+msgstr "Komment kamida 3 belgidan iborat bo'lsin"
+
+msgid "Login with Telegram first"
+msgstr "Avval Telegram orqali kiring"
+
+msgid "Comment must have text or an image"
+msgstr "Kommentda matn yoki rasm bo'lishi kerak"
+
+#, python-format
+msgid "Comment must be at least %(n)d characters"
+msgstr "Komment kamida %(n)d belgidan iborat bo'lsin"
+
+#, python-format
+msgid "Comment too long (max %(n)d chars)"
+msgstr "Komment juda uzun (maks. %(n)d belgi)"
+
+#, python-format
+msgid "Image is too large (max %(n)dMB)"
+msgstr "Rasm juda katta (maks. %(n)dMB)"
+
+msgid "Invalid image format (must be JPG, PNG, GIF, WEBP)"
+msgstr "Rasm formati noto'g'ri (JPG, PNG, GIF, WEBP bo'lsin)"
+
+msgid "Uploaded file is corrupted or not a valid image"
+msgstr "Fayl buzilgan yoki rasm emas"
+
+msgid "You are posting too fast. Please wait a moment."
+msgstr "Juda tez yozyapsiz. Birozdan so'ng urining."
+
+msgid "Duplicate comment detected."
+msgstr "Bu kommentni endigina yozgansiz."
+
+msgid "Your comment is pending admin review."
+msgstr "Kommentingiz moderatsiyada — tez orada chiqadi."
+
+msgid "Your comment has been posted successfully."
+msgstr "Komment joylandi!"

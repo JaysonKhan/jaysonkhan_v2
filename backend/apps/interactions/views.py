@@ -1,3 +1,4 @@
+import html
 import json
 import logging
 import re
@@ -15,6 +16,7 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from PIL import Image
@@ -74,6 +76,10 @@ COMMENTABLE_CONTENT_TYPES = frozenset([
     ('blog', 'post'),
     ('portfolio', 'project'),
 ])
+
+# Reaction emojis the UI offers. Server-side allowlist: without it any string
+# could be stored as an "emoji" and re-rendered to every visitor.
+REACTION_EMOJIS = frozenset(['👍', '❤', '🔥', '😂', '👏', '😱', '👎', '⚡'])
 
 
 # ── Session helpers ────────────────────────────────────────────────────────────
@@ -187,7 +193,7 @@ class TelegramLoginView(View):
             'status': 'ok',
             'user': {
                 'id': entity.telegram_id,
-                'display_name': entity.display_name,
+                'display_name': entity.safe_display_name,
             }
         })
 
@@ -243,7 +249,7 @@ class TelegramWebAppLoginView(View):
             'status': 'ok',
             'user': {
                 'id': entity.telegram_id,
-                'display_name': entity.display_name,
+                'display_name': entity.safe_display_name,
             }
         })
 
@@ -264,7 +270,7 @@ class AddCommentView(View):
 
         profile = get_tg_profile(request)
         if not profile:
-            return JsonResponse({'error': 'Login with Telegram first'}, status=401)
+            return JsonResponse({'error': _('Login with Telegram first')}, status=401)
 
         # ── 0. Ban / Mute Check ──
         ban_result = check_ban(profile)
@@ -278,7 +284,10 @@ class AddCommentView(View):
 
         # ── 1. Sanitize & normalize text ──
         if text:
-            text = bleach.clean(text, tags=[], strip=True)
+            # bleach strips tags and entity-encodes specials; unescape back to
+            # PLAIN text — the client renders via textContent (never innerHTML),
+            # so entities in the DB would double-display as "&lt;".
+            text = html.unescape(bleach.clean(text, tags=[], strip=True))
             # Har satrda ortiqcha bo'shliqlarni tozala, umumiy trim
             text = '\n'.join(
                 re.sub(r'[ \t]+', ' ', line).strip()
@@ -286,26 +295,26 @@ class AddCommentView(View):
             ).strip()
 
         if not text and not image:
-            return JsonResponse({'error': 'Comment must have text or an image'}, status=400)
-        
+            return JsonResponse({'error': _('Comment must have text or an image')}, status=400)
+
         # ── 2. Message Length Validation ──
         min_len = getattr(settings, 'COMMENT_MIN_LENGTH', 3)
         max_len = getattr(settings, 'COMMENT_MAX_LENGTH', 1000)
         if text:
             if len(text) < min_len and not image:
-                return JsonResponse({'error': f'Comment must be at least {min_len} characters'}, status=400)
+                return JsonResponse({'error': _('Comment must be at least %(n)d characters') % {'n': min_len}}, status=400)
             if len(text) > max_len:
-                return JsonResponse({'error': f'Comment too long (max {max_len} chars)'}, status=400)
+                return JsonResponse({'error': _('Comment too long (max %(n)d chars)') % {'n': max_len}}, status=400)
 
         # ── 3. Image Validation (Size & MIME) ──
         if image:
             max_mb = getattr(settings, 'COMMENT_MAX_IMAGE_MB', 5)
             if image.size > max_mb * 1024 * 1024:
-                return JsonResponse({'error': f'Image is too large (max {max_mb}MB)'}, status=400)
-            
+                return JsonResponse({'error': _('Image is too large (max %(n)dMB)') % {'n': max_mb}}, status=400)
+
             allowed_mimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
             if image.content_type not in allowed_mimes:
-                return JsonResponse({'error': 'Invalid image format (must be JPG, PNG, GIF, WEBP)'}, status=400)
+                return JsonResponse({'error': _('Invalid image format (must be JPG, PNG, GIF, WEBP)')}, status=400)
                 
             # content_type above is the client-supplied multipart header and is
             # spoofable; trust Pillow's format detected from the actual file bytes.
@@ -317,11 +326,11 @@ class AddCommentView(View):
                 image.seek(0)
             except Exception as e:
                 logger.warning(f'[Upload] Invalid image from {profile.telegram_id}: {e}')
-                return JsonResponse({'error': 'Uploaded file is corrupted or not a valid image'}, status=400)
+                return JsonResponse({'error': _('Uploaded file is corrupted or not a valid image')}, status=400)
 
             if detected_format not in allowed_formats:
                 logger.warning(f'[Upload] Spoofed MIME from {profile.telegram_id}: format={detected_format}')
-                return JsonResponse({'error': 'Invalid image format (must be JPG, PNG, GIF, WEBP)'}, status=400)
+                return JsonResponse({'error': _('Invalid image format (must be JPG, PNG, GIF, WEBP)')}, status=400)
 
         # ── 4. Rate Limiting logic ──
         now = timezone.now()
@@ -382,7 +391,7 @@ class AddCommentView(View):
             )
             if recent_count >= limit_count:
                 logger.warning(f'[RateLimit] User {profile.telegram_id} blocked')
-                return JsonResponse({'error': 'You are posting too fast. Please wait a moment.'}, status=429)
+                return JsonResponse({'error': _('You are posting too fast. Please wait a moment.')}, status=429)
 
             # ── 5. Duplicate Detection ──
             dup_window = getattr(settings, 'COMMENT_DUP_WINDOW_MINUTES', 5)
@@ -393,7 +402,7 @@ class AddCommentView(View):
             )
             if last_comment and text and last_comment.text == text:
                 logger.warning(f'[Spam] Duplicate text from {profile.telegram_id}')
-                return JsonResponse({'error': 'Duplicate comment detected.'}, status=400)
+                return JsonResponse({'error': _('Duplicate comment detected.')}, status=400)
 
             # ── Save comment ──
             Comment.objects.create(
@@ -409,7 +418,7 @@ class AddCommentView(View):
         
         return JsonResponse({
             'status': 'pending' if not is_approved else 'ok',
-            'message': 'Your comment is pending admin review.' if not is_approved else 'Your comment has been posted successfully.',
+            'message': _('Your comment is pending admin review.') if not is_approved else _('Your comment has been posted successfully.'),
         }, status=201)
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -424,19 +433,22 @@ class ToggleCommentReactionView(View):
 
         profile = get_tg_profile(request)
         if not profile:
-            return JsonResponse({'error': 'Login with Telegram first'}, status=401)
+            return JsonResponse({'error': _('Login with Telegram first')}, status=401)
 
         try:
             body = json.loads(request.body)
             emoji = body.get('emoji', '').strip()
         except json.JSONDecodeError:
             emoji = request.POST.get('emoji', '').strip()
-            
+
         if not emoji:
             return JsonResponse({'error': 'Emoji is required'}, status=400)
 
-        # Basic emoji validation can be added here, we keep it simple for now
-        
+        # Allowlist: an arbitrary string stored as "emoji" would be re-rendered
+        # to every visitor — reject anything the UI doesn't offer.
+        if emoji not in REACTION_EMOJIS:
+            return JsonResponse({'error': 'Unsupported reaction'}, status=400)
+
         try:
             comment = Comment.objects.get(id=comment_id)
         except Comment.DoesNotExist:
@@ -482,7 +494,7 @@ class ToggleLikeView(View):
 
         profile = get_tg_profile(request)
         if not profile:
-            return JsonResponse({'error': 'Login with Telegram first'}, status=401)
+            return JsonResponse({'error': _('Login with Telegram first')}, status=401)
 
         if (app_label, model_name) not in COMMENTABLE_CONTENT_TYPES:
             return JsonResponse({'error': 'Invalid content type'}, status=404)
@@ -541,11 +553,15 @@ def serialize_comment(comment, tg_profile_id=None):
         "id": comment.id,
         "author": {
             "id": comment.author.id,
-            "display_name": comment.author.display_name,
+            # safe_display_name: tofu/format chars stripped, length-capped —
+            # the client renders it via textContent, never innerHTML.
+            "display_name": comment.author.safe_display_name,
             "photo_url": comment.author.photo_url,
-            "initial": comment.author.first_name[0].upper() if comment.author.first_name else 'U',
+            "initial": comment.author.safe_initial,
         },
-        "text": comment.text,
+        # Legacy rows carry bleach entity-encoding (&lt; &amp;) — unescape to
+        # plain text; the client textContent-renders it.
+        "text": html.unescape(comment.text) if comment.text else comment.text,
         "image_url": comment.image.url if comment.image else None,
         "created_at": comment.created_at.isoformat(),
         "is_reviewed": comment.is_reviewed,
