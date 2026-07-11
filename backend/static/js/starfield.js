@@ -361,14 +361,16 @@
     ];
 
     // Yakuniy shakl: egasining yulduz-portreti (oldindan tayyorlangan
-    // nuqta-PNG: static/images/sf-portrait.png). Yuklanmasa galaktika qoladi.
+    // nuqta-PNG). URL konfigdan keladi (manifest-hash'langan {% static %}),
+    // fallback — xom yo'l. Yuklanmasa galaktika qoladi.
     var portraitImg = new Image();
     portraitImg.onload = function () {
       SHAPES[4] = sampleShape(function (g) {
         g.drawImage(portraitImg, 0, 0, SF_GRID, SF_GRID);
       }, N);
     };
-    portraitImg.src = "/static/images/sf-portrait.png";
+    var cfg0 = window.XIVA_STARFIELD || {};
+    portraitImg.src = cfg0.portraitUrl || "/static/images/sf-portrait.png";
 
     // ranglar: krem (asosiy), feruza, terrakota
     var sprites = [

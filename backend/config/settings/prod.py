@@ -6,6 +6,17 @@ from .base import *
 
 DEBUG = False
 
+# ── Static cache-busting ──────────────────────────────────────────────────────
+# Nginx serves /static/ with `expires 30d; Cache-Control: public, immutable` —
+# without hashed filenames every CSS/JS change stays invisible to returning
+# visitors for up to 30 days (2026-07-12: orbit section shipped "blank" because
+# browsers kept the old site.css). Manifest storage gives content-hashed names
+# (site.<hash>.css) so {% static %} URLs change whenever the file does.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'},
+}
+
 # Admin IP gate must be configured in production. AdminIPRestrictionMiddleware
 # no-ops on an empty allowlist, which would leave the admin panel publicly
 # reachable at the custom admin URL. Fail loud instead of failing open.
