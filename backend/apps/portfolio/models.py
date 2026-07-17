@@ -211,3 +211,48 @@ class TeamMember(models.Model):
     @property
     def skills_list(self):
         return [s.strip() for s in self.skills.split(',') if s.strip()]
+
+
+class GalleryImage(models.Model):
+    """Bosh sahifa pastidagi 'gallery wall' kadri (footer tepasida).
+
+    Rasmlar admin orqali yuklanadi; o'lchamlar saqlanadi (layout hech
+    sakramasin — justified-flex `--ar` ni serverdan oladi). `hint` —
+    hover'da chiqadigan izoh (modeltranslation: 4 til).
+    """
+
+    image = models.ImageField(upload_to='gallery/')
+    hint = models.CharField(
+        max_length=200,
+        help_text="Hover'da chiqadigan qisqa izoh (4 tilda)",
+    )
+    width = models.PositiveIntegerField(default=0, editable=False)
+    height = models.PositiveIntegerField(default=0, editable=False)
+    is_visible = models.BooleanField(default=True)
+    order = models.IntegerField(default=0, help_text="Lower = displayed first")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', '-created_at']
+        verbose_name = 'Gallery image'
+        verbose_name_plural = 'Gallery images'
+
+    def __str__(self):
+        return self.hint or f'Gallery #{self.pk}'
+
+    def save(self, *args, **kwargs):
+        # O'lchamlarni bir marta o'qib saqlaymiz (har renderda faylga tegmaslik uchun)
+        if self.image and (not self.width or not self.height):
+            try:
+                self.width = self.image.width
+                self.height = self.image.height
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
+    @property
+    def aspect_css(self) -> str:
+        """CSS uchun lokalizatsiyasiz aspect (`--ar`) — '1,5' emas, '1.5'."""
+        if self.width and self.height:
+            return f'{self.width / self.height:.4f}'
+        return '1.5'

@@ -5,6 +5,7 @@ from .views import (
     BlogListView,
     BlogSearchView,
     ContactView,
+    GalleryFeedView,
     HomeView,
     ProjectDetailView,
     ProjectListView,
@@ -17,6 +18,7 @@ from .views import (
 
 urlpatterns = [
     path('', HomeView.as_view(), name='home'),
+    path('gallery/feed/', GalleryFeedView.as_view(), name='gallery_feed'),
     path('projects/', ProjectListView.as_view(), name='projects'),
     path('projects/<slug:slug>/', ProjectDetailView.as_view(), name='project_detail'),
     path('blog/', BlogListView.as_view(), name='blog_list'),

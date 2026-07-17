@@ -362,6 +362,45 @@
             </div>
         </div>
     </section>
+
+    {# ========================== GALLERY WALL (footer tepasida) ========================== #}
+    {% if gallery_images %}
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% translate "Gallery · Frames" %}</span>
+                    <h2 class="display-md">{% translate "Wall of moments." %}</h2>
+                </div>
+                <span class="mono-label gw-counter"><span id="gw-shown">{{ gallery_images|length }}</span> / <span id="gw-total">{{ gallery_total }}</span></span>
+            </div>
+            <div class="gallery-wall reveal" id="gallery-wall"
+                 data-feed-url="{% url 'gallery_feed' %}"
+                 data-total="{{ gallery_total }}">
+                {% for g in gallery_images %}
+                <figure class="gw-item is-in" style="--ar: {{ g.aspect_css }};" tabindex="0">
+                    <img src="{{ g.image.url }}" alt="{{ g.hint }}" loading="lazy"
+                         width="{{ g.width|default:3 }}" height="{{ g.height|default:2 }}">
+                    <figcaption class="gw-hint">{{ g.hint }}</figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+            {% translate "Show more" as t_gw_more %}
+            {% translate "Loading…" as t_gw_loading %}
+            {% translate "Retry" as t_gw_retry %}
+            <div class="gw-more-wrap">
+                <button id="gw-more" type="button" class="btn"
+                        data-label-more="{{ t_gw_more }}"
+                        data-label-loading="{{ t_gw_loading }}"
+                        data-label-retry="{{ t_gw_retry }}"
+                        {% if gallery_images|length >= gallery_total %}hidden{% endif %}>
+                    {{ t_gw_more }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                </button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
     </div>{# /.sf-wrap #}
 </main>
 {% endblock %}
@@ -371,4 +410,5 @@
 {# intensity 0.7: yulduzlar matn bilan aralashmasligi uchun -30% yorug'lik (2026-07-12) #}
 <script>window.XIVA_STARFIELD = { intensity: 0.7, portraitUrl: "{% static 'images/sf-portrait.png' %}" };</script>
 <script src="{% static 'js/starfield.js' %}"></script>
+{% if gallery_images %}<script src="{% static 'js/gallery-wall.js' %}" defer></script>{% endif %}
 {% endblock %}

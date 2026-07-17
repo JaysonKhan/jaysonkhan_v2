@@ -70,3 +70,6 @@ node_modules/
 /docs/
 /.playwright-cli/
 /.agent/
+
+# Lokal dev: root'dan ishlagan runserver uchun media symlink (backend/media ga)
+/media

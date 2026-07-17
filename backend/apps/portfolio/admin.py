@@ -7,7 +7,7 @@ from django.utils.text import Truncator
 from modeltranslation.admin import TranslationAdmin
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
 
-from .models import Experience, Project, Skill, TeamMember
+from .models import Experience, GalleryImage, Project, Skill, TeamMember
 
 
 @admin.register(Skill)
@@ -164,3 +164,29 @@ class TeamMemberAdmin(TranslationAdmin, UnfoldModelAdmin):
             obj.initials,
         )
     thumbnail.short_description = ''
+
+
+@admin.register(GalleryImage)
+class GalleryImageAdmin(TranslationAdmin, UnfoldModelAdmin):
+    list_per_page = 20
+    list_display = ('preview', 'hint', 'dimensions', 'is_visible', 'order')
+    list_editable = ('is_visible', 'order')
+    list_filter = ('is_visible',)
+    search_fields = ('hint',)
+    readonly_fields = ('preview', 'width', 'height')
+    fieldsets = (
+        (None, {'fields': ('image', 'preview', 'hint', 'is_visible', 'order')}),
+    )
+
+    @admin.display(description='Rasm')
+    def preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height:56px;border-radius:4px;" loading="lazy">',
+                obj.image.url,
+            )
+        return '—'
+
+    @admin.display(description='O\'lcham')
+    def dimensions(self, obj):
+        return f'{obj.width}×{obj.height}' if obj.width else '—'

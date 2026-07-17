@@ -11,7 +11,8 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db.models import Q
-from django.http import Http404, HttpResponse
+from django.core.paginator import Paginator
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -27,6 +28,9 @@ logger = logging.getLogger(__name__)
 # Visitor count cache — avoids COUNT(*) on every page render
 _VISITOR_COUNT_CACHE_KEY = 'visitor_count'
 _VISITOR_COUNT_TTL = 60 * 60  # 1 hour
+
+# Gallery wall: bir sahifadagi kadrlar soni (server-render ham, JSON feed ham)
+GALLERY_PAGE_SIZE = 20
 
 
 def custom_404_view(request, exception=None):
@@ -141,6 +145,14 @@ class HomeView(TemplateView):
             count = PageView.objects.count()
             cache.set(_VISITOR_COUNT_CACHE_KEY, count, _VISITOR_COUNT_TTL)
         context['visitor_count'] = count
+
+        # Gallery wall (footer tepasida): 1-sahifa server-render, qolgani
+        # gallery_feed JSON orqali silliq qo'shiladi (gallery-wall.js).
+        from portfolio.models import GalleryImage
+
+        gallery_qs = GalleryImage.objects.filter(is_visible=True)
+        context['gallery_total'] = gallery_qs.count()
+        context['gallery_images'] = list(gallery_qs[:GALLERY_PAGE_SIZE])
         return context
 
 
@@ -343,6 +355,42 @@ class ContactView(TemplateView):
         context['orbit_guests'] = with_photo[:12]
         context['orbit_moons'] = (with_photo[12:] + without_photo)[:6]
         return context
+
+
+class GalleryFeedView(View):
+    """GET gallery/feed/?page=N — gallery wall'ning keyingi sahifasi (JSON).
+
+    i18n_patterns ichida (til-prefiksli URL) — hint'lar sahifa tilida keladi
+    (CLAUDE.md gotcha #12: qo'lda yozilgan prefikssiz yo'l POSTni sindiradi,
+    GETda esa tilni yo'qotadi; template {% url %} bilan uzatadi).
+    """
+
+    def get(self, request):
+        from portfolio.models import GalleryImage
+
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+
+        qs = GalleryImage.objects.filter(is_visible=True)
+        paginator = Paginator(qs, GALLERY_PAGE_SIZE)
+        page_obj = paginator.get_page(page)
+
+        return JsonResponse({
+            'images': [
+                {
+                    'url': g.image.url,
+                    'hint': g.hint or '',
+                    'ar': g.aspect_css,
+                    'w': g.width,
+                    'h': g.height,
+                }
+                for g in page_obj.object_list
+            ],
+            'has_next': page_obj.has_next(),
+            'total': paginator.count,
+        })
 
 
 # -- Telegram Mini App router --

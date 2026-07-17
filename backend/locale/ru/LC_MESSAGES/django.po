@@ -452,3 +452,14 @@ msgstr "Гости из Telegram на орбите вокруг Jayson Khan"
 
 msgid "Signed in with Telegram — each one orbits at their own pace."
 msgstr "Гости, вошедшие через Telegram — каждый вращается со своей скоростью."
+
+# ── Gallery wall (2026-07-12) ──
+
+msgid "Gallery · Frames"
+msgstr "Галерея · Кадры"
+
+msgid "Wall of moments."
+msgstr "Стена моментов."
+
+msgid "Show more"
+msgstr "Показать ещё"

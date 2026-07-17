@@ -9,4 +9,8 @@ DEBUG = False
 # Allow all hosts in development
 ALLOWED_HOSTS = ['*']
 
+# DEBUG=False bo'lsa ham lokal runserver media'ni bersin (config/urls.py o'qiydi).
+# Prod'da nginx /media/ ni beradi — bu bayroq faqat dev'da yoqiladi.
+SERVE_MEDIA = True
+
 # Additional dev settings here

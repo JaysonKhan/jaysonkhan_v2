@@ -13,12 +13,11 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
-from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -135,6 +134,17 @@ urlpatterns += i18n_patterns(
 handler404 = custom_404_view
 handler500 = custom_500_view
 
+# SERVE_MEDIA: dev.py DEBUG=False saqlaydi (prod-parity), lekin lokal media
+# baribir kerak — bayroq faqat dev settings'da True (prod'da nginx beradi).
+# Eslatma: django'ning static() helper'i DEBUG=False'da O'ZI bo'sh ro'yxat
+# qaytaradi — shu sabab SERVE_MEDIA yo'li to'g'ridan-to'g'ri serve view ishlatadi.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+elif getattr(settings, 'SERVE_MEDIA', False):
+    from django.views.static import serve as _media_serve
+
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', _media_serve,
+                {'document_root': settings.MEDIA_ROOT}),
+    ]

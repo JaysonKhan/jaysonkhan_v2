@@ -156,3 +156,14 @@ Mehmon ko'paygani sari ro'yxat o'zi yangilanadi; hech narsa sozlash shart emas.
 Egasining markaziy rasmini almashtirish = `jayson-orbit.jpg` faylini yangilash
 (+ xohlasangiz `sf-portrait.png` yulduz-portretini ham qayta generatsiya qiling,
 qarang: docs/starfield-implementation.md §10).
+
+## 11. Gallery Wall (bosh sahifa, footer tepasida — 2026-07-17)
+
+Gorizontal justified rasm devori: `portfolio.GalleryImage` (admin-owned!).
+Rasm qo'shish: **admin → Gallery images → yangi yozuv** — rasm yuklang, 4 tilda
+hint yozing (hover'da chiqadi), order bering. O'lchamlar avtomatik saqlanadi
+(layout sakramasligi uchun `--ar` serverdan keladi). 20 tadan sahifalanadi:
+birinchisi server-render, qolgani "Yana ko'rila" bilan silliq qo'shiladi
+(`gallery/feed/` JSON — til-prefiksli, gotcha #12). Media serverda:
+`/var/www/jaysonkhan/media/gallery/`. Kod: `presentation/web/views.py`
+(GalleryFeedView), `static/js/gallery-wall.js`, `site.css` `.gw-*` bloklari.

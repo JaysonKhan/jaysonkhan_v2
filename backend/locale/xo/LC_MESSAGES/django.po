@@ -453,3 +453,14 @@ msgstr "Jayson Khan atrofida aylanayotgan Telegram mehmonla"
 
 msgid "Signed in with Telegram — each one orbits at their own pace."
 msgstr "Saytga Telegram orqali girganla — har biri o'z tezligida aylanadi."
+
+# ── Gallery wall (2026-07-12) ──
+
+msgid "Gallery · Frames"
+msgstr "Galereya · Kadrla"
+
+msgid "Wall of moments."
+msgstr "Lahzala devori."
+
+msgid "Show more"
+msgstr "Yana ko'rila"

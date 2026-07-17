@@ -1,6 +1,6 @@
 """Modeltranslation registrations for portfolio models."""
 from modeltranslation.translator import register, TranslationOptions
-from .models import Project, Skill, Experience, TeamMember
+from .models import Project, Skill, Experience, TeamMember, GalleryImage
 
 
 @register(Project)
@@ -32,3 +32,9 @@ class ExperienceTranslation(TranslationOptions):
 class TeamMemberTranslation(TranslationOptions):
     fallback_undefined = ''
     fields = ('name', 'role', 'bio', 'quote', 'skills')
+
+
+@register(GalleryImage)
+class GalleryImageTranslation(TranslationOptions):
+    fallback_undefined = ''
+    fields = ('hint',)

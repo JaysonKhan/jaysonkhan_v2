@@ -61,3 +61,34 @@ class ProjectApiPermissionsTest(TestCase):
         slugs = [item['slug'] for item in payload['results']]
         self.assertIn('visible-app', slugs)
         self.assertNotIn('hidden-app', slugs)
+
+
+class GalleryWallTest(TestCase):
+    def setUp(self):
+        from portfolio.models import GalleryImage
+        for i in range(3):
+            GalleryImage.objects.create(
+                image=f'gallery/test-{i}.jpg', hint=f'Kadr {i}',
+                width=600, height=400, order=i,
+            )
+        GalleryImage.objects.create(
+            image='gallery/hidden.jpg', hint='Yashirin',
+            width=600, height=400, is_visible=False,
+        )
+
+    def test_feed_returns_visible_images_with_aspect(self):
+        from django.urls import reverse
+        resp = self.client.get(reverse('gallery_feed'))
+        data = resp.json()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(data['total'], 3)
+        self.assertFalse(data['has_next'])
+        self.assertEqual(len(data['images']), 3)
+        self.assertEqual(data['images'][0]['ar'], '1.5000')
+        self.assertNotIn('Yashirin', [i['hint'] for i in data['images']])
+
+    def test_home_renders_gallery_section(self):
+        from django.urls import reverse
+        resp = self.client.get(reverse('home'))
+        self.assertContains(resp, 'gallery-wall')
+        self.assertContains(resp, 'data-feed-url')
