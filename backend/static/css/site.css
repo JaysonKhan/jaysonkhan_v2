@@ -2176,8 +2176,17 @@
   display: block;
 }
 @keyframes orbit-sun-pulse {
-  0%, 100% { box-shadow: 0 0 0 6px var(--accent-soft), 0 0 38px 6px var(--accent-soft); }
-  50%      { box-shadow: 0 0 0 9px var(--accent-soft), 0 0 58px 14px var(--accent-soft); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 6px var(--accent-soft),
+      0 0 38px 6px var(--accent-soft);
+  }
+  50% {
+    box-shadow:
+      0 0 0 9px var(--accent-soft),
+      0 0 58px 14px var(--accent-soft);
+  }
 }
 /* Sayyora — mehmon avatari */
 .orbit-planet {
@@ -2191,7 +2200,9 @@
   border: 1px solid var(--line-3);
   background: var(--bg-2);
   will-change: transform, opacity;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 .orbit-planet:hover {
   border-color: var(--accent);
@@ -2231,7 +2242,9 @@
   margin-top: 18px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .orbit-sun { animation: none; }
+  .orbit-sun {
+    animation: none;
+  }
 }
 .orbit-moon {
   overflow: hidden;
@@ -2294,7 +2307,9 @@
 /* Hover hint — pastdan token-skrim ustida fade-up */
 .gw-hint {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 30px 12px 10px;
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -2308,7 +2323,9 @@
   );
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
   pointer-events: none;
 }
 .gw-item:hover .gw-hint,
@@ -2333,7 +2350,9 @@
   margin-top: 16px;
 }
 #gw-more {
-  transition: opacity 0.45s ease, transform 0.45s ease;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
 }
 #gw-more.is-done {
   opacity: 0;
@@ -2341,16 +2360,27 @@
   pointer-events: none;
 }
 @media (max-width: 640px) {
-  .gallery-wall { gap: 7px; }
+  .gallery-wall {
+    gap: 7px;
+  }
   .gw-item {
     height: 150px;
     flex-basis: calc(var(--ar, 1.5) * 150px);
   }
-  .gw-hint { font-size: 9.5px; padding: 22px 9px 8px; }
+  .gw-hint {
+    font-size: 9.5px;
+    padding: 22px 9px 8px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gw-item { opacity: 1; transform: none; transition: border-color 0.25s ease; }
-  .gw-hint { transition: none; }
+  .gw-item {
+    opacity: 1;
+    transform: none;
+    transition: border-color 0.25s ease;
+  }
+  .gw-hint {
+    transition: none;
+  }
 }
 /* hidden atribut .btn display qoidasidan yutqazmasin (12/12 holat) */
 #gw-more[hidden] {
@@ -2361,14 +2391,18 @@
    LIGHTBOX — hero-animatsiyali rasm ochish (lightbox.js)
    Cover thumbnail → markazga FLIP → asosiy rasmga crossfade
    ══════════════════════════════════════════════════════════════ */
-html.lb-open { overflow: hidden; }
+html.lb-open {
+  overflow: hidden;
+}
 .lb-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
   display: none;
 }
-.lb-overlay.is-visible { display: block; }
+.lb-overlay.is-visible {
+  display: block;
+}
 .lb-backdrop {
   position: absolute;
   inset: 0;
@@ -2376,7 +2410,9 @@ html.lb-open { overflow: hidden; }
   opacity: 0;
   transition: opacity 0.42s var(--ease-out);
 }
-.lb-overlay.is-open .lb-backdrop { opacity: 0.97; }
+.lb-overlay.is-open .lb-backdrop {
+  opacity: 0.97;
+}
 .lb-stage {
   position: fixed;
   overflow: hidden;
@@ -2397,7 +2433,9 @@ html.lb-open { overflow: hidden; }
   opacity: 0;
   transition: opacity 0.55s var(--ease-out);
 }
-.lb-full.is-shown { opacity: 1; }
+.lb-full.is-shown {
+  opacity: 1;
+}
 .lb-cap {
   position: fixed;
   left: 0;
@@ -2411,11 +2449,16 @@ html.lb-open { overflow: hidden; }
   color: var(--fg-2);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.4s var(--ease-out) 0.15s, transform 0.4s var(--ease-out) 0.15s;
+  transition:
+    opacity 0.4s var(--ease-out) 0.15s,
+    transform 0.4s var(--ease-out) 0.15s;
   pointer-events: none;
   padding: 0 20px;
 }
-.lb-overlay.is-open .lb-cap.has-text { opacity: 1; transform: none; }
+.lb-overlay.is-open .lb-cap.has-text {
+  opacity: 1;
+  transform: none;
+}
 .lb-close {
   position: fixed;
   top: 20px;
@@ -2431,10 +2474,19 @@ html.lb-open { overflow: hidden; }
   color: var(--fg-1);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.4s var(--ease-out) 0.1s, background 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.4s var(--ease-out) 0.1s,
+    background 0.2s ease,
+    transform 0.2s ease;
 }
-.lb-overlay.is-open .lb-close { opacity: 1; }
-.lb-close:hover { background: var(--accent); color: var(--bg-1); transform: scale(1.05); }
+.lb-overlay.is-open .lb-close {
+  opacity: 1;
+}
+.lb-close:hover {
+  background: var(--accent);
+  color: var(--bg-1);
+  transform: scale(1.05);
+}
 .lb-spin {
   position: fixed;
   left: 50%;
@@ -2445,20 +2497,34 @@ html.lb-open { overflow: hidden; }
   pointer-events: none;
   transition: opacity 0.25s ease;
 }
-.lb-spin.is-on { opacity: 0.85; }
-.lb-spin svg { animation: ix-spin 0.7s linear infinite; }
+.lb-spin.is-on {
+  opacity: 0.85;
+}
+.lb-spin svg {
+  animation: ix-spin 0.7s linear infinite;
+}
 
 /* Cover devor kadri / about rasm — bosiladigan ko'rinish */
-.lightbox-trigger { cursor: zoom-in; }
+.lightbox-trigger {
+  cursor: zoom-in;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .lb-backdrop { transition: opacity 0.2s; }
-  .lb-full { transition: opacity 0.2s; }
-  .lb-stage { will-change: auto; }
+  .lb-backdrop {
+    transition: opacity 0.2s;
+  }
+  .lb-full {
+    transition: opacity 0.2s;
+  }
+  .lb-stage {
+    will-change: auto;
+  }
 }
 
 /* About anime cover — bosishga ishora (hover'da chiqadi) */
-.about-photo.lightbox-trigger { position: relative; }
+.about-photo.lightbox-trigger {
+  position: relative;
+}
 .about-photo__cue {
   position: absolute;
   left: 50%;
@@ -2474,7 +2540,9 @@ html.lb-open { overflow: hidden; }
   padding: 5px 12px;
   border-radius: 9999px;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
   pointer-events: none;
 }
 .about-photo.lightbox-trigger:hover .about-photo__cue,
@@ -2483,5 +2551,264 @@ html.lb-open { overflow: hidden; }
   transform: translateX(-50%);
 }
 @media (hover: none) {
-  .about-photo__cue { opacity: 0.9; transform: translateX(-50%); }
+  .about-photo__cue {
+    opacity: 0.9;
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Team detail modal — hero FLIP: karta → panel (team-modal.js) ───── */
+html.tm-open {
+  overflow: hidden;
+}
+.team-card--trigger {
+  cursor: pointer;
+}
+.tm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: none;
+}
+.tm-overlay.is-visible {
+  display: block;
+}
+.tm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--bg-0) 88%, black);
+  opacity: 0;
+  transition: opacity 0.42s var(--ease-out);
+}
+.tm-overlay.is-open .tm-backdrop {
+  opacity: 0.95;
+}
+.tm-panel {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(92vw, 720px);
+  height: fit-content;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: clamp(26px, 4vw, 42px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  will-change: transform;
+  box-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.7);
+}
+.tm-head {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+.tm-photo {
+  position: relative;
+  width: clamp(96px, 18vw, 150px);
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-3);
+}
+.tm-photo.has-real {
+  cursor: zoom-in;
+}
+.tm-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tm-img--real {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+.tm-photo.is-real .tm-img--real {
+  opacity: 1;
+}
+.tm-initials {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 44px;
+  color: var(--accent);
+}
+.tm-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%) translateY(6px);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-1);
+  background: color-mix(in oklab, var(--bg-0) 82%, transparent);
+  border: 1px solid var(--line-2);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tm-photo.has-real:not(.is-real):hover .tm-cue,
+.tm-photo.has-real:not(.is-real):focus-visible .tm-cue {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+@media (hover: none) {
+  .tm-photo.has-real:not(.is-real) .tm-cue {
+    opacity: 0.9;
+    transform: translateX(-50%);
+  }
+}
+.tm-who {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.tm-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(26px, 4vw, 34px);
+  color: var(--fg-0);
+  line-height: 1.1;
+}
+.tm-role {
+  color: var(--accent);
+}
+.tm-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  letter-spacing: 0.1em;
+}
+.tm-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--fg-1);
+  line-height: 1.45;
+  border-left: 2px solid var(--accent);
+  padding-left: 18px;
+}
+.tm-quote[hidden] {
+  display: none;
+}
+.tm-bio {
+  color: var(--fg-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.tm-skills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tm-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.tm-links[hidden] {
+  display: none;
+}
+.tm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--bg-1);
+  color: var(--fg-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+.tm-close:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  transform: scale(1.05);
+}
+/* Kontent panel kelgach yumshoq ko'tarilib kiradi */
+.tm-head,
+.tm-quote,
+.tm-bio,
+.tm-skills,
+.tm-links {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.35s var(--ease-out),
+    transform 0.35s var(--ease-out);
+}
+.tm-overlay.is-open .tm-head {
+  transition-delay: 0.16s;
+  opacity: 1;
+  transform: none;
+}
+.tm-overlay.is-open .tm-quote {
+  transition-delay: 0.22s;
+  opacity: 1;
+  transform: none;
+}
+.tm-overlay.is-open .tm-bio {
+  transition-delay: 0.27s;
+  opacity: 1;
+  transform: none;
+}
+.tm-overlay.is-open .tm-skills {
+  transition-delay: 0.32s;
+  opacity: 1;
+  transform: none;
+}
+.tm-overlay.is-open .tm-links {
+  transition-delay: 0.36s;
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-head,
+  .tm-quote,
+  .tm-bio,
+  .tm-skills,
+  .tm-links {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+@media (max-width: 640px) {
+  .tm-head {
+    gap: 16px;
+  }
+  .tm-panel {
+    gap: 16px;
+  }
 }

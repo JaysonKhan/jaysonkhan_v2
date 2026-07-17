@@ -291,6 +291,8 @@ class TeamView(TemplateView):
                 'years': m.years_experience,
                 'initials': m.initials,
                 'photo': m.photo.url if m.photo else '',
+                # real portret — modal'da anime bosilganda ochiladi (lightbox patterni)
+                'photo_real': m.photo_real.url if m.photo_real else '',
                 'skills': m.skills_list,
                 'telegram': m.telegram_url or '',
                 'github': m.github_url or '',

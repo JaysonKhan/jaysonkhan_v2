@@ -178,3 +178,39 @@ class GalleryDimensionRefreshTest(TestCase):
         for bad in ('abc', '-3', '', '9999'):
             resp = self.client.get(reverse('gallery_feed'), {'page': bad})
             self.assertEqual(resp.status_code, 200)
+
+
+class TeamModalTest(TestCase):
+    """Jamoa sahifasi: modal payload (json_script) + karta trigger atributlari."""
+
+    def test_team_page_renders_payload_and_triggers(self):
+        from django.urls import reverse
+        from portfolio.models import TeamMember
+        TeamMember.objects.create(
+            name='Nova', role='Backend', bio='Bio matn', skills='Django, DRF',
+            photo='team/nova.png', photo_real='team/real/nova.jpg',
+            quote='Kod — she\'r', years_experience=3,
+        )
+        resp = self.client.get(reverse('team'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'data-team-id')
+        self.assertContains(resp, 'id="team-data"')
+        self.assertContains(resp, 'team/real/nova.jpg')
+        self.assertContains(resp, 'team-modal.js')
+
+    def test_payload_photo_real_empty_when_missing(self):
+        import json
+
+        from django.urls import reverse
+        from portfolio.models import TeamMember
+        TeamMember.objects.create(
+            name='Aria', role='DevOps', bio='B', photo='team/aria.png',
+        )
+        resp = self.client.get(reverse('team'))
+        html = resp.content.decode()
+        start = html.index('id="team-data"')
+        payload = html[html.index('>', start) + 1:html.index('</script>', start)]
+        data = json.loads(payload)
+        member = list(data.values())[0]
+        self.assertEqual(member['photo_real'], '')
+        self.assertEqual(member['photo'], '/media/team/aria.png')

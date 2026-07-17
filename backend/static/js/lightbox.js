@@ -152,13 +152,16 @@
     var onEnd = function (e) {
       if (e.propertyName !== "transform") return;
       lb.stage.removeEventListener("transitionend", onEnd);
+      if (seq !== openSeq) return; // eskirgan listener (throttle'da kech otiladi)
       animating = false;
       loadFull(lb, fullSrc, seq);
     };
     lb.stage.addEventListener("transitionend", onEnd);
     // Fallback: rAF/transition throttle bo'lsa ham (background tab, battery-saver)
-    // dialog baribir ochilib, to'liq rasm yuklansin
+    // dialog baribir ochilib, to'liq rasm yuklansin. Listener'ni bu yerda ham
+    // olib tashlaymiz — yig'ilib qolsa kech otilib holatni buzadi.
     setTimeout(function () {
+      lb.stage.removeEventListener("transitionend", onEnd);
       if (seq !== openSeq) return; // allaqachon yopilgan yoki boshqa kadr ochilgan
       lb.root.classList.add("is-open");
       if (animating) {
@@ -198,7 +201,7 @@
     if (!overlay || !overlay.root.classList.contains("is-visible") || animating)
       return;
     var lb = overlay;
-    openSeq++; // uchayotgan full-preload bo'lsa natijasi endi tashlanadi
+    var seq = ++openSeq; // uchayotgan full-preload bo'lsa natijasi endi tashlanadi
     lb.spinner.classList.remove("is-on");
     document.documentElement.classList.remove("lb-open");
     if (lastTrigger && lastTrigger.focus) {
@@ -230,22 +233,23 @@
     lb.stage.style.transform =
       "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ")";
 
-    var onEnd = function (e) {
-      if (e.propertyName !== "transform") return;
-      lb.stage.removeEventListener("transitionend", onEnd);
+    var done = function () {
       lb.root.classList.remove("is-visible");
       lb.stage.style.transition = "none";
       lb.stage.style.transform = "none";
       animating = false;
     };
+    var onEnd = function (e) {
+      if (e.propertyName !== "transform") return;
+      lb.stage.removeEventListener("transitionend", onEnd);
+      if (seq !== openSeq) return; // eskirgan — yangi ochilgan rasmni yashirmasin
+      done();
+    };
     lb.stage.addEventListener("transitionend", onEnd);
     setTimeout(function () {
-      if (animating) {
-        lb.root.classList.remove("is-visible");
-        lb.stage.style.transition = "none";
-        lb.stage.style.transform = "none";
-        animating = false;
-      }
+      lb.stage.removeEventListener("transitionend", onEnd);
+      if (seq !== openSeq) return;
+      if (animating) done();
     }, OPEN_MS + 120);
   }
 

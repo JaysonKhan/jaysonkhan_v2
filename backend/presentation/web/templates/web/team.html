@@ -24,7 +24,9 @@
     <section class="section" style="padding-top: 56px;">
         <div class="container team-grid">
             {% for m in team_members %}
-            <div class="card team-card reveal" style="transition-delay: {{ forloop.counter0 }}70ms;">
+            <div class="card team-card reveal team-card--trigger" style="transition-delay: {{ forloop.counter0 }}70ms;"
+                 data-team-id="{{ m.pk }}" tabindex="0" role="button"
+                 aria-haspopup="dialog" aria-label="{{ m.name }} — {{ m.role }}">
                 <div class="team-card__head">
                     {% if m.photo %}
                     <img src="{{ m.photo.url }}" alt="{{ m.name }}" class="team-card__photo" loading="lazy">
@@ -57,5 +59,16 @@
             </div>
         </div>
     </section>
+
+    {# Modal ma'lumoti (json_script — xavfsiz escape) + UI matnlari #}
+    {{ team_payload|json_script:"team-data" }}
+    <div id="team-modal-cfg" hidden
+         data-label-reveal="{% trans 'Tap to reveal' %}"
+         data-label-close="{% trans 'Close' %}"
+         data-label-years="{% trans 'y' %}"></div>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/team-modal.js' %}" defer></script>
 {% endblock %}

@@ -134,9 +134,16 @@ class TeamMemberAdmin(TranslationAdmin, UnfoldModelAdmin):
     list_filter = ('is_visible',)
     search_fields = ('name', 'role', 'bio')
 
+    readonly_fields = ('real_prompt_help',)
     fieldsets = (
         ('Identity', {
-            'fields': ('name', 'role', 'photo', 'years_experience', 'is_visible', 'order'),
+            'fields': ('name', 'role', 'photo', 'photo_real', 'years_experience',
+                       'is_visible', 'order'),
+            'description': (
+                "<b>Photo</b> — anime portret (saytda ko'rinadi). "
+                "<b>Photo real</b> — realistik portret: modal'da anime rasm "
+                "bosilganda ochiladi (bo'sh = faqat anime)."
+            ),
         }),
         ('Bio', {
             'fields': ('bio', 'quote', 'skills'),
@@ -146,7 +153,29 @@ class TeamMemberAdmin(TranslationAdmin, UnfoldModelAdmin):
             'fields': ('telegram_url', 'github_url', 'linkedin_url'),
             'classes': ('collapse',),
         }),
+        ("📷 Real portret yasash (ixtiyoriy)", {
+            'classes': ('collapse',),
+            'fields': ('real_prompt_help',),
+        }),
     )
+
+    @admin.display(description='Realistik portret prompti')
+    def real_prompt_help(self, obj=None):
+        prompt = (
+            "Transform this anime character portrait into a photorealistic "
+            "photograph of a real person. Keep the EXACT same composition, framing, "
+            "pose, hairstyle, clothing, colors and background from the reference — "
+            "only convert the rendering style: natural skin texture, realistic eyes, "
+            "soft studio lighting, DSLR portrait with shallow depth of field. The "
+            "person must look like a plausible real human matching the character's "
+            "apparent age, style and mood. No text, no watermark."
+        )
+        return render_prompt_box(
+            prompt, 'team-real-prompt',
+            "1) Promptni nusxalang. 2) nano_banana_pro (Higgsfield) yoki ChatGPT'da "
+            "anime portretni referens qilib generatsiya qiling. 3) Natijani "
+            "yuqoridagi 'Photo real' maydoniga yuklang."
+        )
 
     def thumbnail(self, obj):
         if obj.photo:

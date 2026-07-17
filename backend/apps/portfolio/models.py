@@ -173,6 +173,11 @@ class TeamMember(models.Model):
         upload_to='team/', blank=True, null=True,
         help_text="Square portrait (recommended 800x800)"
     )
+    photo_real = models.ImageField(
+        upload_to='team/real/', blank=True, null=True,
+        help_text="Realistik portret — modal'da anime rasm bosilganda ochiladi "
+                  "(bo'sh = faqat anime ko'rinadi)",
+    )
     quote = models.CharField(
         max_length=240, blank=True,
         help_text="Optional one-liner shown in the dossier modal"
