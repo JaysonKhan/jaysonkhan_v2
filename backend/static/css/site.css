@@ -2352,3 +2352,7 @@
   .gw-item { opacity: 1; transform: none; transition: border-color 0.25s ease; }
   .gw-hint { transition: none; }
 }
+/* hidden atribut .btn display qoidasidan yutqazmasin (12/12 holat) */
+#gw-more[hidden] {
+  display: none;
+}
