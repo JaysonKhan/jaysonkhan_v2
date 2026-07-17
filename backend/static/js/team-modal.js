@@ -147,7 +147,8 @@
     });
     lb.links.hidden = !lb.links.childNodes.length;
 
-    // Portret: anime ko'rinadi; real bo'lsa preload + cue
+    // Portret: anime bilan ochiladi (karta bilan seamless), real yuklangach
+    // avtomatik REAL'ga crossfade bo'ladi; bosilganda anime'ga qaytadi
     lb.photo.classList.remove("is-real", "has-real");
     lb.imgR.removeAttribute("src");
     if (m.photo) {
@@ -160,7 +161,7 @@
         pre.onload = function () {
           if (seq !== openSeq) return; // boshqa a'zo ochilgan — eskirgan yuklash
           lb.imgR.src = real;
-          lb.photo.classList.add("has-real");
+          lb.photo.classList.add("has-real", "is-real");
         };
         pre.src = real;
       }

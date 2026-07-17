@@ -2608,7 +2608,7 @@ html.tm-open {
 }
 .tm-photo {
   position: relative;
-  width: clamp(96px, 18vw, 150px);
+  width: clamp(130px, 28vw, 230px);
   aspect-ratio: 1;
   border-radius: var(--r-md);
   overflow: hidden;
@@ -2666,13 +2666,13 @@ html.tm-open {
   pointer-events: none;
   white-space: nowrap;
 }
-.tm-photo.has-real:not(.is-real):hover .tm-cue,
-.tm-photo.has-real:not(.is-real):focus-visible .tm-cue {
+.tm-photo.has-real:hover .tm-cue,
+.tm-photo.has-real:focus-visible .tm-cue {
   opacity: 1;
   transform: translateX(-50%);
 }
 @media (hover: none) {
-  .tm-photo.has-real:not(.is-real) .tm-cue {
+  .tm-photo.has-real .tm-cue {
     opacity: 0.9;
     transform: translateX(-50%);
   }
