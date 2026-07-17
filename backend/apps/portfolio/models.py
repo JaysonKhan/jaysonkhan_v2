@@ -221,13 +221,22 @@ class GalleryImage(models.Model):
     hover'da chiqadigan izoh (modeltranslation: 4 til).
     """
 
-    image = models.ImageField(upload_to='gallery/')
+    image = models.ImageField(
+        upload_to='gallery/',
+        help_text="Asosiy (original) rasm — lightbox'da ochiladi",
+    )
+    cover = models.ImageField(
+        upload_to='gallery/covers/', blank=True, null=True,
+        help_text="Devorda ko'rinadigan anime/ghibli cover (bo'sh = original ko'rinadi)",
+    )
     hint = models.CharField(
         max_length=200,
         help_text="Hover'da chiqadigan qisqa izoh (4 tilda)",
     )
     width = models.PositiveIntegerField(default=0, editable=False)
     height = models.PositiveIntegerField(default=0, editable=False)
+    cover_width = models.PositiveIntegerField(default=0, editable=False)
+    cover_height = models.PositiveIntegerField(default=0, editable=False)
     is_visible = models.BooleanField(default=True)
     order = models.IntegerField(default=0, help_text="Lower = displayed first")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -248,6 +257,12 @@ class GalleryImage(models.Model):
                 self.height = self.image.height
             except Exception:
                 pass
+        if self.cover and (not self.cover_width or not self.cover_height):
+            try:
+                self.cover_width = self.cover.width
+                self.cover_height = self.cover.height
+            except Exception:
+                pass
         super().save(*args, **kwargs)
 
     @property
@@ -256,3 +271,23 @@ class GalleryImage(models.Model):
         if self.width and self.height:
             return f'{self.width / self.height:.4f}'
         return '1.5'
+
+    @property
+    def display_url(self) -> str:
+        """Devorda ko'rinadigan rasm: cover bo'lsa cover, bo'lmasa original."""
+        return self.cover.url if self.cover else self.image.url
+
+    @property
+    def display_aspect_css(self) -> str:
+        """Devor layout uchun ko'rinadigan rasmning aspekti."""
+        if self.cover and self.cover_width and self.cover_height:
+            return f'{self.cover_width / self.cover_height:.4f}'
+        return self.aspect_css
+
+    @property
+    def display_width(self):
+        return self.cover_width if (self.cover and self.cover_width) else self.width
+
+    @property
+    def display_height(self):
+        return self.cover_height if (self.cover and self.cover_height) else self.height

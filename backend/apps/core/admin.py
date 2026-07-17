@@ -252,6 +252,7 @@ class SiteSettingsHomepageAdmin(
                     'about_title',
                     'about_description',
                     'about_image', 'about_image_preview',
+                    'about_image_anime',
                 ),
             }),
             ('Statistika paneli', {

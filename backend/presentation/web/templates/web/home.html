@@ -169,9 +169,16 @@
                     </div>
                 </div>
                 {% elif site_settings.about_image %}
-                <div class="card about-photo">
-                    <img src="{{ site_settings.about_image.url }}" alt="{{ site_settings.site_author }}" loading="lazy">
+                {% with anime=site_settings.about_image_anime %}
+                <div class="card about-photo lightbox-trigger" role="button" tabindex="0"
+                     aria-label="{{ site_settings.site_author }}"
+                     data-lightbox data-full="{{ site_settings.about_image.url }}"
+                     data-hint="{{ site_settings.site_author }}">
+                    <img src="{% if anime %}{{ anime.url }}{% else %}{{ site_settings.about_image.url }}{% endif %}"
+                         alt="{{ site_settings.site_author }}" loading="lazy">
+                    {% if anime %}<span class="about-photo__cue" aria-hidden="true">{% translate "Tap to reveal" %}</span>{% endif %}
                 </div>
+                {% endwith %}
                 {% endif %}
                 {% endwith %}
             </div>
@@ -378,9 +385,12 @@
                  data-feed-url="{% url 'gallery_feed' %}"
                  data-total="{{ gallery_total }}">
                 {% for g in gallery_images %}
-                <figure class="gw-item is-in" style="--ar: {{ g.aspect_css }};" tabindex="0">
-                    <img src="{{ g.image.url }}" alt="{{ g.hint }}" loading="lazy"
-                         width="{{ g.width|default:3 }}" height="{{ g.height|default:2 }}">
+                <figure class="gw-item lightbox-trigger is-in" style="--ar: {{ g.display_aspect_css }};"
+                        tabindex="0" role="button" aria-label="{{ g.hint }}"
+                        data-lightbox data-full="{{ g.image.url }}" data-full-ar="{{ g.aspect_css }}"
+                        data-hint="{{ g.hint }}">
+                    <img src="{{ g.display_url }}" alt="{{ g.hint }}" loading="lazy"
+                         width="{{ g.display_width|default:3 }}" height="{{ g.display_height|default:2 }}">
                     <figcaption class="gw-hint">{{ g.hint }}</figcaption>
                 </figure>
                 {% endfor %}
@@ -411,4 +421,5 @@
 <script>window.XIVA_STARFIELD = { intensity: 0.7, portraitUrl: "{% static 'images/sf-portrait.png' %}" };</script>
 <script src="{% static 'js/starfield.js' %}"></script>
 {% if gallery_images %}<script src="{% static 'js/gallery-wall.js' %}" defer></script>{% endif %}
+{% if gallery_images or site_settings.about_image %}<script src="{% static 'js/lightbox.js' %}" defer></script>{% endif %}
 {% endblock %}

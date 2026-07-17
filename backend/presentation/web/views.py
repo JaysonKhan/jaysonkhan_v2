@@ -10,8 +10,8 @@ from core.services import SiteSettingsService
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db.models import Q
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -380,11 +380,15 @@ class GalleryFeedView(View):
         return JsonResponse({
             'images': [
                 {
-                    'url': g.image.url,
+                    # url = devorda ko'rinadigan rasm (cover bo'lsa cover, bo'lmasa original)
+                    'url': g.display_url,
+                    'ar': g.display_aspect_css,
+                    'w': g.display_width,
+                    'h': g.display_height,
+                    # full = lightbox'da ochiladigan asosiy (original) rasm
+                    'full': g.image.url,
+                    'full_ar': g.aspect_css,
                     'hint': g.hint or '',
-                    'ar': g.aspect_css,
-                    'w': g.width,
-                    'h': g.height,
                 }
                 for g in page_obj.object_list
             ],

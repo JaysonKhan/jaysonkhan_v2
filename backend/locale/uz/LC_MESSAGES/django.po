@@ -464,3 +464,8 @@ msgstr "Lahzalar devori."
 
 msgid "Show more"
 msgstr "Yana ko'rish"
+
+# ── Lightbox (2026-07-17) ──
+
+msgid "Tap to reveal"
+msgstr "Bosib oching"

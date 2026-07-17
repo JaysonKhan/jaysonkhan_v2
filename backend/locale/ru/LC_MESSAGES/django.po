@@ -463,3 +463,8 @@ msgstr "Стена моментов."
 
 msgid "Show more"
 msgstr "Показать ещё"
+
+# ── Lightbox (2026-07-17) ──
+
+msgid "Tap to reveal"
+msgstr "Нажмите, чтобы открыть"

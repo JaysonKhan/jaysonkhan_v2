@@ -15,9 +15,16 @@
 
   function makeItem(img) {
     var fig = document.createElement("figure");
-    fig.className = "gw-item";
+    fig.className = "gw-item lightbox-trigger";
     fig.style.setProperty("--ar", img.ar || "1.5");
     fig.tabIndex = 0;
+    fig.setAttribute("role", "button");
+    fig.setAttribute("aria-label", img.hint || "");
+    // lightbox.js delegatsiya orqali ochadi: cover ko'rinadi, full ochiladi
+    fig.setAttribute("data-lightbox", "");
+    fig.setAttribute("data-full", img.full || img.url);
+    if (img.full_ar) fig.setAttribute("data-full-ar", img.full_ar);
+    fig.setAttribute("data-hint", img.hint || "");
 
     var im = document.createElement("img");
     im.src = img.url;

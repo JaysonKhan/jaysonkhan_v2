@@ -92,3 +92,35 @@ class GalleryWallTest(TestCase):
         resp = self.client.get(reverse('home'))
         self.assertContains(resp, 'gallery-wall')
         self.assertContains(resp, 'data-feed-url')
+
+
+class GalleryCoverTest(TestCase):
+    """Cover (anime) bo'lsa devor cover'ni, lightbox esa asosiy rasmni beradi."""
+
+    def test_feed_uses_cover_for_display_and_image_for_full(self):
+        from django.urls import reverse
+        from portfolio.models import GalleryImage
+        GalleryImage.objects.create(
+            image='gallery/real.jpg', cover='gallery/covers/anime.jpg',
+            hint='Kadr', width=1000, height=500,
+            cover_width=800, cover_height=800, order=0,
+        )
+        data = self.client.get(reverse('gallery_feed')).json()
+        item = data['images'][0]
+        # Devorda cover ko'rinadi (kvadrat), lightbox asosiy rasmni (2:1) ochadi
+        self.assertIn('covers/anime.jpg', item['url'])
+        self.assertEqual(item['ar'], '1.0000')
+        self.assertIn('real.jpg', item['full'])
+        self.assertEqual(item['full_ar'], '2.0000')
+
+    def test_feed_falls_back_to_image_when_no_cover(self):
+        from django.urls import reverse
+        from portfolio.models import GalleryImage
+        GalleryImage.objects.create(
+            image='gallery/plain.jpg', hint='Oddiy',
+            width=600, height=400, order=0,
+        )
+        item = self.client.get(reverse('gallery_feed')).json()['images'][0]
+        self.assertIn('plain.jpg', item['url'])
+        self.assertIn('plain.jpg', item['full'])
+        self.assertEqual(item['ar'], '1.5000')

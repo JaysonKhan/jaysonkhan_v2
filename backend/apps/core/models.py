@@ -167,7 +167,11 @@ class ContentSectionsMixin(models.Model):
     )
     about_image = models.ImageField(
         upload_to='about/', blank=True, null=True,
-        help_text="About section portrait/image"
+        help_text="About section portrait/image (lightbox'da ochiladigan asosiy rasm)"
+    )
+    about_image_anime = models.ImageField(
+        upload_to='about/', blank=True, null=True,
+        help_text="About'da KO'RINADIGAN anime/ghibli cover — bosilganda asosiy rasm ochiladi (bo'sh = asosiy rasm)"
     )
     wakatime_stats = models.JSONField(
         blank=True, default=dict,
