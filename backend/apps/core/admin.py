@@ -234,7 +234,29 @@ class SiteSettingsNavigationAdmin(
 class SiteSettingsHomepageAdmin(
     _ProxySettingsMixin, _ImagePreviewMixin, TranslationAdmin, ModelAdmin
 ):
-    readonly_fields = ('hero_image_preview', 'about_image_preview', 'resume_preview')
+    readonly_fields = (
+        'hero_image_preview', 'about_image_preview', 'resume_preview',
+        'about_anime_prompt_help',
+    )
+
+    @admin.display(description='Anime cover prompti (about)')
+    def about_anime_prompt_help(self, obj=None):
+        from portfolio.admin import render_prompt_box
+        prompt = (
+            "Redraw this magazine profile poster as a Studio Ghibli style anime "
+            "illustration. Keep the EXACT layout and ALL typography exactly as in the "
+            "original — same text, positions and sizes, fully legible. Same paper "
+            "background and accent colors. ONLY transform the photographed person into "
+            "a hand-drawn Studio Ghibli anime character with the same pose and clothing, "
+            "soft cel shading. No watermark."
+        )
+        return render_prompt_box(
+            prompt, 'about-anime-prompt',
+            "Jurnal-layout uchun: butun matn/tipografiyani saqlaydi, faqat odamni "
+            "anime qiladi. Nusxalang → nano_banana_pro'da about rasmini referens qilib "
+            "generatsiya qiling → natijani 'About image anime' maydoniga yuklang. "
+            "(Anime bo'lmasa — asosiy about rasm ko'rinadi.)"
+        )
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
@@ -252,7 +274,7 @@ class SiteSettingsHomepageAdmin(
                     'about_title',
                     'about_description',
                     'about_image', 'about_image_preview',
-                    'about_image_anime',
+                    'about_image_anime', 'about_anime_prompt_help',
                 ),
             }),
             ('Statistika paneli', {
