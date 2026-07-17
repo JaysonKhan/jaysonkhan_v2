@@ -167,3 +167,26 @@ birinchisi server-render, qolgani "Yana ko'rila" bilan silliq qo'shiladi
 (`gallery/feed/` JSON — til-prefiksli, gotcha #12). Media serverda:
 `/var/www/jaysonkhan/media/gallery/`. Kod: `presentation/web/views.py`
 (GalleryFeedView), `static/js/gallery-wall.js`, `site.css` `.gw-*` bloklari.
+
+## 12. Anime cover + lightbox (2026-07-17)
+
+**Ikki rasm tizimi.** Har `GalleryImage`da 2 ta rasm bor:
+- `image` — ASOSIY (real) rasm, lightbox'da bosilganda ochiladi.
+- `cover` — devorda KO'RINADIGAN anime/ghibli versiya (bo'sh bo'lsa `image` ko'rinadi).
+
+Devorda cover, bosilganda `image` — FLIP "hero" animatsiyasi bilan (cover markazga
+uchadi, keyin real rasmga crossfade). Kod: `static/js/lightbox.js` +
+`site.css` `.lb-*` bloklari. Trigger: `[data-lightbox]` (gallery figure + about).
+
+**About rasm** ham xuddi shunday: `SiteSettings.about_image` (real) +
+`about_image_anime` (ko'rinadigan anime cover). Admin → Sayt sozlamalari →
+Homepage tab → About bo'limi'da ikkalasini yuklaysiz.
+
+**Yangi anime cover yasash** (Higgsfield `nano_banana_pro` bilan ishlagan):
+prompt = "Transform this photograph into a hand-painted Studio Ghibli /
+Makoto Shinkai anime illustration... Preserve the EXACT same composition...
+only convert the rendering style to anime." Kuchli "UNMISTAKABLY 2D anime cel"
+urg'usi shart — aks holda realistik chiqadi. Jurnal-layout (about) uchun barcha
+matnni "keep EXACT typography, only the person becomes anime" deb saqlab qoldiring.
+Cover fayllari serverda: `/var/www/jaysonkhan/media/gallery/covers/` va
+`/var/www/jaysonkhan/media/about/`.
