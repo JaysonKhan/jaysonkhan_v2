@@ -224,6 +224,7 @@
                         {% for code, name in LANGUAGES %}
                         <a href="/{{ code }}{{ request.path|slice:'3:' }}"
                            class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
+                           data-lang-switch
                            aria-label="{{ name }}">{{ code|upper }}</a>
                         {% endfor %}
                     </div>
@@ -311,6 +312,41 @@
     </footer>
 
     <script src="{% static 'js/infinite-scroll.js' %}"></script>
+
+    <script>
+    /* Til almashganda scroll pozitsiyasini saqlash: pill bosilganda sessionStorage'ga
+       yoziladi, yangi til sahifasida o'sha joydan davom etadi (sahifa mos kelsagina) */
+    (function () {
+        var KEY = "jk:langScroll";
+        function stripLang(p) {
+            return p.replace(/^\/(xo|uz|ru|en)(?=\/|$)/, "");
+        }
+        try {
+            var raw = sessionStorage.getItem(KEY);
+            if (raw) {
+                sessionStorage.removeItem(KEY);
+                var saved = JSON.parse(raw);
+                if (saved && Date.now() - saved.t < 60000 &&
+                    stripLang(location.pathname) === saved.path) {
+                    var restore = function () { window.scrollTo(0, saved.y); };
+                    restore();
+                    window.addEventListener("load", restore, { once: true });
+                }
+            }
+        } catch (e) {}
+        document.addEventListener("click", function (e) {
+            var a = e.target.closest && e.target.closest("[data-lang-switch]");
+            if (!a) return;
+            try {
+                sessionStorage.setItem(KEY, JSON.stringify({
+                    path: stripLang(location.pathname),
+                    y: window.scrollY,
+                    t: Date.now()
+                }));
+            } catch (err) {}
+        });
+    })();
+    </script>
 
     <script>
     /* Nav scrolled-state, scroll-top, mobile menu, reveal, count-up, live clocks */
