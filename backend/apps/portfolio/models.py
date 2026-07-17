@@ -250,19 +250,39 @@ class GalleryImage(models.Model):
         return self.hint or f'Gallery #{self.pk}'
 
     def save(self, *args, **kwargs):
-        # O'lchamlarni bir marta o'qib saqlaymiz (har renderda faylga tegmaslik uchun)
-        if self.image and (not self.width or not self.height):
+        # O'lchamlar saqlangan holda keladi (har renderda faylga tegmaslik uchun);
+        # fayl ALMASHTIRILSA qayta o'qiymiz — eski --ar bilan layout buzilmasin
+        old = {}
+        if self.pk:
+            old = (
+                type(self)._default_manager.filter(pk=self.pk)
+                .values('image', 'cover')
+                .first()
+                or {}
+            )
+        if self.image and (
+            not self.width or not self.height or self.image.name != old.get('image')
+        ):
             try:
                 self.width = self.image.width
                 self.height = self.image.height
             except Exception:
                 pass
-        if self.cover and (not self.cover_width or not self.cover_height):
-            try:
-                self.cover_width = self.cover.width
-                self.cover_height = self.cover.height
-            except Exception:
-                pass
+        if self.cover:
+            if (
+                not self.cover_width
+                or not self.cover_height
+                or self.cover.name != old.get('cover')
+            ):
+                try:
+                    self.cover_width = self.cover.width
+                    self.cover_height = self.cover.height
+                except Exception:
+                    pass
+        else:
+            # cover olib tashlangan — eski o'lchamlar qolib ketmasin
+            self.cover_width = 0
+            self.cover_height = 0
         super().save(*args, **kwargs)
 
     @property

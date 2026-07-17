@@ -11,6 +11,11 @@
   var overlay = null;
   var lastTrigger = null;
   var animating = false;
+  // Avlod hisoblagichi: har ochish/yopish +1 — uchayotgan (in-flight) preload
+  // eskirsa natijasi tashlanadi (A'ni ochib tez yopib B'ni ochganda A'ning
+  // to'liq rasmi B ustiga tushib qolmasin)
+  var openSeq = 0;
+  var currentAr = 1; // resize'da stage'ni qayta markazlash uchun
 
   function buildOverlay() {
     var o = document.createElement("div");
@@ -60,6 +65,7 @@
       full: fullImg,
       cap: cap,
       spinner: spinner,
+      close: close,
     };
   }
 
@@ -94,10 +100,13 @@
 
     if (!overlay) overlay = buildOverlay();
     var lb = overlay;
+    var seq = ++openSeq;
+    currentAr = ar;
 
     lb.cover.src = coverSrc;
-    lb.full.src = "";
+    lb.full.removeAttribute("src");
     lb.full.classList.remove("is-shown");
+    lb.spinner.classList.remove("is-on");
     lb.cap.textContent = hint;
     lb.cap.classList.toggle("has-text", !!hint);
 
@@ -109,12 +118,14 @@
 
     document.documentElement.classList.add("lb-open");
     lb.root.classList.add("is-visible");
+    // Fokus dialog ichiga: Esc/Enter yopadi; yopilganda triggerga qaytadi
+    lb.close.focus({ preventScroll: true });
 
     var rect = img.getBoundingClientRect();
 
     if (reduce) {
       lb.root.classList.add("is-open");
-      loadFull(lb, fullSrc);
+      loadFull(lb, fullSrc, seq);
       return;
     }
 
@@ -142,40 +153,57 @@
       if (e.propertyName !== "transform") return;
       lb.stage.removeEventListener("transitionend", onEnd);
       animating = false;
-      loadFull(lb, fullSrc);
+      loadFull(lb, fullSrc, seq);
     };
     lb.stage.addEventListener("transitionend", onEnd);
-    // fallback
+    // Fallback: rAF/transition throttle bo'lsa ham (background tab, battery-saver)
+    // dialog baribir ochilib, to'liq rasm yuklansin
     setTimeout(function () {
+      if (seq !== openSeq) return; // allaqachon yopilgan yoki boshqa kadr ochilgan
+      lb.root.classList.add("is-open");
       if (animating) {
         animating = false;
-        loadFull(lb, fullSrc);
+        lb.stage.style.transition = "none";
+        lb.stage.style.transform = "none";
+        loadFull(lb, fullSrc, seq);
       }
     }, OPEN_MS + 120);
   }
 
-  function loadFull(lb, fullSrc) {
-    if (!fullSrc || fullSrc === lb.cover.src) return; // cover = full bo'lsa reveal shart emas
+  function loadFull(lb, fullSrc, seq) {
+    if (!fullSrc) return;
+    // Nisbiy (data-full="/media/...") va absolyut (img.src) URL'larni bir xil
+    // ko'rinishga keltirib solishtiramiz — cover = full (cover'siz fallback)
+    // holatida bekorga spinner/qayta yuklash bo'lmasin
+    var resolved = new URL(fullSrc, window.location.href).href;
+    if (resolved === (lb.cover.currentSrc || lb.cover.src)) return;
     lb.spinner.classList.add("is-on");
     var pre = new Image();
     pre.onload = function () {
-      lb.full.src = fullSrc;
-      requestAnimationFrame(function () {
-        lb.full.classList.add("is-shown");
-        lb.spinner.classList.remove("is-on");
-      });
-    };
-    pre.onerror = function () {
+      if (seq !== openSeq) return; // eskirgan yuklash — boshqa kadr ochilgan/yopilgan
+      lb.full.src = resolved;
+      // sinxron reveal: opacity 0 allaqachon render bo'lgan, transition baribir ishlaydi
+      // (rAF'ga bog'lasak background tabda reveal osilib qoladi)
+      lb.full.classList.add("is-shown");
       lb.spinner.classList.remove("is-on");
     };
-    pre.src = fullSrc;
+    pre.onerror = function () {
+      if (seq !== openSeq) return;
+      lb.spinner.classList.remove("is-on");
+    };
+    pre.src = resolved;
   }
 
   function closeLightbox() {
     if (!overlay || !overlay.root.classList.contains("is-visible") || animating)
       return;
     var lb = overlay;
+    openSeq++; // uchayotgan full-preload bo'lsa natijasi endi tashlanadi
+    lb.spinner.classList.remove("is-on");
     document.documentElement.classList.remove("lb-open");
+    if (lastTrigger && lastTrigger.focus) {
+      lastTrigger.focus({ preventScroll: true });
+    }
 
     if (reduce || !lastTrigger) {
       lb.root.classList.remove("is-open", "is-visible");
@@ -220,6 +248,19 @@
       }
     }, OPEN_MS + 120);
   }
+
+  // Ochiq holatda oyna o'lchami o'zgarsa (rotate/resize) stage'ni qayta markazlaymiz
+  window.addEventListener("resize", function () {
+    if (!overlay || !overlay.root.classList.contains("is-visible") || animating)
+      return;
+    var t = targetRect(currentAr);
+    var lb = overlay;
+    lb.stage.style.transition = "none";
+    lb.stage.style.left = t.x + "px";
+    lb.stage.style.top = t.y + "px";
+    lb.stage.style.width = t.w + "px";
+    lb.stage.style.height = t.h + "px";
+  });
 
   // Delegatsiya — server-render va dinamik (gallery-wall.js) kadrlar uchun
   document.addEventListener("click", function (e) {

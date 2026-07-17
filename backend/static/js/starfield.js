@@ -442,17 +442,30 @@
 
     var vw = 0,
       vh = 0,
-      dpr = 1;
+      dpr = 1,
+      docH = 0; // keshlangan scrollHeight — har frame'da o'qish layout'ni majburlaydi
     function resize() {
       vw = window.innerWidth;
       vh = window.innerHeight;
+      docH = document.documentElement.scrollHeight;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = vw * dpr;
       canvas.height = vh * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
-    window.addEventListener("resize", resize);
+    // Debounce: drag-resize paytida har event'da canvas realloc bo'lmasin
+    var resizeT;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(resize, 150);
+    });
+    // Kontent balandligi o'zgarsa (masalan, gallery load-more) morph shkalasi yangilanadi
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(function () {
+        docH = document.documentElement.scrollHeight;
+      }).observe(document.body);
+    }
 
     var sp = { cur: 0, target: 0 };
     var anchorStep = Math.max(1, Math.ceil(N / 120));
@@ -472,9 +485,8 @@
       ctx.clearRect(0, 0, vw, vh);
       if (inten <= 0.01) return;
 
-      // scroll → shakl pozitsiyasi
-      var doc = document.documentElement;
-      var maxScroll = Math.max(1, doc.scrollHeight - vh);
+      // scroll → shakl pozitsiyasi (docH keshlangan — resize/ResizeObserver yangilaydi)
+      var maxScroll = Math.max(1, docH - vh);
       sp.target = (window.scrollY / maxScroll) * (SHAPES.length - 1);
       sp.cur += (sp.target - sp.cur) * (rm ? 1 : 0.065);
 

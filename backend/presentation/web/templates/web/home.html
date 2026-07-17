@@ -389,7 +389,7 @@
                         tabindex="0" role="button" aria-label="{{ g.hint }}"
                         data-lightbox data-full="{{ g.image.url }}" data-full-ar="{{ g.aspect_css }}"
                         data-hint="{{ g.hint }}">
-                    <img src="{{ g.display_url }}" alt="{{ g.hint }}" loading="lazy"
+                    <img src="{{ g.display_url }}" alt="{{ g.hint }}" loading="lazy" decoding="async"
                          width="{{ g.display_width|default:3 }}" height="{{ g.display_height|default:2 }}">
                     <figcaption class="gw-hint">{{ g.hint }}</figcaption>
                 </figure>

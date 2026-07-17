@@ -1,5 +1,5 @@
 from django.test import TestCase
-from portfolio.models import Skill, Project
+from portfolio.models import Project, Skill
 from portfolio.services import PortfolioRepository
 
 
@@ -124,3 +124,57 @@ class GalleryCoverTest(TestCase):
         self.assertIn('plain.jpg', item['url'])
         self.assertIn('plain.jpg', item['full'])
         self.assertEqual(item['ar'], '1.5000')
+
+
+class GalleryDimensionRefreshTest(TestCase):
+    """Fayl almashtirilganda o'lchamlar qayta o'qiladi (eski --ar layoutni buzmasin)."""
+
+    @staticmethod
+    def _png(w, h):
+        from io import BytesIO
+
+        from PIL import Image as PILImage
+        buf = BytesIO()
+        PILImage.new('RGB', (w, h)).save(buf, format='PNG')
+        return buf.getvalue()
+
+    def test_replacing_image_refreshes_dimensions(self):
+        import tempfile
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.test import override_settings
+        from portfolio.models import GalleryImage
+        with tempfile.TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                g = GalleryImage.objects.create(
+                    image=SimpleUploadedFile('a.png', self._png(10, 20), 'image/png'),
+                    hint='Kadr',
+                )
+                self.assertEqual((g.width, g.height), (10, 20))
+                g.image = SimpleUploadedFile('b.png', self._png(30, 15), 'image/png')
+                g.save()
+                g.refresh_from_db()
+                self.assertEqual((g.width, g.height), (30, 15))
+
+    def test_clearing_cover_resets_cover_dimensions(self):
+        from portfolio.models import GalleryImage
+        g = GalleryImage.objects.create(
+            image='gallery/x.jpg', hint='K', width=600, height=400,
+            cover='gallery/covers/x.jpg', cover_width=800, cover_height=800,
+        )
+        g.cover = None
+        g.save()
+        g.refresh_from_db()
+        self.assertEqual((g.cover_width, g.cover_height), (0, 0))
+        # Fallback: devorda endi asosiy rasm aspekti ishlaydi
+        self.assertEqual(g.display_aspect_css, '1.5000')
+
+    def test_feed_survives_garbage_page_param(self):
+        from django.urls import reverse
+        from portfolio.models import GalleryImage
+        GalleryImage.objects.create(
+            image='gallery/x.jpg', hint='K', width=600, height=400,
+        )
+        for bad in ('abc', '-3', '', '9999'):
+            resp = self.client.get(reverse('gallery_feed'), {'page': bad})
+            self.assertEqual(resp.status_code, 200)

@@ -12,8 +12,10 @@
   var shownEl = document.getElementById("gw-shown");
   var nextPage = 2;
   var loading = false;
+  // Birinchi qator darhol (eager), qolgani lazy — 20 kadrni birdan tortmaslik uchun
+  var EAGER_COUNT = 6;
 
-  function makeItem(img) {
+  function makeItem(img, idx) {
     var fig = document.createElement("figure");
     fig.className = "gw-item lightbox-trigger";
     fig.style.setProperty("--ar", img.ar || "1.5");
@@ -29,8 +31,9 @@
     var im = document.createElement("img");
     im.src = img.url;
     im.alt = img.hint || "";
-    // eager: dinamik kadrlar hozir ko'rsatiladi; lazy'da decode() hech settle bo'lmaydi
-    im.loading = "eager";
+    // lazy kadrlar decode() da settle bo'lmaydi — reveal poygasi (load/timeout) qoplaydi
+    im.loading = idx < EAGER_COUNT ? "eager" : "lazy";
+    im.decoding = "async";
     if (img.w) im.width = img.w;
     if (img.h) im.height = img.h;
 
@@ -60,8 +63,18 @@
     loading = true;
     setBtn(moreBtn.dataset.labelLoading, true);
 
+    // Timeout'siz osilgan so'rov tugmani abadiy "loading"da qoldirardi
+    var ctrl =
+      typeof AbortController === "function" ? new AbortController() : null;
+    var killTimer = ctrl
+      ? setTimeout(function () {
+          ctrl.abort();
+        }, 12000)
+      : 0;
+
     fetch(FEED_URL + "?page=" + nextPage, {
       headers: { "Accept-Language": document.documentElement.lang || "xo" },
+      signal: ctrl ? ctrl.signal : undefined,
     })
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
@@ -69,9 +82,12 @@
       })
       .then(function (data) {
         var items = (data.images || []).map(makeItem);
+        // Bitta fragment = bitta reflow (20 ta alohida appendChild o'rniga)
+        var frag = document.createDocumentFragment();
         items.forEach(function (fig) {
-          wall.appendChild(fig);
+          frag.appendChild(fig);
         });
+        wall.appendChild(frag);
 
         // Rasm tayyor bo'lgach birin-ketin fade-up; decode/load/timeout —
         // qaysi biri birinchi kelsa (decode ba'zan settle bo'lmaydi)
@@ -108,6 +124,7 @@
         setBtn(moreBtn.dataset.labelRetry, false);
       })
       .finally(function () {
+        if (killTimer) clearTimeout(killTimer);
         loading = false;
       });
   });
