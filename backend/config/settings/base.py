@@ -420,6 +420,12 @@ UNFOLD = {
                         "permission": lambda r: r.user.has_perm("portfolio.view_teammember"),
                     },
                     {
+                        "title": "Galereya devori",
+                        "icon": "photo_library",
+                        "link": f"{_A}portfolio/galleryimage/",
+                        "permission": lambda r: r.user.has_perm("portfolio.view_galleryimage"),
+                    },
+                    {
                         "title": "Media kutubxonasi",
                         "icon": "image",
                         "link": f"{_A}core/asset/manager/",
@@ -450,6 +456,22 @@ UNFOLD = {
                         "icon": "favorite",
                         "link": f"{_A}interactions/like/",
                         "permission": lambda r: r.user.has_perm("interactions.view_like"),
+                    },
+                    {
+                        "title": "Reaksiyalar",
+                        "icon": "add_reaction",
+                        "link": f"{_A}interactions/commentreaction/",
+                        "permission": lambda r: r.user.has_perm(
+                            "interactions.view_commentreaction"
+                        ),
+                    },
+                    {
+                        "title": "Kanal ulashishlar",
+                        "icon": "share",
+                        "link": f"{_A}interactions/channelshare/",
+                        "permission": lambda r: r.user.has_perm(
+                            "interactions.view_channelshare"
+                        ),
                     },
                 ],
             },
@@ -576,6 +598,26 @@ UNFOLD = {
                         "icon": "group",
                         "link": f"{_A}telegram/telegramentity/",
                         "permission": lambda r: r.user.has_perm("telegram.view_telegramentity"),
+                    },
+                    {
+                        "title": "Server xizmatlari",
+                        "icon": "monitor_heart",
+                        "link": f"{_A}servermonitor/servicecheckresult/",
+                        "permission": lambda r: r.user.is_superuser,
+                    },
+                    {
+                        "title": "Telegram log xabarlari",
+                        "icon": "receipt_long",
+                        "link": f"{_A}interactions/adminlogmessage/",
+                        "permission": lambda r: r.user.has_perm(
+                            "interactions.view_adminlogmessage"
+                        ),
+                    },
+                    {
+                        "title": "Guruhlar (huquqlar)",
+                        "icon": "admin_panel_settings",
+                        "link": f"{_A}auth/group/",
+                        "permission": lambda r: r.user.is_superuser,
                     },
                 ],
             },
