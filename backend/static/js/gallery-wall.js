@@ -1,7 +1,10 @@
-/* gallery-wall.js — footer tepasidagi "Gallery Wall" load-more mantiqi.
+/* gallery-wall.js — footer tepasidagi "Gallery Wall" avto-paginatsiyasi.
    Sahifalar JSON feed'dan (til-prefiksli {% url %} — CLAUDE.md gotcha #12)
    sakratmasdan tortiladi: yangi kadrlar img.decode() dan KEYIN, birin-ketin
    fade-up bo'lib qo'shiladi; tugma joyi min-height bilan band — UI sakramaydi.
+   Devor oxiriga yaqinlashganda IntersectionObserver keyingi sahifani O'ZI
+   yuklaydi (600px oldindan); tugma fallback/retry uchun qoladi — xatoda
+   avto-yuklash pauza bo'lib, qo'lda retry kutiladi.
    Oxirgi sahifadan keyin tugma yumshoq yo'qoladi, hisoblagich qoladi. */
 (function () {
   var wall = document.getElementById("gallery-wall");
@@ -52,14 +55,15 @@
 
   function finish() {
     moreBtn.classList.add("is-done");
+    if (io) io.disconnect();
     // O'rin band qolaveradi (.gw-more-wrap min-height) — layout sakramaydi
     setTimeout(function () {
       moreBtn.hidden = true;
     }, 450);
   }
 
-  moreBtn.addEventListener("click", function () {
-    if (loading) return;
+  function loadMore() {
+    if (loading || moreBtn.hidden) return;
     loading = true;
     setBtn(moreBtn.dataset.labelLoading, true);
 
@@ -117,15 +121,50 @@
 
         nextPage++;
         setBtn(moreBtn.dataset.labelMore, false);
-        if (!data.has_next) finish();
+        if (!data.has_next) {
+          finish();
+        } else {
+          poke(); // wrap hali ko'rinib turgan bo'lsa keyingi sahifani darhol boshlaydi
+        }
       })
       .catch(function (err) {
         console.error("Gallery feed failed", err);
+        autoPaused = true; // xatoda avto-yuklashni to'xtatamiz — retry qo'lda
         setBtn(moreBtn.dataset.labelRetry, false);
       })
       .finally(function () {
         if (killTimer) clearTimeout(killTimer);
         loading = false;
       });
+  }
+
+  moreBtn.addEventListener("click", function () {
+    autoPaused = false;
+    loadMore();
   });
+
+  // Avto-paginatsiya: devor oxiri (tugma atrofi) ko'rinishga 600px qolganda
+  // keyingi sahifa o'zi yuklanadi. IO threshold-kesishmada otiladi — sahifa
+  // qo'shilgach wrap hali ham ko'rinib tursa, poke() qayta kuzatib yana otdiradi.
+  var autoPaused = false;
+  var io = null;
+  var wrap = moreBtn.parentElement;
+
+  function poke() {
+    if (!io || moreBtn.hidden) return;
+    io.unobserve(wrap);
+    io.observe(wrap);
+  }
+
+  if ("IntersectionObserver" in window && wrap) {
+    io = new IntersectionObserver(
+      function (entries) {
+        if (!entries[0].isIntersecting) return;
+        if (loading || autoPaused || moreBtn.hidden) return;
+        loadMore();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(wrap);
+  }
 })();
