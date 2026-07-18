@@ -18,12 +18,34 @@ STORAGES = {
 }
 
 # Admin IP gate must be configured in production. AdminIPRestrictionMiddleware
-# no-ops on an empty allowlist, which would leave the admin panel publicly
-# reachable at the custom admin URL. Fail loud instead of failing open.
-if not ADMIN_ALLOWED_IPS:
+# no-ops when BOTH sources are empty, which would leave the admin panel
+# publicly reachable at the custom admin URL. Fail loud instead of failing
+# open — but check the bot-managed dynamic allowlist too (core/allowed_ips.py),
+# not just the .env base list: the whole point of that system is to let an
+# operator manage IPs via @Jaysonkhanbot without ever touching .env, so an
+# empty ADMIN_ALLOWED_IPS is a legitimate, common state, not a misconfiguration.
+# A plain file read (no app import) — settings.py runs before the app registry
+# is ready, so this can't go through the core.allowed_ips helper.
+#
+# 2026-07-19 incident: this check used to look at ADMIN_ALLOWED_IPS alone.
+# Clearing the .env list (now that the dynamic allowlist exists) crashed the
+# ENTIRE site, not just the admin panel — gunicorn couldn't boot at all.
+def _dynamic_ips_present() -> bool:
+    import json
+    try:
+        with open(ADMIN_ALLOWED_IPS_FILE, encoding='utf-8') as fh:
+            return bool(json.load(fh).get('ips'))
+    except Exception:
+        return False
+
+
+if not ADMIN_ALLOWED_IPS and not _dynamic_ips_present():
     raise ImproperlyConfigured(
-        'ADMIN_ALLOWED_IPS must be set in production (config.settings.prod) — '
-        'an empty list silently disables the admin IP restriction.'
+        'No admin IP allowlist configured in production (config.settings.prod) — '
+        'ADMIN_ALLOWED_IPS is empty AND the shared dynamic allowlist '
+        f'({ADMIN_ALLOWED_IPS_FILE}) has no entries. Add at least one IP via '
+        '@Jaysonkhanbot /ip, or set ADMIN_ALLOWED_IPS in .env — an empty '
+        'allowlist would silently disable the admin IP restriction.'
     )
 
 # ── Security headers (OWASP + CIS Benchmark) ─────────────────────────────────
