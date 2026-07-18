@@ -132,6 +132,38 @@ class IpHandlersTest(_TmpFileMixin, TestCase):
         handle_ip_callback(f'ipdok_{token}', _cq(f'ipdok_{token}'), self.api)
         self.assertEqual(load_data()['ips'], [])
 
+    def test_clear_all_flow(self, _owner):
+        from servermonitor.ip_handlers import handle_ip_callback
+        add_ip('84.54.12.7')
+        add_ip('10.1.2.3')
+        # Delete menu now offers the clear-all button
+        handle_ip_callback('ip_delmenu', _cq('ip_delmenu'), self.api)
+        rows = self.api.edited[0]['reply_markup']['inline_keyboard']
+        callbacks = [b['callback_data'] for row in rows for b in row]
+        self.assertIn('ipdall', callbacks)
+        # Confirm prompt carries the count, nothing removed yet
+        handle_ip_callback('ipdall', _cq('ipdall'), self.api)
+        self.assertIn('2', self.api.edited[1]['text'])
+        self.assertEqual(len(load_data()['ips']), 2)
+        # Execute → dynamic list empty, history records the wipe
+        handle_ip_callback('ipdallok', _cq('ipdallok'), self.api)
+        self.assertEqual(load_data()['ips'], [])
+        self.assertEqual(load_data()['history'][-1]['op'], 'clear')
+        self.assertIn('2', self.api.sent[0][1])  # "2 ta IP o'chirildi"
+
+    def test_clear_all_hidden_for_single_entry(self, _owner):
+        from servermonitor.ip_handlers import handle_ip_callback
+        add_ip('84.54.12.7')
+        handle_ip_callback('ip_delmenu', _cq('ip_delmenu'), self.api)
+        rows = self.api.edited[0]['reply_markup']['inline_keyboard']
+        callbacks = [b['callback_data'] for row in rows for b in row]
+        self.assertNotIn('ipdall', callbacks)
+
+    def test_clear_all_on_empty_list(self, _owner):
+        from servermonitor.ip_handlers import handle_ip_callback
+        self.assertTrue(handle_ip_callback('ipdallok', _cq('ipdallok'), self.api))
+        self.assertIn('bo\'sh', self.api.sent[0][1])
+
     def test_non_owner_callback_blocked(self, owner_mock):
         owner_mock.return_value = False
         from servermonitor.ip_handlers import handle_ip_callback

@@ -18,6 +18,7 @@ import re
 
 from core.allowed_ips import (
     add_ip,
+    clear_ips,
     decode_ip,
     encode_ip,
     load_data,
@@ -96,8 +97,13 @@ def _panel_text(lang: str) -> str:
     if history:
         lines.append('\n' + t('ip.history_header', lang, icon=ce('clock', '🕐')))
         for h in reversed(history[-5:]):
-            op = '➕' if h.get('op') == 'add' else '➖'
             at = (h.get('at') or '')[:16].replace('T', ' ')
+            if h.get('op') == 'clear':
+                lines.append(
+                    f'  🧹 <i>{t("ip.hist_clear", lang, n=h.get("count", "?"))} ({at})</i>'
+                )
+                continue
+            op = '➕' if h.get('op') == 'add' else '➖'
             lines.append(f'  {op} <code>{h.get("ip", "?")}</code> <i>({at})</i>')
 
     lines.append('\n' + t('ip.footer', lang, icon=ce('scam_warn', 'ℹ️')))
@@ -201,7 +207,8 @@ def maybe_offer_ip_add(message: dict, api: TelegramBotAPI) -> bool:
 def handle_ip_callback(data: str, callback_query: dict, api: TelegramBotAPI) -> bool:
     """Callback family: ip_menu / ip_addhelp / ip_delmenu / ipaok_ / ipd_ / ipdok_."""
     if not (data.startswith('ip_') or data.startswith('ipaok_')
-            or data.startswith('ipd_') or data.startswith('ipdok_')):
+            or data.startswith('ipd_') or data.startswith('ipdok_')
+            or data in ('ipdall', 'ipdallok')):
         return False
 
     tg_from = callback_query.get('from', {})
@@ -250,12 +257,41 @@ def handle_ip_callback(data: str, callback_query: dict, api: TelegramBotAPI) -> 
             }]
             for e in entries
         ]
+        if len(entries) >= 2:
+            rows.append([{'text': t('ip.btn_del_all', lang), 'callback_data': 'ipdall'}])
         rows.append([{'text': t('ip.btn_back', lang), 'callback_data': 'ip_menu'}])
         api.answer_callback_query(cb_id)
         _edit_or_send(
             t('ip.delmenu_title', lang, icon=ce('ban', '🗑')),
             {'inline_keyboard': rows},
         )
+
+    elif data == 'ipdall':
+        entries = load_data()['ips']
+        if not entries:
+            api.answer_callback_query(cb_id, t('ip.delmenu_empty', lang))
+            return True
+        api.answer_callback_query(cb_id)
+        _edit_or_send(
+            t('ip.confirm_del_all', lang, icon=ce('scam_warn', '⚠️'), n=len(entries)),
+            {'inline_keyboard': [[
+                {'text': t('ip.btn_confirm_del_all', lang), 'callback_data': 'ipdallok'},
+                {'text': t('ip.btn_cancel', lang), 'callback_data': 'ip_menu'},
+            ]]},
+        )
+
+    elif data == 'ipdallok':
+        ok, res = clear_ips(by=tg_id)
+        api.answer_callback_query(
+            cb_id, t('ip.toast_cleared', lang) if ok else t('ip.toast_error', lang),
+        )
+        if ok:
+            api.send_message(
+                chat_id, t('ip.cleared', lang, icon=ce('success', '✅'), n=res),
+            )
+            _edit_or_send(_panel_text(lang), _panel_keyboard(lang))
+        else:
+            api.send_message(chat_id, f'{ce("error", "❌")} {_fail_text(res, lang)}')
 
     elif data.startswith('ipd_'):
         ip = decode_ip(data[len('ipd_'):])

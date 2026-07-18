@@ -129,6 +129,24 @@ class AllowedIpsFileTest(_TmpFileMixin, TestCase):
             data = json.load(fh)
         self.assertEqual(data['version'], 1)
 
+    def test_clear_ips(self):
+        from core.allowed_ips import clear_ips
+        for i in range(1, 4):
+            add_ip(f'10.0.0.{i}')
+        ok, count = clear_ips(by=7)
+        self.assertTrue(ok)
+        self.assertEqual(count, 3)
+        self.assertEqual(get_dynamic_ips(), [])
+        last = load_data()['history'][-1]
+        self.assertEqual(last['op'], 'clear')
+        self.assertEqual(last['count'], 3)
+
+    def test_clear_ips_empty_rejected(self):
+        from core.allowed_ips import clear_ips
+        ok, res = clear_ips()
+        self.assertFalse(ok)
+        self.assertEqual(res[0], 'ip.err_empty')
+
 
 @override_settings(ADMIN_URL_PREFIX='jk-test-admin/', ADMIN_ALLOWED_IPS=['10.0.0.1'])
 class AdminGateUnionTest(_TmpFileMixin, TestCase):

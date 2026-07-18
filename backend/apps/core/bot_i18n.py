@@ -372,6 +372,29 @@ TEXTS: dict[str, dict[str, str]] = {
         'ru': "{icon} <b>Какой IP удалить?</b>\n(базовые IP из .env не трогаются)",
     },
     'ip.delmenu_empty': {'uz': "Dinamik ro'yxat bo'sh", 'ru': "Динамический список пуст"},
+    'ip.btn_del_all': {'uz': "🧹 Hammasini o'chirish", 'ru': "🧹 Удалить все"},
+    'ip.confirm_del_all': {
+        'uz': "{icon} Dinamik ro'yxatdagi <b>BARCHA {n} ta IP</b> o'chirilsinmi?\n"
+              "(.env bazaviy IP'lariga tegilmaydi — kirish yo'qolmaydi)",
+        'ru': "{icon} Удалить <b>ВСЕ {n} IP</b> из динамического списка?\n"
+              "(базовые IP из .env не трогаются — доступ не потеряется)",
+    },
+    'ip.btn_confirm_del_all': {'uz': "✅ Ha, hammasini o'chir", 'ru': "✅ Да, удалить все"},
+    'ip.cleared': {
+        'uz': "{icon} Dinamik ro'yxat tozalandi — {n} ta IP o'chirildi. "
+              ".env bazaviy IP'lar amalda qolmoqda.",
+        'ru': "{icon} Динамический список очищен — удалено IP: {n}. "
+              "Базовые IP из .env продолжают действовать.",
+    },
+    'ip.toast_cleared': {'uz': "✓ Tozalandi", 'ru': "✓ Очищено"},
+    'ip.err_empty': {
+        'uz': "Dinamik ro'yxat allaqachon bo'sh.",
+        'ru': "Динамический список уже пуст.",
+    },
+    'ip.hist_clear': {
+        'uz': "hammasi o'chirildi ({n} ta)",
+        'ru': "удалены все ({n})",
+    },
     'ip.confirm_del': {
         'uz': "{icon} <code>{ip}</code> barcha saytlar allowlist'idan o'chirilsinmi?",
         'ru': "{icon} Удалить <code>{ip}</code> из allowlist всех сайтов?",

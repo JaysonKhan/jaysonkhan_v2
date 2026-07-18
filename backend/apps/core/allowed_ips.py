@@ -187,6 +187,30 @@ def remove_ip(raw_ip: str, *, by: int = 0) -> tuple:
     return True, ip
 
 
+def clear_ips(*, by: int = 0) -> tuple:
+    """Remove EVERY bot-managed IP at once. .env base lists are untouched,
+    so the admin can never lock themselves out with this.
+
+    Returns (True, removed_count) | (False, (i18n_key, params)) — same
+    failure contract as add_ip/remove_ip.
+    """
+    data = load_data()
+    count = len(data['ips'])
+    if not count:
+        return False, ('ip.err_empty', {})
+
+    now = datetime.now().isoformat(timespec='seconds')
+    data['ips'] = []
+    history = data.setdefault('history', [])
+    history.append({'op': 'clear', 'count': count, 'at': now, 'by': by})
+    data['history'] = history[-MAX_HISTORY:]
+
+    ok, err = _atomic_save(data)
+    if not ok:
+        return False, ('ip.err_write', {'err': err})
+    return True, count
+
+
 # ── Deep-link helpers (t.me/<bot>?start=addip_<token>) ────────────────────────
 # Telegram start payloads allow only [A-Za-z0-9_-], so the IP is carried as
 # unpadded urlsafe base64 (IPv4 and IPv6 both fit the 64-char limit).
