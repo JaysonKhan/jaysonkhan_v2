@@ -171,6 +171,16 @@ python manage.py register_bot_commands
 ### Architecture invariants
 1. **Middleware order matters** — `RequestSanitizationMiddleware` (first) → CORS → Django Security → `SecurityHeadersMiddleware` → Session → Locale → Common → CSRF → Auth → `AdminIPRestrictionMiddleware` → Messages → `VisitorTrackingMiddleware` (LAST — acts only on final 200 HTML GET). No XFrameOptions: CSP `frame-ancestors` in Nginx handles it.
 2. **CSP lives in Nginx**, not Django. New iframe embeds (YouTube etc.) require updating `frame-src` in `security/nginx/jaysonkhan.conf` AND on the server.
+   - **Nginx sync tartibi (2026-07-19):** `/etc/nginx/sites-enabled/jaysonkhan` endi
+     `sites-available/jaysonkhan`ga SYMLINK (oldin alohida nusxa edi — repo'dagi
+     `conn_per_ip 20→60` fix serverga yetmay drift bo'lgan). Sync: repo conf →
+     `sites-available/jaysonkhan` (scp+sudo cp) → `nginx -t` → `reload`. sites-enabled'ga
+     to'g'ridan-to'g'ri yozish TAQIQ — symlink buziladi.
+   - nginx-level 50x (rate-limit 503, gunicorn restart) uchun statik sahifalar:
+     `backend/static/errors/{404,500}.html` (self-contained, collectstatic ships) +
+     conf'da `location = /404.html|/500.html { root .../static/errors; internal; }`.
+     Bularsiz error_page Django'ga proxy bo'lib "Not Found: /500.html" log-shovqini
+     va yalang'och 404 UX berardi.
 3. **Admin URL is configurable** via `ADMIN_URL` env; admin is also IP-restricted via `ADMIN_ALLOWED_IPS`.
 4. **API permissions** — default `IsAdminUser`. Public endpoints (`projects`, `contact`) explicitly override with `AllowAny`.
 
