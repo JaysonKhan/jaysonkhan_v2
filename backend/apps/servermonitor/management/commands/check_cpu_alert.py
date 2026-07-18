@@ -65,6 +65,12 @@ class Command(BaseCommand):
         threshold = options['threshold']
         interval = options['interval']
         need = options['consecutive']
+
+        # Disk piggy-backs on this 10-min cron: a full disk kills EVERY site
+        # at once and the daily 09:00 report can be 20h away. Runs first so a
+        # CPU early-return never skips it.
+        self._check_disk()
+
         cpu = collect_cpu(interval=interval)
 
         alert_text = format_cpu_alert(cpu, threshold=threshold)
@@ -98,3 +104,59 @@ class Command(BaseCommand):
         _write_consec(0)  # page qilindi → reset (har run spam qilmaslik)
         self.stdout.write(self.style.WARNING(
             f'CPU alert sent to {site.telegram_owner_id} ({consec} ketma-ket run)'))
+
+    # ── Disk alert (≥90%, kuniga 1 marta) ────────────────────────────────────
+
+    _DISK_THRESHOLD = 90.0
+    _DISK_MARKER = '/var/tmp/disk_alert_sent'
+
+    def _check_disk(self) -> None:
+        """Alert once per day when any real partition crosses 90%."""
+        from datetime import date
+
+        from servermonitor.metrics import collect_partitions
+
+        try:
+            hot = [p for p in collect_partitions() if p.percent >= self._DISK_THRESHOLD]
+        except Exception as exc:  # noqa: BLE001 — never break the CPU check
+            self.stderr.write(f'disk check failed: {exc}')
+            return
+
+        today = date.today().isoformat()
+        if not hot:
+            # Threshold cleared — arm the alert again for the next breach.
+            try:
+                import os
+                os.unlink(self._DISK_MARKER)
+            except OSError:
+                pass
+            return
+
+        try:
+            with open(self._DISK_MARKER) as fh:
+                if fh.read().strip() == today:
+                    return  # bugun allaqachon yuborilgan
+        except OSError:
+            pass
+
+        site = SiteSettingsService.get()
+        if not site.telegram_owner_id:
+            return
+
+        lines = ['🚨 <b>Disk Alert!</b>']
+        for p in hot:
+            lines.append(
+                f'  🔴 <code>{p.mountpoint}</code> — <b>{p.percent}%</b> '
+                f'({p.used_gb}/{p.total_gb}GB)'
+            )
+        lines.append(
+            '\nJoy bo\'shatish: eski backuplar, <code>journalctl --vacuum-time=7d</code>, '
+            '<code>apt clean</code>. Tekshirish: /disk'
+        )
+        TelegramBotAPI().send_message(site.telegram_owner_id, '\n'.join(lines))
+        try:
+            with open(self._DISK_MARKER, 'w') as fh:
+                fh.write(today)
+        except OSError:
+            pass
+        self.stdout.write(self.style.WARNING('Disk alert sent'))

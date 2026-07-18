@@ -3,11 +3,13 @@ Telegram bot command handlers for server monitoring.
 
 All commands require the sender to be the site owner (telegram_owner_id).
 Commands: /status, /services, /disk, /tariff, /logs, /backup
+v2:       /panel, /web, /ssl, /errors, /top, /db, /restart, /ip
 """
 from __future__ import annotations
 
 import logging
 import subprocess
+import time
 
 from core.emoji import ce
 from core.services import SiteSettingsService
@@ -16,10 +18,17 @@ from interactions.notifications.telegram_api import TelegramBotAPI
 from .contabo import analyze_tariff, format_tariff_advice
 from .formatters import (
     format_cpu_alert,
+    format_db_report,
     format_disk_detailed,
+    format_error_scan,
     format_services,
+    format_ssl_checks,
     format_status_report,
+    format_top_processes,
+    format_web_checks,
 )
+from .ip_handlers import handle_ip_command
+from .ip_handlers import send_panel as send_ip_panel
 from .metrics import (
     MONITORED_SERVICES,
     collect_all_service_status,
@@ -28,16 +37,37 @@ from .metrics import (
     collect_full_snapshot,
     collect_memory,
     collect_partitions,
+    collect_top_processes_sampled,
 )
+from .web_checks import check_databases, check_http, check_ssl, scan_journal_errors
 
 logger = logging.getLogger('servermonitor')
 
 # Commands this module handles
-SERVER_COMMANDS = {'/status', '/services', '/disk', '/tariff', '/logs', '/backup'}
+SERVER_COMMANDS = {
+    '/status', '/services', '/disk', '/tariff', '/logs', '/backup',
+    '/panel', '/web', '/ssl', '/errors', '/top', '/db', '/restart', '/ip',
+}
 
 # Allowed systemd unit names (MONITORED_SERVICES is list[dict]; we only ever
 # accept/operate on these exact unit strings). Ordered for stable display.
 _UNIT_NAMES = tuple(cfg['unit'] for cfg in MONITORED_SERVICES)
+
+# /restart menu targets: app units + nginx only. Postgres/Redis/mail restarts
+# take EVERY site down at once — those stay manual (or via the /services
+# inactive-service button when one is already down).
+_RESTARTABLE_UNITS = tuple(
+    cfg['unit'] for cfg in MONITORED_SERVICES if cfg['group'] == 'apps'
+) + ('nginx',)
+
+# Units whose restart has a known side effect worth a louder confirm.
+_RESTART_WARNINGS = {
+    'edustats-bot': (
+        '⚠️ edustats-bot restartdan 60s keyin uzbmb FULL sync boshlanadi — '
+        'edustats.uz ~10 daqiqa sekinlashadi/000 beradi (o\'zi tiklanadi, '
+        'qayta restart QILMANG).'
+    ),
+}
 
 
 def _collect_all_services() -> list:
@@ -77,6 +107,22 @@ def handle_server_command(command: str, message: dict, api: TelegramBotAPI) -> b
         _handle_logs(tg_id, message, api)
     elif command == '/backup':
         _handle_backup(tg_id, api)
+    elif command == '/panel':
+        _handle_panel(tg_id, api)
+    elif command == '/web':
+        _handle_web(tg_id, api)
+    elif command == '/ssl':
+        _handle_ssl(tg_id, api)
+    elif command == '/errors':
+        _handle_errors(tg_id, message, api)
+    elif command == '/top':
+        _handle_top(tg_id, api)
+    elif command == '/db':
+        _handle_db(tg_id, api)
+    elif command == '/restart':
+        _handle_restart_menu(tg_id, api)
+    elif command == '/ip':
+        handle_ip_command(command, message, api)
 
     return True
 
@@ -242,9 +288,118 @@ def _handle_backup(tg_id: int, api: TelegramBotAPI) -> None:
         api.send_message(tg_id, f'❌ Backup xatolik: <code>{exc}</code>')
 
 
+# ── v2 handlers ──────────────────────────────────────────────────────────────
+
+
+def _handle_web(tg_id: int, api: TelegramBotAPI) -> None:
+    """HTTP health of every public site + localhost-only internal APIs."""
+    api.send_chat_action(tg_id, 'typing')
+    try:
+        api.send_message(tg_id, format_web_checks(check_http()))
+    except Exception as exc:
+        logger.error('web check failed: %s', exc)
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
+
+
+def _handle_ssl(tg_id: int, api: TelegramBotAPI) -> None:
+    """TLS certificate expiry for every domain (manual DNS-01 renewals)."""
+    api.send_chat_action(tg_id, 'typing')
+    try:
+        api.send_message(tg_id, format_ssl_checks(check_ssl()))
+    except Exception as exc:
+        logger.error('ssl check failed: %s', exc)
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
+
+
+def _handle_errors(tg_id: int, message: dict, api: TelegramBotAPI) -> None:
+    """journalctl error counts. Usage: /errors [soat] (default 6, max 48)."""
+    api.send_chat_action(tg_id, 'typing')
+    parts = message.get('text', '').split()
+    hours = 6
+    if len(parts) > 1:
+        try:
+            hours = max(1, min(int(parts[1]), 48))
+        except ValueError:
+            pass
+    try:
+        api.send_message(tg_id, format_error_scan(scan_journal_errors(hours), hours))
+    except Exception as exc:
+        logger.error('error scan failed: %s', exc)
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
+
+
+def _handle_top(tg_id: int, api: TelegramBotAPI) -> None:
+    """Top processes by CPU (sampled) with RAM column."""
+    api.send_chat_action(tg_id, 'typing')
+    try:
+        procs = collect_top_processes_sampled(8)
+        api.send_message(tg_id, format_top_processes(procs))
+    except Exception as exc:
+        logger.error('top failed: %s', exc)
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
+
+
+def _handle_db(tg_id: int, api: TelegramBotAPI) -> None:
+    """PostgreSQL database sizes + active connections."""
+    api.send_chat_action(tg_id, 'typing')
+    try:
+        rows, connections, error = check_databases()
+        api.send_message(tg_id, format_db_report(rows, connections, error))
+    except Exception as exc:
+        logger.error('db check failed: %s', exc)
+        api.send_message(tg_id, f'{ce("error", "❌")} Xatolik: <code>{exc}</code>')
+
+
+def _handle_restart_menu(tg_id: int, api: TelegramBotAPI) -> None:
+    """Two-step restart: pick a unit, then confirm."""
+    rows = [
+        [{'text': f'🔄 {unit}', 'callback_data': f'rst_{unit}'}]
+        for unit in _RESTARTABLE_UNITS
+    ]
+    rows.append([{'text': '❌ Bekor', 'callback_data': 'rst_cancel'}])
+    api.send_message(
+        tg_id,
+        f'{ce("swap", "🔄")} <b>Qaysi servis restart qilinsin?</b>\n'
+        f'(tasdiq so\'raladi; infra servislarga /services orqali)',
+        reply_markup={'inline_keyboard': rows},
+    )
+
+
+def _handle_panel(tg_id: int, api: TelegramBotAPI) -> None:
+    """Control center — every view one tap away."""
+    keyboard = {'inline_keyboard': [
+        [
+            {'text': '📊 Status', 'callback_data': 'pnl_status'},
+            {'text': '🔧 Servislar', 'callback_data': 'pnl_services'},
+        ],
+        [
+            {'text': '🌐 Web', 'callback_data': 'pnl_web'},
+            {'text': '🔐 SSL', 'callback_data': 'pnl_ssl'},
+        ],
+        [
+            {'text': '🧾 Errorlar', 'callback_data': 'pnl_errors'},
+            {'text': '💿 Disk', 'callback_data': 'pnl_disk'},
+        ],
+        [
+            {'text': '🏆 Top', 'callback_data': 'pnl_top'},
+            {'text': '🐘 DB', 'callback_data': 'pnl_db'},
+        ],
+        [
+            {'text': '🛡 IP Allowlist', 'callback_data': 'pnl_ip'},
+            {'text': '🔄 Restart', 'callback_data': 'pnl_restart'},
+        ],
+    ]}
+    api.send_message(
+        tg_id,
+        f'{ce("server", "🎛")} <b>Boshqaruv paneli</b>\n'
+        f'Kerakli bo\'limni tanlang:',
+        reply_markup=keyboard,
+    )
+
+
 def handle_server_callback(callback_data: str, callback_query: dict, api: TelegramBotAPI) -> bool:
     """Handle callback queries for server monitor inline buttons."""
-    if not callback_data.startswith('svc_'):
+    if not callback_data.startswith(('svc_', 'pnl_', 'rst_', 'rstok_')):
         return False
 
     tg_id = callback_query['from']['id']
@@ -252,6 +407,74 @@ def handle_server_callback(callback_data: str, callback_query: dict, api: Telegr
 
     if not is_owner(tg_id):
         api.answer_callback_query(cb_id, '🔒 Faqat owner uchun')
+        return True
+
+    # ── Control panel buttons → run the matching view as a fresh message ──
+    if callback_data.startswith('pnl_'):
+        key = callback_data[len('pnl_'):]
+        api.answer_callback_query(cb_id)
+        simple = {
+            'status': _handle_status,
+            'services': _handle_services,
+            'web': _handle_web,
+            'ssl': _handle_ssl,
+            'disk': _handle_disk,
+            'top': _handle_top,
+            'db': _handle_db,
+            'restart': _handle_restart_menu,
+        }
+        if key == 'errors':
+            _handle_errors(tg_id, {'text': '/errors'}, api)
+        elif key == 'ip':
+            send_ip_panel(tg_id, api)
+        elif key in simple:
+            simple[key](tg_id, api)
+        return True
+
+    # ── Two-step restart flow ─────────────────────────────────────────────
+    if callback_data == 'rst_cancel':
+        api.answer_callback_query(cb_id, 'Bekor qilindi')
+        return True
+
+    if callback_data.startswith('rstok_'):
+        unit = callback_data[len('rstok_'):]
+        if unit not in _RESTARTABLE_UNITS:
+            api.answer_callback_query(cb_id, 'Noma\'lum servis')
+            return True
+        api.answer_callback_query(cb_id, f'🔄 {unit} restart...')
+        try:
+            subprocess.run(
+                ['sudo', 'systemctl', 'restart', unit],
+                capture_output=True, timeout=60,
+            )
+            time.sleep(2)
+            cfg = [c for c in MONITORED_SERVICES if c['unit'] == unit]
+            status = collect_all_service_status(cfg or [{'unit': unit}])
+            state = status[0].status if status else '?'
+            icon = ce('success', '✅') if (status and status[0].active) else ce('critical', '🔴')
+            api.send_message(
+                tg_id,
+                f'{icon} <code>{unit}</code> restart yakunlandi — '
+                f'holat: <code>{state}</code>',
+            )
+        except Exception as exc:
+            api.send_message(tg_id, f'{ce("error", "❌")} Restart xato: <code>{exc}</code>')
+        return True
+
+    if callback_data.startswith('rst_'):
+        unit = callback_data[len('rst_'):]
+        if unit not in _RESTARTABLE_UNITS:
+            api.answer_callback_query(cb_id, 'Noma\'lum servis')
+            return True
+        warn = _RESTART_WARNINGS.get(unit, '')
+        text = f'{ce("swap", "🔄")} <code>{unit}</code> restart qilinsinmi?'
+        if warn:
+            text += f'\n\n{warn}'
+        api.answer_callback_query(cb_id)
+        api.send_message(tg_id, text, reply_markup={'inline_keyboard': [[
+            {'text': '✅ Ha, restart', 'callback_data': f'rstok_{unit}'},
+            {'text': '❌ Bekor', 'callback_data': 'rst_cancel'},
+        ]]})
         return True
 
     if callback_data == 'svc_refresh':

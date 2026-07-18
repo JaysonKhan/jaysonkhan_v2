@@ -431,3 +431,51 @@ def health_check(request):
 
     status_code = 200 if health['status'] == 'ok' else 503
     return JsonResponse(health, status=status_code)
+
+
+def myip_view(request):
+    """Echo the visitor's real IP with a one-tap deep link into the owner bot.
+
+    Companion page for @Jaysonkhanbot's /ip feature: the owner opens this on
+    any device, sees the device's public IP, and the button carries it back
+    to the bot (t.me/<bot>?start=addip_<b64>) where an explicit confirm tap
+    adds it to the shared admin allowlist. Public and harmless — it only
+    echoes the caller's own address; adding requires the owner's Telegram.
+    """
+    from core.allowed_ips import encode_ip
+    from core.security_middleware import _get_client_ip
+    from django.conf import settings as _settings
+
+    ip = _get_client_ip(request)
+    bot_username = getattr(_settings, 'TELEGRAM_BOT_USERNAME', '').lstrip('@')
+    button = ''
+    if bot_username:
+        deep_link = f'https://t.me/{bot_username}?start=addip_{encode_ip(ip)}'
+        button = (
+            f'<a class="btn" href="{deep_link}">'
+            f'\U0001f6e1 Bot orqali allowlist\'ga qo\'shish</a>'
+        )
+    html = f"""<!doctype html>
+<html lang="uz"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mening IP manzilim</title>
+<style>
+  body {{ background:#12100e; color:#f2ede4; font-family:ui-monospace,Menlo,monospace;
+         display:flex; flex-direction:column; align-items:center; justify-content:center;
+         min-height:100vh; margin:0; gap:24px; padding:16px; text-align:center; }}
+  .ip {{ font-size:clamp(1.6rem,6vw,3rem); font-weight:700; letter-spacing:.03em;
+         color:#e07a4f; user-select:all; }}
+  .btn {{ background:#2ec4b6; color:#12100e; padding:14px 22px; border-radius:10px;
+          text-decoration:none; font-weight:700; }}
+  p {{ color:#9a938a; max-width:34rem; line-height:1.5; }}
+</style></head><body>
+<div class="ip">{ip}</div>
+{button}
+<p>Bu qurilmaning ommaviy IP manzili. Tugma @{bot_username or 'Jaysonkhanbot'}ga
+olib o'tadi — u yerda tasdiqlasangiz, IP barcha saytlarning admin allowlist'iga
+qo'shiladi.</p>
+</body></html>"""
+    resp = HttpResponse(html)
+    resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
+    return resp

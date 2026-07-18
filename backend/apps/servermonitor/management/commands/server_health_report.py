@@ -133,13 +133,25 @@ class Command(BaseCommand):
         # Pull supplementary data only for the full report (not quick).
         restart_counts: dict[str, int] = {}
         cron_summary: dict | None = None
+        ssl_warnings: list = []
         if not options['quick']:
             restart_counts = _restart_counts_24h()
             cron_summary = _cron_summary_24h()
+            # LE renewals are MANUAL (DNS-01) here — surface expiring certs
+            # daily before they become an outage.
+            from servermonitor.web_checks import check_ssl
+            try:
+                ssl_warnings = [
+                    c for c in check_ssl() if c.error or c.days_left < 14
+                ]
+            except Exception as exc:  # noqa: BLE001 — report must still send
+                self.stderr.write(f'SSL check failed: {exc}')
 
         cron_unhealthy = bool(cron_summary and (cron_summary['failed'] or cron_summary['overdue']))
 
-        if options['alert_only'] and not (has_cpu_alert or has_service_down or cron_unhealthy):
+        if options['alert_only'] and not (
+            has_cpu_alert or has_service_down or cron_unhealthy or ssl_warnings
+        ):
             self.stdout.write(self.style.SUCCESS('No alerts — skipping report'))
             return
 
@@ -158,6 +170,15 @@ class Command(BaseCommand):
         if has_service_down:
             down = [(s.display or s.name) for s in snapshot.services if not s.active]
             text += f'\n\n🚨 <b>Down services:</b> {", ".join(down)}'
+
+        if ssl_warnings:
+            lines = ['\n\n🔐 <b>SSL ogohlantirish!</b> (yangilash QO\'LDA — DNS-01)']
+            for c in ssl_warnings:
+                if c.error:
+                    lines.append(f'  🔴 {c.domain} — tekshirib bo\'lmadi ({c.error})')
+                else:
+                    lines.append(f'  ⏳ {c.domain} — <b>{c.days_left} kun qoldi</b> ({c.expires})')
+            text += '\n'.join(lines)
 
         api.send_message(tg_id, text)
         self.stdout.write(self.style.SUCCESS(f'Report sent to {tg_id}'))

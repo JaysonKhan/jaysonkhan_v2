@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional
@@ -280,6 +281,8 @@ MONITORED_SERVICES: list[dict] = [
     {'unit': 'edustats-bot',       'group': 'apps',     'display': 'EduStats Bot',          'critical': True},
     {'unit': 'uzexam',             'group': 'apps',     'display': 'UzExam Web',            'critical': True},
     {'unit': 'uzexam-bot',         'group': 'apps',     'display': 'UzExam Bot',            'critical': True},
+    {'unit': 'vaygo-web',          'group': 'apps',     'display': 'Vaygo Web',             'critical': True},
+    {'unit': 'vaygo-bot',          'group': 'apps',     'display': 'Vaygo Bot',             'critical': True},
     # ── Infrastructure (everyone depends on these) ──
     {'unit': 'nginx',              'group': 'infra',    'display': 'Nginx',                 'critical': True},
     {'unit': 'postgresql@16-main', 'group': 'infra',    'display': 'PostgreSQL 16',         'critical': True},
@@ -385,6 +388,37 @@ def collect_top_processes(n: int = 5) -> list[dict]:
             continue
     procs.sort(key=lambda x: x['cpu'], reverse=True)
     return procs[:n]
+
+
+def collect_top_processes_sampled(n: int = 8, *, sample: float = 0.8) -> list[dict]:
+    """Top N processes by CPU over a real sample window.
+
+    ``collect_top_processes`` calls ``cpu_percent`` on brand-new Process
+    objects, whose first reading is always 0.0 — fine for the daily report
+    (long-lived cron gathers other metrics first), useless for an
+    interactive /top. Prime every process, sleep, then read the delta.
+    """
+    procs = []
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            proc.cpu_percent(None)  # prime the counter
+            procs.append(proc)
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    time.sleep(sample)
+    out = []
+    for proc in procs:
+        try:
+            out.append({
+                'pid': proc.pid,
+                'name': proc.name(),
+                'cpu': round(proc.cpu_percent(None), 1),
+                'mem': round(proc.memory_percent(), 1),
+            })
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    out.sort(key=lambda x: (x['cpu'], x['mem']), reverse=True)
+    return out[:n]
 
 
 def collect_uptime() -> timedelta:

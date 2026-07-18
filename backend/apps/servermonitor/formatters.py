@@ -66,6 +66,8 @@ _SERVICE_ICONS = {
     'edustats-bot':    '🤖',
     'uzexam':          '🎓',
     'uzexam-bot':      '🤖',
+    'vaygo-web':       '🛍',
+    'vaygo-bot':       '🤖',
     'nginx':           '⚡',
     'postgresql':      '🐘',
     'redis-server':    '🧠',
@@ -411,3 +413,79 @@ def format_status_report(snapshot: ServerSnapshot) -> str:
         format_services_grouped(snapshot.services),
     ]
     return '\n'.join(sections)
+
+
+# ── v2: HTTP / SSL / error-scan / DB views ───────────────────────────────────
+
+
+def format_web_checks(checks: list) -> str:
+    """/web — HTTP health of public sites + localhost APIs."""
+    lines = [f'{_ce("web", "🌐")} <b>Web Health</b> (HTTP)']
+    internal_started = False
+    for c in checks:
+        if c.internal and not internal_started:
+            internal_started = True
+            lines.append(f'\n  {_ce("server", "🖥")} <i>Ichki API (localhost):</i>')
+        if c.status == 0:
+            lines.append(f'  🔴 <b>{c.label}</b> — ulanish yo\'q ({c.error})')
+        elif 200 <= c.status < 400:
+            speed = '🟢' if c.ms < 1500 else '🟡'
+            lines.append(f'  {speed} <b>{c.label}</b> — {c.status} · {c.ms}ms')
+        else:
+            lines.append(f'  🔴 <b>{c.label}</b> — HTTP {c.status} · {c.ms}ms')
+    return '\n'.join(lines)
+
+
+def format_ssl_checks(checks: list) -> str:
+    """/ssl — Let's Encrypt expiry per domain (manual DNS-01 renewals!)."""
+    lines = [f'{_ce("lock", "🔐")} <b>SSL sertifikatlar</b>']
+    for c in checks:
+        if c.error:
+            lines.append(f'  🔴 <b>{c.domain}</b> — tekshirib bo\'lmadi ({c.error})')
+        elif c.days_left < 7:
+            lines.append(f'  🔴 <b>{c.domain}</b> — <b>{c.days_left} kun qoldi!</b> ({c.expires})')
+        elif c.days_left < 14:
+            lines.append(f'  🟡 <b>{c.domain}</b> — {c.days_left} kun qoldi ({c.expires})')
+        else:
+            lines.append(f'  🟢 <b>{c.domain}</b> — {c.days_left} kun ({c.expires})')
+    lines.append(
+        f'\n{_ce("scam_warn", "ℹ️")} Yangilash qo\'lda (DNS-01): '
+        f'<code>certbot renew</code> yo\'q — muddat yaqinlashsa alert keladi.'
+    )
+    return '\n'.join(lines)
+
+
+def format_error_scan(scans: list, hours: int) -> str:
+    """/errors — journalctl error counts per app unit."""
+    lines = [f'{_ce("logs_icon", "🧾")} <b>Xatoliklar</b> (oxirgi {hours} soat, journalctl)']
+    total = 0
+    worst = None
+    for s in scans:
+        if s.count < 0:
+            lines.append(f'  ⚪ <code>{s.unit}</code> — {s.error}')
+            continue
+        total += s.count
+        dot = '🟢' if s.count == 0 else ('🟡' if s.count < 20 else '🔴')
+        lines.append(f'  {dot} <code>{s.unit}</code> — {s.count} ta')
+        if s.count and (worst is None or s.count > worst.count):
+            worst = s
+    if worst and worst.sample:
+        from django.utils.html import escape as _esc
+        lines.append(f'\nEng ko\'p xato — <code>{worst.unit}</code>, oxirgisi:')
+        lines.append(f'<pre>{_esc(worst.sample)}</pre>')
+    if total == 0:
+        lines.append(f'\n{_ce("ok", "✅")} Hammasi toza!')
+    lines.append('\nBatafsil: <code>/logs [servis] [qator]</code>')
+    return '\n'.join(lines)
+
+
+def format_db_report(rows: list[dict], connections: int, error: str) -> str:
+    """/db — PostgreSQL database sizes + connection count."""
+    lines = ['🐘 <b>PostgreSQL</b>']
+    if error:
+        lines.append(f'  🔴 {error}')
+        return '\n'.join(lines)
+    for r in rows:
+        lines.append(f'  • <code>{r["name"]}</code> — {r["size"]}')
+    lines.append(f'\n  🔌 Aktiv ulanishlar: <b>{connections}</b>')
+    return '\n'.join(lines)

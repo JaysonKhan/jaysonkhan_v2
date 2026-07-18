@@ -112,6 +112,14 @@ class TelegramWebhookView(View):
         if chat_type == 'private' and handle_emoji_input(message, self.api):
             return
 
+        # Owner pasted a bare IP → offer to add it to the admin allowlist
+        if chat_type == 'private' and not text.startswith('/'):
+            from servermonitor.handlers import is_owner
+            from servermonitor.ip_handlers import maybe_offer_ip_add
+            if is_owner(message.get('from', {}).get('id', 0)) \
+                    and maybe_offer_ip_add(message, self.api):
+                return
+
         if not text.startswith('/'):
             return
         command = text.split()[0].split('@')[0]  # strip @botname
@@ -133,6 +141,14 @@ class TelegramWebhookView(View):
         if command == '/start':
             from core.emoji import ce as _ce
             from servermonitor.handlers import is_owner
+            from servermonitor.ip_handlers import handle_start_payload
+
+            # Deep link: t.me/<bot>?start=addip_<token> (from /myip/ page)
+            parts = message.get('text', '').split(maxsplit=1)
+            payload = parts[1].strip() if len(parts) > 1 else ''
+            if payload and is_owner(tg_id) and handle_start_payload(payload, tg_id, self.api):
+                return
+
             if is_owner(tg_id):
                 self.api.send_chat_action(tg_id, 'typing')
                 chart = _ce('chart', '📊')
@@ -142,10 +158,19 @@ class TelegramWebhookView(View):
                 alert = _ce('alert', '🚨')
                 self.api.send_message(tg_id, (
                     f'{_ce("greeting", "👋")} <b>Salom, Admin!</b>\n\n'
-                    f'{server} <b>Server Monitor</b>\n'
+                    f'{server} <b>Boshqaruv</b>\n'
+                    f'/panel — {_ce("server", "🎛")} Boshqaruv paneli (hammasi)\n'
+                    f'/ip — {_ce("lock", "🛡")} Admin IP allowlist (barcha saytlar)\n'
+                    f'/restart — {_ce("swap", "🔄")} Servis restart (tasdiq bilan)\n\n'
+                    f'{server} <b>Monitoring</b>\n'
                     f'/status — {chart} Server holati\n'
                     f'/services — {_ce("services_icon", "🔧")} Servislar holati\n'
+                    f'/web — {_ce("web", "🌐")} Saytlar HTTP health\n'
+                    f'/ssl — {_ce("lock", "🔐")} SSL muddatlari\n'
+                    f'/errors — {_ce("logs_icon", "🧾")} Xatoliklar (journalctl)\n'
                     f'/disk — {disk} Disk ishlatilishi\n'
+                    f'/top — {_ce("trophy", "🏆")} Top jarayonlar\n'
+                    f'/db — 🐘 PostgreSQL hajmlari\n'
                     f'/tariff — {money} Contabo tarif tavsiyasi\n'
                     f'/logs — {_ce("logs_icon", "📋")} Servis loglari\n'
                     f'/backup — {_ce("backup_icon", "💾")} DB backup\n\n'
@@ -154,7 +179,9 @@ class TelegramWebhookView(View):
                     f'/config — {_ce("config_icon", "⚙️")} Admin guruh\n\n'
                     f'{_ce("clock", "⏰")} <b>Avtomatik</b>\n'
                     f'{chart} Kunlik hisobot — 09:00\n'
-                    f'{alert} CPU alert — har 10 daq (>75%)'
+                    f'{alert} CPU alert — har 10 daq · Disk alert ≥90%\n'
+                    f'{_ce("scam_warn", "ℹ️")} IP qo\'shish: menga IP yozing yoki '
+                    f'jaysonkhan.com/myip'
                 ))
             else:
                 self.api.send_message(tg_id, (
@@ -316,8 +343,12 @@ class TelegramWebhookView(View):
 
     def _handle_callback(self, callback_query):
         data = callback_query.get('data', '')
-        # Server monitor callbacks (service restart, refresh)
+        # Server monitor callbacks (service restart, refresh, panel)
         if handle_server_callback(data, callback_query, self.api):
+            return
+        # Admin IP allowlist callbacks (owner check inside)
+        from servermonitor.ip_handlers import handle_ip_callback
+        if handle_ip_callback(data, callback_query, self.api):
             return
         if data.startswith('toggle_'):
             self._toggle_user_pref(callback_query)

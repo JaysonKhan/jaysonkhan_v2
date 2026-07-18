@@ -130,9 +130,20 @@ backend/venv/bin/python backend/manage.py test portfolio.tests.SkillModelTest
 ### Server monitor (Telegram bot commands — owner-only)
 
 ```
-/start    /notifications    /status    /services
-/disk     /tariff    /logs [service] [lines]    /backup
+/panel — control center (inline tugmalar, hammasi bir joyda)
+/ip — shared admin IP allowlist (add/del/list; .env'ga TEGMAYDI)
+/status  /services  /web  /ssl  /errors [h]  /disk  /top  /db
+/restart (confirm bilan)  /tariff  /logs [service] [lines]  /backup
+/start  /notifications
 ```
+
+- **IP allowlist v2 (2026-07-18):** bot `/var/www/shared/admin_allowed_ips.json`
+  (core/allowed_ips.py, atomik yozish) fayliga yozadi; jaysonkhan + uzexam +
+  edustats-web admin middleware'lari har request'da shu faylni `.env` bazasiga
+  UNION qiladi — restart kerak emas, `.env` o'zgarmaydi. IP qo'shish: botga
+  bare IP yuborish / `/ip add` / https://jaysonkhan.com/myip/ (deep-link).
+  O'chirish faqat dinamik ro'yxatga tegadi; `.env` bazaviy IP'lar bot orqali
+  o'chirilmaydi (lockout himoyasi).
 
 Backed by management commands:
 ```bash
@@ -218,7 +229,9 @@ backend/venv/bin/python backend/manage.py test <touched_app> --settings=config.s
 DJANGO_SECRET_KEY
 DJANGO_ALLOWED_HOSTS
 ADMIN_URL                       # admin slug
-ADMIN_ALLOWED_IPS               # comma-separated whitelist
+ADMIN_ALLOWED_IPS               # comma-separated whitelist (.env base)
+ADMIN_ALLOWED_IPS_FILE          # optional; default /var/www/shared/admin_allowed_ips.json
+                                # (bot-managed dynamic allowlist, unioned at request time)
 
 # Database — Django reads ONLY DATABASE_URL (env.db(); unset = sqlite db.sqlite3)
 DATABASE_URL                    # prod: postgres://user:pass@localhost:5432/portfolio_db

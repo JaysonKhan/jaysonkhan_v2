@@ -158,6 +158,32 @@ class TelegramBotAPI:
             'reply_markup': reply_markup,
         })
 
+    def edit_message_text(
+        self,
+        chat_id: int,
+        message_id: int,
+        text: str,
+        *,
+        parse_mode: str = 'HTML',
+        reply_markup: Optional[dict] = None,
+        disable_web_page_preview: bool = True,
+    ) -> Optional[dict]:
+        """POST /editMessageText — refresh an inline-keyboard view in place.
+
+        Was missing while servermonitor's svc_refresh already called it, so
+        the /services "Yangilash" button died with a silent AttributeError.
+        """
+        payload: dict = {
+            'chat_id': chat_id,
+            'message_id': message_id,
+            'text': text,
+            'parse_mode': parse_mode,
+            'disable_web_page_preview': disable_web_page_preview,
+        }
+        if reply_markup is not None:
+            payload['reply_markup'] = reply_markup
+        return self._post('editMessageText', payload)
+
     def send_document(
         self,
         chat_id: int,

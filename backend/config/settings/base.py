@@ -212,6 +212,9 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 # ── Admin IP Restriction (empty list = no restriction in dev) ────────────────
 ADMIN_ALLOWED_IPS = [ip.strip() for ip in env.list('ADMIN_ALLOWED_IPS', default=[]) if ip.strip()]
+# Bot-managed dynamic allowlist (core.allowed_ips) — unioned with the list
+# above at request time; shared by every site on the server.
+ADMIN_ALLOWED_IPS_FILE = env('ADMIN_ALLOWED_IPS_FILE', default='/var/www/shared/admin_allowed_ips.json')
 ADMIN_URL_PREFIX = env('ADMIN_URL', default='admin/')
 
 # ── File Upload Security ─────────────────────────────────────────────────────

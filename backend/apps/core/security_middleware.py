@@ -126,23 +126,30 @@ class RequestSanitizationMiddleware:
 class AdminIPRestrictionMiddleware:
     """
     Restrict admin panel access to whitelisted IPs.
-    Configure ADMIN_ALLOWED_IPS in settings.
+
+    Effective allowlist = ADMIN_ALLOWED_IPS (.env base, needs restart to
+    change) ∪ the bot-managed shared file (core.allowed_ips — applies
+    immediately, no restart). The union is computed per request so an IP
+    added via @Jaysonkhanbot works on the very next admin request.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
         self.admin_url = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/')
-        self.allowed_ips = getattr(settings, 'ADMIN_ALLOWED_IPS', [])
+        self.env_ips = getattr(settings, 'ADMIN_ALLOWED_IPS', [])
 
     def __call__(self, request):
-        if self.allowed_ips and request.path.startswith(f'/{self.admin_url}'):
-            client_ip = _get_client_ip(request)
-            if client_ip not in self.allowed_ips:
-                logger.warning(
-                    '[Security] Admin access attempt from unauthorized IP: %s, path: %s',
-                    client_ip, request.path
-                )
-                from django.http import Http404
-                raise Http404
+        if request.path.startswith(f'/{self.admin_url}'):
+            from core.allowed_ips import get_dynamic_ips
+            allowed = set(self.env_ips) | set(get_dynamic_ips())
+            if allowed:
+                client_ip = _get_client_ip(request)
+                if client_ip not in allowed:
+                    logger.warning(
+                        '[Security] Admin access attempt from unauthorized IP: %s, path: %s',
+                        client_ip, request.path
+                    )
+                    from django.http import Http404
+                    raise Http404
 
         return self.get_response(request)

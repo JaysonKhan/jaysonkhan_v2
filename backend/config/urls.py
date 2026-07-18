@@ -2,7 +2,14 @@ import environ
 from blog.feeds import LatestPostsAtomFeed, LatestPostsFeed
 from core.emoji_views import emoji_manager
 from core.sitemaps import SITEMAPS
-from core.views import health_check, humans_txt, llms_txt, robots_txt, upload_media_view
+from core.views import (
+    health_check,
+    humans_txt,
+    llms_txt,
+    myip_view,
+    robots_txt,
+    upload_media_view,
+)
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
@@ -13,11 +20,12 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
-from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -67,6 +75,9 @@ urlpatterns = [
 
     # ── Health check ──────────────────────────────────────────────────────────
     path('health/', health_check, name='health_check'),
+
+    # ── IP echo — companion page for @Jaysonkhanbot /ip (non-i18n) ───────────
+    path('myip/', myip_view, name='myip'),
 
     # ── Telegram Bot Webhook ─────────────────────────────────────────────────
     path(

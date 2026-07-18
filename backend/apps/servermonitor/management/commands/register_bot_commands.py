@@ -3,19 +3,25 @@ Register server monitor bot commands with Telegram so they appear
 in the command menu for the bot owner.
 """
 from django.core.management.base import BaseCommand
-
 from interactions.notifications.telegram_api import TelegramBotAPI
 
-
 BOT_COMMANDS = [
-    {'command': 'start', 'description': 'Botni ishga tushirish'},
-    {'command': 'notifications', 'description': 'Bildirishnoma sozlamalari'},
+    {'command': 'panel', 'description': 'Boshqaruv paneli (hammasi bir joyda)'},
+    {'command': 'ip', 'description': 'Admin IP allowlist (barcha saytlar)'},
     {'command': 'status', 'description': 'Server holati (quick snapshot)'},
     {'command': 'services', 'description': 'Systemd servislar holati'},
+    {'command': 'web', 'description': 'Saytlar HTTP health + latency'},
+    {'command': 'ssl', 'description': 'SSL sertifikat muddatlari'},
+    {'command': 'errors', 'description': 'Xatoliklar soni (/errors [soat])'},
     {'command': 'disk', 'description': 'Disk ishlatilishi (batafsil)'},
+    {'command': 'top', 'description': 'Top jarayonlar (CPU/RAM)'},
+    {'command': 'db', 'description': 'PostgreSQL baza hajmlari'},
+    {'command': 'restart', 'description': 'Servis restart (tasdiq bilan)'},
     {'command': 'tariff', 'description': 'Contabo tarif tavsiyasi'},
     {'command': 'logs', 'description': 'Servis loglari (/logs [servis] [qator])'},
     {'command': 'backup', 'description': 'PostgreSQL backup yaratish'},
+    {'command': 'start', 'description': 'Botni ishga tushirish'},
+    {'command': 'notifications', 'description': 'Bildirishnoma sozlamalari'},
 ]
 
 
