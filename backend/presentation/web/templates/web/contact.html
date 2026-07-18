@@ -127,17 +127,15 @@
                     <img src="{% static 'images/jayson-orbit.jpg' %}" alt="{{ site_settings.site_author }}">
                 </div>
                 {% for g in orbit_guests %}
-                <a class="orbit-planet"
-                   {% if g.username %}href="https://t.me/{{ g.username }}" target="_blank" rel="noopener"{% endif %}
-                   title="{{ g.safe_display_name }}">
-                    <img src="{{ g.photo_url }}" alt="{{ g.safe_display_name }}" loading="lazy" referrerpolicy="no-referrer">
-                </a>
+                <button type="button" class="orbit-planet" title="{{ g.safe_display_name }}" aria-label="{{ g.safe_display_name }}">
+                    <img src="{{ g.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+                </button>
                 {% endfor %}
                 {% for m in orbit_moons %}
-                <span class="orbit-moon" title="{{ m.safe_display_name }}" aria-hidden="true">{% if m.photo_url %}<img src="{{ m.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}{{ m.safe_initial }}{% endif %}</span>
+                <button type="button" class="orbit-moon" title="{{ m.safe_display_name }}" aria-label="{{ m.safe_display_name }}">{% if m.photo_url %}<img src="{{ m.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer">{% else %}{{ m.safe_initial }}{% endif %}</button>
                 {% endfor %}
             </div>
-            <p class="orbit-note reveal">{% translate "Signed in with Telegram — each one orbits at their own pace." %}</p>
+            <p class="orbit-note reveal" id="orbit-note" data-default="{% translate "Signed in with Telegram — each one orbits at their own pace." %}">{% translate "Signed in with Telegram — each one orbits at their own pace." %}</p>
         </div>
     </section>
     {% endif %}

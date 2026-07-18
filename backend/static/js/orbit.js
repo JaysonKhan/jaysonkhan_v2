@@ -3,10 +3,42 @@
    sayyoralardek aylanadi; rasmsiz mehmonlar — sayyoralarning yo'ldoshlari.
    Pseudo-3D: ellips trayektoriya + masofaga qarab scale/z-index/xiralik.
    Unumdorlik: bitta rAF, faqat transform/opacity (composited), seksiya
-   ekrandan chiqsa IntersectionObserver to'xtatadi; reduced-motion'da statik. */
+   ekrandan chiqsa IntersectionObserver to'xtatadi; reduced-motion'da statik.
+   Bosilganda — hech qayerga navigatsiya qilinmaydi (privacy policy: 3-shaxs
+   saytiga yo'naltirmaymiz). Ism pastdagi izohda ko'rsatiladi, orbita davom
+   etadi; bir necha soniyadan keyin standart matnga qaytadi. */
 (function () {
   var stage = document.getElementById("orbit-stage");
   if (!stage) return;
+
+  var note = document.getElementById("orbit-note");
+  var defaultNote = note
+    ? note.getAttribute("data-default") || note.textContent
+    : "";
+  var revealTimer = null;
+  var revealedEl = null;
+
+  function reveal(el) {
+    var name = el.getAttribute("title");
+    if (!name || !note) return;
+    if (revealedEl) revealedEl.classList.remove("is-revealed");
+    revealedEl = el;
+    el.classList.add("is-revealed");
+    note.textContent = name;
+    note.classList.add("orbit-note--revealed");
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(function () {
+      note.textContent = defaultNote;
+      note.classList.remove("orbit-note--revealed");
+      if (revealedEl) revealedEl.classList.remove("is-revealed");
+      revealedEl = null;
+    }, 3200);
+  }
+
+  stage.addEventListener("click", function (e) {
+    var el = e.target.closest(".orbit-planet, .orbit-moon");
+    if (el) reveal(el);
+  });
 
   var planets = [].slice.call(stage.querySelectorAll(".orbit-planet"));
   var moons = [].slice.call(stage.querySelectorAll(".orbit-moon"));
