@@ -103,7 +103,8 @@ class Command(BaseCommand):
                     'last_seen': last_seen,
                 })
 
-        text = format_cron_failure_alert(failures=failures, overdue=overdue)
+        from interactions.notifications.lang import owner_lang
+        text = format_cron_failure_alert(failures=failures, overdue=overdue, lang=owner_lang())
         if text is None:
             self.stdout.write(self.style.SUCCESS(
                 f'No cron failures in last {hours}h, no overdue jobs.'

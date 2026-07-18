@@ -117,6 +117,30 @@ class NotificationPreference(models.Model):
         return f"Prefs for {self.profile.display_name}"
 
 
+class BotChatPref(models.Model):
+    """
+    Per-chat bot preferences keyed by raw Telegram chat id.
+
+    Deliberately NOT tied to TelegramEntity: the bot must remember the
+    language of anyone who talks to it (owner included), even if they never
+    logged in on the site. Default language when no row exists is resolved
+    from the Telegram client's language_code (see notifications.lang).
+    """
+    chat_id = models.BigIntegerField(unique=True)
+    language = models.CharField(
+        max_length=5, default='uz',
+        help_text="Bot reply language for this chat ('uz' or 'ru')",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Bot Chat Preference'
+        verbose_name_plural = 'Bot Chat Preferences'
+
+    def __str__(self):
+        return f"{self.chat_id}: {self.language}"
+
+
 class UserBan(models.Model):
     """
     Tracks bans and mutes issued via the admin Telegram group.

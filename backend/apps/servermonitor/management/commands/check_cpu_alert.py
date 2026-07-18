@@ -73,7 +73,8 @@ class Command(BaseCommand):
 
         cpu = collect_cpu(interval=interval)
 
-        alert_text = format_cpu_alert(cpu, threshold=threshold)
+        from interactions.notifications.lang import owner_lang
+        alert_text = format_cpu_alert(cpu, threshold=threshold, lang=owner_lang())
         if not alert_text:
             _write_consec(0)  # tushdi → hisoblagich reset
             self.stdout.write(self.style.SUCCESS(
@@ -143,16 +144,16 @@ class Command(BaseCommand):
         if not site.telegram_owner_id:
             return
 
-        lines = ['🚨 <b>Disk Alert!</b>']
+        from core.bot_i18n import t
+        from interactions.notifications.lang import owner_lang
+        lang = owner_lang()
+        lines = [t('alert.disk_title', lang)]
         for p in hot:
             lines.append(
                 f'  🔴 <code>{p.mountpoint}</code> — <b>{p.percent}%</b> '
                 f'({p.used_gb}/{p.total_gb}GB)'
             )
-        lines.append(
-            '\nJoy bo\'shatish: eski backuplar, <code>journalctl --vacuum-time=7d</code>, '
-            '<code>apt clean</code>. Tekshirish: /disk'
-        )
+        lines.append(t('alert.disk_advice', lang))
         TelegramBotAPI().send_message(site.telegram_owner_id, '\n'.join(lines))
         try:
             with open(self._DISK_MARKER, 'w') as fh:

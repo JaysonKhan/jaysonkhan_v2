@@ -135,7 +135,8 @@ def scan_journal_errors(hours: int = 6) -> list[ErrorScan]:
                     sample = line.strip()[:120]
             results.append(ErrorScan(unit, count, sample))
         except FileNotFoundError:
-            results.append(ErrorScan(unit, -1, error='journalctl yo\'q'))
+            # Language-neutral code — formatters map it via i18n (err.na).
+            results.append(ErrorScan(unit, -1, error='no-journalctl'))
         except Exception as exc:  # noqa: BLE001
             results.append(ErrorScan(unit, -1, error=str(exc)[:60]))
     return results

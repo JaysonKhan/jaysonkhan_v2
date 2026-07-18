@@ -9,14 +9,17 @@ from unittest.mock import patch
 from core import allowed_ips
 from core.allowed_ips import add_ip, encode_ip, load_data
 from django.test import TestCase, override_settings
-
 from servermonitor.formatters import (
     format_db_report,
     format_error_scan,
     format_ssl_checks,
     format_web_checks,
 )
-from servermonitor.handlers import _RESTARTABLE_UNITS, SERVER_COMMANDS, handle_server_callback
+from servermonitor.handlers import (
+    _RESTARTABLE_UNITS,
+    SERVER_COMMANDS,
+    handle_server_callback,
+)
 from servermonitor.ip_handlers import (
     handle_ip_command,
     handle_start_payload,
@@ -114,7 +117,7 @@ class IpHandlersTest(_TmpFileMixin, TestCase):
 
     def test_deep_link_payload(self, _owner):
         token = encode_ip('203.0.113.7')
-        self.assertTrue(handle_start_payload(f'addip_{token}', 777, self.api))
+        self.assertTrue(handle_start_payload(f'addip_{token}', {'id': 777}, self.api))
         self.assertIn('203.0.113.7', self.api.sent[0][1])
 
     def test_delete_flow(self, _owner):
@@ -176,6 +179,100 @@ class InventoryTest(TestCase):
     def test_v2_commands_registered(self):
         for cmd in ('/panel', '/ip', '/web', '/ssl', '/errors', '/top', '/db', '/restart'):
             self.assertIn(cmd, SERVER_COMMANDS)
+
+
+class BotI18nTest(TestCase):
+    """Catalogue integrity + language resolution + ru rendering."""
+
+    def test_every_key_has_both_languages(self):
+        from core.bot_i18n import LANGS, TEXTS
+        missing = [
+            (key, lang)
+            for key, entry in TEXTS.items()
+            for lang in LANGS
+            if not entry.get(lang)
+        ]
+        self.assertEqual(missing, [])
+
+    def test_t_fallbacks(self):
+        from core.bot_i18n import t
+        self.assertEqual(t('no.such.key', 'ru'), 'no.such.key')
+        # Bad params never raise — returns the raw template
+        self.assertIn('{unit}', t('restart.starting_toast', 'uz'))
+
+    def test_resolve_lang_precedence(self):
+        from interactions.models import BotChatPref
+        from interactions.notifications.lang import resolve_lang, set_lang
+        # No pref → Telegram client language decides
+        self.assertEqual(resolve_lang({'id': 5, 'language_code': 'ru'}), 'ru')
+        self.assertEqual(resolve_lang({'id': 5, 'language_code': 'en'}), 'uz')
+        self.assertEqual(resolve_lang({'id': 5}), 'uz')
+        # Explicit pref overrides the client language
+        self.assertTrue(set_lang(5, 'ru'))
+        self.assertEqual(resolve_lang({'id': 5, 'language_code': 'en'}), 'ru')
+        self.assertEqual(BotChatPref.objects.get(chat_id=5).language, 'ru')
+        # Invalid language rejected
+        self.assertFalse(set_lang(5, 'fr'))
+
+    def test_command_sets_differ_per_language(self):
+        from servermonitor.management.commands.register_bot_commands import (
+            COMMAND_ORDER,
+            _commands_for,
+        )
+        uz = _commands_for('uz')
+        ru = _commands_for('ru')
+        self.assertEqual(len(uz), len(COMMAND_ORDER))
+        self.assertIn({'command': 'lang', 'description': 'Til / Язык'}, uz)
+        by_cmd_ru = {c['command']: c['description'] for c in ru}
+        self.assertIn('Панель управления', by_cmd_ru['panel'])
+        self.assertIn('Перезапуск', by_cmd_ru['restart'])
+
+    def test_webhook_lang_callback_persists(self):
+        from interactions.notifications.lang import resolve_lang
+        from interactions.notifications.webhook import TelegramWebhookView
+        view = TelegramWebhookView()
+        view.api = FakeAPI()
+        view._set_language({'id': 'cb9', 'data': 'lang_ru', 'from': {'id': 909}})
+        self.assertEqual(resolve_lang({'id': 909}), 'ru')
+        self.assertIn('Русский', view.api.sent[0][1])
+
+
+@patch('servermonitor.handlers.is_owner', return_value=True)
+class RussianRenderTest(_TmpFileMixin, TestCase):
+    """A ru-client owner gets Russian UI without any explicit pref."""
+
+    def test_ip_panel_in_russian(self, _owner):
+        message = {
+            'from': {'id': 777, 'language_code': 'ru'},
+            'text': '/ip',
+        }
+        handle_ip_command('/ip', message, self.api)
+        text = self.api.sent[0][1]
+        self.assertIn('Админ IP Allowlist', text)
+        self.assertIn('Динамические', text)
+
+    def test_restart_confirm_in_russian(self, _owner):
+        cq = _cq('rst_jaysonkhan')
+        cq['from']['language_code'] = 'ru'
+        handle_server_callback('rst_jaysonkhan', cq, self.api)
+        self.assertIn('Перезапустить', self.api.sent[0][1])
+
+    def test_owner_start_menu_in_russian(self, _owner):
+        from interactions.notifications.webhook import TelegramWebhookView
+        view = TelegramWebhookView()
+        view.api = FakeAPI()
+        menu = view._owner_start_menu('ru')
+        self.assertIn('Здравствуйте', menu)
+        self.assertIn('Мониторинг', menu)
+        self.assertIn('/panel', menu)
+
+    def test_formatters_russian(self, _owner):
+        text = format_ssl_checks([SslCheck('uzexam.uz', 5, '2026-07-23')], lang='ru')
+        self.assertIn('осталось 5 дн.!', text)
+        web = format_web_checks(
+            [HttpCheck('uzexam.uz', 'https://y/', 0, 8000, error='timeout')], lang='ru',
+        )
+        self.assertIn('нет соединения', web)
 
 
 class FormatterSmokeTest(TestCase):

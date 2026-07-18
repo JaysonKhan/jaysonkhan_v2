@@ -133,8 +133,10 @@ def _find_downgrade(current: dict) -> dict | None:
     return None
 
 
-def format_tariff_advice(advice: TariffAdvice) -> str:
-    """Format tariff advice as a Telegram-ready message."""
+def format_tariff_advice(advice: TariffAdvice, lang: str = 'uz') -> str:
+    """Format tariff advice as a Telegram-ready message (uz/ru)."""
+    from core.bot_i18n import t
+
     from .formatters import _ce
 
     rec_emoji = {
@@ -143,15 +145,18 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
         'keep': _ce('ok', '✅'),
     }
     emoji = rec_emoji.get(advice.recommendation, '📋')
+    # Reason is rendered from the recommendation code so it localizes; the
+    # dataclass's uz `reason` string stays for logs/back-compat.
+    reason = t(f'tariff.reason_{advice.recommendation}', lang)
 
-    money = _ce('money', '💰')
     lines = [
-        f'{money} <b>Contabo Tariff Advisor</b>\n',
-        f'{_ce("package", "📦")} Current: <b>{advice.current_plan["name"]}</b>',
+        t('tariff.title', lang, icon=_ce('money', '💰')),
+        t('tariff.current', lang, icon=_ce('package', '📦'),
+          name=advice.current_plan['name']),
         f'{advice.current_plan["cpu_cores"]} CPU / {advice.current_plan["ram_gb"]}GB RAM / {advice.current_plan["disk_gb"]}GB Disk',
         f'€{advice.current_plan["price_eur"]}/mo\n',
-        f'{emoji} <b>Tavsiya: {advice.recommendation.upper()}</b>',
-        f'{_ce("history", "📝")} {advice.reason}\n',
+        t('tariff.rec', lang, icon=emoji, rec=advice.recommendation.upper()),
+        f'{_ce("history", "📝")} {reason}\n',
     ]
 
     for d in advice.details:
@@ -159,14 +164,14 @@ def format_tariff_advice(advice: TariffAdvice) -> str:
 
     if advice.suggested_plan:
         sp = advice.suggested_plan
-        lines.append(f'\n{_ce("package", "📦")} Tavsiya etilgan plan: <b>{sp["name"]}</b>')
+        lines.append(t('tariff.suggested', lang, icon=_ce('package', '📦'), name=sp['name']))
         lines.append(f'   {sp["cpu_cores"]} CPU / {sp["ram_gb"]}GB RAM / {sp["disk_gb"]}GB Disk')
         lines.append(f'   €{sp["price_eur"]}/mo')
 
         diff = sp['price_eur'] - advice.current_plan['price_eur']
         if diff > 0:
-            lines.append(f'   💸 +€{diff:.2f}/mo qo\'shimcha')
+            lines.append(t('tariff.extra', lang, diff=f'{diff:.2f}'))
         elif diff < 0:
-            lines.append(f'   💰 €{abs(diff):.2f}/mo tejash!')
+            lines.append(t('tariff.save', lang, diff=f'{abs(diff):.2f}'))
 
     return '\n'.join(lines)

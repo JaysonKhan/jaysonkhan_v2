@@ -28,6 +28,7 @@ import re
 import tempfile
 from collections import Counter
 
+from core.bot_i18n import t
 from core.services import SiteSettingsService
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -184,7 +185,7 @@ def _fmt_size(n: int) -> str:
     return f'{n}B'
 
 
-def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
+def build_summary(period_label: str, host: str, err: dict, sec: dict, lang: str = 'uz') -> str:
     """Compose the HTML Telegram message from parsed django_errors stats."""
     st = err['status']
     real_5xx = st.get('500', 0)
@@ -193,27 +194,26 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
     hosthdr = st.get('hosthdr', 0)
     # ERROR total minus benign Invalid-HTTP_HOST noise → real error count
     real_errors = max(0, err['levels'].get('ERROR', 0) - hosthdr)
-    verdict = '✅ Server sog‘lom' if real_5xx == 0 else '⚠️ Diqqat: real xatolar bor'
+    verdict = t('mon.healthy', lang) if real_5xx == 0 else t('mon.attention', lang)
 
     lines = [
-        f'📋 <b>Oylik log hisoboti — {period_label}</b>',
+        t('mon.title', lang, period=period_label),
         f'<code>{host}</code>',
         '',
         verdict,
         '',
-        f'🔴 <b>5xx (real xatolar):</b> {real_5xx}',
+        t('mon.5xx', lang, n=real_5xx),
         f'🟡 <b>4xx:</b> {total_4xx}  '
         f'<i>(404:{st.get("404", 0)} · 403:{st.get("403", 0)} · '
         f'401:{st.get("401", 0)} · 400:{st.get("400", 0)})</i>',
-        f'🛡 <b>Bloklangan skanerlar:</b> {blocked}',
+        t('mon.blocked', lang, n=blocked),
         f'🌐 <b>Host-header probe:</b> {hosthdr} <i>(benign)</i>',
-        f'📊 <b>Jami:</b> real ERROR {real_errors} · '
-        f'WARNING {err["levels"].get("WARNING", 0)}',
+        t('mon.total', lang, e=real_errors, w=err['levels'].get('WARNING', 0)),
     ]
 
     if real_5xx:
         lines.append('')
-        lines.append('🔎 <b>Top server xatolari:</b>')
+        lines.append(t('mon.top_errors', lang))
         for sig, cnt in err['err_signatures'].most_common(5):
             short = sig if len(sig) <= 110 else sig[:107] + '…'
             lines.append(f'• <code>{_esc(short)}</code> ×{cnt}')
@@ -221,14 +221,14 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
     top_scans = err['scan_paths'].most_common(5)
     if top_scans:
         lines.append('')
-        lines.append('🎯 <b>Eng ko‘p urinilgan yo‘llar:</b>')
+        lines.append(t('mon.top_paths', lang))
         for p, cnt in top_scans:
             lines.append(f'• <code>{_esc(p)}</code> ×{cnt}')
 
     top_ips = (err['attacker_ips'] + sec['attacker_ips']).most_common(5)
     if top_ips:
         lines.append('')
-        lines.append('🌐 <b>Faol skaner IP‘lari:</b>')
+        lines.append(t('mon.scanner_ips', lang))
         for ip, cnt in top_ips:
             lines.append(f'• <code>{ip}</code> ×{cnt}')
 
@@ -236,10 +236,7 @@ def build_summary(period_label: str, host: str, err: dict, sec: dict) -> str:
     if err['first_date'] and err['last_date']:
         span = f'{err["first_date"]} — {err["last_date"]} · '
     lines.append('')
-    lines.append(
-        f'<i>Loglar arxivlandi va tozalandi. '
-        f'{span}{err["lines"] + sec["lines"]:,} qator.</i>'
-    )
+    lines.append(t('mon.archived', lang, span=span, n=f'{err["lines"] + sec["lines"]:,}'))
     return '\n'.join(lines)
 
 
@@ -278,7 +275,8 @@ class Command(BaseCommand):
         period_label = f'{UZ_MONTHS[prev_month]} {prev_year}'
         host = os.uname().nodename
 
-        summary = build_summary(period_label, host, err, sec)
+        from interactions.notifications.lang import owner_lang
+        summary = build_summary(period_label, host, err, sec, lang=owner_lang())
 
         if opts['dry_run']:
             self.stdout.write(summary.replace('<b>', '').replace('</b>', '')

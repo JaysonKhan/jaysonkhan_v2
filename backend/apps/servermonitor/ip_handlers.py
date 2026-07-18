@@ -9,6 +9,8 @@ Owner-only. Three ways to add an IP, all ending in an explicit confirm tap:
 The bot writes ONLY the shared JSON file (core.allowed_ips) — it never
 touches any project's .env, and no service restart is needed: every site's
 admin middleware re-reads the file per request.
+
+All texts render via core.bot_i18n (uz/ru, resolved per chat).
 """
 from __future__ import annotations
 
@@ -22,9 +24,11 @@ from core.allowed_ips import (
     normalize_ip,
     remove_ip,
 )
+from core.bot_i18n import t
 from core.emoji import ce
 from django.conf import settings
 from django.utils.html import escape
+from interactions.notifications.lang import resolve_lang
 from interactions.notifications.telegram_api import TelegramBotAPI
 
 MYIP_URL = 'https://jaysonkhan.com/myip/'
@@ -55,73 +59,82 @@ def _peek_env_ips(paths: tuple[str, ...]) -> list[str] | None:
     return None
 
 
-def _panel_text() -> str:
-    data = load_data()
-    shield = ce('lock', '🛡')
-    lines = [f'{shield} <b>Admin IP Allowlist</b> — barcha saytlar\n']
+def _fail_text(res, lang: str) -> str:
+    """Render an allowed_ips failure tuple (key, params) in *lang*."""
+    if isinstance(res, tuple) and len(res) == 2:
+        return t(res[0], lang, **res[1])
+    return str(res)
 
-    lines.append(f'{ce("bot", "🤖")} <b>Dinamik (bot boshqaradi, restart kerak emas):</b>')
+
+def _panel_text(lang: str) -> str:
+    data = load_data()
+    lines = [t('ip.panel_title', lang, icon=ce('lock', '🛡')) + '\n']
+
+    lines.append(t('ip.dynamic_header', lang, icon=ce('bot', '🤖')))
     if data['ips']:
         for e in data['ips']:
             label = f' — {escape(e.get("label", ""))}' if e.get('label') else ''
             added = (e.get('added') or '')[:16].replace('T', ' ')
             lines.append(f'  • <code>{e["ip"]}</code>{label} <i>({added})</i>')
     else:
-        lines.append('  <i>bo\'sh — hali IP qo\'shilmagan</i>')
+        lines.append(f'  {t("ip.empty", lang)}')
 
-    gear = ce('config_icon', '⚙️')
-    lines.append(f'\n{gear} <b>.env bazaviy ro\'yxatlar</b> (faqat ma\'lumot):')
+    lines.append('\n' + t('ip.env_header', lang, icon=ce('config_icon', '⚙️')))
     own = getattr(settings, 'ADMIN_ALLOWED_IPS', [])
     lines.append(f'  jaysonkhan: <code>{", ".join(own) or "—"}</code>')
     for name, paths in ENV_PEEKS.items():
         ips = _peek_env_ips(paths)
-        shown = ', '.join(ips) if ips else ('bo\'sh' if ips == [] else 'o\'qib bo\'lmadi')
+        if ips:
+            shown = ', '.join(ips)
+        elif ips == []:
+            shown = t('ip.env_empty', lang)
+        else:
+            shown = t('ip.env_unreadable', lang)
         lines.append(f'  {name}: <code>{shown}</code>')
 
     history = data.get('history', [])
     if history:
-        lines.append(f'\n{ce("clock", "🕐")} <b>So\'nggi o\'zgarishlar:</b>')
+        lines.append('\n' + t('ip.history_header', lang, icon=ce('clock', '🕐')))
         for h in reversed(history[-5:]):
             op = '➕' if h.get('op') == 'add' else '➖'
             at = (h.get('at') or '')[:16].replace('T', ' ')
             lines.append(f'  {op} <code>{h.get("ip", "?")}</code> <i>({at})</i>')
 
-    lines.append(
-        f'\n{ce("scam_warn", "ℹ️")} Yangi IP <b>bir zumda</b> jaysonkhan + uzexam + '
-        f'edustats admin panellariga tarqaladi. .env fayllarga tegilmaydi.'
-    )
+    lines.append('\n' + t('ip.footer', lang, icon=ce('scam_warn', 'ℹ️')))
     return '\n'.join(lines)
 
 
-def _panel_keyboard() -> dict:
+def _panel_keyboard(lang: str) -> dict:
     return {'inline_keyboard': [
         [
-            {'text': '➕ IP qo\'shish', 'callback_data': 'ip_addhelp'},
-            {'text': '🗑 O\'chirish', 'callback_data': 'ip_delmenu'},
+            {'text': t('ip.btn_add', lang), 'callback_data': 'ip_addhelp'},
+            {'text': t('ip.btn_del', lang), 'callback_data': 'ip_delmenu'},
         ],
         [
-            {'text': '🌍 IP manzilimni aniqlash', 'url': MYIP_URL},
+            {'text': t('ip.btn_detect', lang), 'url': MYIP_URL},
         ],
         [
-            {'text': '🔄 Yangilash', 'callback_data': 'ip_menu'},
+            {'text': t('ip.btn_refresh', lang), 'callback_data': 'ip_menu'},
         ],
     ]}
 
 
-def send_panel(tg_id: int, api: TelegramBotAPI) -> None:
-    api.send_message(tg_id, _panel_text(), reply_markup=_panel_keyboard())
+def send_panel(tg_id: int, api: TelegramBotAPI, lang: str | None = None) -> None:
+    lang = lang or resolve_lang(chat_id=tg_id)
+    api.send_message(tg_id, _panel_text(lang), reply_markup=_panel_keyboard(lang))
 
 
-def _confirm_add_prompt(tg_id: int, ip: str, api: TelegramBotAPI, *, label: str = '') -> None:
+def _confirm_add_prompt(
+    tg_id: int, ip: str, api: TelegramBotAPI, *, label: str = '', lang: str = 'uz',
+) -> None:
     token = encode_ip(ip)
-    note = f' (izoh: {escape(label)})' if label else ''
+    note = t('ip.note', lang, label=escape(label)) if label else ''
     api.send_message(
         tg_id,
-        f'{ce("lock", "🛡")} <code>{ip}</code>{note} barcha saytlarning admin '
-        f'allowlist\'iga qo\'shilsinmi?',
+        t('ip.confirm_add', lang, icon=ce('lock', '🛡'), ip=ip, note=note),
         reply_markup={'inline_keyboard': [[
-            {'text': '✅ Qo\'shish', 'callback_data': f'ipaok_{token}'},
-            {'text': '❌ Bekor', 'callback_data': 'ip_menu'},
+            {'text': t('ip.btn_confirm_add', lang), 'callback_data': f'ipaok_{token}'},
+            {'text': t('ip.btn_cancel', lang), 'callback_data': 'ip_menu'},
         ]]},
     )
 
@@ -131,37 +144,44 @@ def handle_ip_command(command: str, message: dict, api: TelegramBotAPI) -> bool:
     if command != '/ip':
         return False
 
-    tg_id = message['from']['id']
+    tg_from = message.get('from', {})
+    tg_id = tg_from['id']
+    lang = resolve_lang(tg_from)
     parts = message.get('text', '').split()
     sub = parts[1].lower() if len(parts) > 1 else ''
 
     if sub == 'add' and len(parts) > 2:
         ip = normalize_ip(parts[2])
         if not ip:
-            api.send_message(tg_id, f'{ce("error", "❌")} Noto\'g\'ri IP: <code>{escape(parts[2][:40])}</code>')
+            api.send_message(
+                tg_id,
+                t('ip.invalid', lang, icon=ce('error', '❌'), raw=escape(parts[2][:40])),
+            )
             return True
-        _confirm_add_prompt(tg_id, ip, api, label=' '.join(parts[3:]))
+        _confirm_add_prompt(tg_id, ip, api, label=' '.join(parts[3:]), lang=lang)
     elif sub == 'del' and len(parts) > 2:
-        ok, msg = remove_ip(parts[2], by=tg_id)
-        icon = ce('success', '✅') if ok else ce('error', '❌')
-        text = f'{icon} <code>{msg}</code> o\'chirildi.' if ok else f'{icon} {escape(msg)}'
-        api.send_message(tg_id, text)
+        ok, res = remove_ip(parts[2], by=tg_id)
         if ok:
-            send_panel(tg_id, api)
+            api.send_message(tg_id, t('ip.deleted', lang, icon=ce('success', '✅'), ip=res))
+            send_panel(tg_id, api, lang)
+        else:
+            api.send_message(tg_id, f'{ce("error", "❌")} {_fail_text(res, lang)}')
     else:
-        send_panel(tg_id, api)
+        send_panel(tg_id, api, lang)
     return True
 
 
-def handle_start_payload(payload: str, tg_id: int, api: TelegramBotAPI) -> bool:
+def handle_start_payload(payload: str, tg_from: dict, api: TelegramBotAPI) -> bool:
     """Deep link: t.me/<bot>?start=addip_<b64ip> (from the /myip/ page)."""
     if not payload.startswith('addip_'):
         return False
+    tg_id = tg_from['id']
+    lang = resolve_lang(tg_from)
     ip = decode_ip(payload[len('addip_'):])
     if not ip:
-        api.send_message(tg_id, f'{ce("error", "❌")} Havoladagi IP o\'qilmadi.')
+        api.send_message(tg_id, t('ip.link_bad', lang, icon=ce('error', '❌')))
         return True
-    _confirm_add_prompt(tg_id, ip, api)
+    _confirm_add_prompt(tg_id, ip, api, lang=lang)
     return True
 
 
@@ -173,7 +193,8 @@ def maybe_offer_ip_add(message: dict, api: TelegramBotAPI) -> bool:
     ip = normalize_ip(text)
     if not ip:
         return False
-    _confirm_add_prompt(message['from']['id'], ip, api)
+    tg_from = message.get('from', {})
+    _confirm_add_prompt(tg_from['id'], ip, api, lang=resolve_lang(tg_from))
     return True
 
 
@@ -183,13 +204,16 @@ def handle_ip_callback(data: str, callback_query: dict, api: TelegramBotAPI) -> 
             or data.startswith('ipd_') or data.startswith('ipdok_')):
         return False
 
-    tg_id = callback_query['from']['id']
+    tg_from = callback_query.get('from', {})
+    tg_id = tg_from['id']
     cb_id = callback_query['id']
+    lang = resolve_lang(tg_from)
 
     from .handlers import is_owner  # local import — avoids a circular import
     if not is_owner(tg_id):
-        api.answer_callback_query(cb_id, '🔒 Faqat owner uchun')
+        api.answer_callback_query(cb_id, t('cb.owner_only', lang))
         return True
+
     msg = callback_query.get('message', {}) or {}
     chat_id = (msg.get('chat') or {}).get('id') or tg_id
     message_id = msg.get('message_id')
@@ -204,26 +228,20 @@ def handle_ip_callback(data: str, callback_query: dict, api: TelegramBotAPI) -> 
             api.send_message(chat_id, text, reply_markup=keyboard)
 
     if data == 'ip_menu':
-        _edit_or_send(_panel_text(), _panel_keyboard())
-        api.answer_callback_query(cb_id, 'Yangilandi ✓')
+        _edit_or_send(_panel_text(lang), _panel_keyboard(lang))
+        api.answer_callback_query(cb_id, t('cb.updated', lang))
 
     elif data == 'ip_addhelp':
         api.answer_callback_query(cb_id)
         api.send_message(
             chat_id,
-            f'{ce("scam_warn", "ℹ️")} <b>IP qo\'shish yo\'llari:</b>\n\n'
-            f'1. Menga IP manzilni oddiy xabar qilib yuboring — '
-            f'masalan <code>84.54.12.7</code>\n'
-            f'2. <code>/ip add 84.54.12.7 uy-wifi</code> (izoh ixtiyoriy)\n'
-            f'3. <a href="{MYIP_URL}">jaysonkhan.com/myip</a> sahifasini oching — '
-            f'IP\'ingizni ko\'rsatadi va bir bosishda botga qaytaradi.\n\n'
-            f'Har qanday yo\'lda ham men tasdiq so\'rayman.',
+            t('ip.addhelp', lang, icon=ce('scam_warn', 'ℹ️'), url=MYIP_URL),
         )
 
     elif data == 'ip_delmenu':
         entries = load_data()['ips']
         if not entries:
-            api.answer_callback_query(cb_id, 'Dinamik ro\'yxat bo\'sh')
+            api.answer_callback_query(cb_id, t('ip.delmenu_empty', lang))
             return True
         rows = [
             [{
@@ -232,50 +250,51 @@ def handle_ip_callback(data: str, callback_query: dict, api: TelegramBotAPI) -> 
             }]
             for e in entries
         ]
-        rows.append([{'text': '⬅️ Orqaga', 'callback_data': 'ip_menu'}])
+        rows.append([{'text': t('ip.btn_back', lang), 'callback_data': 'ip_menu'}])
         api.answer_callback_query(cb_id)
         _edit_or_send(
-            f'{ce("ban", "🗑")} <b>Qaysi IP o\'chirilsin?</b>\n'
-            f'(.env bazaviy IP\'lariga tegilmaydi)',
+            t('ip.delmenu_title', lang, icon=ce('ban', '🗑')),
             {'inline_keyboard': rows},
         )
 
     elif data.startswith('ipd_'):
         ip = decode_ip(data[len('ipd_'):])
         if not ip:
-            api.answer_callback_query(cb_id, 'IP o\'qilmadi')
+            api.answer_callback_query(cb_id, t('ip.toast_bad_ip', lang))
             return True
         api.answer_callback_query(cb_id)
         _edit_or_send(
-            f'{ce("scam_warn", "⚠️")} <code>{ip}</code> barcha saytlar '
-            f'allowlist\'idan o\'chirilsinmi?',
+            t('ip.confirm_del', lang, icon=ce('scam_warn', '⚠️'), ip=ip),
             {'inline_keyboard': [[
-                {'text': '✅ Ha, o\'chir', 'callback_data': f'ipdok_{data[len("ipd_"):]}'},
-                {'text': '❌ Bekor', 'callback_data': 'ip_menu'},
+                {'text': t('ip.btn_confirm_del', lang),
+                 'callback_data': f'ipdok_{data[len("ipd_"):]}'},
+                {'text': t('ip.btn_cancel', lang), 'callback_data': 'ip_menu'},
             ]]},
         )
 
     elif data.startswith('ipdok_'):
         ip = decode_ip(data[len('ipdok_'):])
         ok, res = remove_ip(ip or '', by=tg_id)
-        api.answer_callback_query(cb_id, '✓ O\'chirildi' if ok else 'Xatolik')
+        api.answer_callback_query(
+            cb_id, t('ip.toast_deleted', lang) if ok else t('ip.toast_error', lang),
+        )
         if ok:
-            _edit_or_send(_panel_text(), _panel_keyboard())
+            _edit_or_send(_panel_text(lang), _panel_keyboard(lang))
         else:
-            api.send_message(chat_id, f'{ce("error", "❌")} {escape(res)}')
+            api.send_message(chat_id, f'{ce("error", "❌")} {_fail_text(res, lang)}')
 
     elif data.startswith('ipaok_'):
         ip = decode_ip(data[len('ipaok_'):])
         ok, res = add_ip(ip or '', by=tg_id)
-        api.answer_callback_query(cb_id, '✓ Qo\'shildi' if ok else 'Xatolik')
+        api.answer_callback_query(
+            cb_id, t('ip.toast_added', lang) if ok else t('ip.toast_error', lang),
+        )
         if ok:
             api.send_message(
-                chat_id,
-                f'{ce("success", "✅")} <code>{res}</code> qo\'shildi — '
-                f'jaysonkhan, uzexam va edustats admin panellarida darhol amal qiladi.',
+                chat_id, t('ip.added', lang, icon=ce('success', '✅'), ip=res),
             )
-            send_panel(chat_id, api)
+            send_panel(chat_id, api, lang)
         else:
-            api.send_message(chat_id, f'{ce("error", "❌")} {escape(res)}')
+            api.send_message(chat_id, f'{ce("error", "❌")} {_fail_text(res, lang)}')
 
     return True

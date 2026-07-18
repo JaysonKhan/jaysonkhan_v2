@@ -131,18 +131,23 @@ def _atomic_save(data: dict) -> tuple[bool, str]:
         return False, str(exc)
 
 
-def add_ip(raw_ip: str, *, label: str = '', by: int = 0) -> tuple[bool, str]:
-    """Validate + append an IP. Returns (ok, human message — HTML-safe text)."""
+def add_ip(raw_ip: str, *, label: str = '', by: int = 0) -> tuple:
+    """Validate + append an IP.
+
+    Returns (True, canonical_ip) on success, or (False, (i18n_key, params))
+    on failure — the caller renders the failure in the chat's language via
+    core.bot_i18n.t (keys: ip.err_*).
+    """
     ip = normalize_ip(raw_ip)
     if not ip:
-        return False, f'Noto\'g\'ri IP: {raw_ip.strip()[:40]}'
+        return False, ('ip.err_invalid', {'raw': (raw_ip or '').strip()[:40]})
 
     label = ' '.join((label or '').split())[:MAX_LABEL_LEN]
     data = load_data()
     if any(e.get('ip') == ip for e in data['ips']):
-        return False, f'{ip} allaqachon ro\'yxatda.'
+        return False, ('ip.err_duplicate', {'ip': ip})
     if len(data['ips']) >= MAX_IPS:
-        return False, f'Ro\'yxat to\'la ({MAX_IPS} ta) — avval eskisini o\'chiring.'
+        return False, ('ip.err_full', {'max': MAX_IPS})
 
     now = datetime.now().isoformat(timespec='seconds')
     data['ips'].append({'ip': ip, 'label': label, 'added': now})
@@ -152,20 +157,23 @@ def add_ip(raw_ip: str, *, label: str = '', by: int = 0) -> tuple[bool, str]:
 
     ok, err = _atomic_save(data)
     if not ok:
-        return False, f'Yozib bo\'lmadi: {err}'
+        return False, ('ip.err_write', {'err': err})
     return True, ip
 
 
-def remove_ip(raw_ip: str, *, by: int = 0) -> tuple[bool, str]:
-    """Remove a bot-managed IP. .env base IPs are not managed here."""
+def remove_ip(raw_ip: str, *, by: int = 0) -> tuple:
+    """Remove a bot-managed IP. .env base IPs are not managed here.
+
+    Same return contract as add_ip: (True, ip) | (False, (i18n_key, params)).
+    """
     ip = normalize_ip(raw_ip)
     if not ip:
-        return False, f'Noto\'g\'ri IP: {raw_ip.strip()[:40]}'
+        return False, ('ip.err_invalid', {'raw': (raw_ip or '').strip()[:40]})
 
     data = load_data()
     remaining = [e for e in data['ips'] if e.get('ip') != ip]
     if len(remaining) == len(data['ips']):
-        return False, f'{ip} dinamik ro\'yxatda yo\'q (.env bazasini bot boshqarmaydi).'
+        return False, ('ip.err_not_found', {'ip': ip})
 
     now = datetime.now().isoformat(timespec='seconds')
     data['ips'] = remaining
@@ -175,7 +183,7 @@ def remove_ip(raw_ip: str, *, by: int = 0) -> tuple[bool, str]:
 
     ok, err = _atomic_save(data)
     if not ok:
-        return False, f'Yozib bo\'lmadi: {err}'
+        return False, ('ip.err_write', {'err': err})
     return True, ip
 
 

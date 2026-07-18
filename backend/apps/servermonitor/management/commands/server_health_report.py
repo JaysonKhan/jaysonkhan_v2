@@ -22,6 +22,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import timedelta
 
+from core.bot_i18n import t
 from core.services import SiteSettingsService
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -116,6 +117,8 @@ class Command(BaseCommand):
 
         api = TelegramBotAPI()
         tg_id = site.telegram_owner_id
+        from interactions.notifications.lang import owner_lang
+        lang = owner_lang()
 
         # Janitor: keep the per-check history bounded (runs daily, before the
         # alert-only early return, so it always fires).
@@ -126,7 +129,7 @@ class Command(BaseCommand):
         self.stdout.write('Collecting server metrics...')
         snapshot = collect_full_snapshot(cpu_interval=5.0)
 
-        cpu_alert = format_cpu_alert(snapshot.cpu, threshold=85.0)
+        cpu_alert = format_cpu_alert(snapshot.cpu, threshold=85.0, lang=lang)
         has_cpu_alert = cpu_alert is not None
         has_service_down = any(not s.active for s in snapshot.services)
 
@@ -156,12 +159,13 @@ class Command(BaseCommand):
             return
 
         if options['quick']:
-            text = format_status_report(snapshot)
+            text = format_status_report(snapshot, lang)
         else:
             text = format_full_report(
                 snapshot,
                 restart_counts=restart_counts,
                 cron_summary=cron_summary,
+                lang=lang,
             )
 
         if cpu_alert:
@@ -169,15 +173,16 @@ class Command(BaseCommand):
 
         if has_service_down:
             down = [(s.display or s.name) for s in snapshot.services if not s.active]
-            text += f'\n\n🚨 <b>Down services:</b> {", ".join(down)}'
+            text += '\n\n' + t('rep.down', lang, list=', '.join(down))
 
         if ssl_warnings:
-            lines = ['\n\n🔐 <b>SSL ogohlantirish!</b> (yangilash QO\'LDA — DNS-01)']
+            lines = [t('alert.ssl_header', lang)]
             for c in ssl_warnings:
                 if c.error:
-                    lines.append(f'  🔴 {c.domain} — tekshirib bo\'lmadi ({c.error})')
+                    lines.append(t('alert.ssl_fail_line', lang, domain=c.domain, err=c.error))
                 else:
-                    lines.append(f'  ⏳ {c.domain} — <b>{c.days_left} kun qoldi</b> ({c.expires})')
+                    lines.append(t('alert.ssl_days_line', lang,
+                                   domain=c.domain, d=c.days_left, exp=c.expires))
             text += '\n'.join(lines)
 
         api.send_message(tg_id, text)

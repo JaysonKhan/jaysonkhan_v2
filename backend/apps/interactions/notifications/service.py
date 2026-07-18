@@ -14,10 +14,12 @@ import threading
 from html import escape
 from typing import Optional
 
+from core.bot_i18n import t
 from core.emoji import ce
 from core.services import SiteSettingsService
 from django.conf import settings
 
+from .lang import owner_lang, resolve_lang
 from .telegram_api import TelegramBotAPI
 
 logger = logging.getLogger('interactions.notifications')
@@ -71,14 +73,15 @@ class NotificationService:
 
         replier = escape(comment.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
+        user_lang = resolve_lang(chat_id=recipient.telegram_id)
 
-        text = (
-            f'{ce("reply", "↩️")} <b>{replier}</b> sizning kommentingizga javob yozdi:\n\n'
-            f'"{snippet}"'
+        text = t(
+            'ntf.reply', user_lang,
+            icon=ce('reply', '↩️'), name=replier, snippet=snippet,
         )
         fallback_url = f'{self._domain}{self._content_url(comment)}#comment-{comment.id}'
         reply_markup = self._deep_link_button(
-            'Javob berish', f'c-{comment.id}', fallback_url, site=site,
+            t('ntf.reply_btn', user_lang), f'c-{comment.id}', fallback_url, site=site,
         )
         self.api.send_message(
             recipient.telegram_id, text, reply_markup=reply_markup,
@@ -114,10 +117,13 @@ class NotificationService:
             return
         author = escape(comment.author.display_name)
         snippet = escape(comment.text[:200]) if comment.text else ''
-        text = f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:\n{snippet}' if snippet else f'{ce("comment", "💬")} <b>{author}</b> komment yozdi:'
+        lang = owner_lang()
+        text = t('adm.comment', lang, icon=ce('comment', '💬'), name=author)
+        if snippet:
+            text += f'\n{snippet}'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
+            t('adm.view_comment', lang), f'c-{comment.id}', fallback_url, site=site,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
@@ -138,7 +144,7 @@ class NotificationService:
         text = f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>:\n{snippet}' if snippet else f'{ce("reply", "↩️")} <b>{author}</b> → <b>{parent_author}</b>'
         fallback_url = f'{self._full_url(comment)}#comment-{comment.id}'
         button = self._deep_link_button(
-            'Javobni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
+            t('adm.view_reply', owner_lang()), f'c-{comment.id}', fallback_url, site=site,
         )
         photo_url = self._comment_image_url(comment)
         self._send_to_admin_group(
@@ -152,12 +158,13 @@ class NotificationService:
             return
         actor = escape(reaction.author.display_name)
         comment_author = escape(reaction.comment.author.display_name)
-        verb = 'reacted' if action == 'added' else 'removed'
-        text = f'{reaction.emoji} <b>{actor}</b> {verb} on <b>{comment_author}</b>\'s comment'
+        lang = owner_lang()
+        key = 'adm.reaction_added' if action == 'added' else 'adm.reaction_removed'
+        text = t(key, lang, emoji=reaction.emoji, actor=actor, author=comment_author)
         comment = reaction.comment
         fallback_url = self._comment_anchor_url(comment)
         button = self._deep_link_button(
-            'Kommentni ko\'rish', f'c-{comment.id}', fallback_url, site=site,
+            t('adm.view_comment', lang), f'c-{comment.id}', fallback_url, site=site,
         )
         self._send_to_admin_group(text, reaction.author, 'reaction', reply_markup=button, site=site)
 
@@ -171,13 +178,15 @@ class NotificationService:
         actor = escape(like.author.display_name)
         title = self._content_title(obj)
         emoji = ce('like', '👍') if action == 'liked' else ce('unlike', '👎')
-        text = f'{emoji} <b>{actor}</b> {action} <b>{escape(title)}</b>'
+        lang = owner_lang()
+        key = 'adm.liked' if action == 'liked' else 'adm.unliked'
+        text = t(key, lang, emoji=emoji, actor=actor, title=escape(title))
         startapp = self._content_startapp(obj)
         fallback_url = ''
         if hasattr(obj, 'get_absolute_url'):
             fallback_url = f'{self._domain}{obj.get_absolute_url()}'
         button = self._deep_link_button(
-            'Ko\'rish', startapp, fallback_url, site=site,
+            t('adm.view', lang), startapp, fallback_url, site=site,
         ) if (startapp or fallback_url) else None
         self._send_to_admin_group(text, like.author, 'like', reply_markup=button, site=site)
 
@@ -186,22 +195,26 @@ class NotificationService:
         if not getattr(site, 'admin_notify_new_users', True):
             return
 
+        lang = owner_lang()
+
         # ── Entity type ───────────────────────────────────────────────────
         type_map = {
-            'user': (ce('user', '👤'), 'Foydalanuvchi'),
-            'bot': (ce('bot', '🤖'), 'Bot'),
-            'group': (ce('group', '👥'), 'Guruh'),
-            'supergroup': (ce('group', '👥'), 'Superguruh'),
-            'channel': (ce('channel_icon', '📢'), 'Kanal'),
+            'user': (ce('user', '👤'), t('adm.type_user', lang)),
+            'bot': (ce('bot', '🤖'), t('adm.type_bot', lang)),
+            'group': (ce('group', '👥'), t('adm.type_group', lang)),
+            'supergroup': (ce('group', '👥'), t('adm.type_supergroup', lang)),
+            'channel': (ce('channel_icon', '📢'), t('adm.type_channel', lang)),
         }
-        emoji, type_label = type_map.get(profile.entity_type, (ce('user', '👤'), 'Noma\'lum'))
+        emoji, type_label = type_map.get(
+            profile.entity_type, (ce('user', '👤'), t('adm.type_unknown', lang)),
+        )
 
         # ── Servis manbalarini erta so'rash (yangi vs qaytgan user uchun) ──
         svc_labels = {
-            'site': f'{ce("web", "🌐")} Sayt (Login)',
+            'site': t('adm.src_site', lang, icon=ce('web', '🌐')),
         }
         svc_action_labels = {
-            'site': f'{ce("web", "🌐")} Saytga kirdi',
+            'site': t('adm.src_site_action', lang, icon=ce('web', '🌐')),
         }
         try:
             from telegram.models import EntitySource
@@ -219,10 +232,10 @@ class NotificationService:
         if is_returning:
             # Qaytgan user — yangi servisdan kirdi (sources ordered by -updated_at)
             new_service = sources[0] if sources else ''
-            action = svc_action_labels.get(new_service, f'{new_service} dan topildi')
+            action = svc_action_labels.get(new_service, t('adm.src_found', lang, s=new_service))
             lines = [f'{ce("returning", "🔄")} <b>{name}</b> — {action}']
         else:
-            lines = [f'{emoji} <b>Yangi {type_label.lower()}: {name}</b>']
+            lines = [t('adm.new_entity', lang, emoji=emoji, type=type_label.lower(), name=name)]
 
         # ── Asosiy ma'lumotlar ────────────────────────────────────────────
         username = profile.username
@@ -245,7 +258,7 @@ class NotificationService:
         if getattr(profile, 'is_premium', False):
             badges.append(f'{ce("premium", "⭐️")} Premium')
         if getattr(profile, 'is_verified', False):
-            badges.append(f'{ce("verified", "✅")} Tasdiqlangan')
+            badges.append(f'{ce("verified", "✅")} {t("adm.badge_verified", lang)}')
         if getattr(profile, 'is_scam', False):
             badges.append(f'{ce("scam_warn", "⚠️")} SCAM')
         if getattr(profile, 'is_fake', False):
@@ -264,7 +277,7 @@ class NotificationService:
         buttons = [
             [
                 {'text': '⚙️ Admin', 'url': self._admin_entity_url(profile)},
-                {'text': '🌐 Sayt', 'url': self._domain},
+                {'text': t('adm.btn_site', lang), 'url': self._domain},
             ]
         ]
 
@@ -283,11 +296,10 @@ class NotificationService:
         email = escape(contact.email or '')
         subject = escape(contact.subject or '')
         body = escape((contact.message or '')[:300])
-        text = (
-            f'{ce("contact_msg", "📩")} Yangi xabar:\n'
-            f'<b>From:</b> {name} ({email})\n'
-            f'<b>Subject:</b> {subject}\n'
-            f'<b>Message:</b> {body}'
+        lang = owner_lang()
+        text = t(
+            'adm.contact_new', lang, icon=ce('contact_msg', '📩'),
+            name=name, email=email, subject=subject, body=body,
         )
         try:
             from django.urls import reverse
@@ -296,7 +308,7 @@ class NotificationService:
         except Exception:
             admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/').rstrip('/') + '/'
             admin_url = f'{self._domain}/{admin_prefix}contact/contactmessage/'
-        button = {'inline_keyboard': [[{'text': 'Admin panelda ko\'rish', 'url': admin_url}]]}
+        button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': admin_url}]]}
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button, site=site)
 
     # ── Private helpers ──────────────────────────────────────────────────────

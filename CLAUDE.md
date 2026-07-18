@@ -134,8 +134,18 @@ backend/venv/bin/python backend/manage.py test portfolio.tests.SkillModelTest
 /ip — shared admin IP allowlist (add/del/list; .env'ga TEGMAYDI)
 /status  /services  /web  /ssl  /errors [h]  /disk  /top  /db
 /restart (confirm bilan)  /tariff  /logs [service] [lines]  /backup
-/start  /notifications
+/lang — til (uz/ru)  /start  /notifications
 ```
+
+- **Bot i18n (2026-07-18):** BARCHA bot matnlari `core/bot_i18n.py` katalogida
+  (uz default + ru), render `t(key, lang, **fmt)`. Til: `BotChatPref` (chat_id
+  keyed, `/lang` bilan o'rnatiladi) → Telegram `language_code` → uz
+  (`interactions/notifications/lang.py`). Cron/alert xabarlari `owner_lang()`.
+  `setMyCommands` 3 to'plam (default/uz/ru) — `register_bot_commands`
+  `cmd.*` kalitlardan quradi, /start menyu ham AYNAN shu kalitlardan (drift yo'q).
+  Yangi bot matni qo'shsang: kalitni katalogga (uz+ru) qo'sh, testda
+  `test_every_key_has_both_languages` tekshiradi. Kanal postlari
+  (channel_share.py) ataylab bir tilda — kontent, UI emas.
 
 - **IP allowlist v2 (2026-07-18):** bot `/var/www/shared/admin_allowed_ips.json`
   (core/allowed_ips.py, atomik yozish) fayliga yozadi; jaysonkhan + uzexam +

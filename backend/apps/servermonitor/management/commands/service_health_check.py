@@ -123,6 +123,7 @@ class Command(BaseCommand):
             )
 
             if is_change and cfg.get('critical', True) and api and owner:
+                from interactions.notifications.lang import owner_lang
                 text = format_service_alert(
                     unit=unit,
                     display=cfg['display'],
@@ -130,6 +131,7 @@ class Command(BaseCommand):
                     new_active=status.active,
                     previous_active=prev_active,
                     status_text=status.status,
+                    lang=owner_lang(),
                 )
                 try:
                     api.send_message(owner, text)

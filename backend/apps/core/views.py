@@ -475,6 +475,9 @@ def myip_view(request):
 <p>Bu qurilmaning ommaviy IP manzili. Tugma @{bot_username or 'Jaysonkhanbot'}ga
 olib o'tadi — u yerda tasdiqlasangiz, IP barcha saytlarning admin allowlist'iga
 qo'shiladi.</p>
+<p>Это публичный IP-адрес устройства. Кнопка откроет
+@{bot_username or 'Jaysonkhanbot'} — после подтверждения IP попадёт в
+админ-allowlist всех сайтов.</p>
 </body></html>"""
     resp = HttpResponse(html)
     resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, private'
