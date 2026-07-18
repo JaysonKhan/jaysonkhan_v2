@@ -96,6 +96,29 @@ TEXTS: dict[str, dict[str, str]] = {
         'ru': "Язык / Til",
     },
 
+    # ── Bot profile (BotFather name / description / about) ──────────────────
+    # setMyName limit 64, setMyDescription 512, setMyShortDescription 120.
+    'bot.name': {
+        'uz': "JaysonKhan Assistant",
+        'ru': "JaysonKhan Assistant",
+    },
+    'bot.description': {
+        'uz': "jaysonkhan.com rasmiy boti.\n\n"
+              "• Saytga Telegram orqali kirish\n"
+              "• Kommentingizga javob va reaksiya kelganda xabar\n"
+              "• Bildirishnoma sozlamalari — /notifications\n"
+              "• Til — /lang (O'zbekcha / Русский)",
+        'ru': "Официальный бот jaysonkhan.com.\n\n"
+              "• Вход на сайт через Telegram\n"
+              "• Уведомления об ответах и реакциях на ваши комментарии\n"
+              "• Настройки уведомлений — /notifications\n"
+              "• Язык — /lang (O'zbekcha / Русский)",
+    },
+    'bot.short': {
+        'uz': "jaysonkhan.com boti — sayt bildirishnomalari va Telegram-login",
+        'ru': "Бот jaysonkhan.com — уведомления сайта и вход через Telegram",
+    },
+
     # ── /start ──────────────────────────────────────────────────────────────
     'start.hello': {
         'uz': "{greeting} <b>Salom, Admin!</b>",

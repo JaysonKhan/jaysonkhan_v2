@@ -37,6 +37,11 @@ class FakeAPI:
         self.answered = []
         self.edited = []
         self.actions = []
+        self.posts = []
+
+    def _post(self, method, data):
+        self.posts.append((method, data))
+        return {'ok': True, 'result': {}}
 
     def send_message(self, chat_id, text, **kwargs):
         self.sent.append((chat_id, text, kwargs))
@@ -226,6 +231,37 @@ class BotI18nTest(TestCase):
         by_cmd_ru = {c['command']: c['description'] for c in ru}
         self.assertIn('Панель управления', by_cmd_ru['panel'])
         self.assertIn('Перезапуск', by_cmd_ru['restart'])
+
+    def test_public_set_hides_admin_commands(self):
+        from servermonitor.management.commands.register_bot_commands import (
+            PUBLIC_COMMANDS,
+            _commands_for,
+        )
+        public = _commands_for('uz', PUBLIC_COMMANDS)
+        names = {c['command'] for c in public}
+        self.assertEqual(names, {'start', 'notifications', 'lang'})
+        self.assertNotIn('restart', names)
+        self.assertNotIn('backup', names)
+
+    def test_owner_chat_scope_registration(self):
+        from servermonitor.management.commands.register_bot_commands import (
+            COMMAND_ORDER,
+            register_owner_commands,
+        )
+        api = FakeAPI()
+        self.assertTrue(register_owner_commands(api, 777, 'ru'))
+        method, payload = api.posts[0]
+        self.assertEqual(method, 'setMyCommands')
+        self.assertEqual(payload['scope'], {'type': 'chat', 'chat_id': 777})
+        self.assertEqual(len(payload['commands']), len(COMMAND_ORDER))
+        self.assertIn('Панель управления', payload['commands'][0]['description'])
+
+    def test_profile_texts_fit_telegram_limits(self):
+        from core.bot_i18n import t
+        for lang in ('uz', 'ru'):
+            self.assertLessEqual(len(t('bot.name', lang)), 64)
+            self.assertLessEqual(len(t('bot.description', lang)), 512)
+            self.assertLessEqual(len(t('bot.short', lang)), 120)
 
     def test_webhook_lang_callback_persists(self):
         from interactions.notifications.lang import resolve_lang

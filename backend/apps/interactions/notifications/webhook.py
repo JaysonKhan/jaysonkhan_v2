@@ -388,6 +388,13 @@ class TelegramWebhookView(View):
         new_lang = cq['data'].replace('lang_', '')
         tg_id = cq['from']['id']
         set_lang(tg_id, new_lang)
+        # Owner's chat-scoped admin menu re-renders in the new language too.
+        from servermonitor.handlers import is_owner
+        if is_owner(tg_id):
+            from servermonitor.management.commands.register_bot_commands import (
+                register_owner_commands,
+            )
+            register_owner_commands(self.api, tg_id, new_lang)
         self.api.answer_callback_query(cq['id'], t('cb.updated', new_lang))
         self.api.send_message(tg_id, t('lang.saved', new_lang))
 
