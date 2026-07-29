@@ -2,6 +2,9 @@
 Tests for blog Markdown rendering, contact spam protection, and core model integrity.
 Run with: python manage.py test
 """
+import shutil
+import tempfile
+
 from blog.templatetags.markdown_extras import render_markdown
 from contact.spam_protection import (
     RATE_LIMIT_MAX_SUBMISSIONS,
@@ -9,8 +12,12 @@ from contact.spam_protection import (
     is_rate_limited,
 )
 from core.models import SiteSettings
+from django.core.cache import cache
 from django.template import Context, Template
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
+
+# Image-upload tests must not write into the developer's real media/ tree.
+_TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix='jk-test-media-')
 
 
 class MarkdownRenderingTest(TestCase):
@@ -169,6 +176,9 @@ class BioPageSeoTest(TestCase):
 
     LEGAL_NAME = "Jahongir Qo'ziboyev"
 
+    def setUp(self):
+        cache.clear()  # sitemap views are cache_page'd — see GallerySitemapTest
+
     def _text(self, path):
         """Response body with entities resolved — Django escapes the apostrophe
         in "Qo'ziboyev" to &#x27;, which search engines unescape but a naive
@@ -250,3 +260,114 @@ class BioPageSeoTest(TestCase):
         about_url = reverse('about')
         self.assertIn(about_url, self.client.get(reverse('home')).content.decode())
         self.assertIn('/about/', self.client.get('/sitemap-static.xml').content.decode())
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class GallerySitemapTest(TestCase):
+    """Gallery wall frames must reach Google Images.
+
+    Only the first page of frames is server-rendered; the rest arrive over the
+    JS feed, which crawlers never call. The homepage sitemap entry is therefore
+    the only discovery path — if it regresses, the wall silently drops out of
+    image search.
+    """
+
+    NS = {
+        's': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+        'image': 'http://www.google.com/schemas/sitemap-image/1.1',
+    }
+
+    def setUp(self):
+        # The sitemap views are cache_page'd. Any earlier test that fetched a
+        # sitemap leaves a gallery-less copy in LocMemCache, and these tests
+        # then assert against it — green alone, red in the full suite.
+        cache.clear()
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from portfolio.models import GalleryImage
+
+        # 1x1 GIF — enough for ImageField, no Pillow decode of a real photo.
+        gif = (b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00'
+               b'\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+        # `hint` is a modeltranslation field: assigning the bare name writes
+        # only the column for whatever language happens to be active, which
+        # differs between a standalone run and the full suite. Set all four.
+        cls.frame = GalleryImage.objects.create(
+            image=SimpleUploadedFile('frame.gif', gif, content_type='image/gif'),
+            cover=SimpleUploadedFile('frame-cover.gif', gif, content_type='image/gif'),
+            hint='Xiva — Ichan-Qalʻa',
+            hint_xo='Xiva — Ichan-Qalʻa',
+            hint_uz='Xiva — Ichan-Qalʻa',
+            hint_ru='Хива — Ичан-Кала',
+            hint_en='Khiva — Itchan Kala',
+        )
+        GalleryImage.objects.create(
+            image=SimpleUploadedFile('hidden.gif', gif, content_type='image/gif'),
+            hint='Hidden frame',
+            is_visible=False,
+        )
+
+    def _home_entry(self):
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(self.client.get('/sitemap-static.xml').content)
+        for url in root.findall('s:url', self.NS):
+            if url.find('s:loc', self.NS).text.rstrip('/').endswith('/xo'):
+                return url
+        self.fail('homepage entry missing from sitemap-static.xml')
+
+    def test_visible_frames_are_listed_on_the_homepage_entry(self):
+        locs = [e.text for e in self._home_entry().findall('.//image:loc', self.NS)]
+        self.assertIn(f'https://jaysonkhan.com{self.frame.image.url}', locs)
+        self.assertIn(f'https://jaysonkhan.com{self.frame.cover.url}', locs)
+
+    def test_hidden_frames_are_not_listed(self):
+        locs = [e.text for e in self._home_entry().findall('.//image:loc', self.NS)]
+        self.assertFalse([loc for loc in locs if 'hidden' in loc])
+
+    def test_captions_carry_the_hint_and_the_owner_name(self):
+        caps = [e.text for e in self._home_entry().findall('.//image:caption', self.NS)]
+        match = [c for c in caps if 'Ichan' in c]
+        self.assertTrue(match, 'gallery hint missing from captions')
+        self.assertIn("Jahongir Qo'ziboyev", match[0])
+
+    def test_other_static_pages_carry_no_images(self):
+        """Only the homepage owns the wall — a stray image block elsewhere would
+        tell Google the same photos live on five different URLs."""
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(self.client.get('/sitemap-static.xml').content)
+        for url in root.findall('s:url', self.NS):
+            loc = url.find('s:loc', self.NS).text
+            if loc.rstrip('/').endswith('/xo'):
+                continue
+            with self.subTest(loc=loc):
+                self.assertEqual(url.findall('.//image:loc', self.NS), [])
+
+    def test_project_and_post_sitemaps_still_emit_their_single_image(self):
+        """The mixin moved from one image to a list — the older sitemaps must
+        keep working."""
+        import xml.etree.ElementTree as ET
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from portfolio.models import Project
+
+        gif = (b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00'
+               b'\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+        Project.objects.create(
+            title='Sitemap probe', slug='sitemap-probe',
+            short_description='short',
+            image=SimpleUploadedFile('proj.gif', gif, content_type='image/gif'),
+            is_visible=True,
+        )
+        root = ET.fromstring(self.client.get('/sitemap-projects.xml').content)
+        locs = [e.text for e in root.findall('.//image:loc', self.NS)]
+        self.assertEqual(len(locs), 1)
+        self.assertIn('proj', locs[0])

@@ -24,13 +24,19 @@ from datetime import datetime, timezone
 from blog.models import Post
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from portfolio.models import Project
+from portfolio.models import GalleryImage, Project
 
 # ── Constants ─────────────────────────────────────────────────────────────
 
 LANGUAGES = ("xo", "uz", "ru", "en")
 DEFAULT_LANG = "xo"
 SITE_BASE = "https://jaysonkhan.com"
+
+# Appended to every gallery caption so Google Images ties the frames to the
+# person entity. Deliberately NOT copied into each <img alt>: the wall also
+# holds photos of friends, family and places, and an alt claiming the owner is
+# in all 52 of them would simply be wrong.
+GALLERY_OWNER = "Jahongir Qo'ziboyev (Jayson Khan)"
 
 
 def _to_aware(dt):
@@ -95,34 +101,42 @@ def _build_alternates(canonical_path: str) -> list:
 class ImageSitemapMixin:
     """Adds `<image:image>` extension data per URL.
 
-    Subclasses define `image_url(item)` and `image_caption(item)`.
-    `templates/sitemap.xml` renders the inline image block.
+    Subclasses override `images(item)` and return `[(url, caption), ...]` —
+    a LIST, because the homepage carries the whole gallery wall (Google allows
+    up to 1000 images per <url>). `templates/sitemap.xml` renders the block.
+
+    Only `image:loc` and `image:caption` are emitted: Google dropped support
+    for image:title / image:license / image:geo_location in 2022.
     """
 
-    def image_url(self, obj):  # override
-        return None
-
-    def image_caption(self, obj):  # override
-        return ""
+    def images(self, obj):  # override → [(url, caption), ...]
+        return []
 
     def get_urls(self, page=1, site=None, protocol=None):
         urls = super().get_urls(page=page, site=site, protocol=protocol)
         for url_info in urls:
-            item = url_info["item"]
-            img = self.image_url(item)
-            if img:
-                url_info["image_url"] = _abs(img)
-                url_info["image_caption"] = self.image_caption(item) or ""
+            entries = [
+                {"loc": _abs(url), "caption": caption or ""}
+                for url, caption in self.images(url_info["item"])
+                if url
+            ]
+            if entries:
+                url_info["images"] = entries
         return urls
 
 
 # ── Static pages ──────────────────────────────────────────────────────────
 
-class StaticSitemap(Sitemap):
+class StaticSitemap(ImageSitemapMixin, Sitemap):
     """Top-level pages — home is priority 1.0, others weighted by importance.
 
     Lists only the canonical /xo/ URL per page; hreflang alternates point to
     /uz/, /ru/, /en/ siblings + x-default.
+
+    The homepage entry also carries the whole gallery wall. Without it those
+    photos are effectively invisible to Google Images: only the first
+    GALLERY_PAGE_SIZE frames are server-rendered and the rest arrive through
+    the JS `gallery_feed` endpoint, which a crawler never fetches.
     """
 
     protocol = "https"
@@ -155,6 +169,22 @@ class StaticSitemap(Sitemap):
     def lastmod(self, item):
         return _now()
 
+    def images(self, item):
+        if item[0] != "home":
+            return []
+        entries = []
+        for frame in GalleryImage.objects.filter(is_visible=True):
+            hint = (frame.hint or "").strip()
+            # Both variants belong to the page: the cover is what the wall
+            # renders, the original is what the lightbox opens. Submitting only
+            # the original would offer Google an image no <img> tag points at.
+            caption = f"{hint} — {GALLERY_OWNER}".strip(" —") or GALLERY_OWNER
+            if frame.cover:
+                entries.append((frame.cover.url, caption))
+            if frame.image and (not frame.cover or frame.image.name != frame.cover.name):
+                entries.append((frame.image.url, caption))
+        return entries
+
 
 # ── Projects ──────────────────────────────────────────────────────────────
 
@@ -179,15 +209,13 @@ class ProjectSitemap(ImageSitemapMixin, Sitemap):
         # Featured projects get higher crawl priority
         return 0.9 if getattr(obj, "is_featured", False) else 0.8
 
-    def image_url(self, obj):
-        if obj.image:
-            return obj.image.url
-        return None
-
-    def image_caption(self, obj):
+    def images(self, obj):
+        if not obj.image:
+            return []
         title = (obj.title or "").strip()
         short = (obj.short_description or "").strip()
-        return f"{title} — {short}".strip(" —") or title or "JaysonKhan project"
+        caption = f"{title} — {short}".strip(" —") or title or "JaysonKhan project"
+        return [(obj.image.url, caption)]
 
 
 # ── Blog ──────────────────────────────────────────────────────────────────
@@ -209,15 +237,13 @@ class PostSitemap(ImageSitemapMixin, Sitemap):
     def lastmod(self, obj):
         return _to_aware(obj.updated_at)
 
-    def image_url(self, obj):
-        if obj.featured_image:
-            return obj.featured_image.url
-        return None
-
-    def image_caption(self, obj):
+    def images(self, obj):
+        if not obj.featured_image:
+            return []
         title = (obj.title or "").strip()
         excerpt = (obj.excerpt or "").strip()[:120]
-        return f"{title} — {excerpt}".strip(" —") or title or "JaysonKhan article"
+        caption = f"{title} — {excerpt}".strip(" —") or title or "JaysonKhan article"
+        return [(obj.featured_image.url, caption)]
 
 
 # ── hreflang alternates decorator ─────────────────────────────────────────
