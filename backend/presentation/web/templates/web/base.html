@@ -37,6 +37,12 @@
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 
     <meta property="og:site_name" content="{{ site_settings.site_author }}">
+    {% comment %}og:locale — social-preview language hints. `xo` has no BCP-47
+    territory form, so it maps to uz_UZ like the standard Latin locale.{% endcomment %}
+    <meta property="og:locale" content="{% if LANGUAGE_CODE == 'ru' %}ru_RU{% elif LANGUAGE_CODE == 'en' %}en_US{% else %}uz_UZ{% endif %}">
+    {% if LANGUAGE_CODE != 'ru' %}<meta property="og:locale:alternate" content="ru_RU">{% endif %}
+    {% if LANGUAGE_CODE != 'en' %}<meta property="og:locale:alternate" content="en_US">{% endif %}
+    {% if LANGUAGE_CODE == 'ru' or LANGUAGE_CODE == 'en' %}<meta property="og:locale:alternate" content="uz_UZ">{% endif %}
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
     <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{% endblock %}">
@@ -76,6 +82,9 @@
             "Jahongir Quziboyev",
             "Betta347",
             "Jayson",
+            "Jahongir Kuzibaev",
+            "Jahongir Kuziboyev",
+            "Kuziboyev Jahongir",
             "Жейсон Хан",
             "Жейсонхан",
             "Жахонгир Кузибоев",
@@ -89,13 +98,42 @@
           "familyName": "Qo'ziboyev",
           "additionalName": "JaysonKhan",
           "url": "{{ site_settings.og_url }}",
-          "jobTitle": "AI EdTech Specialist · Founder of UzExam and Edustats",
-          "hasOccupation": {
-            "@type": "Occupation",
-            "name": "AI EdTech Specialist",
-            "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
-            "skills": "AI in education, testing platforms, education analytics, AI mentors, product strategy"
-          },
+          "mainEntityOfPage": {"@id": "{{ site_settings.og_url }}/about/#profilepage"},
+          "jobTitle": [
+            "AI Developer",
+            "Mobile Developer (Flutter)",
+            "Full-Stack Developer",
+            "AI EdTech Specialist · Founder of UzExam and Edustats",
+            "AI dasturchi · Mobil dasturchi · Full-stack dasturchi",
+            "Сунъий интеллект дастурчи · Мобил дастурчи · Фулл-стек дастурчи",
+            "AI разработчик · Мобильный разработчик · Full-stack разработчик"
+          ],
+          "hasOccupation": [
+            {
+              "@type": "Occupation",
+              "name": "AI Developer",
+              "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
+              "skills": "AI-agent orchestration, AI mentors, AI-assisted engineering, LLM product development"
+            },
+            {
+              "@type": "Occupation",
+              "name": "Mobile Application Developer",
+              "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
+              "skills": "Flutter, Dart, Clean Architecture, BLoC, iOS, Android, REST integrations"
+            },
+            {
+              "@type": "Occupation",
+              "name": "Full-Stack Developer",
+              "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
+              "skills": "Python, Django, DRF, FastAPI, PostgreSQL, Redis, Nginx, Linux, CI/CD"
+            },
+            {
+              "@type": "Occupation",
+              "name": "AI EdTech Specialist",
+              "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
+              "skills": "AI in education, testing platforms, education analytics, AI mentors, product strategy"
+            }
+          ],
           "description": "{{ site_settings.meta_description|escapejs }}",
           "email": "{{ site_settings.email }}",
           "nationality": {"@type": "Country", "name": "Uzbekistan"},
@@ -116,7 +154,7 @@
             "Artificial Intelligence", "EdTech", "UzExam", "Edustats", "Education Analytics",
             "Testing Platforms", "AI Mentors", "Student Progress Analytics", "Product Strategy",
             "Flutter", "Dart", "Mobile Engineering", "iOS Development", "Android Development",
-            "Python", "Django", "Backend Engineering", "REST API",
+            "Python", "Django", "Backend Engineering", "Full-Stack Development", "REST API",
             "PostgreSQL", "Redis", "DevOps", "Linux Server Administration",
             "Telegram Bot Development", "aiogram", "FastAPI",
             "JavaScript", "TypeScript", "Tailwind CSS", "HTMX",
@@ -129,8 +167,14 @@
             "@id": "{{ site_settings.og_url }}#organization",
             "name": "JaysonKhan AI EdTech Studio",
             "url": "{{ site_settings.og_url }}"
-          }{% if site_settings.og_image %},
-          "image": "{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}"{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
+          }{% if site_settings.about_image or site_settings.og_image %},
+          {% comment %}Portrait first: `image` on a Person feeds Google Images and
+          the knowledge panel, and og_image is a 1200x630 banner, not a face.{% endcomment %}
+          "image": {
+            "@type": "ImageObject",
+            "url": "{{ request.scheme }}://{{ request.get_host }}{% if site_settings.about_image %}{{ site_settings.about_image.url }}{% else %}{{ site_settings.og_image.url }}{% endif %}",
+            "caption": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobile & full-stack developer, Tashkent, Uzbekistan"
+          }{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
           "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %}, {% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}{% if site_settings.twitter_url and site_settings.linkedin_url %}, {% elif site_settings.twitter_url and site_settings.github_url %}, {% endif %}{% if site_settings.twitter_url %}"{{ site_settings.twitter_url }}"{% endif %}{% if site_settings.telegram_url %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url %}, {% endif %}"{{ site_settings.telegram_url }}"{% endif %}]{% endif %}
         },
         {
@@ -156,7 +200,7 @@
           "name": "{{ site_settings.site_title }}",
           "description": "{{ site_settings.meta_description|escapejs }}",
           "publisher": {"@id": "{{ site_settings.og_url }}#person"},
-          "inLanguage": "en",
+          "inLanguage": "{{ LANGUAGE_CODE|default:'uz' }}",
           "potentialAction": {
             "@type": "SearchAction",
             "target": "{{ site_settings.og_url }}/blog/search/?q={search_term_string}",
@@ -211,6 +255,7 @@
                 </a>
 
                 <nav class="site-nav">
+                    <a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">{% trans "About" %}</a>
                     {% if site_settings.apps_section_visible %}
                     <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                     {% endif %}
@@ -239,6 +284,7 @@
 
             <div class="mobile-nav" id="mobile-nav">
                 <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Home" %}</a>
+                <a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">{% trans "About" %}</a>
                 {% if site_settings.apps_section_visible %}
                 <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                 {% endif %}
@@ -289,6 +335,7 @@
 
                 <div class="site-footer__col">
                     <span class="mono-label">{% trans "Home" %}</span>
+                    <a href="{% url 'about' %}">{% trans "About" %}</a>
                     {% if site_settings.apps_section_visible %}<a href="{% url 'projects' %}">{% trans "Work" %}</a>{% endif %}
                     <a href="{% url 'blog_list' %}">{% trans "Journal" %}</a>
                     <a href="{% url 'team' %}">{% trans "Team" %}</a>

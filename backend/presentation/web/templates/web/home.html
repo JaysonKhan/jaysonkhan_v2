@@ -134,6 +134,9 @@
                 <h2 class="display-md">{{ site_settings.about_title }}</h2>
                 <p>{{ site_settings.about_description }}</p>
                 <div style="display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                    <a href="{% url 'about' %}" class="btn btn-primary">{% trans "About" %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
                     <a href="{% url 'team' %}" class="btn">{% trans "Team" %}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
@@ -174,8 +177,11 @@
                      aria-label="{{ site_settings.site_author }}"
                      data-lightbox data-full="{{ site_settings.about_image.url }}"
                      data-hint="{{ site_settings.site_author }}">
+                    {% comment %}alt carries the legal name too — Google Images matches
+                    the name query against alt text, and the brand name alone never
+                    surfaces for a passport-name search.{% endcomment %}
                     <img src="{% if anime %}{{ anime.url }}{% else %}{{ site_settings.about_image.url }}{% endif %}"
-                         alt="{{ site_settings.site_author }}" loading="lazy">
+                         alt="Jahongir Qo'ziboyev ({{ site_settings.site_author }}) — {{ site_settings.about_title }}" loading="lazy">
                     {% if anime %}<span class="about-photo__cue" aria-hidden="true">{% translate "Tap to reveal" %}</span>{% endif %}
                 </div>
                 {% endwith %}

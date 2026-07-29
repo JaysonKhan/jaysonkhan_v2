@@ -1,0 +1,164 @@
+{% extends 'web/base.html' %}
+{% load static i18n %}
+
+{% comment %}Person-entity page. Copy comes from presentation/web/bio_copy.py
+(code-owned, 4 locales) — NOT from SiteSettings, so deploy seeders can't
+overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md).
+{% endcomment %}
+
+{% block title %}{{ bio.seo_title }}{% endblock %}
+{% block meta_description %}{{ bio.meta_description }}{% endblock %}
+{% block og_title %}{{ bio.seo_title }}{% endblock %}
+{% block og_description %}{{ bio.meta_description }}{% endblock %}
+{% block twitter_title %}{{ bio.seo_title }}{% endblock %}
+{% block twitter_description %}{{ bio.meta_description }}{% endblock %}
+{% block og_type %}profile{% endblock %}
+{% block og_path %}{{ request.path }}{% endblock %}
+
+{% block content %}
+<main>
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">{{ bio.eyebrow }}</span>
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">
+                {{ bio.h1 }}
+                <em class="serif-i" style="color: var(--accent);">{{ bio.h1_em }}</em>
+            </h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ bio.lede }}</p>
+        </div>
+    </section>
+
+    {# ========================== PORTRAIT + STORY ========================== #}
+    <section class="section" style="padding-top: 40px;">
+        <div class="container about-grid">
+            <div class="about-copy reveal">
+                {% for s in bio.sections %}
+                <h2 class="display-md">{{ s.h2 }}</h2>
+                {% for p in s.body %}<p>{{ p }}</p>{% endfor %}
+                {% endfor %}
+            </div>
+            {% if site_settings.about_image %}
+            <div class="reveal" style="transition-delay: .1s;">
+                <div class="card about-photo">
+                    <img src="{{ site_settings.about_image.url }}"
+                         alt="{{ bio.h1 }} ({{ site_settings.site_author }}) — {{ bio.eyebrow }}"
+                         width="640" height="800" loading="lazy" decoding="async">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ========================== TECH STACK ========================== #}
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">Stack</span>
+                    <h2 class="display-md">{{ bio.skills_title }}</h2>
+                </div>
+            </div>
+            <div class="team-grid">
+                {% for label, items in skill_groups %}
+                <div class="card reveal" style="padding: 26px; transition-delay: {{ forloop.counter0 }}70ms;">
+                    <span class="mono-label">{{ label }}</span>
+                    <p style="margin-top: 8px;">{{ items }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ========================== NAME VARIANTS ========================== #}
+    {% comment %}Real disambiguation content: the same person is spelled several
+    different ways across Latin/Cyrillic scripts, which is exactly why name
+    searches miss this site. Mirrors Person.alternateName in base.html.{% endcomment %}
+    <section class="section" style="padding-top: 0;">
+        <div class="container post-narrow">
+            <div class="card reveal">
+                <span class="eyebrow">{{ bio.aka_title }}</span>
+                <p style="margin-top: 10px;">{{ bio.aka_intro }}</p>
+                {% for group in name_groups %}
+                <div style="margin-top: 16px;">
+                    <span class="mono-label">{{ group.label }}</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                        {% for n in group.names %}<span class="tag">{{ n }}</span>{% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ========================== FAQ ========================== #}
+    <section class="section" id="faq" style="padding-top: 0;">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "FAQ" %}</span>
+                    <h2 class="display-md">{{ bio.faq_title }}</h2>
+                </div>
+            </div>
+            <div class="faq-list">
+                {% for item in bio.faq %}
+                <details class="faq-item reveal"{% if forloop.first %} open{% endif %}>
+                    <summary class="faq-item__q">{{ item.q }}</summary>
+                    <p class="faq-item__a">{{ item.a }}</p>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ========================== CTA ========================== #}
+    <section class="cta-section">
+        <div class="aurora aurora--cta" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container cta-section__inner">
+            <h2 class="display-lg reveal">{{ bio.cta_title }}</h2>
+            <p class="cta-section__desc reveal">{{ bio.cta_text }}</p>
+            <div class="cta-section__action reveal">
+                <a href="{% url 'contact' %}" class="btn btn-primary btn--cta">{{ bio.cta_btn }}
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% comment %}ProfilePage + FAQPage + BreadcrumbList, appended to the @graph in
+base.html. mainEntity points at the site-wide Person node so Google merges this
+page into the same entity rather than creating a second one.{% endcomment %}
+{% block jsonld_extra %},
+        {
+          "@type": "ProfilePage",
+          "@id": "{{ site_settings.og_url }}/about/#profilepage",
+          "url": "{{ site_settings.og_url }}{{ request.path }}",
+          "name": "{{ bio.seo_title|escapejs }}",
+          "description": "{{ bio.meta_description|escapejs }}",
+          "inLanguage": "{{ LANGUAGE_CODE }}",
+          "mainEntity": {"@id": "{{ site_settings.og_url }}#person"},
+          "isPartOf": {"@id": "{{ site_settings.og_url }}#website"},
+          "breadcrumb": {"@id": "{{ site_settings.og_url }}/about/#breadcrumb"}
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "{{ site_settings.og_url }}/about/#breadcrumb",
+          "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "{{ site_settings.site_author|escapejs }}", "item": "{{ site_settings.og_url }}/{{ LANGUAGE_CODE }}/"},
+            {"@type": "ListItem", "position": 2, "name": "{{ bio.h1|escapejs }}"}
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "{{ site_settings.og_url }}/about/#faq",
+          "mainEntity": [{% for item in bio.faq %}
+            {"@type": "Question", "name": "{{ item.q|escapejs }}", "acceptedAnswer": {"@type": "Answer", "text": "{{ item.a|escapejs }}"}}{% if not forloop.last %},{% endif %}{% endfor %}
+          ]
+        }{% endblock %}

@@ -19,11 +19,15 @@ from django.db import transaction
 LANGS = ("xo", "uz", "ru", "en")
 
 COPY = {
+    # The legal name belongs in the <title>: name searches ("Jahongir
+    # Qo'ziboyev", "Жахонгир Кузибоев") were finding unrelated people because
+    # the string appeared nowhere except JSON-LD and meta keywords. The brand
+    # name stays first — it's how he's actually known online.
     "site_title": {
-        "xo": "Jayson Khan — O'zbekistonda AI EdTech Specialist | UzExam asoschisi",
-        "uz": "Jayson Khan — O'zbekistonda AI EdTech Specialist | UzExam asoschisi",
-        "ru": "Jayson Khan — AI EdTech специалист в Узбекистане | Основатель UzExam",
-        "en": "Jayson Khan — AI EdTech Specialist in Uzbekistan | Founder of UzExam",
+        "xo": "Jayson Khan (Jahongir Qo'ziboyev) — AI va mobil dasturchi | UzExam asoschisi",
+        "uz": "Jayson Khan (Jahongir Qo'ziboyev) — AI va mobil dasturchi | UzExam asoschisi",
+        "ru": "Jayson Khan (Жахонгир Кузибоев) — AI и мобильный разработчик | Основатель UzExam",
+        "en": "Jayson Khan (Jahongir Qo'ziboyev) — AI & Mobile Developer | Founder of UzExam",
     },
     "site_tagline": {
         "xo": "AI yordamida EdTech mahsulotla, test platformala va ta'lim analitikasini quramiz.",
@@ -31,23 +35,28 @@ COPY = {
         "ru": "AI-продукты для EdTech: тестовые платформы, образовательная аналитика и автоматизация.",
         "en": "AI-powered EdTech products, testing platforms and education analytics for Uzbekistan.",
     },
+    # NOTE: meta_description is max_length=160 — keep every locale under it or
+    # the seeder raises on save. Legal name + role terms come first.
     "meta_description": {
-        "xo": "Jayson Khan — UzExam va EduStats asoschisi. Bitta odam + 24/7 AI-agentla: 60k+ savolli test platforma, 52k+ auditoriyali ta'lim analitikasi va AI mentorla.",
-        "uz": "Jayson Khan — UzExam va EduStats asoschisi. Bir odam + 24/7 AI-agentlar: 60k+ savolli test platforma, 52k+ auditoriyali ta'lim analitikasi va AI mentorlar.",
-        "ru": "Jayson Khan — основатель UzExam и EduStats. Один человек + AI-агенты 24/7: тестовая платформа с 60k+ вопросов, образовательная аналитика с аудиторией 52k+ и AI-менторы.",
-        "en": "Jayson Khan is an AI EdTech specialist and founder of UzExam and EduStats — one human + a 24/7 AI-agent workforce building a 60k+ question testing platform and education analytics in Uzbekistan.",
+        "xo": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. 25+ ilova, 60k+ savol.",
+        "uz": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. 25+ ilova, 60k+ savol.",
+        "ru": "Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик из Узбекистана, основатель UzExam и EduStats. 25+ приложений.",
+        "en": "Jayson Khan (Jahongir Qo'ziboyev) — AI, mobile and full-stack developer in Uzbekistan, founder of UzExam and EduStats. 25+ apps, 60k+ questions.",
     },
+    # max_length=255 — Google ignores this tag entirely, Yandex weighs it
+    # lightly, so spend the budget on the name variants and role terms that
+    # actually differ per script instead of restating the product story.
     "meta_keywords": {
-        "xo": "Jayson Khan, JaysonKhan, Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam asoschisi, EduStats, Edustats, test platforma O'zbekiston, ta'lim analitikasi, AI mentor, sun'iy intellekt mutaxassis O'zbekiston, solo AI founder",
-        "uz": "Jayson Khan, JaysonKhan, Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam asoschisi, EduStats, Edustats, test platforma O'zbekiston, ta'lim analitikasi, AI mentor, sun'iy intellekt mutaxassis O'zbekiston, solo AI founder",
-        "ru": "Jayson Khan, JaysonKhan, Жахонгир Кузибоев, Кузибоев Жахонгир, Джахонгир Кузибоев, AI EdTech Узбекистан, основатель UzExam, EduStats, Edustats, тестовая платформа, образовательная аналитика, AI mentor, AI специалист Узбекистан, solo AI founder",
-        "en": "Jayson Khan, JaysonKhan, Jahongir Qoziboyev, Qoziboyev Jahongir, Kuziboyev Jahongir, AI EdTech Uzbekistan, UzExam founder, EduStats, Edustats, test platform Uzbekistan, education analytics, AI mentor, AI specialist Uzbekistan, solo AI founder",
+        "xo": "Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Jayson Khan, JaysonKhan, AI dasturchi, mobil dasturchi, full stack dasturchi, Flutter dasturchi, O'zbekiston dasturchi, UzExam asoschisi, EduStats, AI EdTech, sun'iy intellekt",
+        "uz": "Jahongir Qo'ziboyev, Qo'ziboyev Jahongir, Jayson Khan, JaysonKhan, AI dasturchi, mobil dasturchi, full stack dasturchi, Flutter dasturchi, O'zbekiston dasturchi, UzExam asoschisi, EduStats, AI EdTech, sun'iy intellekt",
+        "ru": "Жахонгир Кузибоев, Кузибоев Жахонгир, Jayson Khan, JaysonKhan, AI разработчик, мобильный разработчик, full stack разработчик, Flutter разработчик, разработчик Узбекистан, основатель UzExam, EduStats, AI EdTech",
+        "en": "Jahongir Qo'ziboyev, Qoziboyev Jahongir, Jayson Khan, JaysonKhan, AI developer, mobile developer, full stack developer, Flutter developer, Uzbekistan developer, UzExam founder, EduStats, AI EdTech",
     },
     "hero_eyebrow": {
-        "xo": "AI EdTech · UzExam · EduStats · O'zbekiston",
-        "uz": "AI EdTech · UzExam · EduStats · O'zbekiston",
-        "ru": "AI EdTech · UzExam · EduStats · Узбекистан",
-        "en": "AI EdTech · UzExam · EduStats · Uzbekistan",
+        "xo": "AI · Mobil · Full-stack dasturchi · UzExam · EduStats · O'zbekiston",
+        "uz": "AI · Mobil · Full-stack dasturchi · UzExam · EduStats · O'zbekiston",
+        "ru": "AI · Mobile · Full-stack разработчик · UzExam · EduStats · Узбекистан",
+        "en": "AI · Mobile · Full-stack developer · UzExam · EduStats · Uzbekistan",
     },
     "hero_title": {
         "xo": "O'zbekistonda AI asosidagi<br>EdTech mahsulotla",
@@ -62,10 +71,10 @@ COPY = {
         "en": "built to win.",
     },
     "hero_subtitle": {
-        "xo": "Man Jayson Khan — UzExam va EduStats asoschisiman. Bitta odam + 24/7 AI-agentla bilan test platformala, AI mentorla va ta'lim analitikasi quraman. 60k+ savol, 55k+ foydalanuvchi — hammasi jonli production'da.",
-        "uz": "Men Jayson Khan — UzExam va EduStats asoschisiman. Bir odam + 24/7 AI-agentlar bilan test platformalari, AI mentorlar va ta'lim analitikasi quraman. 60k+ savol, 55k+ foydalanuvchi — hammasi jonli production'da.",
-        "ru": "Я Jayson Khan — основатель UzExam и EduStats. Один человек + AI-агенты 24/7: строю тестовые платформы, AI-менторов и образовательную аналитику. 60k+ вопросов, 55k+ пользователей — всё в живом production.",
-        "en": "I'm Jayson Khan — founder of UzExam and EduStats. One human + a 24/7 AI-agent workforce building testing platforms, AI mentors and education analytics. 60k+ questions, 55k+ users — all in live production.",
+        "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisiman. Bitta odam + 24/7 AI-agentla bilan test platformala, AI mentorla va ta'lim analitikasi quraman. 60k+ savol, 55k+ foydalanuvchi — hammasi jonli production'da.",
+        "uz": "Men Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisiman. Bir odam + 24/7 AI-agentlar bilan test platformalari, AI mentorlar va ta'lim analitikasi quraman. 60k+ savol, 55k+ foydalanuvchi — hammasi jonli production'da.",
+        "ru": "Я Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик, основатель UzExam и EduStats. Один человек + AI-агенты 24/7: строю тестовые платформы, AI-менторов и образовательную аналитику. 60k+ вопросов, 55k+ пользователей — всё в живом production.",
+        "en": "I'm Jayson Khan (Jahongir Qo'ziboyev) — an AI, mobile and full-stack developer, founder of UzExam and EduStats. One human + a 24/7 AI-agent workforce building testing platforms, AI mentors and education analytics. 60k+ questions, 55k+ users — all in live production.",
     },
     "availability_badge": {
         "xo": "AI EdTech hamkorlikka ochiq",
@@ -80,10 +89,10 @@ COPY = {
         "en": "AI EdTech Founder",
     },
     "about_description": {
-        "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — Xorazmdan chiqqan AI EdTech founder. Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovala, TaxPay fintech). Endi studio davri: kod, QA, monitoring va incident-response — 24/7 AI-agentlada; strategiya, kontent sifati va mas'uliyat — manda. Natija: 3 oyda yolg'iz qurilgan UzExam (54 modul, 100k+ satr kod, 60k+ savol) va 52k+ tasdiqlangan auditoriyali EduStats. President Tech Award 2026 ishtirokchisiman.",
-        "uz": "Men Jayson Khan (Jahongir Qo'ziboyev) — AI EdTech founder. Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovalar, TaxPay fintech). Endi studio davri: kod, QA, monitoring va incident-response — 24/7 AI-agentlarda; strategiya, kontent sifati va mas'uliyat — menda. Natija: 3 oyda yolg'iz qurilgan UzExam (54 modul, 100k+ satr kod, 60k+ savol) va 52k+ tasdiqlangan auditoriyali EduStats. President Tech Award 2026 ishtirokchisiman.",
-        "ru": "Я Jayson Khan (Жахонгир Кузибоев) — AI EdTech founder. В мобильную эру за 3+ года выпустил 25+ приложений (корпоративные приложения в UIC Group, финтех TaxPay). Теперь эра студии: код, QA, мониторинг и incident-response — на AI-агентах 24/7; стратегия, качество контента и ответственность — на мне. Результат: UzExam, построенный в одиночку за 3 месяца (54 модуля, 100k+ строк кода, 60k+ вопросов), и EduStats с верифицированной аудиторией 52k+. Участник President Tech Award 2026.",
-        "en": "I'm Jayson Khan (Jahongir Qo'ziboyev) — an AI EdTech founder. In the mobile era I shipped 25+ apps over 3+ years (corporate apps at UIC Group, the TaxPay fintech). Now it's the studio era: code, QA, monitoring and incident response run on AI agents 24/7 — strategy, content quality and accountability stay with me. The result: UzExam built solo in 3 months (54 modules, 100k+ lines of code, 60k+ questions) and EduStats with a 52k+ verified audience. President Tech Award 2026 participant.",
+        "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, AI EdTech founder. Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovala, TaxPay fintech). Endi studio davri: kod, QA, monitoring va incident-response — 24/7 AI-agentlada; strategiya, kontent sifati va mas'uliyat — manda. Natija: 3 oyda yolg'iz qurilgan UzExam (54 modul, 100k+ satr kod, 60k+ savol) va 52k+ tasdiqlangan auditoriyali EduStats. President Tech Award 2026 ishtirokchisiman.",
+        "uz": "Men Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, AI EdTech founder. Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovalar, TaxPay fintech). Endi studio davri: kod, QA, monitoring va incident-response — 24/7 AI-agentlarda; strategiya, kontent sifati va mas'uliyat — menda. Natija: 3 oyda yolg'iz qurilgan UzExam (54 modul, 100k+ satr kod, 60k+ savol) va 52k+ tasdiqlangan auditoriyali EduStats. President Tech Award 2026 ishtirokchisiman.",
+        "ru": "Я Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик, AI EdTech founder. В мобильную эру за 3+ года выпустил 25+ приложений (корпоративные приложения в UIC Group, финтех TaxPay). Теперь эра студии: код, QA, мониторинг и incident-response — на AI-агентах 24/7; стратегия, качество контента и ответственность — на мне. Результат: UzExam, построенный в одиночку за 3 месяца (54 модуля, 100k+ строк кода, 60k+ вопросов), и EduStats с верифицированной аудиторией 52k+. Участник President Tech Award 2026.",
+        "en": "I'm Jayson Khan (Jahongir Qo'ziboyev) — an AI, mobile and full-stack developer and AI EdTech founder. In the mobile era I shipped 25+ apps over 3+ years (corporate apps at UIC Group, the TaxPay fintech). Now it's the studio era: code, QA, monitoring and incident response run on AI agents 24/7 — strategy, content quality and accountability stay with me. The result: UzExam built solo in 3 months (54 modules, 100k+ lines of code, 60k+ questions) and EduStats with a 52k+ verified audience. President Tech Award 2026 participant.",
     },
     # ── Stats bar: labels MUST travel with the counts (the 2026-06 deploy
     #    updated counts only and left mobile-era labels → "40k+ Years experience").
@@ -193,6 +202,7 @@ COPY = {
     },
     "faq_items": {
         "xo": [
+            {"q": "Jahongir Qo'ziboyev kim?", "a": "Jahongir Qo'ziboyev (internetda Jayson Khan) — O'zbekistonda ishlaydigan AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. Kirilda Жаҳонгир Қўзибоев, ruschada Жахонгир Кузибоев deb yoziladi."},
             {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va EduStats asoschisi. Test platformala, ta'lim analitikasi va AI mentor tizimlarini quradi. President Tech Award 2026 ishtirokchisi."},
             {"q": "UzExam nima?", "a": "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi: 60k+ savol, 9 trek (DTM, IELTS, SAT, Avtotest va boshqala), takrorlanmas savolla (Uniqueness Engine), SM-2 va antifraud reyting. Telegram bilan chambarchas ishlaydi."},
             {"q": "EduStats nima?", "a": "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi platformasi: universitetla reytingi, 52k+ telefon-tasdiqlangan Telegram auditoriyasi va 75 OTM o'tish ballari (2020–2025)."},
@@ -201,6 +211,7 @@ COPY = {
             {"q": "Jayson Khan bilan qale bog'lansa bo'ladi?", "a": "jaysonkhan.com saytidagi kontakt sahifasi yo Telegram (@jaysonkhan) orqali — Telegram eng tez javob beradigan kanal."},
         ],
         "uz": [
+            {"q": "Jahongir Qo'ziboyev kim?", "a": "Jahongir Qo'ziboyev (internetda Jayson Khan) — O'zbekistonda ishlaydigan AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. Kirilda Жаҳонгир Қўзибоев, ruschada Жахонгир Кузибоев deb yoziladi."},
             {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va EduStats asoschisi. Test platformalari, ta'lim analitikasi va AI mentor tizimlarini quradi. President Tech Award 2026 ishtirokchisi."},
             {"q": "UzExam nima?", "a": "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi: 60k+ savol, 9 yo'nalish (DTM, IELTS, SAT, Avtotest va boshqalar), takrorlanmas savollar (Uniqueness Engine), SM-2 va antifraud reyting. Telegram bilan chuqur integratsiya."},
             {"q": "EduStats nima?", "a": "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi platformasi: universitetlar reytingi, 52k+ telefon-tasdiqlangan Telegram auditoriyasi va 75 OTM o'tish ballari (2020–2025)."},
@@ -209,6 +220,7 @@ COPY = {
             {"q": "Jayson Khan bilan qanday bog'lanish mumkin?", "a": "jaysonkhan.com saytidagi kontakt sahifasi yoki Telegram (@jaysonkhan) orqali — Telegram eng tez javob beradigan kanal."},
         ],
         "ru": [
+            {"q": "Кто такой Жахонгир Кузибоев?", "a": "Жахонгир Кузибоев (в интернете — Jayson Khan) — AI, мобильный и full-stack разработчик из Узбекистана, основатель UzExam и EduStats. По-узбекски Jahongir Qo'ziboyev, узбекской кириллицей Жаҳонгир Қўзибоев."},
             {"q": "Кто такой Jayson Khan?", "a": "Jayson Khan (Жахонгир Кузибоев) — AI EdTech специалист, основатель UzExam и EduStats из Ташкента, Узбекистан. Строит тестовые платформы, образовательную аналитику и системы AI-менторов. Участник President Tech Award 2026."},
             {"q": "Что такое UzExam?", "a": "UzExam (uzexam.uz) — универсальная адаптивная экзаменационная платформа для Узбекистана: 60k+ вопросов, 9 треков (DTM, IELTS, SAT, автотесты и другие), неповторяющиеся вопросы (Uniqueness Engine), SM-2 и антифрод-рейтинг. Глубокая интеграция с Telegram."},
             {"q": "Что такое EduStats?", "a": "EduStats (edustats.uz) — платформа студенческих отзывов и образовательной аналитики: рейтинги университетов, 52k+ верифицированная Telegram-аудитория и проходные баллы 75 вузов (2020–2025)."},
@@ -217,6 +229,7 @@ COPY = {
             {"q": "Как связаться с Jayson Khan?", "a": "Через страницу контактов на jaysonkhan.com или в Telegram (@jaysonkhan) — Telegram отвечает быстрее всего."},
         ],
         "en": [
+            {"q": "Who is Jahongir Qo'ziboyev?", "a": "Jahongir Qo'ziboyev (known online as Jayson Khan) is an AI, mobile and full-stack developer based in Uzbekistan and the founder of UzExam and EduStats. Also spelled Жаҳонгир Қўзибоев (Uzbek Cyrillic) and Жахонгир Кузибоев (Russian)."},
             {"q": "Who is Jayson Khan?", "a": "Jayson Khan (Jahongir Qo'ziboyev) is an AI EdTech specialist and founder of UzExam and EduStats, based in Tashkent, Uzbekistan. He builds testing platforms, education analytics and AI mentor systems. President Tech Award 2026 participant."},
             {"q": "What is UzExam?", "a": "UzExam (uzexam.uz) is a universal, adaptive exam platform for Uzbekistan: 60k+ questions across 9 tracks (DTM, IELTS, SAT, driving tests and more), non-repeating questions (Uniqueness Engine), SM-2 spaced repetition and an anti-fraud rating. Deeply integrated with Telegram."},
             {"q": "What is EduStats?", "a": "EduStats (edustats.uz) is a student-voice and education-analytics platform: university rankings, a 52k+ phone-verified Telegram audience and admission cut-off scores for 75 universities (2020–2025)."},

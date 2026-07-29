@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
@@ -22,6 +23,8 @@ from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
 from portfolio.models import Project
 from portfolio.services import PortfolioRepository, PortfolioService
+
+from .bio_copy import NAME_GROUPS, SKILL_GROUPS, get_bio
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +156,28 @@ class HomeView(TemplateView):
         gallery_qs = GalleryImage.objects.filter(is_visible=True)
         context['gallery_total'] = gallery_qs.count()
         context['gallery_images'] = list(gallery_qs[:GALLERY_PAGE_SIZE])
+        return context
+
+
+class AboutView(TemplateView):
+    """`/about/` — the person-entity page.
+
+    Exists so name queries ("Jahongir Qo'ziboyev", "Жахонгир Кузибоев") and
+    role queries ("AI dasturchi", "мобильный разработчик") have a single page
+    whose title, H1 and body all answer them — the homepage is positioned for
+    the product story and cannot carry both.
+
+    Copy is code-owned (`bio_copy.py`), not SiteSettings: the deploy seeders
+    must never half-overwrite it.
+    """
+
+    template_name = 'web/about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['bio'] = get_bio(get_language())
+        context['name_groups'] = NAME_GROUPS
+        context['skill_groups'] = SKILL_GROUPS
         return context
 
 

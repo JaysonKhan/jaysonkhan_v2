@@ -296,3 +296,8 @@ msgstr ""
 #: presentation/web/views.py:178
 msgid "Mobile"
 msgstr ""
+
+# ── Bio / person-entity page (2026-07-29) ──
+
+msgid "About"
+msgstr ""

@@ -21,12 +21,10 @@ Cache: 1 hour. Crawlers hit /sitemap.xml hourly; data churns daily.
 """
 from datetime import datetime, timezone
 
+from blog.models import Post
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-
 from portfolio.models import Project
-from blog.models import Post
-
 
 # ── Constants ─────────────────────────────────────────────────────────────
 
@@ -132,6 +130,9 @@ class StaticSitemap(Sitemap):
     # NOTE: don't name this `_items` — collides with Sitemap._items().
     PAGES = [
         ("home", 1.0, "daily"),
+        # Person-entity page — the target for name queries, so it ranks just
+        # under the homepage even though its content changes rarely.
+        ("about", 0.9, "monthly"),
         ("projects", 0.9, "weekly"),
         ("team", 0.7, "monthly"),
         ("blog_list", 0.9, "daily"),

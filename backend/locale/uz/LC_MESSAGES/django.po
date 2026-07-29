@@ -469,3 +469,8 @@ msgstr "Yana ko'rish"
 
 msgid "Tap to reveal"
 msgstr "Bosib oching"
+
+# ── Bio / person-entity page (2026-07-29) ──
+
+msgid "About"
+msgstr "Men haqimda"
