@@ -79,7 +79,10 @@ overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md)
     searches miss this site. Mirrors Person.alternateName in base.html.{% endcomment %}
     <section class="section" style="padding-top: 0;">
         <div class="container post-narrow">
-            <div class="card reveal">
+            {# `.card` is a bare surface — padding is the caller's job (see
+               .proj-card / .team-card, same clamp). Without it the chips sit
+               flush against the border. #}
+            <div class="card reveal" style="padding: clamp(26px, 3vw, 38px);">
                 <span class="eyebrow">{{ bio.aka_title }}</span>
                 <p style="margin-top: 10px;">{{ bio.aka_intro }}</p>
                 {% for group in name_groups %}
