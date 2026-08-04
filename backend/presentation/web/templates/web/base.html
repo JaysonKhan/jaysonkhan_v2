@@ -15,11 +15,14 @@
     <meta name="author" content="{{ site_settings.site_author }}">
     <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 
-    {# i18n hreflang — tells search engines about other language variants #}
+    {# i18n hreflang — tells search engines about other language variants.   #}
+    {# 'xo' ISO-639 kod EMAS (Ahrefs 2026-08-03: invalid annotation, 48 URL) #}
+    {# — hreflang'da chiqarilmaydi; /xo/ sahifalar x-default orqali qamraladi #}
+    {# (xo kontent/locale TEGILMAGAN — faqat annotatsiya).                   #}
     {% load i18n %}{% get_available_languages as ALL_LANGS %}
-    {% for code, name in ALL_LANGS %}
+    {% for code, name in ALL_LANGS %}{% if code != 'xo' %}
     <link rel="alternate" hreflang="{{ code }}" href="{{ request.scheme }}://{{ request.get_host }}/{{ code }}{{ request.path|slice:'3:' }}">
-    {% endfor %}
+    {% endif %}{% endfor %}
     <link rel="alternate" hreflang="x-default" href="{{ request.scheme }}://{{ request.get_host }}/xo{{ request.path|slice:'3:' }}">
 
     {% if site_settings.google_site_verification %}

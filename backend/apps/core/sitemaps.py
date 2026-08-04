@@ -85,9 +85,12 @@ def _build_alternates(canonical_path: str) -> list:
     """
     if not canonical_path.startswith("/"):
         canonical_path = "/" + canonical_path
+    # 'xo' ISO-639 emas — hreflang annotatsiyasiga kirmaydi (Ahrefs 2026-08-03
+    # "invalid annotation"); /xo/ x-default sifatida qoladi (pastda).
     alternates = [
         {"lang_code": code, "location": f"{SITE_BASE}/{code}{canonical_path}"}
         for code in LANGUAGES
+        if code != "xo"
     ]
     alternates.append({
         "lang_code": "x-default",
