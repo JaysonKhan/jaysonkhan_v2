@@ -2,7 +2,7 @@
 from blog.models import Category, Post, Tag
 from contact.models import ContactMessage
 from contact.services import ContactRepository, ContactService
-from contact.spam_protection import is_rate_limited
+from contact.spam_protection import is_rate_limited, is_spam_content
 from core.services import SiteSettingsService
 from portfolio.models import Experience, Project, Skill
 from rest_framework import mixins, permissions, status, viewsets
@@ -150,6 +150,9 @@ class ContactMessageViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        if is_spam_content(request, data['message']):
+            # Mirror the SSR form: report success, store nothing, mail nobody.
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         # ContactService.repository.create_message() performs the DB write,
         # so we must NOT also call serializer.save().
         msg = ContactService(ContactRepository()).send_contact_message(

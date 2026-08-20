@@ -3,10 +3,15 @@ Contact form spam protection utilities.
 
 1. Honeypot: hidden field that bots fill in, humans don't.
 2. Rate limiting: per-IP throttle using Django's cache framework.
+3. Contact-field validation: the value must be a real email or @handle.
+4. Content signature: link blasts and known bulk-spam phrases.
 """
 import logging
+import re
 
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +24,12 @@ RATE_LIMIT_WINDOW_SECONDS = 600     # 10-minute window
 def is_honeypot_filled(request) -> bool:
     """
     Return True if the honeypot field was filled → likely a bot.
-    The hidden field is named 'website' (common bait name).
+
+    The field is named 'referral_code', not the usual 'website'/'url' bait:
+    bulk form-spam software (XRumer & friends) carries a skip-list of the
+    common bait names, so the classic ones catch nothing.
     """
-    value = request.POST.get('website', '')
+    value = request.POST.get('referral_code', '')
     if value:
         logger.warning(
             "Honeypot triggered from IP %s (value=%r)",
@@ -49,6 +57,53 @@ def is_rate_limited(request) -> bool:
 
     if count > RATE_LIMIT_MAX_SUBMISSIONS:
         logger.warning("Rate-limit hit for IP %s (%d/%d)", ip, count, RATE_LIMIT_MAX_SUBMISSIONS)
+        return True
+    return False
+
+
+# ── Contact-field / content checks ───────────────────────────────────────────
+# The form offers one field for either contact route ("@username / email"), so
+# EmailField validation alone would reject legitimate Telegram handles.
+TELEGRAM_HANDLE_RE = re.compile(r'^@[A-Za-z0-9_]{4,32}$')
+URL_RE = re.compile(r'https?://', re.IGNORECASE)
+MAX_URLS = 2
+
+# Phrases taken from the 2026-06..08 bulk-spam campaigns. Kept deliberately
+# short and unambiguous: a false positive here silently drops a real lead.
+SPAM_PHRASES = (
+    'jackpot',
+    'promo code',
+    'per day or more',
+    'crypto-powered',
+    'collect cryptocurrency',
+    'followers per month',
+    'instagram growth',
+    'contact forms at mass',
+)
+
+
+def is_valid_contact(value: str) -> bool:
+    """Return True if value is a real email address or a Telegram handle."""
+    if TELEGRAM_HANDLE_RE.match(value):
+        return True
+    try:
+        validate_email(value)
+    except ValidationError:
+        return False
+    return True
+
+
+def is_spam_content(request, message: str) -> bool:
+    """Return True if the message body matches a known bulk-spam signature."""
+    if len(URL_RE.findall(message)) > MAX_URLS:
+        logger.warning("Link-blast spam from IP %s (%d urls)",
+                       _get_client_ip(request), len(URL_RE.findall(message)))
+        return True
+
+    lowered = message.lower()
+    hit = next((p for p in SPAM_PHRASES if p in lowered), None)
+    if hit:
+        logger.warning("Spam phrase %r from IP %s", hit, _get_client_ip(request))
         return True
     return False
 

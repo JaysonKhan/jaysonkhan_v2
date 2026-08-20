@@ -4,7 +4,9 @@ import logging
 from blog.models import Post
 from blog.services import BlogRepository, BlogService
 from contact.services import ContactRepository, ContactService
-from contact.spam_protection import is_honeypot_filled, is_rate_limited
+from contact.spam_protection import (
+    is_honeypot_filled, is_rate_limited, is_spam_content, is_valid_contact,
+)
 from core.models import PageView
 from core.services import SiteSettingsService
 from django.contrib import messages
@@ -354,6 +356,20 @@ class ContactView(TemplateView):
         if not all([name, email, message]):
             messages.error(request, "Please fill in all required fields.")
             return self.render_to_response(self.get_context_data(form_data=request.POST))
+
+        # A real typo deserves a visible error; bots ignore it either way. The
+        # SSR path writes via objects.create(), which never runs full_clean(),
+        # so without this the EmailField happily stored bot garbage.
+        if not is_valid_contact(email):
+            messages.error(
+                request,
+                "Please enter a valid email address or Telegram username."
+            )
+            return self.render_to_response(self.get_context_data(form_data=request.POST))
+
+        # Silently pretend it worked: an error tells the sender to retune.
+        if is_spam_content(request, message):
+            return self.render_to_response(self.get_context_data(success=True))
 
         try:
             contact_service = ContactService(ContactRepository())

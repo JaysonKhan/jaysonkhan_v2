@@ -67,12 +67,12 @@ class HoneypotTest(TestCase):
 
     def test_empty_honeypot_passes(self):
         """Normal request without honeypot value passes."""
-        request = self.factory.post('/contact/', {'name': 'Test', 'website': ''})
+        request = self.factory.post('/contact/', {'name': 'Test', 'referral_code': ''})
         self.assertFalse(is_honeypot_filled(request))
 
     def test_filled_honeypot_blocked(self):
         """Request with filled honeypot is blocked."""
-        request = self.factory.post('/contact/', {'name': 'Bot', 'website': 'http://spam.com'})
+        request = self.factory.post('/contact/', {'name': 'Bot', 'referral_code': 'http://spam.com'})
         self.assertTrue(is_honeypot_filled(request))
 
     def test_missing_honeypot_passes(self):
