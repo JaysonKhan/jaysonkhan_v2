@@ -48,7 +48,7 @@ formuladan to'g'ridan-to'g'ri generatsiya qilinadi.
 
 ## 3. Zarra tizimi
 
-- Soni: **1800** (desktop) / **820** (mobil, `<768px`).
+- Soni: **1800** (desktop) / **560** (mobil, `<768px`; 2026-09-05 gacha 820 — §11).
 - Har zarra deterministik hash (`sfHash(i)`) orqali xususiyat oladi:
   - `c` — rang: 84% krem, 9% feruza (`--accent-2` ohangi), 7% terrakota (`--accent` ohangi)
   - `r` — radius 1.0–2.9px, 4% "yirik yulduz" (+2.0)
@@ -64,11 +64,11 @@ formuladan to'g'ridan-to'g'ri generatsiya qilinadi.
 | Qatlam | Texnika |
 |---|---|
 | Fon changi | 240 statik mayda yulduz, scroll parallaks (`y −= scrollY×0.045×z`), miltillash |
-| Yulduz halosi | 64px radial-gradient sprite, `globalCompositeOperation: "lighter"` (additiv nur) |
+| Yulduz halosi | 64px radial-gradient sprite, `globalCompositeOperation: "lighter"` (additiv nur); alpha `a·0.5`, o'lcham `r·(5.0+glint·5.5)·haloK` (§11) |
 | O'tkir yadro | `arc()` to'liq alpha bilan — yulduz tiniq ko'rinadi |
-| Diffraksiya nurlari | `r > 2.2` yoki chaqnash paytida 4 tomonlama ingichka kross |
+| Diffraksiya nurlari | `r > 2.9` (faqat 4% «yirik» yulduz) yoki `glint > 0.45` paytida 4 tomonlama ingichka kross, alpha `a·0.35` (2.2 chegara yulduzlarning 39%ini qamrab olardi — §11) |
 | Chaqnash (glint) | `sin^28` puls — yulduz vaqti-vaqti bilan yarqiraydi |
-| Harakat izi (streak) | tezlik > 1.6px bo'lsa orqaga 3.4× chiziq — "oqib o'tish" effekti |
+| Harakat izi (streak) | tezlik > 1.6px bo'lsa orqaga 3.4× chiziq — "oqib o'tish" effekti; alpha `a·0.6` |
 | Turkum chiziqlari | har 15-zarra (≈120 langar) orasida `d < 5vmin` bo'lsa ingichka ip; faqat joylashganda (`settle`) |
 | Uchar yulduz | 4.5–10.5s intervalda gradient dumli meteor |
 | Sarlavha | obida nomi (IBM Plex Mono, 10.5px) o'ng-pastda, integer pozitsiyada paydo bo'ladi |
@@ -105,7 +105,11 @@ formuladan to'g'ridan-to'g'ri generatsiya qilinadi.
 
 | Nima | Qayerda |
 |---|---|
-| Zarra soni | `const N = mobile ? 820 : 1800` |
+| Zarra soni | `var N = mobile ? 560 : 1800` |
+| Yorug'lik (2 knob) | `home.html`: `intensity` — har yulduz alfasi (additiv yig'indidan OLDIN); `opacity` — canvas qatlami CSS shaffofligi (yig'indidan KEYIN, maksimumni cheklaydi). Avval `opacity`ni buring — §11 |
+| Halo masshtabi | `haloK = clamp(shapeS/880, 0.7, 1)` — `resize()`; kichik chizmada (mobil) halolar qalashmasin |
+| Kross chegarasi | `if (p.r > 2.9 \|\| glint > 0.45)` — 2.9 = faqat 4% boost olgan yulduz (boost'siz maksimum r = 2.9) |
+| O'qilishni o'lchash | `node tools/sf-measure.mjs <url> <outDir> <tag> [w] [h]` — matn ostidagi canvas yorug'ligi, 9 scroll-nuqta, skrinshotlar |
 | Morph tezligi | `sp.cur += (…) × 0.065` va prujina `× 0.085` |
 | Yoy kuchi | `arc = sin(e·π) × (h1−0.5) × 0.22` |
 | Shakl o'lchami/joyi | `proj()` — `s ≤ 880px`, markaz `x: 60% (desktop)`, `y: 52%` |
@@ -131,8 +135,9 @@ Komponent React'ga deyarli bog'liq emas — faqat mount/unmount uchun ishlatilad
 
 - Kod: `backend/static/js/starfield.js` — vanilla IIFE, `init()` canvas'ni
   `document.body.prepend()` qiladi (fixed, `z-index: 0`, `pointer-events: none`).
-- Konfiguratsiya: `window.XIVA_STARFIELD = { intensity: 0..1, lines: bool }`
-  (ixtiyoriy, har kadrda o'qiladi; default `intensity: 1`, `lines: true`).
+- Konfiguratsiya: `window.XIVA_STARFIELD = { intensity: 0..1, lines: bool, opacity: 0..1 }`
+  (ixtiyoriy; `intensity`/`lines` har kadrda o'qiladi, default `1`/`true`;
+  `opacity` init'da o'qiladi → canvas CSS shaffofligi, default 1 — §11).
 - Ulanish: faqat bosh sahifa — `home.html` `extra_js` blokida `<script>`;
   kontent `.sf-wrap` (`position: relative; z-index: 1`) o'ramida.
 - Shaffof seksiyalar: `site.css` dagi `.ticker-band--sf`, `.band--sf`,
@@ -146,6 +151,51 @@ Komponent React'ga deyarli bog'liq emas — faqat mount/unmount uchun ishlatilad
   PNG async yuklanadi; yuklanguncha galaktika fallback. (Avval yuz-portret
   sinab ko'rilgan edi — egasi logotipni tanladi, 2026-07-12.)
 - **Yorug'lik**: `home.html` da `window.XIVA_STARFIELD = { intensity: 0.7 }` —
-  yulduzlar matn bilan aralashmasligi uchun -30%.
+  yulduzlar matn bilan aralashmasligi uchun -30%. **Yetarli bo'lmadi** — mehmonlar
+  matnni o'qiy olmadi; sabab va yechim §11 da.
 - **Uchar yulduzlar**: bitta meteor → **pool (5 tagacha parallel)**, spawn
   intervali 4.5–10.5s → 0.9–2.5s (~4-5x ko'p). `METEOR_MAX` bilan sozlanadi.
+
+## 11. 2026-09-05 reviziyasi (o'qilish: yulduzlar matnni yutmasin)
+
+Egasi: «yulduzlar juda yorug', odamlar yozuvlarni o'qishga qiynalyapti». O'lchov
+(`tools/sf-measure.mjs`, 1440×900 va 390×844, 9 scroll-nuqta) buni tasdiqladi: matn
+ostidagi canvas piksellari ko'p joyda **255 (to'liq oq)** ga yetardi, mobil h1 ostida
+yorug' piksellar 16%, manifest paragraflari ostida 26%.
+
+**Sabab — additiv («lighter») qalashuv, yorug'lik knobi emas.** Band bo'ylab yulduzlar
+~4px oraliqda, har biri 12.5px halo + (39% yulduzda!) 16–40px diffraksiya krossi chizardi.
+3–5 halo bir pikselda yig'ilib oq «arqon» bo'lardi. `intensity` har yulduz alfasini
+chiziqli kamaytiradi — yig'indi hali ham 1.0 dan oshib clip bo'laveradi; shu sabab
+2026-07-12 dagi 1.0 → 0.7 sezilmadi.
+
+**Yechim (uch qatlam):**
+
+| Nima | Oldin | Keyin | Nega |
+|---|---|---|---|
+| `opacity` (yangi knob, `home.html`) | — | **0.6** | canvas CSS shaffofligi — yig'indidan KEYIN; maksimum 255 → 153, hech qaysi turkum oq bo'lolmaydi |
+| Halo alpha / o'lcham | `a·0.85`, `r·(6.4+glint·6.5)` | `a·0.5`, `r·(5.0+glint·5.5)·haloK` | qalashuvning asosiy manbai |
+| Kross chegarasi / alpha | `r > 2.2` (39% yulduz), `a·0.55` | `r > 2.9` (4% yirik), `a·0.35` | dizayn niyati «yirik yoki chaqnayotgan» edi |
+| Glint amplitudasi | `+glint·0.7` | `+glint·0.45` | chaqnash to'liq oqqa yetmasin |
+| Streak alpha | `a·0.9` | `a·0.6` | morph paytidagi «bulut» |
+| Mobil N / halo | 820, halo px-da bir xil | **560**, `haloK = clamp(shapeS/880, 0.7, 1)` | 366px chizmada bir xil px-halo 2.4× kattaroq nisbiy iz qoldirardi |
+| `intensity` | 0.7 | 0.7 (o'zgarmadi) | yadro/rang/iplar/meteorlar o'z kuchini saqlasin |
+
+**Natija (matn ostidagi canvas, o'rtacha barcha ko'rinadigan matn elementlari bo'yicha):**
+
+| Ko'rsatkich | Desktop oldin → keyin | Mobil oldin → keyin |
+|---|---|---|
+| yorug' piksellar (L>60) | 3.54% → 0.97% | 6.48% → 1.04% |
+| «issiq» piksellar (L>140) | 1.36% → 0.28% | 3.27% → 0.32% |
+| >5% yorug' elementlar | 26 → 3 | 18 → 4 |
+| o'rtacha yorug'lik (0..255) | 6.6 → 2.0 | 11.9 → 1.8 |
+| maksimum | 255 → 153 | 255 → 153 |
+
+Tekshirish: `node --check backend/static/js/starfield.js` · perl curly-quote skan (faqat
+`SF_NAMES` dagi 3 ta oldingi apostrof chiqishi kerak) · `RM=1` bilan reduced-motion o'tishi.
+
+**Hali ham yorug' desa** — birinchi `opacity`ni 0.6 → 0.5 ga buring (bir raqam, `home.html`).
+Zaxira levers (qo'llanmagan): hero ostida token-derivativ matn-skrimi
+(`.sf-wrap .hero::before`, `color-mix(in oklab, var(--bg-0) 45%, transparent)` gradienti,
+≤1024px da tekis); shaffof `.section` bloklariga `.section--sf` pardasi; `proj()` markazini
+60% → 72% ga surish (barcha 5 shakl siljiydi — ehtiyot).

@@ -423,8 +423,8 @@
 
 {% block extra_js %}
 {# Xiva yulduz turkumi — scroll-morph canvas foni (docs/starfield-implementation.md) #}
-{# intensity 0.7: yulduzlar matn bilan aralashmasligi uchun -30% yorug'lik (2026-07-12) #}
-<script>window.XIVA_STARFIELD = { intensity: 0.7, portraitUrl: "{% static 'images/sf-portrait.png' %}" };</script>
+{# intensity 0.7: har yulduz alfasi; opacity 0.6: butun qatlam (additiv qalashuvdan KEYIN) — 2026-07-12 dagi 0.7 yetmadi, mehmonlar matnni o'qiy olmadi (2026-09-05) #}
+<script>window.XIVA_STARFIELD = { intensity: 0.7, opacity: 0.6, portraitUrl: "{% static 'images/sf-portrait.png' %}" };</script>
 <script src="{% static 'js/starfield.js' %}"></script>
 {% if gallery_images %}<script src="{% static 'js/gallery-wall.js' %}" defer></script>{% endif %}
 {% if gallery_images or site_settings.about_image %}<script src="{% static 'js/lightbox.js' %}" defer></script>{% endif %}

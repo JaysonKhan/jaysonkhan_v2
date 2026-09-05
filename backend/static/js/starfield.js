@@ -2,8 +2,12 @@
    Yulduzlar (canvas zarralari) Ichan-Qal'a obidalarini chizadi; scroll bilan
    bir obidadan ikkinchisiga yulduzlar harakati orqali kino kabi o'tadi.
    Vanilla port of the design prototype's starfield.jsx (docs/starfield-implementation.md §8).
-   Config (optional, read every frame):
-     window.XIVA_STARFIELD = { intensity: 0..1, lines: true|false }
+   Config (optional):
+     window.XIVA_STARFIELD = { intensity: 0..1, lines: true|false, opacity: 0..1 }
+     intensity/lines — har kadrda o'qiladi (har yulduzning o'z alfasi);
+     opacity — init'da o'qiladi: canvas qatlamining CSS shaffofligi. Additiv
+     ("lighter") qalashuvdan KEYIN qo'llanadi, shu sabab zich turkumlar ham
+     matn ostida to'liq oq (255) ga yetolmaydi — intensity buni qilolmaydi.
 */
 (function () {
   var SF_GRID = 640;
@@ -340,17 +344,22 @@
 
   /* ── init: canvas yaratish + render sikli ── */
   function init() {
+    var cfg0 = window.XIVA_STARFIELD || {};
     var canvas = document.createElement("canvas");
     canvas.setAttribute("aria-hidden", "true");
     canvas.style.cssText =
       "position:fixed;inset:0;width:100%;height:100%;" +
       "z-index:0;pointer-events:none;display:block;";
+    // qatlam shaffofligi (post-additiv yorug'lik shifti — matn o'qilishi uchun)
+    if (cfg0.opacity != null) {
+      canvas.style.opacity = String(sfClamp(cfg0.opacity, 0, 1));
+    }
     document.body.prepend(canvas);
 
     var ctx = canvas.getContext("2d");
     var rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var mobile = window.innerWidth < 768;
-    var N = mobile ? 820 : 1800;
+    var N = mobile ? 560 : 1800;
 
     var SHAPES = [
       sampleShape(drawKalta, N),
@@ -369,7 +378,6 @@
         g.drawImage(portraitImg, 0, 0, SF_GRID, SF_GRID);
       }, N);
     };
-    var cfg0 = window.XIVA_STARFIELD || {};
     portraitImg.src = cfg0.portraitUrl || "/static/images/sf-portrait.png";
 
     // ranglar: krem (asosiy), feruza, terrakota
@@ -443,11 +451,15 @@
     var vw = 0,
       vh = 0,
       dpr = 1,
-      docH = 0; // keshlangan scrollHeight — har frame'da o'qish layout'ni majburlaydi
+      docH = 0, // keshlangan scrollHeight — har frame'da o'qish layout'ni majburlaydi
+      shapeS = 0, // chizma masshtabi (px) — proj() va halo o'lchami uchun
+      haloK = 1; // halo radiusi chizma masshtabiga mos (kichik ekranda halolar qalashmasin)
     function resize() {
       vw = window.innerWidth;
       vh = window.innerHeight;
       docH = document.documentElement.scrollHeight;
+      shapeS = Math.min(Math.min(vw, vh * 1.06) * 0.94, 880);
+      haloK = sfClamp(shapeS / 880, 0.7, 1);
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = vw * dpr;
       canvas.height = vh * dpr;
@@ -471,7 +483,7 @@
     var anchorStep = Math.max(1, Math.ceil(N / 120));
 
     function proj(nx, ny) {
-      var s = Math.min(Math.min(vw, vh * 1.06) * 0.94, 880);
+      var s = shapeS;
       var cx = vw > 1024 ? vw * 0.6 : vw * 0.5;
       var cy = vh * 0.52;
       return [cx + (nx - 0.5) * s, cy + (ny - 0.55) * s];
@@ -563,10 +575,10 @@
               Math.max(0, Math.sin(ts * 0.00043 * p.spd + p.ph * 3.7)),
               28,
             );
-        var a = sfClamp((tw + glint * 0.7) * inten, 0, 1);
+        var a = sfClamp((tw + glint * 0.45) * inten, 0, 1);
         if (!rm && spd > 1.6) {
           // harakat chizig'i — yulduz "oqib o'tayotgan" effekt
-          ctx.globalAlpha = sfClamp(a * 0.9, 0, 1);
+          ctx.globalAlpha = sfClamp(a * 0.6, 0, 1);
           ctx.strokeStyle = strokeCols[p.c] + "0.9)";
           ctx.lineWidth = sfClamp(p.r * 0.75, 0.7, 1.8);
           ctx.beginPath();
@@ -575,8 +587,8 @@
           ctx.stroke();
         }
         // yorqin halo
-        ctx.globalAlpha = a * 0.85;
-        var sz = p.r * (6.4 + glint * 6.5);
+        ctx.globalAlpha = a * 0.5;
+        var sz = p.r * (5.0 + glint * 5.5) * haloK;
         ctx.drawImage(sprites[p.c], p.x - sz / 2, p.y - sz / 2, sz, sz);
         // o'tkir yadro
         ctx.globalAlpha = a;
@@ -591,9 +603,9 @@
         );
         ctx.fill();
         // diffraksiya nurlari (yirik yoki chaqnayotgan yulduzlar)
-        if (p.r > 2.2 || glint > 0.45) {
+        if (p.r > 2.9 || glint > 0.45) {
           var sl = p.r * 4.0 + glint * 11;
-          ctx.globalAlpha = a * 0.55;
+          ctx.globalAlpha = a * 0.35;
           ctx.strokeStyle = coreCols[p.c] + "0.9)";
           ctx.lineWidth = 0.7;
           ctx.beginPath();
