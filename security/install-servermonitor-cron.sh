@@ -53,7 +53,10 @@ CLEANED=$(printf '%s\n' "$EXISTING" | awk -v B="$BEGIN" -v E="$END" '
     $0 == B { skip = 1; next }
     $0 == E { skip = 0; next }
     !skip   { print }
-' | grep -vE 'check_cpu_alert|service_health_check|cron_health_check|server_health_report|monthly_log_report' || true)
+' | grep -vE '(/var/www/jaysonkhan|/jaysonkhan_v2/|servermonitor).*(check_cpu_alert|service_health_check|cron_health_check|server_health_report|monthly_log_report)' || true)
+# ^ 2026-09-10: filtr FAQAT shu loyihaning (jaysonkhan yo'li) monitor-qatorlarini oladi.
+#   Ilgari nom bo'yicha global edi va UzExam'ning `manage.py cron_run cron_health_check`
+#   qatorini (deploy crontabida) jimgina o'chirib yuborardi — ism-to'qnashuvi.
 
 # Re-emit: cleaned crontab, blank separator, fresh managed block.
 {
