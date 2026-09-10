@@ -158,7 +158,7 @@ backend/venv/bin/python backend/manage.py test portfolio.tests.SkillModelTest
 Backed by management commands:
 ```bash
 python manage.py server_health_report [--quick] [--tariff] [--alert-only]
-python manage.py check_cpu_alert [--threshold N]
+python manage.py check_cpu_alert [--threshold N] [--delay S] [--load-factor F]   # default: 20 s kutib (cron :01 bo‘roni o‘tsin), page faqat load_1 ≥ 0.8×yadro
 python manage.py register_bot_commands
 ```
 

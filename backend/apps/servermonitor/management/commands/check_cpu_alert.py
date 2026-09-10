@@ -10,11 +10,27 @@ Defaults updated 2026-04-27 after a flurry of false positives:
     parallel queries and gunicorn worker boots regularly spike a single
     1s window without representing real overload)
 
+2026-09-10 — ikki soxta-page manbasi yopildi (tunda 4 ta «6/6 core 100%»
+page, sar bo'yicha 10-daqiqalik CPU ≤ 20%, load ≤ 1.6/6):
+  - cron har daqiqaning :01 soniyasida bir vaqtda ~9 ta Django-jarayon
+    boshlaydi (uzexam per-minute dispatch'lar + bu monitor + health-check),
+    har boot ≈ 1.8 s CPU → 6 yadro ~6 s 100% (mpstat 04:13:02–:07 bilan
+    o'lchangan). Monitor ham :x3 daqiqada :01 da boshlanib, 5 s namunani
+    aynan shu bo'ron ichida olardi. `--delay` (20 s) namunani :21–:26 ga
+    suradi — bo'ron o'tib bo'lgan.
+  - `--load-factor`: page faqat 1-daqiqalik load ≥ factor × yadro bo'lsa.
+    Yadro-foizi 5 s oynadagi burst'ni ko'radi, load esa haqiqiy
+    «kuchaytirish kerak» holatini — alert matni aynan shuni va'da qiladi.
+
 Usage:
-    python manage.py check_cpu_alert                  # 85% / 5s sample
+    python manage.py check_cpu_alert                  # 85% / 5s sample, 20s delay
     python manage.py check_cpu_alert --threshold 90   # custom threshold
     python manage.py check_cpu_alert --interval 1     # tighter sample
+    python manage.py check_cpu_alert --delay 0        # darhol o'lcha (interaktiv)
+    python manage.py check_cpu_alert --load-factor 0  # load-darvozasini o'chir
 """
+import time
+
 from core.services import SiteSettingsService
 from django.core.management.base import BaseCommand
 from interactions.notifications.telegram_api import TelegramBotAPI
@@ -60,17 +76,32 @@ class Command(BaseCommand):
             help="Ketma-ket necha cron-run yuqori bo'lsa page (default: 2 — "
                  "deploy build/warmup bir martalik spike'ni filtrlaydi)",
         )
+        parser.add_argument(
+            '--delay', type=float, default=20.0,
+            help="Namunadan oldin kutish, soniya (default: 20 — cron :01 "
+                 "bo'ronidan, ya'ni bir vaqtda boot bo'ladigan Django-"
+                 "jarayonlardan tashqariga chiqadi; 0 = darhol)",
+        )
+        parser.add_argument(
+            '--load-factor', type=float, default=0.8,
+            help="Page faqat 1-daqiqalik load ≥ factor × yadro bo'lsa "
+                 "(default: 0.8; 0 = darvozani o'chirish)",
+        )
 
     def handle(self, *args, **options):
         threshold = options['threshold']
         interval = options['interval']
         need = options['consecutive']
+        delay = options['delay']
+        load_factor = options['load_factor']
 
         # Disk piggy-backs on this 10-min cron: a full disk kills EVERY site
         # at once and the daily 09:00 report can be 20h away. Runs first so a
         # CPU early-return never skips it.
         self._check_disk()
 
+        if delay > 0:
+            time.sleep(delay)
         cpu = collect_cpu(interval=interval)
 
         from interactions.notifications.lang import owner_lang
@@ -80,6 +111,17 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f'All {cpu.core_count} cores below {threshold}% '
                 f'(sampled over {interval}s) — no alert'
+            ))
+            return
+
+        load_gate = load_factor * cpu.core_count
+        if load_factor > 0 and cpu.load_avg_1 < load_gate:
+            # Yadro(lar) 5 s oynada issiq, lekin runnable-navbat past —
+            # qisqa burst (cron boot, PG parallel query), overload emas.
+            _write_consec(0)
+            self.stdout.write(self.style.WARNING(
+                f'Hot cores, but load_1={cpu.load_avg_1} < {load_gate:.1f} '
+                f'({load_factor}×{cpu.core_count}) — burst, page qilinmadi'
             ))
             return
 

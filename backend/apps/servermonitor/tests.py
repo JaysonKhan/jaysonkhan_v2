@@ -379,3 +379,90 @@ class FormatterSmokeTest(TestCase):
         self.assertIn('17', text)
         err_text = format_db_report([], 0, 'psql xato')
         self.assertIn('psql xato', err_text)
+
+
+# ── check_cpu_alert: bo'ron-himoyasi (2026-09-10) ────────────────────────────
+
+_CPU_CMD = 'servermonitor.management.commands.check_cpu_alert'
+
+
+def _cpu(load: float, percent: float = 99.0):
+    from servermonitor.metrics import CpuCoreInfo, CpuMetrics
+    return CpuMetrics(
+        total_percent=percent, core_count=6,
+        cores=[CpuCoreInfo(core=i, percent=percent) for i in range(6)],
+        load_avg_1=load, load_avg_5=load, load_avg_15=load,
+    )
+
+
+class CpuAlertBurstGuardTest(TestCase):
+    """Cron :01 bo'roni (bir vaqtda boot bo'ladigan Django-jarayonlar) 5 s
+    namunada 6/6 yadroni 100% ko'rsatadi-yu, load 1 atrofida qoladi — bu
+    page emas. Haqiqiy overload = issiq yadrolar + load ≥ 0.8×yadro, ketma-ket."""
+
+    def setUp(self):
+        super().setUp()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.api = FakeAPI()
+        from types import SimpleNamespace
+        self.patches = [
+            patch(f'{_CPU_CMD}._STATE_FILE', os.path.join(self.tmp.name, 'consec')),
+            patch(f'{_CPU_CMD}.Command._check_disk', lambda self: None),
+            patch(f'{_CPU_CMD}.time.sleep'),
+            patch(f'{_CPU_CMD}.TelegramBotAPI', return_value=self.api),
+            patch(f'{_CPU_CMD}.SiteSettingsService'),
+            patch('interactions.notifications.lang.owner_lang', return_value='uz'),
+        ]
+        started = [p.start() for p in self.patches]
+        self.sleep = started[2]
+        started[4].get.return_value = SimpleNamespace(telegram_owner_id=777)
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+        super().tearDown()
+
+    def _run(self, cpu, **opts):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        with patch(f'{_CPU_CMD}.collect_cpu', return_value=cpu):
+            call_command('check_cpu_alert', stdout=out, stderr=StringIO(), **opts)
+        return out.getvalue()
+
+    def test_default_delay_moves_the_sample_past_the_cron_boot_burst(self):
+        self._run(_cpu(load=0.9, percent=5.0))
+        self.sleep.assert_called_once_with(20.0)
+
+    def test_delay_zero_samples_immediately(self):
+        self._run(_cpu(load=0.9, percent=5.0), delay=0)
+        self.sleep.assert_not_called()
+
+    def test_hot_cores_with_low_load_never_page(self):
+        for _ in range(3):
+            out = self._run(_cpu(load=1.2))
+        self.assertIn('load_1=1.2', out)
+        self.assertEqual(self.api.sent, [])
+
+    def test_sustained_overload_pages_on_second_consecutive_run(self):
+        first = self._run(_cpu(load=5.4))
+        self.assertIn('1/2', first)
+        self.assertEqual(self.api.sent, [])
+        second = self._run(_cpu(load=5.4))
+        self.assertIn('CPU alert sent', second)
+        self.assertEqual(len(self.api.sent), 1)
+        self.assertEqual(self.api.sent[0][0], 777)
+
+    def test_low_load_run_resets_the_consecutive_counter(self):
+        self._run(_cpu(load=5.4))          # 1/2
+        self._run(_cpu(load=1.0))          # burst → reset
+        out = self._run(_cpu(load=5.4))    # yana 1/2, page emas
+        self.assertIn('1/2', out)
+        self.assertEqual(self.api.sent, [])
+
+    def test_load_gate_can_be_disabled(self):
+        self._run(_cpu(load=1.2), load_factor=0)
+        self._run(_cpu(load=1.2), load_factor=0)
+        self.assertEqual(len(self.api.sent), 1)
+
