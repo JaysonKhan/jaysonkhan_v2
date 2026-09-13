@@ -384,3 +384,9 @@ body.task-login #layout-content { border-top:2px solid var(--accent); }
 html:root .jk-mail-account { border:1px solid var(--jk-border); }
 html:root #layout-content .scroller { scrollbar-color:var(--jk-input-border) transparent; }
 @media (max-width:480px) { .jk-mail-intro h2 { font-size:28px; } }
+/* Elastic adds .popover to the actual rail on phones; its dark rule is more
+   specific than the desktop rail selector. Cover the unused drawer height too. */
+html:root #layout-menu.popover { background:var(--ink-deep); border-color:var(--jk-border); }
+html:root.layout-phone #layout > div > .header,
+html:root.layout-phone #layout > div > .footer { background:var(--jk-panel); border-color:var(--jk-border); }
+html:root #layout-menu .popover-header a.cancel { color:var(--fg-0); }

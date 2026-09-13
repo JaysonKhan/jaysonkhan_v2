@@ -118,6 +118,8 @@ class MailSafetyTests(unittest.TestCase):
         self.assertIn('html:root .popover .popover-header a { color:var(--jk-text); }', css)
         self.assertIn('html:root.iframe body.task-settings', css)
         self.assertIn('html:root.layout-phone #messagelist td.flags', css)
+        self.assertIn('#layout-menu.popover { background:var(--ink-deep)', css)
+        self.assertIn('#layout-menu .popover-header a.cancel::before', solar)
         # Owner-authorized dark reading palette has an original-colors opt-out.
         self.assertIn('html.dark-mode body:not(.jk-mail-original-html)', css)
         self.assertNotIn('filter:invert', css)
