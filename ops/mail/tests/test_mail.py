@@ -101,6 +101,7 @@ class MailSafetyTests(unittest.TestCase):
         css = (MAIL / 'jaysonkhan_mail/mail.css').read_text()
         solar = (MAIL / 'jaysonkhan_mail/solar.css').read_text()
         for selector in ['.toolbar a.save', '.toolbar a.attach', '.toolbar a.print',
+                         '.formbuttons .submit', '.html-editor > .editor-toolbar > a.mce-i-html',
                          '#sections-table .general .section', '#settings-menu .identities > a',
                          '.menu .dropbutton a.dropdown', '.formbuttons .send']:
             self.assertIn(selector, solar)

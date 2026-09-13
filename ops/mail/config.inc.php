@@ -9,7 +9,7 @@ if (strtolower($_SERVER['HTTP_HOST'] ?? '') === 'mail.jaysonkhan.com') {
     $config['product_name'] = 'JaysonKhan Mail';
     // Multiple editable sender profiles; the plugin enforces the own-alias allowlist.
     $config['identities_level'] = 0;
-    $config['blankpage_url'] = 'plugins/jaysonkhan_mail/watermark.html?v=20260914';
+    $config['blankpage_url'] = 'plugins/jaysonkhan_mail/watermark.html?v=20260914-2';
     // Type-specific favicon is a supported Roundcube template API. Use the
     // regenerated transparent owner mark, not a horizontal wordmark in the rail.
     $config['skin_logo'] = [

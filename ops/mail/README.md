@@ -17,6 +17,8 @@ Django, business data, mail content, credentials, routing or 2FA changes.
   used for login, rail, favicon and settings; bespoke stationery/contact artwork.
 - Solar icons preserve native accessible labels and fallback glyphs. Scope is
   navigation, toolbars, compose, settings, login and modal actions—not mail text.
+  Settings Save (`.submit`) and signature-editor HTML switch share these masks.
+  Empty-frame theme is inherited before CSS loads to avoid a light-theme flash.
 - Fixed populated editor top padding, long toolbar/rail labels, split buttons,
   native mobile popovers, raw third-party 2FA inputs and button spacing.
 - Autofill preserves palette; password reveal changes only `type`, hides again

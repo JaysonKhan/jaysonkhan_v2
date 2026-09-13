@@ -1,9 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark-mode">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JaysonKhan Mail</title>
+<script>
+// Inherit presentation before loading CSS to avoid a Paper flash in Ink mode.
+try {
+  if (parent !== window) document.documentElement.classList.toggle("dark-mode", parent.document.documentElement.classList.contains("dark-mode"));
+} catch (error) { /* Standalone/cross-origin use keeps the Ink default. */ }
+</script>
 <link rel="stylesheet" href="tokens.css?v=20260914-1">
 <style>
   * { box-sizing:border-box; }
