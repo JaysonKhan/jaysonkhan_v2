@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JaysonKhan Mail</title>
+<link rel="stylesheet" href="tokens.css?v=20260914-1">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--jk-panel); color:var(--jk-text); font-family:var(--font-sans); }
+  main { text-align:center; padding:24px; max-width:400px; }
+  img { display:block; width:180px; height:180px; object-fit:contain; margin:0 auto; }
+  h1 { font-size:28px; font-weight:700; letter-spacing:-.8px; margin:24px 0 12px; }
+  p { font-size:14px; line-height:1.7; color:var(--jk-muted); }
+  small { display:block; margin-top:28px; font:10px var(--font-mono); letter-spacing:1.5px; color:var(--jk-info); }
+  small::before { content:''; display:block; height:2px; width:24px; background:var(--accent); margin:0 auto 20px; }
+  @media(max-height:420px) { img { width:100px; height:100px; } main { padding:16px; } }
+</style>
+</head>
+<body><main><img id="art" src="assets/mail-empty-v1.webp" alt="" width="180" height="180"><h1 id="title">Room for a good conversation.</h1><p id="hint">Select a message. Give it your full attention.</p><small>JAYSONKHAN / MAIL</small></main>
+<script>
+  // Only inherit visible parent presentation; never access mail data or storage.
+  if (window.parent !== window) {
+    try {
+      var source = parent.document.documentElement;
+      function sync() {
+        document.documentElement.classList.toggle("dark-mode", source.classList.contains("dark-mode"));
+        var language = source.lang.slice(0,2);
+        document.documentElement.lang = source.lang || "en";
+        // The blank frame is reused by Contacts and Settings too. Derive only
+        // visible presentation context, not account data or message content.
+        var task = parent.document.body.classList;
+        var context = task.contains("task-addressbook") ? "contacts" : task.contains("task-settings") ? "settings" : "mail";
+        var copy = {
+          en: {mail:["Room for a good conversation.","Select a message. Give it your full attention."], contacts:["Keep good people close.","Choose a contact or add someone new."], settings:["Make yourself at home.","Choose a section to shape your workspace."]},
+          uz: {mail:["Yaxshi suhbat uchun joy.","Xatni tanlang. E’tiboringizni suhbatga qarating."], contacts:["Yaxshi aloqalar — yaqin.","Kontaktni tanlang yoki yangi tanish qo‘shing."], settings:["O‘zingizga moslab oling.","Ish muhitini sozlash uchun bo‘limni tanlang."]},
+          ru: {mail:["Место для хорошего разговора.","Выберите письмо и уделите ему внимание."], contacts:["Хорошие связи — рядом.","Выберите контакт или добавьте новый."], settings:["Устраивайтесь удобнее.","Выберите раздел и настройте рабочее пространство."]}
+        };
+        var text = (copy[language] || copy.en)[context];
+        document.getElementById("title").textContent = text[0];
+        document.getElementById("hint").textContent = text[1];
+        var asset = context === "mail" ? "mail-empty-v1.webp" : context === "contacts" ? "contacts-empty-v1.webp" : "icon.png";
+        document.getElementById("art").setAttribute("src", "assets/" + asset);
+      }
+      sync();
+      new MutationObserver(sync).observe(source, {attributes:true, attributeFilter:["class","lang"]});
+    } catch (error) { /* Direct standalone use keeps its readable default. */ }
+  }
+</script></body></html>

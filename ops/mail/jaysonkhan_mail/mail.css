@@ -1,0 +1,386 @@
+/* JaysonKhan layer over Elastic. Stored messages and native mail/editor actions stay intact. */
+@import url(tokens.css?v=20260914-1);
+body { font-family:var(--font-sans); }
+#layout, #layout-content, #layout-list, #layout-sidebar, .iframe body { background:var(--jk-panel); color:var(--jk-text); }
+#layout > div > .header, #layout > div > .footer, .searchbar, .menu.toolbar { border-color:var(--jk-border); }
+#layout-sidebar, #layout-sidebar > .header, #layout-sidebar > .footer { background:var(--jk-bg); }
+#layout-menu, #taskmenu { background:var(--ink-deep); color:var(--fg-2); }
+#layout-menu .popover-header { background:var(--ink-deep); border:0; }
+/* Native light-mode rail sections otherwise retain the old charcoal color. */
+html:root #layout-menu .popover-header, html:root #taskmenu .special-buttons { background:var(--ink-deep) !important; }
+#layout-menu #logo { width:42px; height:42px; max-width:42px; max-height:42px; object-fit:contain; padding:0; border-radius:0; background:transparent; margin:16px auto; opacity:1; }
+#taskmenu a { color:var(--fg-2); border-radius:var(--r-md); margin:3px 7px; padding-top:10px; padding-bottom:10px; min-height:44px; }
+#taskmenu a.selected, #taskmenu a:hover { background:var(--accent-soft); color:var(--fg-0); }
+#taskmenu a.compose { background:var(--accent); color:var(--fg-0); box-shadow:0 4px 14px var(--jk-shadow); }
+#taskmenu a.logout { color:var(--bad); }
+#taskmenu a .inner { font-size:12px; font-weight:500; }
+#layout-sidebar .header-title { font-size:13px; font-weight:600; color:var(--jk-text); }
+#mailboxlist { padding:12px 10px; }
+#mailboxlist li a { border-radius:var(--r-md); min-height:44px; line-height:44px; color:var(--jk-muted); margin:2px 0; }
+#mailboxlist li.selected > a { background:var(--jk-selected); color:var(--jk-info); font-weight:600; }
+#mailboxlist li a:hover { background:var(--jk-soft); }
+#messagelist { color:var(--jk-text); }
+#messagelist td { padding-top:13px; padding-bottom:13px; border-color:var(--jk-border); }
+#messagelist tr.selected td, #messagelist tr.focused td { background:var(--jk-selected); color:var(--jk-text); }
+#messagelist tr:hover td { background:var(--jk-soft); }
+#messagelist .subject a { color:var(--jk-text); font-size:14px; line-height:1.6; }
+#messagelist .unread .subject a { color:var(--jk-info); font-weight:700; }
+#messagelist .fromto, #messagelist .date { color:var(--jk-muted); font-size:12px; }
+#layout-list .searchbar { margin:8px 10px; border:1px solid var(--jk-border); border-radius:var(--r-md); background:var(--jk-soft); }
+#layout-list .searchbar input { color:var(--jk-text); }
+#layout-list .header, #layout-content > .header { background:var(--jk-panel); }
+.menu.toolbar a, .header a.button { color:var(--jk-muted); }
+.menu.toolbar a:hover, .header a.button:hover { color:var(--jk-info); background:var(--jk-soft); }
+.btn-primary { background:var(--accent); border-color:var(--accent); border-radius:var(--r-sm); }
+.form-control, .custom-select { border-radius:var(--r-sm); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline:3px solid var(--accent-2); outline-offset:3px; }
+.jk-mail-card { margin:12px; padding:17px 14px; border:1px solid var(--jk-border); border-radius:var(--r-md); background:var(--jk-panel); }
+.jk-mail-eyebrow { display:block; font-size:10px; font-weight:700; letter-spacing:1.5px; color:var(--jk-info); }
+.jk-mail-card h2 { font-size:14px; line-height:1.45; font-weight:700; margin:10px 0 5px; }
+.jk-mail-card p { font-size:12px; line-height:1.65; color:var(--jk-muted); margin:0 0 14px; }
+.jk-mail-address-button, .jk-mail-copy { background:var(--jk-selected); color:var(--jk-info); border:1px solid var(--jk-border); border-radius:var(--r-sm); min-height:40px; padding:8px 12px; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.jk-mail-address-button { width:100%; }
+.jk-mail-dialog { background:var(--jk-panel); color:var(--jk-text); border:1px solid var(--jk-border); border-radius:var(--r-lg); width:min(540px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:24px; overflow:auto; box-shadow:0 24px 100px var(--jk-shadow); }
+.jk-mail-dialog::backdrop { background:var(--jk-backdrop); backdrop-filter:blur(4px); }
+.jk-mail-dialog-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.jk-mail-dialog h2 { font-size:21px; font-weight:700; margin:0; }
+.jk-mail-close { background:var(--jk-soft); color:var(--jk-muted); border:0; border-radius:var(--r-md); width:44px; height:44px; font-size:26px; cursor:pointer; flex:none; }
+.jk-mail-account { margin:20px 0 14px; background:var(--jk-soft); border-radius:var(--r-md); padding:16px; }
+.jk-mail-account strong { display:block; margin-top:7px; overflow-wrap:anywhere; font-size:16px; }
+.jk-mail-explainer, .jk-mail-footnote { font-size:13px; line-height:1.65; color:var(--jk-muted); }
+.jk-mail-search { width:100%; border:1px solid var(--jk-border); border-radius:var(--r-md); background:var(--jk-bg); color:var(--jk-text); height:46px; padding:0 14px; margin:6px 0 12px; }
+.jk-mail-alias-list { list-style:none; padding:0; margin:0; max-height:36dvh; overflow:auto; }
+.jk-mail-alias-list li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 2px; border-bottom:1px solid var(--jk-border); }
+.jk-mail-alias-list li[hidden] { display:none; }
+.jk-mail-alias-address { font-size:13px; overflow-wrap:anywhere; }
+.jk-mail-copy { flex:none; }
+.jk-mail-status { color:var(--jk-info); font-size:12px; min-height:18px; margin:8px 0; }
+.jk-mail-empty { color:var(--jk-muted); padding:16px; text-align:center; }
+.jk-mail-attribution { color:var(--jk-muted); font-size:10px; }
+body.task-login { background:var(--jk-bg); background-image:radial-gradient(ellipse at 20% 0%,var(--accent-soft),transparent 55%); }
+body.task-login #layout { align-items:center; justify-content:center; padding:24px 16px; min-height:100dvh; height:auto; overflow:auto; background:transparent; }
+body.task-login #layout-content { flex:none; width:min(440px,100%); margin:auto; height:auto; min-height:0; padding:32px; border:1px solid var(--jk-border); border-radius:var(--r-lg); box-shadow:0 20px 65px var(--jk-shadow); }
+body.task-login #logo { position:static; display:block; top:auto; width:62px; height:62px; max-height:62px; background:transparent; border-radius:0; padding:0; margin:0 auto 24px; opacity:1; }
+body.task-login #login-form { position:static; top:auto; width:100%; max-width:none; margin:0; }
+body.task-login #rcmloginsubmit { background:var(--accent); border-color:var(--accent); border-radius:var(--r-sm); min-height:46px; }
+body.task-login .form-control { background:var(--jk-bg); border-color:var(--jk-border); color:var(--jk-text); min-height:46px; }
+body.task-login .input-group-text { background:var(--jk-soft); border-color:var(--jk-border); color:var(--jk-muted); }
+body.task-login #login-footer { color:var(--jk-muted); }
+.jk-mail-intro { text-align:center; margin:0 0 26px; }
+.jk-mail-intro h2 { color:var(--jk-text); font-size:26px; font-weight:700; letter-spacing:-.6px; margin:10px 0; }
+.jk-mail-intro p { color:var(--jk-muted); font-size:14px; }
+@media (max-width:480px) {
+  .jk-mail-dialog { padding:18px; border-radius:var(--r-lg); }
+  .jk-mail-alias-address { font-size:12px; }
+  body.task-login #layout-content { padding:24px; }
+  .jk-mail-intro h2 { font-size:23px; }
+}
+
+/* Component contract: Elastic moves a toolbar into a popover on small
+   screens. Stack desktop icon/label pairs ONLY in a header, not in popovers.
+   Split controls stay two independent actions with a real focusable target. */
+:root #layout > div > .header .menu.toolbar a:not(.dropdown),
+:root #layout > div > .header > a.refresh {
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  gap:4px; padding:6px 10px; line-height:1.2; border-radius:var(--r-sm);
+}
+:root #layout > div > .header .menu.toolbar a::before,
+:root #layout > div > .header > a.refresh::before {
+  display:block; position:static; float:none !important; margin:0 !important;
+  width:22px !important; height:22px !important; line-height:22px;
+}
+:root #layout > div > .header .menu.toolbar a .inner { display:block; font-size:12px; line-height:16px; }
+:root #layout > div > .header .menu.toolbar .dropbutton { display:inline-flex; vertical-align:top; align-items:stretch; border-radius:var(--r-sm); }
+:root #layout > div > .header .menu.toolbar .dropbutton a.dropdown {
+  display:flex; align-items:center; justify-content:center; width:28px; min-width:28px;
+  padding:0; border-radius:0 9px 9px 0;
+}
+:root #layout > div > .header .menu.toolbar .dropbutton a.dropdown::before { width:14px !important; height:14px !important; min-width:14px; }
+:root #layout > div > .header .menu.toolbar .dropbutton a.dropdown .inner { display:none; }
+:root .menu a.disabled { opacity:.45; cursor:default; }
+:root .menu a:not(.disabled):focus-visible, :root a.button:focus-visible,
+:root .form-control:focus-visible, :root .custom-select:focus-visible {
+  outline:2px solid var(--jk-info); outline-offset:-2px; box-shadow:0 0 0 3px var(--jk-selected);
+}
+@media (min-width:481px) {
+  :root #taskmenu a { display:flex; width:calc(100% - 14px) !important; max-width:none; float:none; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:9px 2px; }
+  :root #taskmenu a::before { display:block; float:none; margin:0 !important; }
+  :root #taskmenu a .inner { line-height:16px; font-size:11px; }
+}
+/* Settings, address books and folders use the same horizontal icon grid. */
+:root #settings-menu, :root #directorylist { padding:12px 10px; }
+:root #settings-menu li, :root #directorylist li { border:0; }
+:root #settings-menu li.selected, :root #directorylist li.selected { background:transparent; }
+:root #mailboxlist li { border-color:transparent; }
+:root #mailboxlist li.selected { background:transparent; }
+:root #settings-menu li a, :root #directorylist li a {
+  color:var(--jk-muted); border-radius:var(--r-md); min-height:44px; margin:2px 0;
+}
+:root #settings-menu li.selected > a, :root #directorylist li.selected > a {
+  background:var(--jk-selected); color:var(--jk-info); font-weight:600;
+}
+:root #settings-menu li a::before, :root #directorylist li a::before,
+:root #mailboxlist li a::before { float:left; margin:11px 10px 0 0; }
+:root #sections-table td.section { padding:14px 16px; color:var(--jk-text); border-color:var(--jk-border); }
+:root #sections-table td.section::before { margin-right:12px; }
+:root #sections-table tr.selected td, :root #contacts-table tr.selected td,
+:root #identities-table tr.selected td, :root #responses-table tr.selected td {
+  background:var(--jk-selected); color:var(--jk-info);
+}
+:root .task-settings .listing td, :root .task-addressbook .listing td { border-color:var(--jk-border); }
+:root .task-settings .listing, :root .task-addressbook .listing { color:var(--jk-text); }
+:root .formcontent legend { color:var(--jk-text); font-size:16px; font-weight:600; padding:8px 0 14px; border-color:var(--jk-border); }
+:root .formcontent label, :root .formcontent .col-form-label { color:var(--jk-muted); }
+:root .formcontent .form-control, :root .formcontent .custom-select,
+:root #compose-headers .recipient-input {
+  background-color:var(--jk-panel); color:var(--jk-text); border-color:var(--jk-border); border-radius:var(--r-sm);
+}
+:root .formcontent input.form-control, :root .formcontent select { min-height:40px; }
+:root .formcontent .form-control::placeholder { color:var(--jk-muted); opacity:1; }
+:root .formcontent .input-group-text { background:var(--jk-soft); color:var(--jk-muted); border-color:var(--jk-border); }
+:root .formbuttons { background:var(--jk-panel); border-color:var(--jk-border); padding:12px 20px; }
+:root .btn { border-radius:var(--r-sm); }
+html:root .btn.btn-primary { background:var(--accent); border-color:var(--accent); color:var(--fg-0); }
+html:root .btn.btn-primary:hover { background:var(--accent-strong); border-color:var(--accent-strong); }
+html:root .btn.btn-secondary { background:var(--jk-soft); color:var(--jk-text); border-color:var(--jk-border); }
+:root .formbuttons .btn, :root #compose-attachments .attach { min-height:44px; }
+:root .formbuttons .btn::before, :root #compose-attachments .attach::before,
+:root .jk-mail-copy::before, :root .jk-mail-address-button::before { float:none; vertical-align:middle; margin-right:8px; width:18px !important; height:18px !important; min-width:18px; }
+
+/* Compose: native editor, recipients, drafts and receipt settings unchanged. */
+:root #compose-content > form { padding:24px; }
+:root #compose-headers { margin-bottom:20px; }
+:root #compose-headers .input-group-text { min-width:40px; justify-content:center; }
+:root #compose-headers .input-group-text::before { float:none; margin:0; }
+:root #compose-subject { font-weight:600; }
+:root #composebody { border:1px solid var(--jk-border); border-radius:var(--r-md); padding:20px; font-size:15px; line-height:1.7; color:var(--jk-text); background:var(--jk-panel); }
+:root #compose-attachments { padding:20px 12px; border:1px dashed var(--jk-border); border-radius:var(--r-md); background:var(--jk-panel); }
+:root #compose-attachments .hint { color:var(--jk-muted); line-height:1.6; }
+:root #compose-attachments .upload-form::before {
+  content:""; display:block; width:92px; height:92px; margin:0 auto 8px;
+  background:url(assets/mail-empty-v1.webp) center/contain no-repeat;
+}
+/* The native drop target used a second enormous SVG arrow below the upload
+   controls. Our illustration replaces that decoration, not drag/drop handling. */
+:root #compose-attachments.droptarget::after { display:none; }
+:root #compose-attachments.droptarget.active { border-color:var(--jk-info); }
+:root #compose-attachments.droptarget.hover { background:var(--jk-selected); }
+:root #composebodycontainer > .editor-toolbar { background:var(--jk-soft); border-color:var(--jk-border); border-radius:var(--r-md) 10px 0 0; }
+:root #composebodycontainer > .editor-toolbar > a { color:var(--jk-muted); width:44px; min-height:32px; display:inline-flex; align-items:center; justify-content:center; }
+:root #composebodycontainer > .editor-toolbar > a::before { float:none; margin:0; width:18px !important; height:18px !important; min-width:18px; }
+:root #compose-options { padding:20px 16px; }
+:root #compose-options .form-group { padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--jk-border); }
+
+/* Reading: style the client chrome and plaintext only. Sender HTML retains
+   its own colours/layout and Roundcube's sanitizer / remote-content blocking.
+   Keep monospace and whitespace: delivery logs, code and tables depend on it. */
+:root #message-header { padding:8px 4px 20px; border-bottom:1px solid var(--jk-border); margin-bottom:20px; }
+:root #message-header > .subject { color:var(--jk-text); font-size:clamp(20px,2vw,26px); line-height:1.4; font-weight:700; letter-spacing:-.4px; overflow-wrap:anywhere; margin:4px 0 18px; }
+:root #message-header .header-content { min-width:0; color:var(--jk-muted); font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
+:root #message-header .header-headers .header-title { color:var(--jk-muted); }
+:root #message-header .header-links { display:flex; flex-wrap:wrap; gap:4px 12px; margin-top:8px; }
+:root #message-header .header-links a { display:inline-flex; align-items:center; gap:6px; min-height:32px; font-size:12px; color:var(--jk-info); }
+:root #message-header .header-links a::before { float:none; margin:0; width:16px !important; height:16px !important; min-width:16px; }
+:root #message-header .contactphoto { width:44px; height:44px; padding:8px; background:var(--jk-soft); }
+:root #messagebody .message-part { color:var(--jk-text); line-height:1.75; padding:12px 0; }
+:root #messagebody .message-part div.pre { font-family:var(--font-mono); font-size:13px; line-height:1.8; overflow-wrap:anywhere; }
+:root #messagebody .message-part a { color:var(--jk-info); text-underline-offset:3px; }
+:root #messagebody .message-part blockquote { border-left:3px solid var(--jk-info); border-right:0; background:var(--jk-soft); color:var(--jk-muted); padding:10px 16px; margin:12px 0; border-radius:0 8px 8px 0; }
+:root .message-partheaders { padding:12px 16px; border:1px solid var(--jk-border); border-radius:var(--r-md); background:var(--jk-soft); color:var(--jk-muted); }
+:root .message-partheaders .headers-table { color:var(--jk-muted); }
+:root #attachment-list li { background:var(--jk-soft); border:1px solid var(--jk-border); border-radius:var(--r-sm); margin:4px 0; color:var(--jk-text); }
+:root #attachment-list li::before { align-self:center; float:none; width:18px !important; height:18px !important; min-width:18px; margin:0 6px; color:var(--jk-muted); }
+:root #attachment-list { background:transparent; border:0; }
+:root #attachment-list a { color:var(--jk-info); }
+:root #message-objects .boxwarning, :root #compose-objects .boxwarning { border-radius:var(--r-md); line-height:1.6; }
+/* Native popovers/dialogs share surfaces, without changing their focus logic. */
+:root .popover, :root .ui-dialog { background:var(--jk-panel); color:var(--jk-text); border:1px solid var(--jk-border); border-radius:var(--r-md); box-shadow:0 14px 50px var(--jk-shadow); }
+:root .popover-header, :root .ui-dialog .ui-dialog-titlebar { background:var(--jk-soft); color:var(--jk-text); border-color:var(--jk-border); }
+:root .popover .menu a { color:var(--jk-text); }
+:root .popover .menu a:hover { background:var(--jk-selected); color:var(--jk-info); }
+:root .popover .menu a::before { margin-top:10px; }
+/* Elastic relocates toolbar DOM into these popovers. Its inherited glyph height
+   is zero on non-flex actions, so popup geometry needs its own explicit grid. */
+html:root .popover, html:root .popover .popover-body { background:var(--jk-panel); color:var(--jk-text); border-color:var(--jk-border); }
+html:root .popover .popover-header { background:var(--jk-soft); color:var(--jk-text); border-color:var(--jk-border); }
+html:root .popover .popover-header a { color:var(--jk-text); }
+html:root .popover .menu li { border-color:var(--jk-border); }
+html:root .popover .menu li a {
+  display:flex; align-items:center; gap:10px; min-height:44px;
+  line-height:1.4; padding:10px 12px; color:var(--jk-text);
+}
+html:root .popover .menu li a::before {
+  width:22px !important; height:22px !important; min-width:22px;
+  flex:0 0 22px; float:none !important; margin:0 !important;
+}
+html:root .popover .menu li a:not(.disabled):hover { background:var(--jk-selected); color:var(--jk-info); }
+html:root .popover .menu .dropbutton a.dropdown { flex:0 0 44px; width:44px; padding:10px; justify-content:center; background:transparent; }
+html:root .popover .menu .dropbutton a.dropdown::after { display:none; }
+html:root .popover .menu li a[aria-haspopup]:not(.dropdown)::after { margin-left:auto; }
+:root .searchbar .icon::before { margin:0; }
+:root .searchbar form { align-items:center; min-width:0; }
+:root .searchbar .input-group-text { display:flex; align-items:center; justify-content:center; }
+:root .pagenav a { display:flex; align-items:center; justify-content:center; }
+:root .pagenav a::before { display:block; margin:0; }
+@media (pointer:coarse) {
+  :root #layout > div > .header .menu.toolbar .dropbutton a.dropdown { width:44px; min-width:44px; }
+}
+@media (max-width:480px) {
+  :root #layout-menu #logo { margin:12px 18px; }
+  :root #taskmenu a { display:flex; align-items:center; gap:12px; padding:10px 14px; }
+  :root #taskmenu a::before { float:none; margin:0 !important; }
+  :root #compose-content > form { padding:16px 12px; }
+  :root #composebody { padding:14px; font-size:16px; }
+  :root #message-header { padding-top:0; }
+  :root #message-header .contactphoto { display:none; }
+  :root #message-header .header-links a { min-height:44px; }
+  :root .formbuttons { padding:10px 12px; }
+}
+@media print {
+  :root #message-header, :root #messagebody .message-part { color:var(--ink-deep); border-color:var(--line-2); }
+  :root #messagebody .message-part a { color:var(--jk-info); }
+}
+@media print { .jk-mail-card, .jk-mail-dialog { display:none !important; } }
+@media (prefers-reduced-motion:reduce) { .jk-mail-dialog::backdrop { backdrop-filter:none; } }
+/* Elastic's dark selectors are deliberately more specific than its base rules. */
+html.dark-mode #layout-menu, html.dark-mode #taskmenu { background:var(--ink-deep); }
+html.dark-mode #layout-list, html.dark-mode #layout-content { background:var(--jk-panel); }
+html.dark-mode #layout-sidebar, html.dark-mode #layout-sidebar > .header, html.dark-mode #layout-sidebar > .footer { background:var(--jk-bg); }
+html.dark-mode #layout-list > .header, html.dark-mode #layout-content > .header { background:var(--jk-panel); }
+html.dark-mode #taskmenu a { color:var(--fg-2); }
+html.dark-mode #taskmenu a.selected, html.dark-mode #taskmenu a:hover { background:var(--accent-soft); color:var(--fg-0); }
+html.dark-mode #taskmenu a.compose { background:var(--accent); color:var(--fg-0); }
+html.dark-mode #taskmenu .special-buttons a:not(:focus) { background:transparent; }
+html.dark-mode #taskmenu a.logout { color:var(--bad); }
+html.dark-mode #mailboxlist li a { color:var(--jk-muted); }
+html.dark-mode #mailboxlist li.selected > a { background:var(--jk-selected); color:var(--jk-info); }
+html.dark-mode #messagelist tr.selected td, html.dark-mode #messagelist tr.focused td { background:var(--jk-selected); color:var(--jk-text); }
+html.dark-mode #messagelist .subject a { color:var(--jk-text); }
+html.dark-mode #messagelist .unread .subject a { color:var(--jk-info); }
+html.dark-mode #messagelist .fromto, html.dark-mode #messagelist .date { color:var(--jk-muted); }
+html.dark-mode body.task-login #layout-content { background:var(--jk-panel); }
+html.dark-mode body.task-login { background-color:var(--jk-bg); }
+#taskmenu a .inner { display:block; }
+html.layout-phone #taskmenu a .inner { display:inline; }
+.header a.task-menu-button, .header a.back-sidebar-button, .header a.back-list-button, .header a.sidebar-menu { position:relative; width:44px; min-width:44px; flex:0 0 44px; }
+.header a.task-menu-button::before, .header a.back-sidebar-button::before, .header a.back-list-button::before, .header a.sidebar-menu::before { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); margin:0 !important; }
+@media (max-width:480px) {
+  /* Absolute mask glyphs cannot supply intrinsic width to these flex items. */
+  .header > a.button.icon { width:44px; min-width:44px; flex:0 0 44px; }
+  /* Do not set display here: Elastic hides toolbar-list-button below 769px.
+     Center glyphs without revealing controls reserved for another breakpoint. */
+  html:root #layout > div > .header > a.button.icon { position:relative; padding:0; }
+  html:root #layout > div > .header > a.button.icon::before {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); margin:0 !important;
+    width:22px !important; height:22px !important;
+  }
+}
+html:root .floating-action-buttons a { display:flex; align-items:center; justify-content:center; background:var(--accent); color:var(--fg-0); }
+html:root .floating-action-buttons a::before { float:none; margin:0; }
+/* Touch layouts overlay the attachment column. Selection colors must not turn
+   that transparent overlay into a rectangle covering the date underneath. */
+html:root.layout-phone #messagelist td.flags, html:root.touch #messagelist td.flags { background:transparent; }
+/* Native preferences/contact frames have their own body and theme cascade. */
+html:root.iframe body.task-settings, html:root.iframe body.task-addressbook { background:var(--jk-panel); color:var(--jk-text); }
+
+/* Populated-editor and long-locale contracts (not only empty English forms). */
+html:root #composebodycontainer.html-editor > textarea,
+html:root #composebodycontainer.html-editor > .googie_edit_layer { padding-top:56px; }
+html:root #composebodycontainer > .editor-toolbar { height:40px; box-sizing:border-box; }
+html:root #composebodycontainer > .editor-toolbar > a { height:34px; }
+@media (min-width:769px) {
+  html:root #layout > div > .header { height:76px; min-height:76px; line-height:76px; }
+  html:root #layout > div > .header .menu.toolbar { display:flex; align-items:center; min-width:0; }
+  html:root #layout > div > .header .menu.toolbar li { height:74px; flex:none; }
+  html:root #layout > div > .header .menu.toolbar a:not(.dropdown),
+  html:root #layout > div > .header > a.refresh { height:74px; min-width:56px; max-width:116px; padding:6px 8px; overflow:visible; white-space:normal; }
+  html:root #layout > div > .header .menu.toolbar a .inner { white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:break-word; line-height:16px; }
+  html:root #layout > div > .header .menu.toolbar .dropbutton a.dropdown { height:74px; }
+}
+@media (min-width:481px) {
+  /* Anchor Elastic's absolute footer to the rail, not the whole viewport. */
+  html:root #layout-menu { position:relative; width:96px; min-width:96px; }
+  html:root #taskmenu .special-buttons { width:100%; box-sizing:border-box; }
+  html:root #taskmenu a { height:auto; min-height:58px; overflow:visible; white-space:normal; }
+  html:root #taskmenu a .inner { width:100%; white-space:normal; overflow-wrap:break-word; line-height:15px; }
+}
+html:root .formcontent input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=hidden]),
+html:root .formcontent select, html:root .formcontent textarea,
+html:root #compose-headers .form-control {
+  color:var(--jk-text); background-color:var(--jk-panel); border:1px solid var(--jk-input-border);
+  border-radius:var(--r-sm); min-height:42px;
+}
+html:root #compose-headers .input-group { gap:6px; }
+html:root #compose-headers .input-group > .input-group-append { gap:6px; margin-left:0; }
+html:root #compose-headers .input-group-text { border:1px solid var(--jk-border); border-radius:var(--r-sm); }
+
+/* Third-party 2FA UI only: preserve names, IDs, handlers, values and disabled state. */
+#twofactor_gauthenticator-form { max-width:1040px; padding:8px 8px 24px; }
+#twofactor_gauthenticator-form h3 { font-size:24px; line-height:1.45; overflow-wrap:anywhere; margin-bottom:24px; }
+#twofactor_gauthenticator-form table { width:100%; table-layout:fixed; }
+#twofactor_gauthenticator-form td { padding:16px 10px; border-color:var(--jk-border); vertical-align:top; }
+#twofactor_gauthenticator-form td.title { width:180px; color:var(--jk-muted); }
+#twofactor_gauthenticator-form td:not(.title):has(input) { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+#twofactor_gauthenticator-form input[type=password], #twofactor_gauthenticator-form input[type=text] { padding:10px 12px; width:240px; max-width:100%; flex:1 1 140px; min-width:0; box-sizing:border-box; }
+#twofactor_gauthenticator-form input[name="2FA_recovery_codes[]"] { max-width:170px; }
+#twofactor_gauthenticator-form input[type=checkbox] { width:18px; height:18px; accent-color:var(--jk-info); }
+#twofactor_gauthenticator-form input[type=button], #twofactor_gauthenticator-form input[type=submit] { margin:4px 6px 4px 0; min-height:44px; max-width:100%; border:1px solid var(--jk-border); border-radius:var(--r-sm); padding:10px 14px; }
+html:root #twofactor_gauthenticator-form input[type=button], html:root #twofactor_gauthenticator-form input[type=submit] { background:var(--accent); color:var(--fg-0); border-color:var(--accent); }
+#twofactor_gauthenticator-form input:disabled { opacity:.5; cursor:not-allowed; }
+#twofactor_gauthenticator-form .jk-2fa-hint { color:var(--jk-muted); font-size:13px; line-height:1.7; }
+@media (max-width:600px) {
+  #twofactor_gauthenticator-form table, #twofactor_gauthenticator-form tbody, #twofactor_gauthenticator-form tr, #twofactor_gauthenticator-form td { display:block; width:100%; }
+  #twofactor_gauthenticator-form td.title { width:100%; padding-bottom:0; }
+}
+
+/* WebKit paints autofill independently of background-color. No credentials are
+   read; inset paint and text-fill-color keep saved inputs legible in both modes. */
+html:root #login-form input:-webkit-autofill,
+html:root #login-form input:-webkit-autofill:hover,
+html:root #login-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color:var(--jk-text) !important; caret-color:var(--jk-text);
+  -webkit-box-shadow:0 0 0 1000px var(--jk-bg) inset !important;
+  box-shadow:0 0 0 1000px var(--jk-bg) inset !important;
+}
+html:root #login-form input:autofill { color:var(--jk-text); background:var(--jk-bg); }
+html:root #login-form .form-control { background-color:var(--jk-bg); color:var(--jk-text); border-color:var(--jk-input-border); }
+html:root #login-form .form-group { margin-bottom:16px; }
+.jk-password-toggle { display:flex; flex:0 0 44px; align-items:center; justify-content:center; width:44px; min-height:46px; padding:0; border:1px solid var(--jk-border); border-left:0; border-radius:0 8px 8px 0; background:var(--jk-soft); color:var(--jk-muted); cursor:pointer; }
+.jk-password-toggle::before { margin:0 !important; }
+html:root #login-form .input-group:has(.jk-password-toggle) input { border-radius:0; min-width:0; }
+
+/* Optional dark reading palette, applied to sanitized HTML presentation only.
+   Images are never inverted; originals remain available via the reader toggle. */
+#messagebody .message-htmlpart { max-width:100%; overflow-x:auto; border-radius:var(--r-md); padding:16px; }
+#messagebody .message-htmlpart img { max-width:100%; }
+html.dark-mode body:not(.jk-mail-original-html) #messagebody .message-htmlpart,
+html.dark-mode body:not(.jk-mail-original-html) #messagebody .message-htmlpart :where(div,p,span,font,table,tbody,thead,tfoot,tr,td,th,ul,ol,li,section,article,header,footer,center,h1,h2,h3,h4,h5,h6,strong,b,em,i,blockquote,pre,code) {
+  background-color:var(--jk-panel) !important; background-image:none !important;
+  color:var(--jk-text) !important; border-color:var(--jk-border) !important;
+}
+html.dark-mode body:not(.jk-mail-original-html) #messagebody .message-htmlpart a,
+html.dark-mode body:not(.jk-mail-original-html) #messagebody .message-htmlpart a * { color:var(--jk-info) !important; }
+html.dark-mode body:not(.jk-mail-original-html) #messagebody .message-htmlpart blockquote { border-left:3px solid var(--jk-border); padding-left:16px; }
+.jk-reader-toggle { background:var(--jk-soft); border:1px solid var(--jk-border); border-radius:var(--r-sm); color:var(--jk-info); padding:6px 10px; font:inherit; font-size:12px; min-height:36px; cursor:pointer; }
+html:not(.dark-mode) .jk-reader-toggle { display:none; }
+
+/* Brand-specific finish. This is not the blue UzExam skin: warm editorial
+   typography, terracotta actions, turquoise information, quiet ink surfaces. */
+html:root .btn.btn-primary, html:root #taskmenu a.compose,
+html:root #login-form #rcmloginsubmit,
+html:root #twofactor_gauthenticator-form input[type=button],
+html:root #twofactor_gauthenticator-form input[type=submit] {
+  color:var(--on-accent); font-weight:600;
+}
+.jk-mail-eyebrow, .jk-mail-attribution { font-family:var(--font-mono); font-weight:400; }
+.jk-mail-eyebrow { color:var(--jk-info); font-size:10px; letter-spacing:1.25px; line-height:1.8; }
+#messagelist .date { font-family:var(--font-mono); font-size:10px; }
+.jk-mail-intro h2 { font-weight:700; letter-spacing:-1px; line-height:1.15; font-size:34px; }
+.jk-mail-intro p { margin:16px 0 0; line-height:1.7; }
+.jk-mail-card { border-top:2px solid var(--accent); }
+html:root #taskmenu a.selected:not(.compose) { background:var(--accent-soft); color:var(--accent); }
+html:root a { color:var(--jk-info); text-underline-offset:3px; }
+body.task-login #layout-content { border-top:2px solid var(--accent); }
+html:root .jk-mail-account { border:1px solid var(--jk-border); }
+html:root #layout-content .scroller { scrollbar-color:var(--jk-input-border) transparent; }
+@media (max-width:480px) { .jk-mail-intro h2 { font-size:28px; } }

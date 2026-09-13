@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- Synthetic DOM/CSS fixture; no server authentication, secrets, or mail actions. -->
+<html lang="uz" class="layout-normal layout-large"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Populated mail regression fixture</title>
+<link rel="stylesheet" href="/vendor/deps/bootstrap.min.css"><link rel="stylesheet" href="/vendor/styles/styles.min.css"><link rel="stylesheet" href="/plugin/mail.css"><link rel="stylesheet" href="/plugin/solar.css">
+<script>if(new URLSearchParams(location.search).get('theme')==='dark')document.documentElement.classList.add('dark-mode');</script>
+</head><body class="task-mail jaysonkhan-mail"><div id="layout"><div id="layout-content" class="selected"><main id="fixture-content" class="content frame-content"></main></div></div>
+<template id="compose-fixture">
+<div id="message-header"><h2>Sinov xati — shaxsiy ma’lumotlar yo‘q</h2><div class="header-links"></div></div>
+<div id="messagebody"><div class="message-htmlpart" style="background:white;color:#333"><div style="background:white;color:#333"><p>Dark mode uchun oq fonli HTML xat.</p><p><strong>Matn va havola o‘qilishi kerak.</strong> <a href="#">Havola</a></p></div></div></div>
+<form class="formcontent"><label for="composebody">Xat matni (hech narsa jo‘natilmaydi)</label><div id="composebodycontainer" class="html-editor" style="height:300px;position:relative"><textarea id="composebody" class="form-control" style="height:100%">BIRINCHI QATOR TO‘LIQ KO‘RINISHI KERAK.
+Ikkinchi qator. Uchinchi qator uchun yetarli joy.</textarea><div class="editor-toolbar"><a class="mce-i-html" href="#" title="HTML">HTML</a></div></div></form>
+</template>
+<template id="security-fixture">
+<form id="twofactor_gauthenticator-form" class="formcontent"><h3 id="prefs-title">2-Factor Authentication - synthetic@example.invalid</h3><table><tbody>
+<tr><td class="title"><label for="2FA_activate">Activate</label></td><td><input id="2FA_activate" type="checkbox" disabled></td></tr>
+<tr><td class="title"><label for="2FA_secret">Secret</label></td><td><input id="2FA_secret" type="password" autocomplete="new-password"><input id="2FA_create_secret" type="button" value="Create secret" disabled></td></tr>
+<tr><td class="title">Recovery codes</td><td><input name="2FA_recovery_codes[]" type="password"><input name="2FA_recovery_codes[]" type="password"><input name="2FA_recovery_codes[]" type="password"><input name="2FA_recovery_codes[]" type="password"><input id="2FA_show_recovery_codes" type="button" value="Show recovery codes" disabled></td></tr>
+<tr><td></td><td>You can scan this QR code using a TOTP-compatible app such as <a href="#">OpenAuthenticator</a> or <a href="#">Google Authenticator</a>.</td></tr>
+</tbody></table><input type="button" class="button mainaction" value="Saqlash" disabled><input id="2FA_setup_fields" type="button" class="button mainaction" value="Fill all fields" disabled><p><input id="2FA_check_code" type="button" class="button mainaction" value="Check code" disabled><input id="2FA_code_to_check" type="text"></p></form>
+</template>
+<template id="login-fixture"><img id="logo" src="/plugin/assets/icon.png" alt="JaysonKhan"><form id="login-form" onsubmit="event.preventDefault()"><div class="form-group row"><div class="input-group"><div class="input-group-prepend"><span class="input-group-text">@</span></div><input class="form-control" id="rcmloginuser" aria-label="Username" value="synthetic-preview"></div></div><div class="form-group row"><div class="input-group"><div class="input-group-prepend"><span class="input-group-text">●</span></div><input class="form-control" id="rcmloginpwd" type="password" aria-label="Password" value="not-a-real-password"></div></div><button id="rcmloginsubmit" class="btn btn-primary btn-block" type="submit">Sinov</button></form></template>
+<script>
+var mode=new URLSearchParams(location.search).get('view')||'compose';
+if(!['compose','security','login'].includes(mode))mode='compose';
+if(mode==='login')document.body.className='task-login jaysonkhan-mail';
+document.getElementById('fixture-content').append(document.getElementById(mode+'-fixture').content.cloneNode(true));
+var labels={welcome:'Jamoangiz uchun yagona pochta',signin:'JaysonKhan ish muhitiga kiring',showpassword:'Parolni ko‘rsatish',hidepassword:'Parolni yashirish',originalcolors:'Asl ranglar',adaptcolors:'Moslashtirilgan ranglar',twofactortitle:'Ikki bosqichli himoya',activate2fa:'Himoyani yoqish',secret2fa:'Maxfiy kalit',recoverycodes:'Tiklash kodlari',createsecret:'Kalit yaratish',showrecovery:'Kodlarni ko‘rsatish',setup2fa:'Maydonlarni tayyorlash',checkcode:'Kodni tekshirish',save2fahint:'O‘zgarishlar Saqlash bosilgandan keyin kuchga kiradi.'};
+window.rcmail={env:{jaysonkhan_mail_brand:true},gettext:function(key){return labels[key]||key;},addEventListener:function(event,fn){if(event==='init')window.addEventListener('DOMContentLoaded',fn);}};
+</script><script src="/plugin/mail.js"></script></body></html>

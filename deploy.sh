@@ -11,6 +11,39 @@
 
 set -e
 
+# Mail is a separate product on shared Roundcube. Never enter the portfolio
+# deploy below (auto-staging, seed commands, migrations and Django restart).
+deploy_mail() {
+    set -Eeuo pipefail
+    cd "$(dirname "$0")"
+    if [[ -n $(git status --porcelain) ]]; then
+        echo 'Mail deploy requires a clean, reviewed, committed worktree'; exit 1
+    fi
+    python3 -m unittest discover -s ops/mail/tests
+    while IFS= read -r file; do php -l "$file" >/dev/null; done < <(find ops/mail -type f \( -name '*.php' -o -name '*.inc' \))
+    node --check ops/mail/jaysonkhan_mail/mail.js
+    bash -n ops/mail/install.sh
+    git fetch origin main --quiet
+    git merge-base --is-ancestor origin/main HEAD || {
+        echo 'origin/main advanced; rebase and rerun checks'; exit 1;
+    }
+    git push origin HEAD:main
+    local mail_stage mail_sha server_sha
+    mail_sha=$(git rev-parse HEAD)
+    mail_stage=$(ssh -o BatchMode=yes -o ConnectTimeout=10 jaysonkhan 'mktemp -d /var/tmp/jaysonkhan-mail.XXXXXXXX' | tail -1)
+    [[ $mail_stage =~ ^/var/tmp/jaysonkhan-mail\.[a-zA-Z0-9]+$ ]] || exit 1
+    git archive HEAD ops/mail | ssh jaysonkhan \
+        "tar -xf - -C '$mail_stage' && sudo bash '$mail_stage/ops/mail/install.sh' '$mail_sha'"
+    server_sha=$(ssh jaysonkhan 'sudo cat /var/lib/jaysonkhan-mail/RELEASE' | tail -1)
+    [[ $server_sha == "$mail_sha" ]] || { echo 'Mail release SHA mismatch'; exit 1; }
+    echo "Mail-only release verified: $mail_sha"
+}
+if [[ ${1:-} == --mail ]]; then
+    [[ $# == 1 ]] || { echo 'Usage: ./deploy.sh --mail'; exit 1; }
+    deploy_mail
+    exit 0
+fi
+
 # ─── Config ───────────────────────────────────────────────────────────────────
 SERVER="jaysonkhan"
 DOMAIN="jaysonkhan.com"

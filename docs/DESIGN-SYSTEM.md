@@ -211,3 +211,24 @@ buttons get a trailing arrow SVG. One primary per view region.
 - Decorative infinite animations
 - Tailwind utility classes in new templates (the shim at the bottom of site.css
   exists ONLY for the legacy interactions partial)
+
+## 11. Mail-only companion (2026-09-14)
+
+The owner requested parity with the polished UzExam mail workflows while keeping
+JaysonKhan's design. `ops/mail/jaysonkhan_mail` is an independent, exact-host
+Roundcube presentation layer, not a new portfolio layout. It snapshots the XIVA
+INK colors, radii and existing type families without importing the global reset.
+Terracotta remains action, turquoise information, warm ink the default.
+
+Explicit mail-only exceptions needed for the requested native light/dark and
+functional parity: optional warm Paper palette derived by mixing existing tokens;
+Roundcube's own responsive breakpoints/DOM; its three installed languages (en,
+uz, ru). Portfolio's single ink scheme, 900px grid and four-language contract,
+especially all owner-written `xo` copy, remain untouched. No new portfolio fonts,
+colors, templates, DB content or services are deployed by `./deploy.sh --mail`.
+
+The owner's mark is regenerated as a transparent terracotta silhouette. Inbox,
+attachments and contacts use understated ivory/terracotta/turquoise stationery
+illustrations, settings uses the mark. Assets and exact generation prompts are
+versioned under `ops/mail/artwork`; self-hosted fonts and Solar license attribution
+ship inside the plugin. See `ops/mail/README.md` for runtime and safety contracts.

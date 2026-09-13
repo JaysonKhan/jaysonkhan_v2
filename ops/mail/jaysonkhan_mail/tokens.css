@@ -1,0 +1,37 @@
+/* XIVA INK snapshot from backend/static/css/tokens.css. No portfolio reset.
+   Mail-only Paper mode is an explicit accessibility companion, not a new
+   portfolio theme. Actions remain terracotta; information remains turquoise. */
+@font-face { font-family:'Schibsted Grotesk'; src:url(assets/schibsted.woff2) format('woff2'); font-style:normal; font-weight:400 800; font-display:swap; }
+@font-face { font-family:'IBM Plex Mono'; src:url(assets/plex-mono.woff2) format('woff2'); font-style:normal; font-weight:400; font-display:swap; }
+:root {
+  --bg-0:oklch(0.185 0.018 268); --bg-1:oklch(0.215 0.018 268);
+  --bg-2:oklch(0.245 0.02 268); --bg-3:oklch(0.285 0.022 268);
+  --ink-deep:oklch(0.155 0.018 268);
+  --fg-0:oklch(0.955 0.012 85); --fg-1:oklch(0.87 0.012 85);
+  --fg-2:oklch(0.72 0.014 80); --fg-3:oklch(0.56 0.016 75);
+  --line-1:oklch(0.955 0.012 85 / .09); --line-2:oklch(0.955 0.012 85 / .16);
+  --line-3:oklch(0.955 0.012 85 / .28);
+  --accent:oklch(0.71 0.135 45); --accent-strong:oklch(0.64 0.15 42);
+  --accent-soft:oklch(0.71 0.135 45 / .14);
+  --accent-2:oklch(0.78 0.095 185); --accent-2-soft:oklch(0.78 0.095 185 / .13);
+  --on-accent:oklch(0.16 0.02 45); --bad:oklch(0.66 0.17 25);
+  --font-sans:'Schibsted Grotesk',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --jk-bg:color-mix(in oklch,var(--fg-0) 94%,var(--accent)); --jk-panel:var(--fg-0);
+  --jk-soft:color-mix(in oklch,var(--fg-0) 92%,var(--bg-0));
+  --jk-text:var(--bg-0); --jk-muted:color-mix(in oklch,var(--bg-0) 72%,var(--fg-0));
+  --jk-border:color-mix(in oklch,var(--bg-0) 18%,var(--fg-0));
+  --jk-input-border:color-mix(in oklch,var(--bg-0) 42%,var(--fg-0));
+  --jk-info:color-mix(in oklch,var(--accent-2) 50%,var(--ink-deep));
+  --jk-selected:color-mix(in oklch,var(--fg-0) 86%,var(--accent));
+  --jk-shadow:color-mix(in oklch,var(--ink-deep) 24%,transparent);
+  --jk-backdrop:color-mix(in oklch,var(--ink-deep) 75%,transparent);
+  color-scheme:light;
+}
+html.dark-mode {
+  --jk-bg:var(--bg-0); --jk-panel:var(--bg-1); --jk-soft:var(--bg-2);
+  --jk-text:var(--fg-0); --jk-muted:var(--fg-2); --jk-border:var(--line-2);
+  --jk-input-border:var(--line-3); --jk-info:var(--accent-2); --jk-selected:var(--accent-soft);
+  color-scheme:dark;
+}
