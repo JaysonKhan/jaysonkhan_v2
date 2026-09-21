@@ -23,27 +23,36 @@
     {# ========================== GRID + FILTERS ========================== #}
     <section class="section" style="padding-top: 48px;">
         <div class="container">
-            <div class="filter-bar">
+            <form class="field project-search" method="get" role="search">
+                <label class="mono-label" for="project-query">{% trans "Search projects" %}</label>
+                <div class="project-search__controls">
+                    <input id="project-query" name="q" value="{{ search_query }}" type="search" maxlength="100" placeholder="{% trans 'Search projects' %}">
+                    {% if active_filter != 'all' %}<input type="hidden" name="filter" value="{{ active_filter }}">{% endif %}
+                    <button class="btn" type="submit">{% trans "Search" %}</button>
+                </div>
+            </form>
+            <nav class="filter-bar" aria-label="{% trans 'Work' %}">
                 {% for tab in filter_tabs %}
-                <a href="{{ tab.url }}" class="filter-btn{% if active_filter == tab.key %} active{% endif %}">{{ tab.label }}</a>
+                <a href="{{ tab.url }}" class="filter-btn{% if active_filter == tab.key %} active{% endif %}"{% if active_filter == tab.key %} aria-current="page"{% endif %}>{{ tab.label }} <span class="mono">{{ tab.count }}</span></a>
                 {% endfor %}
-            </div>
+            </nav>
 
-            <div id="items-grid" class="proj-grid" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
+            <div id="items-grid" class="proj-grid" data-projects-url="{% url 'projects' %}" data-api-url="{% url 'project-list' %}" data-asof-label="{% trans 'As of' %}" data-has-next="{{ page_obj.has_next|yesno:'true,false' }}">
                 {% for project in projects %}
                 <a href="{% url 'project_detail' project.slug %}" class="card proj-card reveal" style="transition-delay: {{ forloop.counter0|divisibleby:2|yesno:'0,70' }}ms;">
                     <div class="proj-card__top">
                         <span class="tag kind-badge--{{ project.kind }}">{{ project.kind_label }}</span>
                         <span class="proj-card__year">{{ project.created_at|date:"Y" }}</span>
                     </div>
-                    <h3 class="proj-title">{{ project.title }}</h3>
-                    <p class="proj-card__desc">{{ project.get_card_description|truncatewords:28 }}</p>
+                    <h2 class="proj-title">{{ project.title }}</h2>
+                    <p class="proj-card__desc">{{ project.get_card_description }}</p>
                     <div class="proj-card__tech">
                         {% for tech in project.technologies.all|slice:":4" %}<span class="tag">{{ tech.name }}</span>{% endfor %}
                     </div>
+                    {% if project.stats_as_of %}<p class="project-asof mono-label">{% trans "As of" %} <time datetime="{{ project.stats_as_of|date:'Y-m-d' }}">{{ project.stats_as_of|date:"Y-m-d" }}</time></p>{% endif %}
                     <div class="proj-card__foot">
                         <div class="proj-card__stats">
-                            {% for s in project.stats|slice:":3" %}
+                            {% for s in project.display_stats|slice:":3" %}
                             <div class="proj-stat">
                                 <span class="proj-stat__v">{{ s.v }}</span>
                                 <span class="proj-stat__l">{{ s.l }}</span>
@@ -57,7 +66,7 @@
                 </a>
                 {% empty %}
                 <div class="empty-state" style="grid-column: 1 / -1;">
-                    <span class="mono-label">— {% trans "No entries yet" %} —</span>
+                    <span class="mono-label">{% trans "No matching projects" %}</span><a class="btn" href="{% url 'projects' %}">{% trans "All" %}</a>
                 </div>
                 {% endfor %}
             </div>
@@ -72,54 +81,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof InfiniteScroll === 'undefined') return;
-
-    function esc(s) {
-        var d = document.createElement('div');
-        d.appendChild(document.createTextNode(s != null ? String(s) : ''));
-        return d.innerHTML;
-    }
-
-    var projectsBase = "{% url 'projects' %}";
-    var KIND_LABELS = { web: 'WEB', bot: 'TG BOT', mobile: 'MOBILE' };
-
-    var urlParams = new URLSearchParams(window.location.search);
-    var filterKey = urlParams.get('filter') || '';
-    var extraParams = {};
-    if (filterKey) extraParams.filter = filterKey;
-
-    InfiniteScroll.init({
-        apiUrl: '/api/projects/',
-        gridId: 'items-grid',
-        sentinelId: 'scroll-sentinel',
-        spinnerId: 'scroll-spinner',
-        extraParams: extraParams,
-        renderItem: function(p) {
-            var kind = p.kind || (p.is_bot ? 'bot' : (p.web_page_url ? 'web' : 'mobile'));
-            var year = (p.created_at || '').slice(0, 4) || '';
-            var tech = (p.tech_tags || []).slice(0, 4).map(function(t) {
-                return '<span class="tag">' + esc(t) + '</span>';
-            }).join('');
-            var stats = (p.stats || []).slice(0, 3).map(function(s) {
-                return '<div class="proj-stat"><span class="proj-stat__v">' + esc(s.v) + '</span><span class="proj-stat__l">' + esc(s.l) + '</span></div>';
-            }).join('');
-            var href = projectsBase + esc(p.slug) + '/';
-            return '<a href="' + href + '" class="card proj-card reveal in">' +
-                '<div class="proj-card__top">' +
-                '<span class="tag kind-badge--' + esc(kind) + '">' + (KIND_LABELS[kind] || '—') + '</span>' +
-                '<span class="proj-card__year">' + esc(year) + '</span>' +
-                '</div>' +
-                '<h3 class="proj-title">' + esc(p.title) + '</h3>' +
-                '<p class="proj-card__desc">' + esc(p.description || '') + '</p>' +
-                '<div class="proj-card__tech">' + tech + '</div>' +
-                '<div class="proj-card__foot">' +
-                '<div class="proj-card__stats">' + stats + '</div>' +
-                '<span class="proj-card__arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span>' +
-                '</div></a>';
-        }
-    });
-});
-</script>
+<script src="{% static 'js/project-list.js' %}" defer></script>
 {% endblock %}

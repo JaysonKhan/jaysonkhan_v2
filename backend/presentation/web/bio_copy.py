@@ -15,8 +15,8 @@ Target queries this page exists to answer (all four scripts):
 
 EVERY factual claim here is sourced from copy already shipped in
 `ops/management/commands/apply_edtech_founder_copy.py` (2026-07 resume +
-UzExam PTA-2026 docs). Do not add numbers or credentials that are not
-already asserted there.
+UzExam PTA-2026 docs). Product counts were refreshed on 2026-09-21 from
+read-only production aggregates; see docs/project-facts-2026-09.md.
 
 `xo` is the Khorezm dialect — the owner's signature voice (-la plural,
 man/mani, gal/girish, qale). Reword only after the owner approves.
@@ -58,8 +58,8 @@ BIO = {
     "xo": {
         "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobil va full-stack dasturchi",
         "meta_description": (
-            "Jahongir Qo'ziboyev (Jayson Khan) — Xorazmdan chiqqan AI, mobil va "
-            "full-stack dasturchi, UzExam va EduStats asoschisi. 25+ ilova, 60k+ savol."
+            "Jahongir Qo'ziboyev (Jayson Khan) — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, UzExam va"
+            " EduStats asoschisi. 25+ ilova, 85k+ savol."
         ),
         "eyebrow": "Kim u? · AI · Mobil · Full-stack · Toshkent",
         "h1": "Jahongir Qo'ziboyev",
@@ -92,13 +92,14 @@ BIO = {
             {
                 "h2": "Nima quraman",
                 "body": [
-                    "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi. "
-                    "3 oyda yolg'iz qurilgan: 54 modul, 100k+ satr kod, 60k+ savol, 9 imtihon treki "
-                    "(DTM, IELTS, SAT, Avtotest va boshqala), takrorlanmas savolla (Uniqueness Engine), "
-                    "SM-2 takrorlash, antifraud reyting, B2B tenant tizimi va Click/Stars to'lovla.",
+                    "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi. 3 "
+                    "oyda yolg'iz qurilgan: 7 mobil ilova, 21k+ ro'yxatdan o'tgan foydalanuvchi, 85k+ "
+                    "ochiq savol, imtihon yo‘nalishla (DTM, IELTS, SAT, Avtotest va boshqala), "
+                    "takrorlanmas savolla (Uniqueness Engine), SM-2 takrorlash, antifraud reyting, B2B "
+                    "tenant tizimi va Click/Stars to'lovla.",
                     "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi platformasi: "
-                    "universitetla reytingi, 52k+ telefon-tasdiqlangan Telegram auditoriyasi va "
-                    "75 OTM o'tish ballari (2020–2025).",
+                    "universitetla reytingi, 53k+ Telegram auditoriyasi va 121 OTM o'tish"
+                    " ballari (2020–2025).",
                     "Ikkalasi ham jonli production'da ishlayapti. President Tech Award 2026 "
                     "ishtirokchisiman.",
                 ],
@@ -149,8 +150,8 @@ BIO = {
     "uz": {
         "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobil va full-stack dasturchi",
         "meta_description": (
-            "Jahongir Qo'ziboyev (Jayson Khan) — O'zbekistonda AI, mobil va full-stack "
-            "dasturchi, UzExam va EduStats asoschisi. 25+ ilova, 60k+ savol, 55k+ foydalanuvchi."
+            "Jahongir Qo'ziboyev (Jayson Khan) — O'zbekistonda AI, mobil va full-stack dasturchi, UzExam va "
+            "EduStats asoschisi. 25+ ilova, 85k+ savol."
         ),
         "eyebrow": "Men haqimda · AI · Mobil · Full-stack · Toshkent",
         "h1": "Jahongir Qo'ziboyev",
@@ -183,14 +184,11 @@ BIO = {
             {
                 "h2": "Nima quraman",
                 "body": [
-                    "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi. "
-                    "3 oyda yolg'iz qurilgan: 54 modul, 100k+ satr kod, 60k+ savol, 9 yo'nalish "
-                    "(DTM, IELTS, SAT, Avtotest va boshqalar), takrorlanmas savollar (Uniqueness "
-                    "Engine), SM-2 takrorlash, antifraud reyting, B2B tenant tizimi va Click/Stars "
-                    "to'lovlari.",
-                    "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi platformasi: "
-                    "universitetlar reytingi, 52k+ telefon-tasdiqlangan Telegram auditoriyasi va "
-                    "75 OTM o'tish ballari (2020–2025).",
+                    "UzExam — 85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. IELTS, "
+                    "Multilevel, SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, Telegram va "
+                    "Flutter'da.",
+                    "EduStats — 53k+ Telegram foydalanuvchi, katalogda 193 faol OTM va 121 OTM bo'yicha o'tish "
+                    "ballari. Talabalar fikri, reytinglar va manbali ta'lim statistikasi bir joyda.",
                     "Ikkalasi ham jonli production'da. President Tech Award 2026 ishtirokchisiman.",
                 ],
             },
@@ -240,8 +238,8 @@ BIO = {
     "ru": {
         "seo_title": "Жахонгир Кузибоев (Jayson Khan) — AI, мобильный и full-stack разработчик",
         "meta_description": (
-            "Жахонгир Кузибоев (Jayson Khan) — AI, мобильный и full-stack разработчик из "
-            "Узбекистана, основатель UzExam и EduStats. 25+ приложений, 60k+ вопросов."
+            "Жахонгир Кузибоев (Jayson Khan) — AI, мобильный и full-stack разработчик из Узбекистана, "
+            "основатель UzExam и EduStats. 25+ приложений, 85k+ вопросов."
         ),
         "eyebrow": "Обо мне · AI · Mobile · Full-stack · Ташкент",
         "h1": "Жахонгир Кузибоев",
@@ -275,14 +273,10 @@ BIO = {
             {
                 "h2": "Что я строю",
                 "body": [
-                    "UzExam (uzexam.uz) — универсальная адаптивная экзаменационная платформа для "
-                    "Узбекистана. Построена в одиночку за 3 месяца: 54 модуля, 100k+ строк кода, "
-                    "60k+ вопросов, 9 экзаменационных треков (DTM, IELTS, SAT, автотесты и другие), "
-                    "неповторяющиеся вопросы (Uniqueness Engine), интервальное повторение SM-2, "
-                    "антифрод-рейтинг, B2B-tenant система и платежи Click/Stars.",
-                    "EduStats (edustats.uz) — платформа студенческих отзывов и образовательной "
-                    "аналитики: рейтинги университетов, 52k+ верифицированная по телефону "
-                    "Telegram-аудитория и проходные баллы 75 вузов (2020–2025).",
+                    "UzExam — 85k+ опубликованных вопросов, 21k+ зарегистрированных пользователей и 7 мобильных"
+                    " приложений: IELTS, Multilevel, SAT, DTM, национальный сертификат, автотест и интервью.",
+                    "EduStats — 53k+ пользователей Telegram, 193 активных вуза в каталоге и проходные баллы для"
+                    " 121 вуза. Отзывы студентов, рейтинги и статистика образования с указанием источников.",
                     "Оба продукта работают в живом production. Участник President Tech Award 2026.",
                 ],
             },
@@ -332,8 +326,8 @@ BIO = {
     "en": {
         "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, Mobile & Full-Stack Developer",
         "meta_description": (
-            "Jahongir Qo'ziboyev (Jayson Khan) is an AI, mobile and full-stack developer "
-            "from Uzbekistan, founder of UzExam and EduStats. 25+ apps, 60k+ questions."
+            "Jahongir Qo'ziboyev (Jayson Khan) is an AI, mobile and full-stack developer from Uzbekistan, "
+            "founder of UzExam and EduStats. 25+ apps, 85k+ questions."
         ),
         "eyebrow": "About · AI · Mobile · Full-stack · Tashkent",
         "h1": "Jahongir Qo'ziboyev",
@@ -366,14 +360,10 @@ BIO = {
             {
                 "h2": "What I build",
                 "body": [
-                    "UzExam (uzexam.uz) — a universal, adaptive exam platform for Uzbekistan. Built "
-                    "solo in 3 months: 54 modules, 100k+ lines of code, 60k+ questions, 9 exam tracks "
-                    "(DTM, IELTS, SAT, driving tests and more), non-repeating questions (Uniqueness "
-                    "Engine), SM-2 spaced repetition, an anti-fraud rating, B2B tenants and "
-                    "Click/Stars payments.",
-                    "EduStats (edustats.uz) — a student-voice and education-analytics platform: "
-                    "university rankings, a 52k+ phone-verified Telegram audience and admission "
-                    "cut-off scores for 75 universities (2020–2025).",
+                    "UzExam — 85k+ published questions, 21k+ registered users and 7 mobile apps: IELTS, "
+                    "Multilevel, SAT, DTM, national certification, driving tests and interviews.",
+                    "EduStats — 53k+ Telegram users, 193 active university listings and admission scores for "
+                    "121 universities. Student reviews, rankings and source-backed education statistics.",
                     "Both run in live production. President Tech Award 2026 participant.",
                 ],
             },

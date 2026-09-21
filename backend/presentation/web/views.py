@@ -1,5 +1,6 @@
 import json
 import logging
+from urllib.parse import urlencode
 
 from blog.models import Post
 from blog.services import BlogRepository, BlogService
@@ -24,7 +25,7 @@ from django.views.generic import DetailView, ListView, TemplateView
 from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
 from portfolio.models import Project
-from portfolio.services import PortfolioRepository, PortfolioService
+from portfolio.services import PortfolioRepository, PortfolioService, filter_projects
 
 from .bio_copy import NAME_GROUPS, SKILL_GROUPS, get_bio
 
@@ -196,15 +197,7 @@ class ProjectListView(AppsGuardMixin, ListView):
     def get_queryset(self):
         queryset = Project.objects.filter(is_visible=True).prefetch_related('technologies')
         f = self.request.GET.get('filter', '')
-        if f == 'web':
-            queryset = queryset.filter(web_page_url__gt='', is_bot=False)
-        elif f == 'bot':
-            queryset = queryset.filter(is_bot=True)
-        elif f == 'mobile':
-            queryset = queryset.filter(
-                Q(app_store_url__gt='') | Q(play_store_url__gt='')
-            )
-        return queryset.order_by('order', '-created_at')
+        return filter_projects(queryset, f, self.request.GET.get('q', '').strip()[:100]).order_by('order', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -217,6 +210,15 @@ class ProjectListView(AppsGuardMixin, ListView):
             {'key': 'bot',    'label': _('Bots'),   'url': base + '?filter=bot'},
             {'key': 'mobile', 'label': _('Mobile'), 'url': base + '?filter=mobile'},
         ]
+        search = self.request.GET.get('q', '').strip()[:100]
+        context['search_query'] = search
+        visible = Project.objects.filter(is_visible=True)
+        for tab in context['filter_tabs']:
+            tab['count'] = filter_projects(visible, tab['key'], search).count()
+            params = {'filter': tab['key']} if tab['key'] != 'all' else {}
+            if search:
+                params['q'] = search
+            tab['url'] = base + ('?' + urlencode(params) if params else '')
         return context
 
 

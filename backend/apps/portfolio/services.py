@@ -1,4 +1,26 @@
+from django.db.models import Q
+
 from .models import Experience, Project, Skill, TeamMember
+
+
+def filter_projects(queryset, kind="", search=""):
+    """One filter contract for server-rendered cards and their API continuation."""
+    if kind == "web":
+        queryset = queryset.filter(web_page_url__gt="", is_bot=False)
+    elif kind == "bot":
+        queryset = queryset.filter(is_bot=True)
+    elif kind == "mobile":
+        queryset = queryset.filter(Q(app_store_url__gt="") | Q(play_store_url__gt=""))
+    elif kind == "cross":
+        queryset = queryset.filter(app_store_url__gt="", play_store_url__gt="")
+    elif kind == "ios":
+        queryset = queryset.filter(app_store_url__gt="")
+    elif kind == "android":
+        queryset = queryset.filter(play_store_url__gt="")
+    if search:
+        queryset = queryset.filter(Q(title__icontains=search) | Q(short_description__icontains=search)
+                                   | Q(technologies__name__icontains=search)).distinct()
+    return queryset
 
 
 class PortfolioRepository:

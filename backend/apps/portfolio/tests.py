@@ -1,4 +1,6 @@
 from django.test import TestCase
+from django.urls import reverse
+from django.utils.translation import override
 from portfolio.models import Project, Skill
 from portfolio.services import PortfolioRepository
 
@@ -214,3 +216,91 @@ class TeamModalTest(TestCase):
         member = list(data.values())[0]
         self.assertEqual(member['photo_real'], '')
         self.assertEqual(member['photo'], '/media/team/aria.png')
+
+
+class ProjectDiscoveryTest(TestCase):
+    @staticmethod
+    def projects_url(lang="en"):
+        with override(lang):
+            return reverse("projects")
+
+    def setUp(self):
+        from core.models import SiteSettings
+        from django.core.cache import cache
+        settings = SiteSettings.load()
+        settings.apps_section_visible = True
+        settings.save()
+        cache.clear()
+        self.mobile = Project.objects.create(title_en='Mobile practice', slug='mobile-practice',
+            play_store_url='https://play.google.com/store/apps/details?id=example', order=1)
+        self.web = Project.objects.create(title_en='Web practice', slug='web-practice',
+            web_page_url='https://example.com/', order=2)
+        self.bot = Project.objects.create(title_en='Bot practice', slug='bot-practice',
+            web_page_url='https://t.me/example', is_bot=True, order=3)
+        Project.objects.create(title='Hidden', slug='hidden-practice', is_visible=False)
+
+    def test_filters_agree_between_page_and_api(self):
+        expected = {'mobile': {self.mobile.slug}, 'web': {self.web.slug}, 'bot': {self.bot.slug}}
+        for kind, slugs in expected.items():
+            with self.subTest(kind=kind):
+                page = self.client.get(self.projects_url(), {'filter': kind})
+                api = self.client.get(reverse("project-list"), {'filter': kind}, HTTP_ACCEPT_LANGUAGE='en')
+                self.assertEqual({p.slug for p in page.context['projects']}, slugs)
+                self.assertEqual({p['slug'] for p in api.json()['results']}, slugs)
+                self.assertContains(page, 'aria-current="page"')
+
+    def test_search_matches_technology_and_preserves_query_in_tabs(self):
+        tech = Skill.objects.create(name='Flutter')
+        self.mobile.technologies.add(tech)
+        response = self.client.get(self.projects_url(), {'q': 'Flutter'})
+        self.assertEqual([p.slug for p in response.context['projects']], [self.mobile.slug])
+        self.assertTrue(all('q=Flutter' in t['url'] for t in response.context['filter_tabs']))
+        api = self.client.get(reverse("project-list"), {'q': 'Flutter'}, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual([p['slug'] for p in api.json()['results']], [self.mobile.slug])
+
+    def test_mobile_continuation_does_not_pull_in_web_projects(self):
+        for i in range(12):
+            Project.objects.create(title_en=f'Mobile {i}', slug=f'mobile-{i}',
+                play_store_url='https://example.com/app', order=10+i)
+        page = self.client.get(self.projects_url(), {'filter': 'mobile'})
+        first = {p.slug for p in page.context['projects']}
+        api = self.client.get(reverse("project-list"), {'filter': 'mobile', 'page': 2}, HTTP_ACCEPT_LANGUAGE='en')
+        following = {p['slug'] for p in api.json()['results']}
+        self.assertEqual(len(first), 10)
+        self.assertEqual(len(following), 3)
+        self.assertFalse(first & following)
+        self.assertNotIn(self.web.slug, following)
+
+    def test_metric_dates_and_labels_survive_api_continuation(self):
+        self.web.stats = [{'v':'85k+', 'l':'Published questions', 'as_of':'2026-09-21'}]
+        self.web.save()
+        api = self.client.get(reverse("project-list"), {'filter': 'web'}, HTTP_ACCEPT_LANGUAGE='ru')
+        item = api.json()['results'][0]
+        self.assertEqual(item['stats_as_of'], '2026-09-21')
+        self.assertEqual(item['stats'][0]['l'], 'Опубликованных вопросов')
+        self.assertContains(self.client.get(self.projects_url("ru")), 'datetime="2026-09-21"')
+
+
+class ProjectFactsRefreshTest(TestCase):
+    def test_seeders_are_repeatable_and_keep_verified_definitions(self):
+        import io
+        from django.core.management import call_command
+        from core.models import SiteSettings
+        from django.utils.translation import override
+        for _ in range(2):
+            call_command('apply_edtech_projects', stdout=io.StringIO())
+            call_command('apply_edtech_founder_copy', stdout=io.StringIO())
+        self.assertEqual(Project.objects.filter(slug__in=['uzexam','edustats','vaygo']).count(), 3)
+        edustats = Project.objects.get(slug='edustats')
+        self.assertEqual([s['v'] for s in edustats.stats], ['53k+', '193', '121'])
+        uzexam = Project.objects.get(slug='uzexam')
+        self.assertEqual([s['v'] for s in uzexam.stats], ['85k+', '21k+', '7'])
+        self.assertIn('Flutter', list(uzexam.technologies.values_list('name', flat=True)))
+        self.assertNotIn('Flutter', list(edustats.technologies.values_list('name', flat=True)))
+        settings = SiteSettings.load()
+        self.assertEqual((settings.stat_3_count, settings.stat_4_count), (85, 21))
+        for lang in ('xo','uz','ru','en'):
+            with override(lang):
+                self.assertNotIn('52k+', edustats.short_description)
+                self.assertNotIn('60k+', uzexam.short_description)
+                self.assertEqual(self.client.get(reverse("projects")).status_code, 200)

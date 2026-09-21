@@ -51,9 +51,10 @@
             {% if project.short_description %}
             <p class="case-hero__sub fade-up" style="animation-delay: .15s;">{{ project.short_description }}</p>
             {% endif %}
+            {% if project.stats_as_of %}<p class="project-asof mono-label">{% trans "As of" %} <time datetime="{{ project.stats_as_of|date:'Y-m-d' }}">{{ project.stats_as_of|date:"Y-m-d" }}</time></p>{% endif %}
             {% if project.stats %}
             <div class="case-hero__stats fade-up" style="animation-delay: .25s;">
-                {% for s in project.stats %}
+                {% for s in project.display_stats %}
                 <div class="case-stat">
                     <span class="case-stat__v">{{ s.v }}</span>
                     <span class="mono-label">{{ s.l }}</span>

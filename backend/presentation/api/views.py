@@ -5,6 +5,7 @@ from contact.services import ContactRepository, ContactService
 from contact.spam_protection import is_rate_limited, is_spam_content
 from core.services import SiteSettingsService
 from portfolio.models import Experience, Project, Skill
+from portfolio.services import filter_projects
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import Throttled
@@ -57,19 +58,8 @@ class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
             .prefetch_related('technologies')
             .order_by('order', '-created_at')
         )
-        # URL-based filtering — mirrors ProjectListView logic.
-        f = self.request.query_params.get('filter', '')
-        if f == 'cross':
-            qs = qs.filter(play_store_url__gt='', app_store_url__gt='')
-        elif f == 'android':
-            qs = qs.filter(play_store_url__gt='')
-        elif f == 'ios':
-            qs = qs.filter(app_store_url__gt='')
-        elif f == 'web':
-            qs = qs.filter(web_page_url__gt='')
-        elif f == 'bot':
-            qs = qs.filter(is_bot=True)
-        return qs
+        return filter_projects(qs, self.request.query_params.get('filter', ''),
+                               self.request.query_params.get('q', '').strip()[:100])
     # Public: AllowAny set at class level (portfolio projects are intentionally public)
 
 

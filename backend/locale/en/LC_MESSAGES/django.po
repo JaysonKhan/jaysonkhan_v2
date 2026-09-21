@@ -305,3 +305,30 @@ msgstr ""
 #: web/partials/portrait.html
 msgid "Close"
 msgstr "Close"
+
+msgid "Published questions"
+msgstr "Published questions"
+
+msgid "Registered users"
+msgstr "Registered users"
+
+msgid "Mobile apps"
+msgstr "Mobile apps"
+
+msgid "Telegram users"
+msgstr "Telegram users"
+
+msgid "University listings"
+msgstr "University listings"
+
+msgid "Universities with scores"
+msgstr "Universities with scores"
+
+msgid "As of"
+msgstr "As of"
+
+msgid "Search projects"
+msgstr "Search projects"
+
+msgid "No matching projects"
+msgstr "No matching projects"

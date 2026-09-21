@@ -478,3 +478,30 @@ msgstr "Men haqimda"
 #: web/partials/portrait.html
 msgid "Close"
 msgstr "Yopish"
+
+msgid "Published questions"
+msgstr "Ochiq savollar"
+
+msgid "Registered users"
+msgstr "Ro'yxatdan o'tganlar"
+
+msgid "Mobile apps"
+msgstr "Mobil ilovalar"
+
+msgid "Telegram users"
+msgstr "Telegram foydalanuvchilari"
+
+msgid "University listings"
+msgstr "Katalogdagi OTM"
+
+msgid "Universities with scores"
+msgstr "O'tish ballari: OTM"
+
+msgid "As of"
+msgstr "Holat"
+
+msgid "Search projects"
+msgstr "Loyihalarni qidirish"
+
+msgid "No matching projects"
+msgstr "Mos loyiha topilmadi"

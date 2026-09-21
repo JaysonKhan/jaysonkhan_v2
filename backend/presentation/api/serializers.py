@@ -44,6 +44,9 @@ class ProjectListSerializer(serializers.ModelSerializer):
     tech_tags = serializers.SerializerMethodField()
     description = serializers.CharField(source='get_card_description', read_only=True)
 
+    stats = serializers.ReadOnlyField(source='display_stats')
+    stats_as_of = serializers.DateField(read_only=True)
+
     created_at = serializers.DateTimeField(format='%Y-%m-%d', read_only=True)
 
     kind = serializers.CharField(read_only=True)
@@ -53,7 +56,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'slug', 'description', 'image_url',
                   'tech_tags', 'created_at', 'is_featured',
                   'app_store_url', 'play_store_url', 'web_page_url',
-                  'is_bot', 'github_url', 'stats', 'kind')
+                  'is_bot', 'github_url', 'stats', 'stats_as_of', 'kind')
 
     def get_image_url(self, obj):
         if obj.image:

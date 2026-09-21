@@ -47,7 +47,7 @@ const InfiniteScroll = (() => {
                 });
             }
 
-            const resp = await fetch(`${config.apiUrl}?${params.toString()}`);
+            const resp = await fetch(`${config.apiUrl}?${params.toString()}`, {headers: {"Accept-Language": document.documentElement.lang || "xo"}});
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
             const data = await resp.json();

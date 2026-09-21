@@ -105,6 +105,22 @@ class Project(models.Model):
         ]
 
     @property
+    def display_stats(self):
+        from .project_metrics import metric_label
+        return [dict(stat, l=metric_label(stat.get("l", ""))) for stat in self.stats]
+
+    @property
+    def stats_as_of(self):
+        from datetime import date
+        dates = {stat.get("as_of") for stat in self.stats}
+        if len(dates) == 1:
+            try:
+                return date.fromisoformat(dates.pop())
+            except (TypeError, ValueError):
+                pass
+        return None
+
+    @property
     def has_case_study(self):
         return bool(self.case_study_challenge or self.case_study_solution or self.case_study_results)
 

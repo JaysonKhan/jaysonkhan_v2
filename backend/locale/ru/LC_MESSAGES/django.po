@@ -477,3 +477,30 @@ msgstr "Обо мне"
 #: web/partials/portrait.html
 msgid "Close"
 msgstr "Закрыть"
+
+msgid "Published questions"
+msgstr "Опубликованных вопросов"
+
+msgid "Registered users"
+msgstr "Зарегистрированных пользователей"
+
+msgid "Mobile apps"
+msgstr "Мобильных приложений"
+
+msgid "Telegram users"
+msgstr "Пользователей Telegram"
+
+msgid "University listings"
+msgstr "Вузов в каталоге"
+
+msgid "Universities with scores"
+msgstr "Вузов с проходными баллами"
+
+msgid "As of"
+msgstr "На дату"
+
+msgid "Search projects"
+msgstr "Поиск проектов"
+
+msgid "No matching projects"
+msgstr "Подходящих проектов нет"
