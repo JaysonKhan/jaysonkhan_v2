@@ -341,13 +341,15 @@ class AddCommentView(View):
             return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
 
         parent = None
+        reply_to = None
         if parent_id:
             try:
-                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id, is_approved=True)
+                reply_to = Comment.objects.select_related('parent').get(id=int(parent_id), content_type=ct, object_id=object_id, is_approved=True, deleted_at__isnull=True)
+                parent = reply_to.parent or reply_to
             except (ValueError, Comment.DoesNotExist):
                 return JsonResponse({'error': 'Invalid parent comment'}, status=400)
-            if parent.parent_id is not None:
-                return JsonResponse({'error': 'Replies to replies are not allowed'}, status=400)
+            if not parent.is_approved:
+                return JsonResponse({'error': _('This discussion is unavailable.')}, status=400)
 
         # ── 6. Content Moderation (Keywords & Links) ──
         is_approved = True
@@ -398,6 +400,7 @@ class AddCommentView(View):
                 object_id=object_id,
                 text=text,
                 parent=parent,
+                reply_to=reply_to,
                 image=image,
                 is_approved=is_approved,
                 is_reviewed=is_reviewed,
@@ -537,7 +540,7 @@ class ListCommentsView(View):
 
 class ListRepliesView(View):
     def get(self, request, parent_id):
-        parent = public_comment(parent_id)
+        parent = public_comment(parent_id, allow_deleted=True)
         if not parent or parent.parent_id:
             return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
         qs = comment_queryset(parent.content_type, parent.object_id).filter(parent_id=parent_id).order_by('created_at', 'pk')
@@ -555,3 +558,36 @@ class ListRepliesView(View):
             'page': result.number,
             'total_count': result.paginator.count,
         })
+
+
+class DeleteCommentView(View):
+    """Owner-only reversible removal. Moderation and other replies stay intact."""
+
+    def post(self, request, comment_id, action='delete'):
+        if not _is_same_origin(request):
+            return JsonResponse({'error': 'Forbidden'}, status=403)
+        profile = get_tg_profile(request)
+        if not profile:
+            return JsonResponse({'error': _('Login with Telegram first')}, status=401)
+        with transaction.atomic():
+            TelegramEntity.objects.select_for_update().get(pk=profile.pk)
+            comment = Comment.objects.select_for_update().filter(pk=comment_id, author=profile).first()
+            if not comment or not public_target(comment.content_type.app_label, comment.content_type.model, comment.object_id):
+                return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
+            now = timezone.now()
+            if action == 'restore':
+                if not comment.deleted_at or (now - comment.deleted_at).total_seconds() > 60:
+                    return JsonResponse({'error': _('The undo period has expired.')}, status=409)
+                comment.deleted_at = None
+            elif not comment.deleted_at:
+                comment.deleted_at = now
+            comment.save(update_fields=['deleted_at'])
+            qs = comment_queryset(comment.content_type, comment.object_id)
+            root = qs.filter(pk=comment.parent_id or comment.pk).first()
+            return JsonResponse({
+                'status': 'ok', 'id': comment.pk, 'parent_id': comment.parent_id,
+                'undo_seconds': max(0, 60 - int((now - comment.deleted_at).total_seconds())) if comment.deleted_at else 0,
+                'comment': serialize_comment(qs.get(pk=comment.pk), profile.pk) if action == 'restore' and qs.filter(pk=comment.pk).exists() else None,
+                'thread': serialize_comment(root, profile.pk) if root else None,
+                'discussion_count': qs.filter(deleted_at__isnull=True).count(),
+            })

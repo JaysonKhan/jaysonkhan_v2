@@ -571,3 +571,56 @@ msgstr "Ссылка на комментарий"
 
 msgid "Enable JavaScript to sign in, reply and load more comments."
 msgstr "Включите JavaScript для входа, ответов и загрузки комментариев."
+
+msgid "Deleted comment"
+msgstr "Удалённый комментарий"
+
+msgid "This comment was deleted."
+msgstr "Этот комментарий удалён."
+
+msgid "The undo period has expired."
+msgstr "Время для отмены истекло."
+
+msgid "Delete comment"
+msgstr "Удалить комментарий"
+
+msgid "Delete this comment?"
+msgstr "Удалить этот комментарий?"
+
+msgid "Other replies will stay. You can undo this for 60 seconds."
+msgstr ""
+"Ответы других пользователей останутся. Действие можно отменить в течение 60 "
+"секунд."
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Undo"
+msgstr "Отменить удаление"
+
+msgid "Comment deleted."
+msgstr "Комментарий удалён."
+
+msgid "Comment restored."
+msgstr "Комментарий восстановлен."
+
+msgid "Your reply is pending review."
+msgstr "Ваш ответ ожидает проверки."
+
+msgid "Write a reply…"
+msgstr "Напишите ответ…"
+
+msgid "Post reply"
+msgstr "Ответить"
+
+msgid "Comment actions"
+msgstr "Действия с комментарием"
+
+msgid "Read more"
+msgstr "Читать далее"
+
+msgid "Show less"
+msgstr "Свернуть"

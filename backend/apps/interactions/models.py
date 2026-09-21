@@ -23,6 +23,8 @@ class Comment(models.Model):
     # Telegram-like features
     parent       = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     image        = models.ImageField(upload_to='comments/images/', null=True, blank=True)
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='direct_replies')
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     is_approved  = models.BooleanField(
         default=True,

@@ -59,10 +59,10 @@ class NotificationService:
 
     def notify_reply(self, comment) -> None:
         """Notify the parent-comment author that someone replied."""
-        if not comment.author:
+        if not comment.author or not comment.is_approved or comment.deleted_at:
             return
-        parent = comment.parent
-        if not parent or not parent.author:
+        parent = comment.reply_to or comment.parent
+        if not parent or not parent.author or parent.deleted_at or not parent.is_approved:
             return
         if comment.author_id == parent.author_id:
             return
@@ -135,7 +135,7 @@ class NotificationService:
         site = SiteSettingsService.get()
         if not getattr(site, 'admin_notify_replies', True):
             return
-        parent = comment.parent
+        parent = comment.reply_to or comment.parent
         if not parent or not parent.author:
             return
         author = escape(comment.author.display_name)

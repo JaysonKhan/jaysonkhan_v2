@@ -574,3 +574,54 @@ msgid "Enable JavaScript to sign in, reply and load more comments."
 msgstr ""
 "Kirish, javob yozish va boshqa kommentlani ko‘rish uchun JavaScriptni "
 "yoqing."
+
+msgid "Deleted comment"
+msgstr "O‘chirilgan komment"
+
+msgid "This comment was deleted."
+msgstr "Bu komment o‘chirildi."
+
+msgid "The undo period has expired."
+msgstr "Qaytarishga vaqt tugadi."
+
+msgid "Delete comment"
+msgstr "Kommentni o‘chirish"
+
+msgid "Delete this comment?"
+msgstr "Shu komment o‘chirilsinmi?"
+
+msgid "Other replies will stay. You can undo this for 60 seconds."
+msgstr "Boshqalani javoblari qoladi. 60 soniyada qaytarib olsa bo‘ladi."
+
+msgid "Delete"
+msgstr "O‘chirish"
+
+msgid "Cancel"
+msgstr "Bekor qilish"
+
+msgid "Undo"
+msgstr "Qaytarish"
+
+msgid "Comment deleted."
+msgstr "Komment o‘chirildi."
+
+msgid "Comment restored."
+msgstr "Komment qaytdi."
+
+msgid "Your reply is pending review."
+msgstr "Javobingiz tekshirilyapti."
+
+msgid "Write a reply…"
+msgstr "Javob yozing…"
+
+msgid "Post reply"
+msgstr "Javob yuborish"
+
+msgid "Comment actions"
+msgstr "Komment amallari"
+
+msgid "Read more"
+msgstr "Davomini o‘qish"
+
+msgid "Show less"
+msgstr "Qisqartirish"

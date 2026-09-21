@@ -9,11 +9,11 @@ from .models import (
 
 @admin.register(Comment)
 class CommentAdmin(ModelAdmin):
-    list_display   = ('author', 'short_text', 'parent', 'has_image', 'is_approved', 'is_reviewed', 'created_at')
-    list_filter    = ('is_approved', 'is_reviewed', 'content_type', 'created_at')
+    list_display   = ('author', 'short_text', 'parent', 'has_image', 'is_approved', 'is_reviewed', 'deleted_at', 'created_at')
+    list_filter    = ('is_approved', 'is_reviewed', 'deleted_at', 'content_type', 'created_at')
     list_editable  = ('is_approved', 'is_reviewed')
     search_fields  = ('author__first_name', 'author__username', 'text')
-    readonly_fields = ('author', 'content_type', 'object_id', 'created_at')
+    readonly_fields = ('author', 'content_type', 'object_id', 'reply_to', 'deleted_at', 'created_at')
     ordering       = ('-created_at',)
     actions        = ['mark_as_reviewed', 'approve_comments', 'reject_comments']
 

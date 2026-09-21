@@ -297,3 +297,112 @@ class DiscussionRenderingTest(TestCase):
                 for message in english:
                     self.assertNotEqual(gettext(message), message)
                 self.assertNotEqual(discussion_labels()['earlierReplies'], english[0])
+
+
+class CommentOwnershipTest(TestCase):
+    def setUp(self):
+        from django.utils import timezone
+        self.owner = TelegramEntity.objects.create(telegram_id=456781, first_name='Owner', auth_date=1)
+        self.other = TelegramEntity.objects.create(telegram_id=456782, first_name='Other', auth_date=1)
+        self.project = Project.objects.create(title='Controls', slug='controls', is_visible=True)
+        self.ct = ContentType.objects.get_for_model(self.project)
+        self.root = Comment.objects.create(author=self.owner, content_type=self.ct, object_id=self.project.pk, text='Private after delete', image='comments/images/private.png')
+        self.child = Comment.objects.create(author=self.other, content_type=self.ct, object_id=self.project.pk, text='Keep my reply', parent=self.root)
+        self.login(self.owner)
+
+    def login(self, profile):
+        session = self.client.session
+        session['tg_profile_id'] = profile.pk
+        session.save()
+
+    def remove(self, comment=None, action='delete'):
+        return self.client.post(reverse(f'interactions:{action}_comment', args=[(comment or self.root).pk]))
+
+    def test_only_owner_can_remove_or_restore_and_get_is_read_only(self):
+        self.login(self.other)
+        self.assertEqual(self.remove().status_code, 404)
+        self.assertEqual(self.remove(action='restore').status_code, 404)
+        self.login(self.owner)
+        self.assertEqual(self.client.get(reverse('interactions:delete_comment', args=[self.root.pk])).status_code, 405)
+        self.client.session.flush()
+        self.assertEqual(self.remove().status_code, 401)
+        self.root.refresh_from_db()
+        self.assertIsNone(self.root.deleted_at)
+
+    def test_delete_redacts_author_media_and_text_but_preserves_others_replies(self):
+        from interactions.services import discussion_page
+        response = self.remove()
+        self.assertEqual(response.status_code, 200)
+        tombstone = response.json()['thread']
+        self.assertTrue(tombstone['is_deleted'])
+        self.assertIsNone(tombstone['author']['id'])
+        self.assertIsNone(tombstone['image_url'])
+        self.assertNotIn('Private', tombstone['text'])
+        self.assertFalse(tombstone['is_own'])
+        self.assertEqual(response.json()['discussion_count'], 1)
+        self.assertEqual(Comment.objects.count(), 2)
+        replies = self.client.get(reverse('interactions:list_replies', args=[self.root.pk])).json()['replies']
+        self.assertEqual([c['id'] for c in replies], [self.child.pk])
+        self.assertEqual(discussion_page(self.ct,self.project.pk)['discussion_count'], 1)
+        self.assertEqual(self.client.post(reverse('interactions:toggle_comment_reaction', args=[self.root.pk]), {'emoji':'👍'}).status_code,404)
+
+    def test_leaf_deletion_disappears_and_undo_is_owner_scoped_and_idempotent(self):
+        self.login(self.other)
+        deleted = self.remove(self.child).json()
+        self.assertEqual(deleted['thread']['reply_count'], 0)
+        self.assertEqual(self.client.get(reverse('interactions:list_replies', args=[self.root.pk])).json()['total_count'],0)
+        self.assertEqual(self.remove(self.child).status_code,200)
+        restored = self.remove(self.child,'restore')
+        self.assertEqual(restored.status_code,200)
+        self.assertEqual(restored.json()['comment']['text'],'Keep my reply')
+        self.assertEqual(self.remove(self.child,'restore').status_code,409)
+
+    def test_restore_expiry_and_moderation_cannot_be_bypassed(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        self.remove()
+        Comment.objects.filter(pk=self.root.pk).update(deleted_at=timezone.now()-timedelta(seconds=61))
+        self.assertEqual(self.remove(action='restore').status_code,409)
+        Comment.objects.filter(pk=self.root.pk).update(deleted_at=timezone.now(),is_approved=False)
+        response=self.remove(action='restore')
+        self.assertEqual(response.status_code,200)
+        self.assertIsNone(response.json()['comment'])
+        self.assertIsNone(response.json()['thread'])
+        self.root.refresh_from_db()
+        self.assertFalse(self.root.is_approved)
+
+    def test_reply_to_reply_stays_flat_and_identifies_recipient(self):
+        from django.test import override_settings
+        with override_settings(COMMENT_NEW_USER_RATE_COUNT=20):
+            response=self.client.post(reverse('interactions:add_comment',args=['portfolio','project',self.project.pk]),{'text':'Replying to the other reader','parent_id':self.child.pk})
+        self.assertEqual(response.status_code,201)
+        c=Comment.objects.get(pk=response.json()['comment']['id'])
+        self.assertEqual(c.parent_id,self.root.pk)
+        self.assertEqual(c.reply_to_id,self.child.pk)
+        self.assertEqual(response.json()['comment']['reply_to']['name'],'Other')
+        self.assertEqual(response.json()['comment']['reply_to']['id'],self.child.pk)
+
+    def test_deleted_or_cross_discussion_reply_target_is_rejected(self):
+        from django.test import override_settings
+        self.login(self.other)
+        self.remove(self.child)
+        url=reverse('interactions:add_comment',args=['portfolio','project',self.project.pk])
+        with override_settings(COMMENT_NEW_USER_RATE_COUNT=20):
+            self.assertEqual(self.client.post(url,{'text':'No deleted target','parent_id':self.child.pk}).status_code,400)
+            other=Project.objects.create(title='Other',slug='other',is_visible=True)
+            wrong=Comment.objects.create(author=self.owner,content_type=self.ct,object_id=other.pk,text='Wrong target')
+            self.assertEqual(self.client.post(url,{'text':'No other target','parent_id':wrong.pk}).status_code,400)
+
+    def test_new_removal_endpoints_require_csrf(self):
+        client=Client(enforce_csrf_checks=True)
+        session=client.session;session['tg_profile_id']=self.owner.pk;session.save()
+        self.assertEqual(client.post(reverse('interactions:delete_comment',args=[self.root.pk])).status_code,403)
+
+    def test_reply_notification_targets_the_actual_recipient(self):
+        from unittest.mock import patch
+        from interactions.notifications.service import NotificationService
+        reply=Comment.objects.create(author=self.owner,content_type=self.ct,object_id=self.project.pk,parent=self.root,reply_to=self.child,text='For the other reader')
+        svc=NotificationService()
+        with patch.object(svc,'_should_notify',return_value=False) as should_notify:
+            svc.notify_reply(reply)
+        self.assertEqual(should_notify.call_args.args[0],self.other)

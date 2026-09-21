@@ -56,3 +56,19 @@ Authenticated mutations were exercised only in the isolated local QA environment
 no production test comments or reactions were created. Live Telegram identity
 sign-in was not performed. Existing server-manager.sh and server-only untracked
 files were preserved; the primary local checkout was left clean and unchanged.
+
+## Inline replies and owner controls — follow-up
+
+Reference: YouTube Help, https://support.google.com/youtube/answer/6000976?hl=en
+(threaded replies, comment permalinks, Top/Newest and own-comment actions).
+Adapt these interaction patterns within XIVA INK; no third-party UI assets copied.
+
+Backend: owner-scoped, CSRF-protected delete/restore POST endpoints; 60-second undo
+window enforced by the server. Removal is a soft-delete, separate from moderation.
+Public serializers redact author/text/image/reactions; a deleted root remains only
+when needed to retain other users' approved replies. Leaf comments disappear.
+Restore never overrides approval. Admin shows the deletion timestamp. Migration
+0010 adds nullable deleted_at/reply_to fields without rewriting existing content.
+Replies to a reply keep a flat root thread and record the actual recipient;
+notification routing respects that recipient and suppresses pending/deleted content.
+30 interaction tests, Django check and migration consistency checks pass.

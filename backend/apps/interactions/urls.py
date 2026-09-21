@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (TelegramAuthView, TelegramLoginView, TelegramLogoutView, TelegramWebAppLoginView,
-                    AddCommentView, ToggleLikeView, ToggleCommentReactionView, ListCommentsView, ListRepliesView)
+                    AddCommentView, DeleteCommentView, ToggleLikeView, ToggleCommentReactionView, ListCommentsView, ListRepliesView)
 
 app_name = 'interactions'
 
@@ -19,6 +19,8 @@ urlpatterns = [
         AddCommentView.as_view(),
         name='add_comment',
     ),
+    path('interactions/comment/<int:comment_id>/delete/', DeleteCommentView.as_view(), name='delete_comment'),
+    path('interactions/comment/<int:comment_id>/restore/', DeleteCommentView.as_view(), {'action': 'restore'}, name='restore_comment'),
     # Reaction toggle (AJAX)
     path(
         'interactions/comment/<int:comment_id>/react/',

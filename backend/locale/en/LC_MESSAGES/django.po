@@ -403,3 +403,54 @@ msgstr "Link to comment"
 
 msgid "Enable JavaScript to sign in, reply and load more comments."
 msgstr "Enable JavaScript to sign in, reply and load more comments."
+
+msgid "Deleted comment"
+msgstr "Deleted comment"
+
+msgid "This comment was deleted."
+msgstr "This comment was deleted."
+
+msgid "The undo period has expired."
+msgstr "The undo period has expired."
+
+msgid "Delete comment"
+msgstr "Delete comment"
+
+msgid "Delete this comment?"
+msgstr "Delete this comment?"
+
+msgid "Other replies will stay. You can undo this for 60 seconds."
+msgstr "Other replies will stay. You can undo this for 60 seconds."
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Undo"
+msgstr "Undo"
+
+msgid "Comment deleted."
+msgstr "Comment deleted."
+
+msgid "Comment restored."
+msgstr "Comment restored."
+
+msgid "Your reply is pending review."
+msgstr "Your reply is pending review."
+
+msgid "Write a reply…"
+msgstr "Write a reply…"
+
+msgid "Post reply"
+msgstr "Post reply"
+
+msgid "Comment actions"
+msgstr "Comment actions"
+
+msgid "Read more"
+msgstr "Read more"
+
+msgid "Show less"
+msgstr "Show less"

@@ -573,3 +573,55 @@ msgstr "Izohga havola"
 msgid "Enable JavaScript to sign in, reply and load more comments."
 msgstr ""
 "Kirish, javob berish va boshqa izohlarni ko‘rish uchun JavaScriptni yoqing."
+
+msgid "Deleted comment"
+msgstr "O‘chirilgan komment"
+
+msgid "This comment was deleted."
+msgstr "Bu komment o‘chirilgan."
+
+msgid "The undo period has expired."
+msgstr "Qaytarish vaqti tugadi."
+
+msgid "Delete comment"
+msgstr "Kommentni o‘chirish"
+
+msgid "Delete this comment?"
+msgstr "Bu komment o‘chirilsinmi?"
+
+msgid "Other replies will stay. You can undo this for 60 seconds."
+msgstr ""
+"Boshqalarning javoblari saqlanadi. 60 soniya ichida qaytarishingiz mumkin."
+
+msgid "Delete"
+msgstr "O‘chirish"
+
+msgid "Cancel"
+msgstr "Bekor qilish"
+
+msgid "Undo"
+msgstr "Qaytarish"
+
+msgid "Comment deleted."
+msgstr "Komment o‘chirildi."
+
+msgid "Comment restored."
+msgstr "Komment qaytarildi."
+
+msgid "Your reply is pending review."
+msgstr "Javobingiz tekshirilmoqda."
+
+msgid "Write a reply…"
+msgstr "Javob yozing…"
+
+msgid "Post reply"
+msgstr "Javob yuborish"
+
+msgid "Comment actions"
+msgstr "Komment amallari"
+
+msgid "Read more"
+msgstr "Davomini o‘qish"
+
+msgid "Show less"
+msgstr "Qisqartirish"
