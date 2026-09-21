@@ -40,3 +40,19 @@ Release gates: 154/154 tests pass; Django system check reports zero issues;
 makemigrations --check --dry-run reports no changes; JS syntax and git whitespace
 checks pass. SSR regressions cover project and journal in all four locales,
 escaped user text/JSON, session ownership and configured composer limits.
+
+Production verification (2026-09-21): release e9ee4d6 (backend d73f67d) pushed to
+origin/main and deployed through ./deploy.sh, exit 0, all health checks green.
+Origin/main and server HEAD both e9ee4d639d587e134f225ed212b4adb552e2fbeb.
+jaysonkhan/nginx active; /health/ returns database/cache OK; no error-priority
+jaysonkhan journal entries since release start (09:21:20 UTC).
+Eight public SSR routes (UzExam project + journal entry, xo/uz/ru/en) return 200
+with localized discussion endpoints. Public list API retains the existing comment.
+Served hashed comments.b1157fec4714.css and comments.afdb6157aa7d.js match the
+committed source bytes. Real production browser: official Telegram login widget,
+existing avatar/image, image dialog/Escape, newest sorting, guest reply prompt
+and focus, desktop and 390px Uzbek layout pass; no browser console errors.
+Authenticated mutations were exercised only in the isolated local QA environment;
+no production test comments or reactions were created. Live Telegram identity
+sign-in was not performed. Existing server-manager.sh and server-only untracked
+files were preserved; the primary local checkout was left clean and unchanged.
