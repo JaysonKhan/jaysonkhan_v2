@@ -5,6 +5,13 @@ from django.utils.translation import gettext as _
 
 def discussion_labels():
     return {
+        'deleteComment': _('Delete comment'), 'deleteTitle': _('Delete this comment?'),
+        'deleteHint': _('Other replies will stay. You can undo this for 60 seconds.'),
+        'delete': _('Delete'), 'cancel': _('Cancel'), 'undo': _('Undo'),
+        'deleted': _('Comment deleted.'), 'restored': _('Comment restored.'),
+        'pendingReply': _('Your reply is pending review.'),
+        'writeReply': _('Write a reply…'), 'postReply': _('Post reply'),
+        'actions': _('Comment actions'), 'readMore': _('Read more'), 'showLess': _('Show less'),
         'reply': _('Reply'), 'replies': _('Replies'), 'hideReplies': _('Hide replies'),
         'earlierReplies': _('Load earlier replies'), 'moreReplies': _('Load more replies'), 'moreComments': _('Load more comments'),
         'loading': _('Loading…'), 'sending': _('Sending…'), 'send': _('Send comment'),

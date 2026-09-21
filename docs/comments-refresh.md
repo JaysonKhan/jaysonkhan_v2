@@ -72,3 +72,21 @@ Restore never overrides approval. Admin shows the deletion timestamp. Migration
 Replies to a reply keep a flat root thread and record the actual recipient;
 notification routing respects that recipient and suppresses pending/deleted content.
 30 interaction tests, Django check and migration consistency checks pass.
+
+UI follow-up: each Reply opens a compact editor directly under that comment,
+before the thread toggle. Root and per-comment drafts use separate session keys;
+Cancel/Escape keeps the draft, restores Reply focus, and attachments stay scoped
+to their editor. Reply-to-reply attribution links to the actual target. Own rows
+have a More menu with adjacent delete confirmation and a 60-second Undo control;
+counts refresh and removal does not discard other users' replies. Long comments
+have Read more/Show less. Controls, labels and CSRF URLs are shared across blog
+and projects and all four locales.
+
+Validation: 162/162 full-suite tests pass, JS syntax/whitespace checks pass.
+Local real browser: editor is a child of the selected comment before the thread,
+root/reply drafts remain independent, cancel/reopen restores text, flat direct
+replies post successfully, inline image preview/upload works, duplicate errors
+retain text, delete/undo update counts, and deleting an image-bearing parent
+redacts its content while preserving another author's reply. Desktop and 390px
+English/Russian inline forms have no horizontal overflow or duplicate DOM IDs;
+console has no errors. Local notification dispatch remains disabled.

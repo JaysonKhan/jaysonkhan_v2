@@ -13,8 +13,9 @@
   const threads = new Map();
   let sort = 'top', page = initial.page, hasNext = initial.has_next;
   let generation = 0, loading = false, controller;
-  let parentId = null, replyTarget = null, selectedFile = null, previewURL = null, sending = false;
-  let lastReplyButton = null;
+  const editors = new Map();
+  const editorTemplate = loggedIn ? $('form').cloneNode(true) : null;
+  let activeReply = null, mutations = 0;
   const draftKey = `jk-comment:${panel.dataset.user}:${panel.dataset.app}:${panel.dataset.model}:${panel.dataset.oid}`;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -43,7 +44,7 @@
   }
   async function request(url, options = {}) {
     let response;
-    try { response = await fetch(url, {...options, credentials: 'same-origin', headers: {'Accept-Language': lang, ...options.headers}}); }
+    try { response = await fetch(url, {...options, credentials: 'same-origin', headers: {'Accept-Language': lang, 'X-CSRFToken': panel.querySelector('[name=csrfmiddlewaretoken]')?.value || '', ...options.headers}}); }
     catch (error) { if (error.name === 'AbortError') throw error; throw new Error(labels.networkError); }
     let data;
     try { data = await response.json(); } catch (_) { throw new Error(labels.genericError); }
@@ -70,6 +71,7 @@
   }
   function renderReactions(comment, bar) {
     bar.replaceChildren();
+    if (comment.is_deleted) return;
     Object.entries(comment.reaction_counts || {}).forEach(([emoji, count]) => {
       const chip = button(emoji + ' ', 'discussion-reaction', () => react(comment, emoji, bar));
       chip.append(el('span', '', count)); chip.setAttribute('aria-pressed', String(comment.user_reaction === emoji));
@@ -95,14 +97,13 @@
       });
       picker.append(summary, menu); bar.append(picker);
     } else bar.append(button(labels.react, 'discussion-text-btn', requireLogin));
-    if (!comment.parent_id) bar.append(button(labels.reply, 'discussion-text-btn', event => {
-      if (!loggedIn) return requireLogin();
-      parentId = comment.id; replyTarget = comment; lastReplyButton = event.currentTarget;
-      $('reply-name').textContent = labels.replyingTo.replace('{name}', comment.author.display_name);
-      $('reply-preview').textContent = comment.text || labels.image;
-      $('reply-context').hidden = false; saveDraft(); goTo($('text'));
-    }));
+    if (!comment.is_deleted) {
+      const reply = button(labels.reply, 'discussion-text-btn', event => openReply(comment, event.currentTarget));
+      reply.dataset.reply = comment.id; reply.setAttribute('aria-expanded', 'false');
+      reply.setAttribute('aria-controls', `reply-form-${comment.id}`); bar.append(reply);
+    }
   }
+
   async function react(comment, emoji, bar) {
     if (!loggedIn) return requireLogin();
     if (comment.busy) return;
@@ -124,19 +125,41 @@
       const img = el('img'); img.src = safeURL(comment.author.photo_url); img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
       img.addEventListener('error', () => { avatar.textContent = comment.author.initial; }, {once: true}); avatar.replaceChildren(img);
     }
+    if (comment.is_deleted) row.classList.add('is-deleted');
     const body = el('div', 'discussion-comment-body');
     const header = el('header'); header.append(el('strong', '', comment.author.display_name));
     if (comment.is_own) header.append(el('span', 'discussion-you', labels.you));
     const permalink = el('a', 'discussion-time'); permalink.href = `#comment-${comment.id}`; permalink.title = labels.link;
     const time = el('time', '', formatDate(comment.created_at)); time.dateTime = comment.created_at; permalink.append(time); header.append(permalink); body.append(header);
-    if (comment.text) body.append(el('p', 'discussion-text', comment.text));
+    if (comment.is_own) {
+      const menu = el('details', 'discussion-owner-menu');
+      const summary = el('summary', 'discussion-text-btn', '···'); summary.setAttribute('aria-label', labels.actions);
+      const options = el('div', 'discussion-owner-options');
+      options.append(button(labels.deleteComment, 'discussion-text-btn', () => { menu.open = false; confirmDelete(comment, body, summary); }));
+      menu.append(summary, options); header.append(menu);
+    }
+    if (comment.reply_to && comment.reply_to.id !== comment.parent_id) {
+      const target = el('a', 'discussion-reply-to', labels.replyingTo.replace('{name}', comment.reply_to.name));
+      target.href = `#comment-${comment.reply_to.id}`; body.append(target);
+    }
+    if (comment.text) {
+      const text = el('p', 'discussion-text', comment.text); body.append(text);
+      if (comment.text.length > 360 || comment.text.split('\n').length > 5) {
+        text.classList.add('is-collapsed');
+        const more = button(labels.readMore, 'discussion-text-btn discussion-read-more', () => {
+          const collapsed = text.classList.toggle('is-collapsed'); more.textContent = collapsed ? labels.readMore : labels.showLess;
+          more.setAttribute('aria-expanded', String(!collapsed));
+        });
+        more.setAttribute('aria-expanded', 'false'); body.append(more);
+      }
+    }
     if (comment.image_url && safeURL(comment.image_url)) {
       const link = el('a', 'discussion-image lightbox-trigger'); link.href = safeURL(comment.image_url);
       link.dataset.lightbox = ''; link.dataset.full = link.href; link.dataset.hint = `${labels.image} · ${comment.author.display_name}`; link.dataset.closeLabel = labels.close;
       const image = el('img'); image.src = link.href; image.alt = labels.image; image.loading = 'lazy';
       link.append(image, el('span', 'discussion-image-caption', labels.image + ' ↗')); body.append(link);
     }
-    const actions = el('div', 'discussion-actions'); renderReactions(comment, actions); body.append(actions);
+    const actions = el('div', 'discussion-actions'); renderReactions(comment, actions); body.append(actions, el('div', 'discussion-inline-slot'));
     if (!comment.parent_id) {
       const toggle = button(`${labels.replies} · ${comment.reply_count}`, 'discussion-text-btn discussion-thread-toggle', () => toggleThread(comment.id));
       toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', `replies-${comment.id}`); toggle.hidden = !comment.reply_count;
@@ -155,6 +178,7 @@
         (item.dataset.createdAt === comment.created_at && Number(item.id.replace('comment-', '')) > comment.id));
       target.insertBefore(row, next || null);
     } else prepend ? target.prepend(row) : target.append(row);
+    attachEditor(comment.id);
   }
   async function toggleThread(id) {
     const thread = threads.get(id); thread.replies.hidden = !thread.replies.hidden;
@@ -185,12 +209,12 @@
   function renderPage(data, reset) {
     if (reset) { $('list').replaceChildren(); comments.clear(); threads.clear(); }
     data.comments.forEach(comment => addComment(comment, $('list')));
-    if (!$('list').children.length) $('list').append(el('p', 'discussion-empty', labels.empty));
+    updateEmpty();
     $('count').textContent = data.discussion_count;
     page = data.page; hasNext = data.has_next; $('more').hidden = !hasNext;
   }
   async function loadComments(reset = false) {
-    if (loading && !reset) return;
+    if (mutations || (loading && !reset)) return;
     if (controller) controller.abort(); controller = new AbortController();
     const seq = ++generation; loading = true;
     $('list').setAttribute('aria-busy', 'true'); $('more').disabled = true; $('more').textContent = labels.loading; $('load-error').hidden = true;
@@ -205,6 +229,7 @@
   renderPage(initial, true);
   $('more').addEventListener('click', () => loadComments());
   panel.querySelectorAll('[data-sort]').forEach(node => node.addEventListener('click', () => {
+    if (mutations) return;
     sort = node.dataset.sort;
     panel.querySelectorAll('[data-sort]').forEach(item => item.setAttribute('aria-pressed', String(item === node)));
     loadComments(true);
@@ -218,73 +243,200 @@
     } catch (error) { status(error.message, true); }
     finally { node.disabled = false; }
   });
-  function formError(message) { $('form-error').textContent = message; $('form-error').hidden = !message; }
-  function updateInput() {
-    const text = $('text').value; const count = Array.from(text).length;
-    $('chars').textContent = `${count} / ${limits.maxLength}`;
-    $('send').disabled = sending || count > limits.maxLength || (text.trim().length < limits.minLength && !selectedFile);
+  function updateEmpty() {
+    const empty = $('list').querySelector(':scope > .discussion-empty');
+    if ($('list').querySelector(':scope > article')) empty?.remove();
+    else if (!empty) $('list').append(el('p', 'discussion-empty', labels.empty));
   }
-  function saveDraft() {
-    try { sessionStorage.setItem(draftKey, JSON.stringify({text: $('text').value, time: Date.now()})); } catch (_) { /* Storage may be disabled. */ }
+  function lockList(start) {
+    mutations += start ? 1 : -1;
+    if (start) { controller?.abort(); ++generation; loading = false; $('list').removeAttribute('aria-busy'); $('more').textContent = labels.moreComments; }
+    panel.querySelectorAll('[data-sort], #discussion-more').forEach(node => { node.disabled = mutations > 0; });
   }
-  function clearReply(restoreFocus = false) {
-    parentId = null; replyTarget = null; $('reply-context').hidden = true;
-    if (restoreFocus && lastReplyButton && lastReplyButton.isConnected) lastReplyButton.focus();
+  function attachEditor(id) {
+    const editor = editors.get(id); const row = document.getElementById(`comment-${id}`);
+    if (!editor || !row) return;
+    row.querySelector(':scope > .discussion-comment-body > .discussion-inline-slot').append(editor.form);
+    row.querySelector('[data-reply]')?.setAttribute('aria-expanded', String(!editor.form.hidden));
   }
-  function clearImage() {
-    if (previewURL) URL.revokeObjectURL(previewURL); previewURL = null; selectedFile = null;
-    $('image').value = ''; $('preview-image').removeAttribute('src'); $('preview').hidden = true; updateInput();
+  function openReply(comment, trigger) {
+    if (!loggedIn) return requireLogin();
+    if (activeReply && activeReply !== comment.id) editors.get(activeReply)?.close(false);
+    let editor = editors.get(comment.id);
+    if (!editor) {
+      const form = editorTemplate.cloneNode(true); form.id = `reply-form-${comment.id}`;
+      form.classList.add('discussion-inline-form');
+      editor = makeEditor(form, comment); editors.set(comment.id, editor);
+    }
+    activeReply = comment.id; editor.trigger = trigger; editor.form.hidden = false; attachEditor(comment.id);
+    trigger.setAttribute('aria-expanded', 'true');
+    editor.text.focus({preventScroll: true});
+    // Scroll only if the inline editor is below the visible viewport.
+    const bounds = editor.text.getBoundingClientRect();
+    if (bounds.bottom > innerHeight - 30 || bounds.top < 90) {
+      window.scrollTo({top: scrollY + bounds.top - Math.min(innerHeight * .45, 220), behavior: reduced ? 'auto' : 'smooth'});
+    }
   }
-  if (loggedIn) {
-    try {
-      const draft = JSON.parse(sessionStorage.getItem(draftKey));
-      if (draft && Date.now() - draft.time < 86400000 && draft.text) { $('text').value = draft.text; status(labels.draftRestored); }
-    } catch (_) { /* No draft. */ }
-    updateInput();
-    $('text').addEventListener('input', () => { updateInput(); formError(''); saveDraft(); });
-    $('text').addEventListener('keydown', event => {
-      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.isComposing) { event.preventDefault(); if (!$('send').disabled) $('form').requestSubmit(); }
+  function makeEditor(form, target = null) {
+    const suffix = target ? `-${target.id}` : '';
+    form.querySelectorAll('[id]').forEach(node => { node.dataset.field = node.id.replace('discussion-', ''); node.id += suffix; });
+    if (target) form.querySelectorAll('[for], [aria-describedby]').forEach(node => {
+      ['for', 'aria-describedby'].forEach(attr => { if (node.hasAttribute(attr)) node.setAttribute(attr, node.getAttribute(attr).split(' ').map(id => id + suffix).join(' ')); });
     });
-    $('cancel-reply').addEventListener('click', () => clearReply(true));
-    $('remove-image').addEventListener('click', () => { clearImage(); $('image').focus(); });
-    $('image').addEventListener('change', () => {
-      const file = $('image').files[0]; if (!file) return;
-      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type) || file.size > limits.maxImageMB * 1024 * 1024) {
-        clearImage(); formError(labels.imageHint.replace('{n}', limits.maxImageMB)); return;
+    const f = key => form.querySelector(`[data-field="${key}"]`);
+    let selectedFile = null, previewURL = null, sending = false;
+    const key = target ? `${draftKey}:reply:${target.id}` : draftKey;
+    const error = message => { f('form-error').textContent = message; f('form-error').hidden = !message; };
+    const save = () => { try { sessionStorage.setItem(key, JSON.stringify({text:f('text').value, time:Date.now()})); } catch (_) {} };
+    function update() {
+      const text = f('text').value; const count = Array.from(text).length;
+      f('chars').textContent = `${count} / ${limits.maxLength}`;
+      f('send').disabled = sending || count > limits.maxLength || (text.trim().length < limits.minLength && !selectedFile);
+    }
+    function clearImage() {
+      if (previewURL) URL.revokeObjectURL(previewURL); previewURL = null; selectedFile = null;
+      f('image').value = ''; f('preview-image').removeAttribute('src'); f('preview').hidden = true; update();
+    }
+    const editor = {form, text:f('text'), trigger:null, close(focus = true) {
+      if (sending) return;
+      form.hidden = true; save(); if (activeReply === target?.id) activeReply = null;
+      const trigger = document.querySelector(`[data-reply="${target?.id}"]`);
+      trigger?.setAttribute('aria-expanded', 'false'); if (focus) trigger?.focus({preventScroll:true});
+    }};
+    if (target) {
+      f('text').rows = 2; f('text').placeholder = labels.writeReply;
+      form.querySelector(`label[for="${f('text').id}"]`).textContent = labels.replyingTo.replace('{name}',target.author.display_name);
+      f('send').textContent = labels.postReply + ' ↗'; f('cancel').hidden = false;
+      f('cancel').addEventListener('click', () => editor.close());
+    }
+    try { const draft = JSON.parse(sessionStorage.getItem(key)); if (draft && Date.now()-draft.time < 86400000 && draft.text) f('text').value = draft.text; } catch (_) {}
+    update();
+    f('text').addEventListener('input', () => { update(); error(''); save(); });
+    f('text').addEventListener('keydown', event => {
+      if (event.key === 'Escape' && target) { event.preventDefault(); editor.close(); }
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.isComposing) { event.preventDefault(); if (!f('send').disabled) form.requestSubmit(); }
+    });
+    f('remove-image').addEventListener('click', () => { clearImage(); f('image').focus(); });
+    f('image').addEventListener('change', () => {
+      const file = f('image').files[0]; if (!file) return;
+      if (!['image/jpeg','image/png','image/gif','image/webp'].includes(file.type) || file.size > limits.maxImageMB * 1024 * 1024) {
+        clearImage(); error(labels.imageHint.replace('{n}',limits.maxImageMB)); return;
       }
       if (previewURL) URL.revokeObjectURL(previewURL);
-      selectedFile = file; previewURL = URL.createObjectURL(file); $('preview-image').src = previewURL;
-      $('file-name').textContent = file.name; $('preview').hidden = false; formError(''); updateInput();
+      selectedFile = file; previewURL = URL.createObjectURL(file); f('preview-image').src = previewURL;
+      f('file-name').textContent = file.name; f('preview').hidden = false; error(''); update();
     });
-    $('form').addEventListener('submit', async event => {
+    form.addEventListener('submit', async event => {
       event.preventDefault(); if (sending) return;
-      const text = $('text').value.trim();
-      if (Array.from(text).length > limits.maxLength) return formError(labels.maxChars.replace('{n}', limits.maxLength));
-      if (text.length < limits.minLength && !selectedFile) return formError(labels.minChars.replace('{n}', limits.minLength));
-      const body = new FormData(); body.append('text', text); if (parentId) body.append('parent_id', parentId); if (selectedFile) body.append('image', selectedFile);
-      const submittedParent = replyTarget;
-      if (controller) controller.abort(); ++generation; loading = false; $('list').removeAttribute('aria-busy'); $('more').textContent = labels.moreComments;
-      panel.querySelectorAll('[data-sort], #discussion-more').forEach(node => { node.disabled = true; });
-      sending = true; $('form').querySelector('fieldset').disabled = true; $('send').textContent = labels.sending; formError('');
+      const text = f('text').value.trim();
+      if (Array.from(text).length > limits.maxLength) return error(labels.maxChars.replace('{n}',limits.maxLength));
+      if (text.length < limits.minLength && !selectedFile) return error(labels.minChars.replace('{n}',limits.minLength));
+      const body = new FormData(); body.append('text', text); if (target) body.append('parent_id',target.id); if (selectedFile) body.append('image',selectedFile);
+      sending = true; lockList(true); form.querySelector('fieldset').disabled = true; f('send').textContent = labels.sending; error('');
       try {
-        const data = await request($('form').action, {method: 'POST', body});
-        $('text').value = ''; saveDraft(); clearImage(); clearReply(); status(data.message);
+        const data = await request(form.action,{method:'POST',body});
+        f('text').value = ''; save(); clearImage();
         if (data.comment) {
-          const c = data.comment; $('list').querySelector('.discussion-empty')?.remove();
-          if (c.parent_id && !threads.has(c.parent_id) && submittedParent) addComment(submittedParent, $('list'), true);
-          if (c.parent_id && threads.has(c.parent_id)) {
-            const thread = threads.get(c.parent_id); thread.replies.hidden = false; thread.toggle.hidden = false;
-            thread.toggle.textContent = labels.hideReplies; thread.toggle.setAttribute('aria-expanded', 'true');
-            if (!thread.loaded) await loadReplies(c.parent_id);
-            else thread.count += 1;
-            addComment(c, thread.list);
-          } else addComment(c, $('list'), true);
-          $('count').textContent = Number($('count').textContent) + 1;
+          const c = data.comment;
+          if (c.parent_id) {
+            let thread = threads.get(c.parent_id);
+            if (!thread) {
+              const found = await request(listURL({focus:c.id}));
+              if (found.focus_thread) addComment(found.focus_thread,$('list'),true);
+              thread = threads.get(c.parent_id);
+            }
+            if (thread) {
+              thread.replies.hidden = false; thread.toggle.hidden = false;
+              thread.toggle.textContent = labels.hideReplies; thread.toggle.setAttribute('aria-expanded','true');
+              // Focus pagination gives a contiguous page containing the new reply.
+              thread.list.replaceChildren(); thread.loaded = false; thread.page = 0;
+              await loadReplies(c.parent_id,c.id);
+              addComment(c,thread.list);
+            }
+          } else addComment(c,$('list'),true);
+          $('count').textContent = Number($('count').textContent)+1; updateEmpty();
           const node = document.getElementById(`comment-${c.id}`); if (node) goTo(node);
+          if (target) { sending = false; editor.close(false); }
+          else status(data.message);
+        } else {
+          const note = el('p','discussion-help', target ? labels.pendingReply : data.message); note.setAttribute('role','status'); form.after(note);
+          if (target) { sending = false; editor.close(false); }
         }
-      } catch (error) { formError(error.message); }
-      finally { panel.querySelectorAll('[data-sort], #discussion-more').forEach(node => { node.disabled = false; }); sending = false; $('form').querySelector('fieldset').disabled = false; $('send').textContent = labels.send + ' ↗'; updateInput(); }
+      } catch (failure) { error(failure.message); }
+      finally { sending = false; lockList(false); form.querySelector('fieldset').disabled = false; f('send').textContent = (target ? labels.postReply : labels.send)+' ↗'; update(); }
     });
+    return editor;
+  }
+  function replaceRoot(comment) {
+    const old = document.getElementById(`comment-${comment.id}`); const thread = threads.get(comment.id);
+    const row = createComment(comment);
+    if (old) old.replaceWith(row); else $('list').prepend(row);
+    if (thread?.loaded) {
+      const fresh = threads.get(comment.id);
+      fresh.replies.replaceWith(thread.replies); fresh.replies = thread.replies;
+      Object.assign(fresh,{list:thread.list,earlier:thread.earlier,more:thread.more,page:thread.page,firstPage:thread.firstPage,loaded:true,count:comment.reply_count});
+      fresh.toggle.setAttribute('aria-expanded',String(!fresh.replies.hidden));
+      fresh.toggle.textContent = fresh.replies.hidden ? `${labels.replies} · ${fresh.count}` : labels.hideReplies;
+    }
+    attachEditor(comment.id); updateEmpty();
+  }
+  async function refreshReplies(id) {
+    const thread = threads.get(id); if (!thread?.loaded) return;
+    const pages = Math.max(1,thread.page); const replies = [];
+    let last;
+    for (let current=1;current<=pages;current++) {
+      const url = new URL(urlFor(panel.dataset.repliesUrl,id),location.href); url.searchParams.set('page',current);
+      last = await request(url); replies.push(...last.replies); if (!last.has_next) break;
+    }
+    if (!thread.replies.isConnected) return;
+    thread.list.replaceChildren(); replies.forEach(reply => addComment(reply,thread.list));
+    thread.firstPage = 1; thread.page = last.page; thread.count = last.total_count;
+    thread.earlier.hidden = true; thread.more.hidden = !last.has_next;
+  }
+  function confirmDelete(comment, body, trigger) {
+    if (body.querySelector(':scope > .discussion-delete-confirm')) return;
+    const box = el('div','discussion-delete-confirm'); box.setAttribute('role','group'); box.setAttribute('aria-label',labels.deleteTitle);
+    box.append(el('strong','',labels.deleteTitle),el('p','discussion-help',labels.deleteHint));
+    const actions = el('div','discussion-confirm-actions');
+    const cancel = button(labels.cancel,'btn',() => { box.remove(); trigger.focus({preventScroll:true}); });
+    const remove = button(labels.delete,'btn discussion-danger',async () => {
+      cancel.disabled = true; remove.disabled = true; lockList(true);
+      try {
+        const data = await request(urlFor(panel.dataset.deleteUrl,comment.id),{method:'POST'});
+        const row = document.getElementById(`comment-${comment.id}`); const root = document.getElementById(`comment-${comment.parent_id || comment.id}`);
+        const notice = el('div','discussion-notice'); notice.setAttribute('role','status'); notice.append(el('span','',labels.deleted));
+        const undo = button(labels.undo,'discussion-text-btn',async () => {
+          undo.disabled = true; lockList(true);
+          try {
+            const restored = await request(urlFor(panel.dataset.restoreUrl,comment.id),{method:'POST'});
+            if (restored.thread) replaceRoot(restored.thread);
+            if (restored.comment?.parent_id) {
+              const thread = threads.get(restored.comment.parent_id);
+              thread.replies.hidden = false; thread.toggle.setAttribute('aria-expanded','true'); thread.toggle.textContent = labels.hideReplies;
+              if (thread.loaded) await refreshReplies(restored.comment.parent_id);
+              else await loadReplies(restored.comment.parent_id,restored.comment.id);
+            }
+            $('count').textContent = restored.discussion_count; notice.textContent = labels.restored; updateEmpty();
+          } catch (failure) { notice.append(el('span','discussion-error',failure.message)); undo.disabled = false; }
+          finally { lockList(false); }
+        });
+        notice.append(undo);
+        // Keep Undo visible even when the last reply removes its deleted root.
+        if (comment.parent_id && data.thread) threads.get(comment.parent_id).list.before(notice);
+        else root.before(notice);
+        editors.get(comment.id)?.close(false); editors.delete(comment.id);
+        if (!data.thread) { root.remove(); threads.delete(comment.parent_id || comment.id); }
+        else if (!comment.parent_id) replaceRoot(data.thread);
+        else { row.remove(); replaceRoot(data.thread); try { await refreshReplies(comment.parent_id); } catch (_) { status(labels.loadFailed,true); } }
+        $('count').textContent = data.discussion_count; updateEmpty(); undo.focus({preventScroll:true});
+        setTimeout(() => { undo.hidden = true; }, data.undo_seconds*1000);
+      } catch (failure) { box.append(el('p','discussion-error',failure.message)); cancel.disabled = false; remove.disabled = false; }
+      finally { lockList(false); }
+    });
+    actions.append(cancel,remove); box.append(actions); body.querySelector(':scope > .discussion-actions').after(box); cancel.focus({preventScroll:true});
+  }
+  if (loggedIn) {
+    editors.set('root',makeEditor($('form')));
   } else {
     const widget = $('widget');
     window.onTelegramAuth = async user => {
@@ -302,11 +454,16 @@
       script.onerror = () => { widget.textContent = labels.noLogin; }; widget.append(script);
     } else widget.textContent = labels.noLogin;
   }
-  document.addEventListener('click', event => { panel.querySelectorAll('.discussion-picker[open]').forEach(picker => { if (!picker.contains(event.target)) picker.open = false; }); });
-  panel.addEventListener('keydown', event => { if (event.key === 'Escape') panel.querySelectorAll('.discussion-picker[open]').forEach(picker => { picker.open = false; picker.querySelector('summary').focus(); }); });
+  document.addEventListener('click', event => { panel.querySelectorAll('.discussion-picker[open], .discussion-owner-menu[open]').forEach(picker => { if (!picker.contains(event.target)) picker.open = false; }); });
+  panel.addEventListener('keydown', event => { if (event.key === 'Escape') panel.querySelectorAll('.discussion-picker[open], .discussion-owner-menu[open]').forEach(picker => { picker.open = false; picker.querySelector('summary').focus(); }); });
   async function focusComment() {
     const match = location.hash.match(/^#comment-(\d+)$/); if (!match) return;
-    let node = document.getElementById(`comment-${match[1]}`); if (node) return goTo(node);
+    let node = document.getElementById(`comment-${match[1]}`);
+    if (node) {
+      const replies = node.closest('.discussion-replies');
+      if (replies) { const thread = threads.get(Number(replies.id.replace('replies-',''))); replies.hidden = false; thread.toggle.setAttribute('aria-expanded','true'); thread.toggle.textContent = labels.hideReplies; }
+      return goTo(node);
+    }
     try {
       const data = await request(listURL({focus: match[1]}));
       if (!data.focus_thread) return;
