@@ -90,3 +90,16 @@ retain text, delete/undo update counts, and deleting an image-bearing parent
 redacts its content while preserving another author's reply. Desktop and 390px
 English/Russian inline forms have no horizontal overflow or duplicate DOM IDs;
 console has no errors. Local notification dispatch remains disabled.
+
+Follow-up release verified 2026-09-21: f00ee7f (backend 8c5529a) deployed via
+./deploy.sh, exit 0, all health checks green (55s). Main/origin/server match
+f00ee7f28b7d85663e14ef408753dbe514289447. Migration 0010 is applied; services
+jaysonkhan/nginx active; DB/cache health OK; no error-priority journal entries
+since 09:44:22 UTC. All eight locale/project/blog SSR probes passed. Hashed CSS
+comments.d646f3a045c4.css and JS comments.b62c70663d7d.js match committed bytes.
+Live mobile browser confirms localized removal/restore routes, new JS, guest
+reply-to-login focus, no owner menu for guests and no console errors. No production
+comments were created, deleted or restored during QA. Authenticated destructive
+flows were tested only against isolated local fixtures. Long-comment expansion
+and collapse were also exercised locally. Server's pre-existing dirty files and
+primary local checkout remain untouched.
