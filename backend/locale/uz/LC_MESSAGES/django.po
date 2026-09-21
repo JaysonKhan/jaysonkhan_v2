@@ -474,3 +474,7 @@ msgstr "Bosib oching"
 
 msgid "About"
 msgstr "Men haqimda"
+
+#: web/partials/portrait.html
+msgid "Close"
+msgstr "Yopish"

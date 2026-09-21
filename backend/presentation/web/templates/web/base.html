@@ -268,7 +268,7 @@
                 </nav>
 
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="lang-switch">
+                    <div class="lang-switch lang-switch--desktop">
                         {% for code, name in LANGUAGES %}
                         <a href="/{{ code }}{{ request.path|slice:'3:' }}"
                            class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
@@ -286,6 +286,14 @@
             </div>
 
             <div class="mobile-nav" id="mobile-nav">
+                    <div class="lang-switch lang-switch--mobile">
+                        {% for code, name in LANGUAGES %}
+                        <a href="/{{ code }}{{ request.path|slice:'3:' }}"
+                           class="lang-pill{% if code == LANGUAGE_CODE %} active{% endif %}"
+                           data-lang-switch
+                           aria-label="{{ name }}">{{ code|upper }}</a>
+                        {% endfor %}
+                    </div>
                 <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">{% trans "Home" %}</a>
                 <a href="{% url 'about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">{% trans "About" %}</a>
                 {% if site_settings.apps_section_visible %}

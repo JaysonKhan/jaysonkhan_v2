@@ -473,3 +473,7 @@ msgstr "Нажмите, чтобы открыть"
 
 msgid "About"
 msgstr "Обо мне"
+
+#: web/partials/portrait.html
+msgid "Close"
+msgstr "Закрыть"

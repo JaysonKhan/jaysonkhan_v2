@@ -193,6 +193,28 @@ class BioPageSeoTest(TestCase):
                 resp = self.client.get(f'/{lang}/about/')
                 self.assertEqual(resp.status_code, 200)
 
+    def test_portrait_cover_reveals_original_and_comments_do_not_leak(self):
+        settings = SiteSettings.objects.first() or SiteSettings.objects.create()
+        settings.about_image = "about/original.png"
+        settings.about_image_anime = "about/anime.jpg"
+        settings.save()
+        for lang in ("xo", "uz", "ru", "en"):
+            with self.subTest(lang=lang):
+                response = self.client.get(f"/{lang}/about/")
+                self.assertContains(response, 'src="/media/about/anime.jpg"')
+                self.assertContains(response, 'data-full="/media/about/original.png"')
+                self.assertContains(response, 'href="/media/about/original.png"')
+                self.assertContains(response, "js/lightbox.js")
+                self.assertNotContains(response, "{#")
+                self.assertNotContains(response, "#}")
+
+    def test_portrait_fallback_without_anime(self):
+        settings = SiteSettings.objects.first() or SiteSettings.objects.create()
+        settings.about_image = "about/original.png"
+        settings.about_image_anime = ""
+        settings.save()
+        self.assertContains(self.client.get("/en/about/"), 'src="/media/about/original.png"')
+
     def test_legal_name_in_title_and_h1(self):
         """Latin locales spell it Latin, ru spells it Cyrillic — both must match
         what the corresponding search query looks like."""

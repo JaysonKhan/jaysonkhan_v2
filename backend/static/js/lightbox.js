@@ -107,6 +107,9 @@
     lb.full.removeAttribute("src");
     lb.full.classList.remove("is-shown");
     lb.spinner.classList.remove("is-on");
+    lb.root.setAttribute("aria-label", hint);
+    lb.close.setAttribute("aria-label", trigger.dataset.closeLabel || "Close");
+    lb.full.alt = hint;
     lb.cap.textContent = hint;
     lb.cap.classList.toggle("has-text", !!hint);
 
@@ -275,6 +278,11 @@
     }
   });
   document.addEventListener("keydown", function (e) {
+    if (e.key === "Tab" && overlay && overlay.root.classList.contains("is-visible")) {
+      e.preventDefault();
+      overlay.close.focus({ preventScroll: true });
+      return;
+    }
     if (e.key === "Escape") {
       closeLightbox();
       return;

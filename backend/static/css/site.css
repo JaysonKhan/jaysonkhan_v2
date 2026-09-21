@@ -2841,3 +2841,43 @@ html.tm-open {
     gap: 16px;
   }
 }
+
+/* ABOUT · compact portrait hero and editorial biography */
+.bio-hero .page-hero__inner { padding-block: clamp(40px, 5vw, 72px); }
+.bio-hero__grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+.bio-hero__grid--text { grid-template-columns: minmax(0, 780px); }
+.bio-hero__copy { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.bio-hero h1 { font-size: clamp(38px, 4.5vw, 64px); overflow-wrap: anywhere; }
+.bio-hero h1 em { display: block; color: var(--accent); }
+.bio-hero .page-hero__sub { margin: 0; max-width: 60ch; }
+.bio-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.bio-portrait { width: 100%; max-width: 420px; justify-self: end; }
+.bio-portrait .about-photo { display: block; aspect-ratio: 4 / 5; }
+.bio-portrait .about-photo img { height: 100%; width: 100%; object-fit: cover; }
+.bio-nav { display: flex; flex-wrap: wrap; gap: 8px 24px; padding-block: 16px; border-bottom: 1px solid var(--line-1); }
+.bio-nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--fg-2); font-size: 14px; }
+.bio-nav a:hover { color: var(--accent); }
+.bio-nav a:focus-visible, .about-photo:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.bio-story { padding-top: 0; }
+.bio-story__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(28px, 6vw, 88px); padding-block: clamp(40px, 6vw, 80px); border-bottom: 1px solid var(--line-1); }
+.bio-story__heading { display: flex; flex-direction: column; gap: 16px; }
+.bio-story__row .about-copy p { max-width: 65ch; }
+.bio-work-link { align-self: flex-start; }
+.bio-story__row, #stack, #faq { scroll-margin-top: 100px; }
+.bio-names { padding: 0 clamp(24px, 3vw, 38px); }
+.bio-names > summary { min-height: 76px; }
+.bio-names__body { padding-bottom: 32px; }
+@media (max-width: 900px) {
+  .bio-hero__grid, .bio-story__row { grid-template-columns: minmax(0, 1fr); }
+  .bio-portrait { justify-self: center; max-width: 360px; }
+  .bio-nav { gap: 4px 20px; }
+}
+
+.about-photo.lightbox-trigger { display: block; }
+@media (max-width: 900px) {
+  .site-header__bar { gap: 12px; }
+  .lang-switch--desktop { display: none; }
+  .lang-switch--mobile { align-self: flex-start; }
+  .lang-switch--mobile .lang-pill { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .mobile-menu-btn { width: 44px; height: 44px; flex-shrink: 0; }
+}

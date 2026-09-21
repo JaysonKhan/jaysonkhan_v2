@@ -1,0 +1,11 @@
+{% load i18n %}
+{% if site_settings.about_image %}
+<a class="card about-photo lightbox-trigger" href="{{ site_settings.about_image.url }}"
+   aria-label="{% translate 'Tap to reveal' %} — {{ site_settings.site_author }}"
+   data-lightbox data-full="{{ site_settings.about_image.url }}"
+   data-close-label="{% translate 'Close' %}" data-hint="Jahongir Qo'ziboyev ({{ site_settings.site_author }})">
+    <img src="{% if site_settings.about_image_anime %}{{ site_settings.about_image_anime.url }}{% else %}{{ site_settings.about_image.url }}{% endif %}"
+         alt="Jahongir Qo'ziboyev ({{ site_settings.site_author }})" decoding="async"{% if portrait_eager %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+    <span class="about-photo__cue" aria-hidden="true">{% translate "Tap to reveal" %} ↗</span>
+</a>
+{% endif %}

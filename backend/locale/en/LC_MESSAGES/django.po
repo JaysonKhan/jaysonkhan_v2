@@ -301,3 +301,7 @@ msgstr ""
 
 msgid "About"
 msgstr ""
+
+#: web/partials/portrait.html
+msgid "Close"
+msgstr "Close"

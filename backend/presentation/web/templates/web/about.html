@@ -3,7 +3,7 @@
 
 {% comment %}Person-entity page. Copy comes from presentation/web/bio_copy.py
 (code-owned, 4 locales) — NOT from SiteSettings, so deploy seeders can't
-overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md).
+overwrite it. Design: shared portrait/lightbox and XIVA INK tokens (docs/DESIGN-SYSTEM.md).
 {% endcomment %}
 
 {% block title %}{{ bio.seo_title }}{% endblock %}
@@ -17,48 +17,49 @@ overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md)
 
 {% block content %}
 <main>
-    {# ========================== PAGE HERO ========================== #}
-    <section class="page-hero">
-        <div class="aurora aurora--page" aria-hidden="true">
-            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
-        </div>
-        <div class="container page-hero__inner">
-            <span class="eyebrow page-hero__eyebrow fade-up">{{ bio.eyebrow }}</span>
-            <h1 class="display-xl fade-up" style="animation-delay: .1s;">
-                {{ bio.h1 }}
-                <em class="serif-i" style="color: var(--accent);">{{ bio.h1_em }}</em>
-            </h1>
-            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{{ bio.lede }}</p>
-        </div>
-    </section>
-
-    {# ========================== PORTRAIT + STORY ========================== #}
-    <section class="section" style="padding-top: 40px;">
-        <div class="container about-grid">
-            <div class="about-copy reveal">
-                {% for s in bio.sections %}
-                <h2 class="display-md">{{ s.h2 }}</h2>
-                {% for p in s.body %}<p>{{ p }}</p>{% endfor %}
-                {% endfor %}
-            </div>
-            {% if site_settings.about_image %}
-            <div class="reveal" style="transition-delay: .1s;">
-                <div class="card about-photo">
-                    <img src="{{ site_settings.about_image.url }}"
-                         alt="{{ bio.h1 }} ({{ site_settings.site_author }}) — {{ bio.eyebrow }}"
-                         width="640" height="800" loading="lazy" decoding="async">
+    <section class="page-hero bio-hero">
+        <div class="aurora aurora--page" aria-hidden="true"><div class="blob"></div><div class="blob"></div></div>
+        <div class="container page-hero__inner bio-hero__grid{% if not site_settings.about_image %} bio-hero__grid--text{% endif %}">
+            <div class="bio-hero__copy">
+                <span class="eyebrow fade-up">{{ bio.eyebrow }}</span>
+                <h1 class="display-lg fade-up">{{ bio.h1 }}<em class="serif-i">{{ bio.h1_em }}</em></h1>
+                <p class="page-hero__sub fade-up">{{ bio.lede }}</p>
+                <div class="bio-actions fade-up">
+                    <a class="btn btn-primary" href="{% url 'contact' %}">{{ bio.cta_btn }} ↗</a>
+                    <a class="btn" href="{% url 'projects' %}">{% trans "Work" %} ↗</a>
                 </div>
             </div>
+            {% if site_settings.about_image %}
+            <div class="bio-portrait fade-up">{% include "web/partials/portrait.html" with portrait_eager=True %}</div>
             {% endif %}
+        </div>
+    </section>
+    <div class="container">
+        <nav class="bio-nav" aria-label="{{ bio.h1 }}">
+            {% for s in bio.sections %}<a href="#story-{{ forloop.counter }}">{{ s.h2 }}</a>{% endfor %}
+            <a href="#stack">{{ bio.skills_title }}</a>
+            <a href="#faq">{% trans "FAQ" %}</a>
+        </nav>
+    </div>
+    <section class="section bio-story">
+        <div class="container">
+            {% for s in bio.sections %}
+            <article class="bio-story__row" id="story-{{ forloop.counter }}">
+                <div class="bio-story__heading reveal"><span class="mono-label">0{{ forloop.counter }}</span><h2 class="display-md">{{ s.h2 }}</h2></div>
+                <div class="about-copy reveal">{% for p in s.body %}<p>{{ p }}</p>{% endfor %}
+                    {% if forloop.last %}<a class="btn bio-work-link" href="{% url 'projects' %}">{% trans "Work" %} ↗</a>{% endif %}
+                </div>
+            </article>
+            {% endfor %}
         </div>
     </section>
 
     {# ========================== TECH STACK ========================== #}
-    <section class="section" style="padding-top: 0;">
+    <section class="section" id="stack" style="padding-top: 0;">
         <div class="container">
             <div class="section-head reveal">
                 <div class="section-head__titles">
-                    <span class="eyebrow">Stack</span>
+                    <span class="eyebrow">03</span>
                     <h2 class="display-md">{{ bio.skills_title }}</h2>
                 </div>
             </div>
@@ -79,11 +80,9 @@ overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md)
     searches miss this site. Mirrors Person.alternateName in base.html.{% endcomment %}
     <section class="section" style="padding-top: 0;">
         <div class="container post-narrow">
-            {# `.card` is a bare surface — padding is the caller's job (see
-               .proj-card / .team-card, same clamp). Without it the chips sit
-               flush against the border. #}
-            <div class="card reveal" style="padding: clamp(26px, 3vw, 38px);">
-                <span class="eyebrow">{{ bio.aka_title }}</span>
+            <details class="card bio-names reveal">
+                <summary class="faq-item__q">{{ bio.aka_title }}</summary>
+                <div class="bio-names__body">
                 <p style="margin-top: 10px;">{{ bio.aka_intro }}</p>
                 {% for group in name_groups %}
                 <div style="margin-top: 16px;">
@@ -93,7 +92,8 @@ overwrite it. Design: XIVA INK tokens only, zero new CSS (docs/DESIGN-SYSTEM.md)
                     </div>
                 </div>
                 {% endfor %}
-            </div>
+                </div>
+            </details>
         </div>
     </section>
 
@@ -165,3 +165,7 @@ page into the same entity rather than creating a second one.{% endcomment %}
             {"@type": "Question", "name": "{{ item.q|escapejs }}", "acceptedAnswer": {"@type": "Answer", "text": "{{ item.a|escapejs }}"}}{% if not forloop.last %},{% endif %}{% endfor %}
           ]
         }{% endblock %}
+
+{% block extra_js %}
+{% if site_settings.about_image %}<script src="{% static 'js/lightbox.js' %}" defer></script>{% endif %}
+{% endblock %}

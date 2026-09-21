@@ -172,19 +172,7 @@
                     </div>
                 </div>
                 {% elif site_settings.about_image %}
-                {% with anime=site_settings.about_image_anime %}
-                <div class="card about-photo lightbox-trigger" role="button" tabindex="0"
-                     aria-label="{{ site_settings.site_author }}"
-                     data-lightbox data-full="{{ site_settings.about_image.url }}"
-                     data-hint="{{ site_settings.site_author }}">
-                    {% comment %}alt carries the legal name too — Google Images matches
-                    the name query against alt text, and the brand name alone never
-                    surfaces for a passport-name search.{% endcomment %}
-                    <img src="{% if anime %}{{ anime.url }}{% else %}{{ site_settings.about_image.url }}{% endif %}"
-                         alt="Jahongir Qo'ziboyev ({{ site_settings.site_author }}) — {{ site_settings.about_title }}" loading="lazy">
-                    {% if anime %}<span class="about-photo__cue" aria-hidden="true">{% translate "Tap to reveal" %}</span>{% endif %}
-                </div>
-                {% endwith %}
+                {% include "web/partials/portrait.html" %}
                 {% endif %}
                 {% endwith %}
             </div>
