@@ -506,3 +506,71 @@ msgstr "Bu muhokama ochilmayapti."
 
 msgid "Invalid reaction."
 msgstr "Reaksiya noto‘g‘ri."
+
+msgid "Discussion"
+msgstr "Muhokama"
+
+msgid "Questions, ideas or feedback — join the conversation."
+msgstr "Savol, fikr yo taklif bormi? Suhbatga qo‘shiling."
+
+msgid "Sort by"
+msgstr "Saralash"
+
+msgid "What would you like to share?"
+msgstr "Nima demoqchisiz?"
+
+msgid "Enter for a new line · Ctrl / ⌘ + Enter to send"
+msgstr "Enter — yangi satr · Ctrl / ⌘ + Enter — yuborish"
+
+msgid "Image preview"
+msgstr "Rasm ko‘rinishi"
+
+msgid "Comment image"
+msgstr "Kommentdagi rasm"
+
+msgid "Load more comments"
+msgstr "Yana kommentla"
+
+msgid "Load more replies"
+msgstr "Yana javobla"
+
+msgid "Load earlier replies"
+msgstr "Oldingi javobla"
+
+msgid "Hide replies"
+msgstr "Javoblani yopish"
+
+msgid "Replies"
+msgstr "Javobla"
+
+msgid "Sending…"
+msgstr "Yuborilyapti…"
+
+msgid "You"
+msgstr "Siz"
+
+msgid "Sign in with Telegram to join the discussion."
+msgstr "Suhbatga qo‘shilish uchun Telegram bilan kiring."
+
+msgid "Replying to {name}"
+msgstr "{name} ga javob"
+
+msgid "JPG, PNG, GIF or WEBP, up to {n} MB."
+msgstr "JPG, PNG, GIF yo WEBP, {n} MB gacha."
+
+msgid "Write at least {n} characters, or attach an image."
+msgstr "Kamida {n} ta belgi yozing yo rasm qo‘shing."
+
+msgid "Keep your comment within {n} characters."
+msgstr "Komment {n} ta belgidan oshmasin."
+
+msgid "Your draft has been restored."
+msgstr "Yozib turgan kommentingiz qaytdi."
+
+msgid "Link to comment"
+msgstr "Kommentga havola"
+
+msgid "Enable JavaScript to sign in, reply and load more comments."
+msgstr ""
+"Kirish, javob yozish va boshqa kommentlani ko‘rish uchun JavaScriptni "
+"yoqing."

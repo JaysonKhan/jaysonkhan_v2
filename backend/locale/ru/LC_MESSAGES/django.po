@@ -505,3 +505,69 @@ msgstr "Обсуждение недоступно."
 
 msgid "Invalid reaction."
 msgstr "Некорректная реакция."
+
+msgid "Discussion"
+msgstr "Обсуждение"
+
+msgid "Questions, ideas or feedback — join the conversation."
+msgstr "Вопросы, идеи и отзывы — присоединяйтесь к разговору."
+
+msgid "Sort by"
+msgstr "Порядок"
+
+msgid "What would you like to share?"
+msgstr "Чем хотите поделиться?"
+
+msgid "Enter for a new line · Ctrl / ⌘ + Enter to send"
+msgstr "Enter — новая строка · Ctrl / ⌘ + Enter — отправить"
+
+msgid "Image preview"
+msgstr "Предпросмотр изображения"
+
+msgid "Comment image"
+msgstr "Изображение в комментарии"
+
+msgid "Load more comments"
+msgstr "Ещё комментарии"
+
+msgid "Load more replies"
+msgstr "Ещё ответы"
+
+msgid "Load earlier replies"
+msgstr "Предыдущие ответы"
+
+msgid "Hide replies"
+msgstr "Скрыть ответы"
+
+msgid "Replies"
+msgstr "Ответы"
+
+msgid "Sending…"
+msgstr "Отправляем…"
+
+msgid "You"
+msgstr "Вы"
+
+msgid "Sign in with Telegram to join the discussion."
+msgstr "Войдите через Telegram, чтобы участвовать в обсуждении."
+
+msgid "Replying to {name}"
+msgstr "Ответ для {name}"
+
+msgid "JPG, PNG, GIF or WEBP, up to {n} MB."
+msgstr "JPG, PNG, GIF или WEBP, до {n} МБ."
+
+msgid "Write at least {n} characters, or attach an image."
+msgstr "Напишите минимум {n} символа или прикрепите изображение."
+
+msgid "Keep your comment within {n} characters."
+msgstr "В комментарии должно быть не больше {n} символов."
+
+msgid "Your draft has been restored."
+msgstr "Черновик восстановлен."
+
+msgid "Link to comment"
+msgstr "Ссылка на комментарий"
+
+msgid "Enable JavaScript to sign in, reply and load more comments."
+msgstr "Включите JavaScript для входа, ответов и загрузки комментариев."

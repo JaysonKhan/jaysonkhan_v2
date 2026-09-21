@@ -245,3 +245,55 @@ class DiscussionContractTest(TestCase):
         UserBan.objects.create(profile=self.profile, ban_type='ban')
         self.assertEqual(self.client.post(reverse('interactions:toggle_like', args=['portfolio', 'project', self.project.pk])).status_code, 403)
         self.assertEqual(self.client.post(reverse('interactions:toggle_comment_reaction', args=[self.root.pk]), {'emoji': '👍'}).status_code, 403)
+
+
+class DiscussionRenderingTest(TestCase):
+    """Both entry points preserve useful HTML before JS and localized contracts."""
+
+    def setUp(self):
+        from blog.models import Post
+        from django.contrib.auth import get_user_model
+        self.profile = TelegramEntity.objects.create(telegram_id=876543, first_name='Reader', auth_date=1)
+        self.project = Project.objects.create(title='Project', slug='discussion-render', is_visible=True)
+        author = get_user_model().objects.create_user(username='discussion-reader', email='discussion@example.com', password='test-only')
+        self.post = Post.objects.create(title='Journal', slug='discussion-render', author=author, is_published=True)
+        self.text = 'Safe text </script><script>alert(1)</script> & a question'
+        for target in (self.project, self.post):
+            Comment.objects.create(author=self.profile, content_type=ContentType.objects.get_for_model(target), object_id=target.pk, text=self.text)
+
+    def test_both_pages_render_initial_comments_and_language_scoped_endpoints(self):
+        from django.utils.translation import override
+        from django.utils.html import escape
+        for lang in ('xo', 'uz', 'ru', 'en'):
+            for name in ('project_detail', 'blog_detail'):
+                with self.subTest(lang=lang, view=name), override(lang):
+                    response = self.client.get(reverse(name, args=['discussion-render']))
+                    self.assertEqual(response.status_code, 200)
+                    self.assertContains(response, escape(self.text))
+                    self.assertContains(response, f'data-list-url="{reverse("interactions:list_comments")}"')
+                    self.assertContains(response, 'id="discussion-data"')
+                    self.assertNotContains(response, self.text)
+                    self.assertNotContains(response, '{#')
+                    self.assertEqual(response.context['discussion']['discussion_count'], 1)
+
+    def test_authenticated_composer_uses_server_limits_and_safe_initial_payload(self):
+        from django.test import override_settings
+        session = self.client.session
+        session['tg_profile_id'] = self.profile.pk
+        session.save()
+        with override_settings(COMMENT_MAX_LENGTH=300):
+            response = self.client.get(reverse('project_detail', args=['discussion-render']))
+        self.assertContains(response, 'id="discussion-form"')
+        self.assertContains(response, 'maxlength="300"')
+        self.assertNotContains(response, 'id="discussion-login"')
+        self.assertTrue(response.context['discussion']['comments'][0]['is_own'])
+
+    def test_new_ui_labels_are_available_in_every_locale(self):
+        from django.utils.translation import override, gettext
+        from interactions.presentation import discussion_labels
+        english = ['Load earlier replies', 'Your draft has been restored.', 'Telegram sign-in is temporarily unavailable.', 'Discussion', 'Questions, ideas or feedback — join the conversation.']
+        for lang in ('xo', 'uz', 'ru'):
+            with self.subTest(lang=lang), override(lang):
+                for message in english:
+                    self.assertNotEqual(gettext(message), message)
+                self.assertNotEqual(discussion_labels()['earlierReplies'], english[0])

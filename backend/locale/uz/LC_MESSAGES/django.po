@@ -506,3 +506,70 @@ msgstr "Bu muhokama mavjud emas."
 
 msgid "Invalid reaction."
 msgstr "Reaksiya noto‘g‘ri."
+
+msgid "Discussion"
+msgstr "Muhokama"
+
+msgid "Questions, ideas or feedback — join the conversation."
+msgstr "Savol, fikr yoki taklifingizni qoldiring."
+
+msgid "Sort by"
+msgstr "Saralash"
+
+msgid "What would you like to share?"
+msgstr "Fikringizni yozing"
+
+msgid "Enter for a new line · Ctrl / ⌘ + Enter to send"
+msgstr "Enter — yangi satr · Ctrl / ⌘ + Enter — yuborish"
+
+msgid "Image preview"
+msgstr "Rasm ko‘rinishi"
+
+msgid "Comment image"
+msgstr "Izohdagi rasm"
+
+msgid "Load more comments"
+msgstr "Yana izohlar"
+
+msgid "Load more replies"
+msgstr "Yana javoblar"
+
+msgid "Load earlier replies"
+msgstr "Oldingi javoblar"
+
+msgid "Hide replies"
+msgstr "Javoblarni yashirish"
+
+msgid "Replies"
+msgstr "Javoblar"
+
+msgid "Sending…"
+msgstr "Yuborilmoqda…"
+
+msgid "You"
+msgstr "Siz"
+
+msgid "Sign in with Telegram to join the discussion."
+msgstr "Muhokamaga qo‘shilish uchun Telegram orqali kiring."
+
+msgid "Replying to {name}"
+msgstr "{name} ga javob"
+
+msgid "JPG, PNG, GIF or WEBP, up to {n} MB."
+msgstr "JPG, PNG, GIF yoki WEBP, {n} MB gacha."
+
+msgid "Write at least {n} characters, or attach an image."
+msgstr "Kamida {n} ta belgi yozing yoki rasm biriktiring."
+
+msgid "Keep your comment within {n} characters."
+msgstr "Izoh {n} ta belgidan oshmasin."
+
+msgid "Your draft has been restored."
+msgstr "Izoh qoralamasi tiklandi."
+
+msgid "Link to comment"
+msgstr "Izohga havola"
+
+msgid "Enable JavaScript to sign in, reply and load more comments."
+msgstr ""
+"Kirish, javob berish va boshqa izohlarni ko‘rish uchun JavaScriptni yoqing."

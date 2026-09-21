@@ -337,3 +337,69 @@ msgstr "This discussion is unavailable."
 
 msgid "Invalid reaction."
 msgstr "Invalid reaction."
+
+msgid "Discussion"
+msgstr "Discussion"
+
+msgid "Questions, ideas or feedback — join the conversation."
+msgstr "Questions, ideas or feedback — join the conversation."
+
+msgid "Sort by"
+msgstr "Sort by"
+
+msgid "What would you like to share?"
+msgstr "What would you like to share?"
+
+msgid "Enter for a new line · Ctrl / ⌘ + Enter to send"
+msgstr "Enter for a new line · Ctrl / ⌘ + Enter to send"
+
+msgid "Image preview"
+msgstr "Image preview"
+
+msgid "Comment image"
+msgstr "Comment image"
+
+msgid "Load more comments"
+msgstr "Load more comments"
+
+msgid "Load more replies"
+msgstr "Load more replies"
+
+msgid "Load earlier replies"
+msgstr "Load earlier replies"
+
+msgid "Hide replies"
+msgstr "Hide replies"
+
+msgid "Replies"
+msgstr "Replies"
+
+msgid "Sending…"
+msgstr "Sending…"
+
+msgid "You"
+msgstr "You"
+
+msgid "Sign in with Telegram to join the discussion."
+msgstr "Sign in with Telegram to join the discussion."
+
+msgid "Replying to {name}"
+msgstr "Replying to {name}"
+
+msgid "JPG, PNG, GIF or WEBP, up to {n} MB."
+msgstr "JPG, PNG, GIF or WEBP, up to {n} MB."
+
+msgid "Write at least {n} characters, or attach an image."
+msgstr "Write at least {n} characters, or attach an image."
+
+msgid "Keep your comment within {n} characters."
+msgstr "Keep your comment within {n} characters."
+
+msgid "Your draft has been restored."
+msgstr "Your draft has been restored."
+
+msgid "Link to comment"
+msgstr "Link to comment"
+
+msgid "Enable JavaScript to sign in, reply and load more comments."
+msgstr "Enable JavaScript to sign in, reply and load more comments."

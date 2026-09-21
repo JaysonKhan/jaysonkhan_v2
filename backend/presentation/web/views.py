@@ -72,12 +72,6 @@ def _interactions_context(request, obj):
     a second TelegramEntity DB lookup on the same request.
     """
     ct = ContentType.objects.get_for_model(obj)
-    comments = Comment.objects.filter(
-        content_type=ct, object_id=obj.pk, is_approved=True
-    ).select_related('author', 'parent', 'parent__author').prefetch_related(
-        'reactions', 'reactions__author'
-    ).order_by('created_at')
-
     like_count = Like.objects.filter(content_type=ct, object_id=obj.pk).count()
 
     # Re-use profile already fetched by the context processor (avoids duplicate PK lookup).
@@ -90,14 +84,19 @@ def _interactions_context(request, obj):
         Like.objects.filter(author=profile, content_type=ct, object_id=obj.pk).exists()
         if profile else False
     )
+    from interactions.services import discussion_page
+    from interactions.presentation import discussion_labels, discussion_limits
+    discussion = discussion_page(ct, obj.pk, profile.pk if profile else None)
     return {
-        'comments': comments,
+        'discussion': discussion,
+        'discussion_labels': discussion_labels(),
+        'discussion_limits': discussion_limits(),
         'like_count': like_count,
         'user_liked': user_liked,
         'app_label': ct.app_label,
         'model_name': ct.model,
         'object_id': obj.pk,
-        'tg_profile': profile,  # Ensure profile is always in context for the form
+        'tg_profile': profile,
     }
 
 
