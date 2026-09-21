@@ -7,10 +7,9 @@ from urllib.parse import urlparse
 
 import bleach
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -23,6 +22,8 @@ from PIL import Image
 from telegram.models import TelegramEntity
 
 from .models import Comment, Like
+from .services import (public_target, public_comment,
+                       comment_queryset, discussion_page, serialize_comment)
 from .notifications.ban_check import check_ban
 from .telegram_auth import verify_telegram_auth, verify_telegram_webapp_data
 
@@ -67,15 +68,6 @@ def _is_same_origin(request):
     # No Origin or Referer — allow only in dev (non-HTTPS)
     return not request.is_secure()
 
-
-# ── Commentable content types ───────────────────────────────────────────────────
-# Comments/likes are only allowed on these (app_label, model) pairs. Without this
-# allowlist, any authenticated Telegram user could enumerate or comment on internal
-# models (users.user, contact.contactmessage, core.sitesettings, …) via the URL.
-COMMENTABLE_CONTENT_TYPES = frozenset([
-    ('blog', 'post'),
-    ('portfolio', 'project'),
-])
 
 # Reaction emojis the UI offers. Server-side allowlist: without it any string
 # could be stored as an "emoji" and re-rendered to every visitor.
@@ -344,22 +336,14 @@ class AddCommentView(View):
             limit_count = getattr(settings, 'COMMENT_RATE_LIMIT_COUNT', 3)
 
         # ── Setup target object (before atomic block so errors are cheap) ──
-        if (app_label, model_name) not in COMMENTABLE_CONTENT_TYPES:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        try:
-            ct = ContentType.objects.get(app_label=app_label, model=model_name)
-        except ContentType.DoesNotExist:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        model_cls = ct.model_class()
-        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
-            return JsonResponse({'error': 'Target object not found'}, status=404)
+        ct = public_target(app_label, model_name, object_id)
+        if not ct:
+            return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
 
         parent = None
         if parent_id:
             try:
-                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id)
+                parent = Comment.objects.get(id=int(parent_id), content_type=ct, object_id=object_id, is_approved=True)
             except (ValueError, Comment.DoesNotExist):
                 return JsonResponse({'error': 'Invalid parent comment'}, status=400)
             if parent.parent_id is not None:
@@ -384,8 +368,11 @@ class AddCommentView(View):
 
         # ── Atomic: rate-limit check + duplicate check + save (prevents TOCTOU race) ──
         with transaction.atomic():
+            # Lock the author even when they have no comments yet. COUNT itself
+            # does not lock matching rows in PostgreSQL.
+            TelegramEntity.objects.select_for_update().get(pk=profile.pk)
             recent_count = (
-                Comment.objects.select_for_update()
+                Comment.objects
                 .filter(author=profile, created_at__gte=now - timedelta(minutes=limit_mins))
                 .count()
             )
@@ -405,7 +392,7 @@ class AddCommentView(View):
                 return JsonResponse({'error': _('Duplicate comment detected.')}, status=400)
 
             # ── Save comment ──
-            Comment.objects.create(
+            comment = Comment.objects.create(
                 author=profile,
                 content_type=ct,
                 object_id=object_id,
@@ -418,6 +405,7 @@ class AddCommentView(View):
         
         return JsonResponse({
             'status': 'pending' if not is_approved else 'ok',
+            'comment': serialize_comment(comment, profile.pk) if is_approved else None,
             'message': _('Your comment is pending admin review.') if not is_approved else _('Your comment has been posted successfully.'),
         }, status=201)
 
@@ -435,11 +423,17 @@ class ToggleCommentReactionView(View):
         if not profile:
             return JsonResponse({'error': _('Login with Telegram first')}, status=401)
 
+        ban_result = check_ban(profile)
+        if ban_result.is_banned:
+            return JsonResponse({'error': ban_result.message}, status=403)
         try:
-            body = json.loads(request.body)
-            emoji = body.get('emoji', '').strip()
-        except json.JSONDecodeError:
-            emoji = request.POST.get('emoji', '').strip()
+            body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            emoji = body.get('emoji', '')
+            if not isinstance(emoji, str):
+                raise ValueError
+            emoji = emoji.strip()
+        except (ValueError, TypeError, AttributeError):
+            return JsonResponse({'error': _('Invalid reaction.')}, status=400)
 
         if not emoji:
             return JsonResponse({'error': 'Emoji is required'}, status=400)
@@ -449,34 +443,30 @@ class ToggleCommentReactionView(View):
         if emoji not in REACTION_EMOJIS:
             return JsonResponse({'error': 'Unsupported reaction'}, status=400)
 
-        try:
-            comment = Comment.objects.get(id=comment_id)
-        except Comment.DoesNotExist:
-            return JsonResponse({'error': 'Comment not found'}, status=404)
-        
-        # Toggle: if the same reaction exists from this user, delete it.
-        # If the user has another reaction, update it. If they have none, create it.
+        comment = public_comment(comment_id)
+        if not comment:
+            return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
         from .models import CommentReaction
-        
-        reaction = CommentReaction.objects.filter(author=profile, comment=comment).first()
-        if reaction:
-            if reaction.emoji == emoji:
+        with transaction.atomic():
+            TelegramEntity.objects.select_for_update().get(pk=profile.pk)
+            reaction = CommentReaction.objects.filter(author=profile, comment=comment).first()
+            if reaction and reaction.emoji == emoji:
                 reaction.delete()
                 action = 'removed'
-            else:
+            elif reaction:
                 reaction.emoji = emoji
-                reaction.save()
+                reaction.save(update_fields=['emoji'])
                 action = 'updated'
-        else:
-            CommentReaction.objects.create(author=profile, comment=comment, emoji=emoji)
-            action = 'added'
+            else:
+                CommentReaction.objects.create(author=profile, comment=comment, emoji=emoji)
+                action = 'added'
 
         # Count reactions for this comment
         reactions = CommentReaction.objects.filter(comment=comment).values_list('emoji', flat=True)
         from collections import Counter
         counts = dict(Counter(reactions))
 
-        return JsonResponse({'status': 'ok', 'action': action, 'reactions': counts}, status=200)
+        return JsonResponse({'status': 'ok', 'action': action, 'reactions': counts, 'user_reaction': None if action == 'removed' else emoji}, status=200)
 
 
 # ── Like / Unlike (toggle) ─────────────────────────────────────────────────────
@@ -496,24 +486,19 @@ class ToggleLikeView(View):
         if not profile:
             return JsonResponse({'error': _('Login with Telegram first')}, status=401)
 
-        if (app_label, model_name) not in COMMENTABLE_CONTENT_TYPES:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        try:
-            ct = ContentType.objects.get(app_label=app_label, model=model_name)
-        except ContentType.DoesNotExist:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        # Verify the target object actually exists (EXISTS query, no full row load)
-        model_cls = ct.model_class()
-        if model_cls is None or not model_cls.objects.filter(pk=object_id).exists():
-            return JsonResponse({'error': 'Target object not found'}, status=404)
+        ct = public_target(app_label, model_name, object_id)
+        if not ct:
+            return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
+        ban_result = check_ban(profile)
+        if ban_result.is_banned:
+            return JsonResponse({'error': ban_result.message}, status=403)
 
         # Atomic toggle: select_for_update serializes concurrent double-submits
         # so the get_or_create + delete cannot interleave (prevents TOCTOU
         # IntegrityError on the unique_together constraint).
         try:
             with transaction.atomic():
+                TelegramEntity.objects.select_for_update().get(pk=profile.pk)
                 like, created = Like.objects.select_for_update().get_or_create(
                     author=profile,
                     content_type=ct,
@@ -531,126 +516,42 @@ class ToggleLikeView(View):
         count = Like.objects.filter(content_type=ct, object_id=object_id).count()
         return JsonResponse({'liked': liked, 'count': count})
 
-
-def serialize_comment(comment, tg_profile_id=None):
-    # Cache reactions once (avoids duplicate iteration over prefetch cache)
-    reactions = list(comment.reactions.all())
-
-    # Determine the requester's reaction if logged in
-    user_reaction = None
-    if tg_profile_id:
-        for r in reactions:
-            if r.author_id == tg_profile_id:
-                user_reaction = r.emoji
-                break
-
-    # Build group reactions
-    reaction_counts = {}
-    for r in reactions:
-        reaction_counts[r.emoji] = reaction_counts.get(r.emoji, 0) + 1
-
-    return {
-        "id": comment.id,
-        "author": {
-            "id": comment.author.id,
-            # safe_display_name: tofu/format chars stripped, length-capped —
-            # the client renders it via textContent, never innerHTML.
-            "display_name": comment.author.safe_display_name,
-            "photo_url": comment.author.photo_url,
-            "initial": comment.author.safe_initial,
-        },
-        # Legacy rows carry bleach entity-encoding (&lt; &amp;) — unescape to
-        # plain text; the client textContent-renders it.
-        "text": html.unescape(comment.text) if comment.text else comment.text,
-        "image_url": comment.image.url if comment.image else None,
-        "created_at": comment.created_at.isoformat(),
-        "is_reviewed": comment.is_reviewed,
-        "is_own": tg_profile_id == comment.author.id,
-        "reaction_counts": reaction_counts,
-        "user_reaction": user_reaction,
-        "reply_count": getattr(comment, 'reply_count', comment.replies.filter(is_approved=True).count()),
-        "parent_id": comment.parent_id
-    }
-
-
 class ListCommentsView(View):
-    """
-    GET /interactions/comments/?app_label=...&model=...&object_id=...&page=1&sort=top
-    """
     def get(self, request):
         app_label = request.GET.get('app_label')
         model = request.GET.get('model')
         object_id = request.GET.get('object_id')
-        sort = request.GET.get('sort', 'top')
-        try:
-            page = max(1, int(request.GET.get('page', 1)))
-        except (ValueError, TypeError):
-            page = 1
+        ct = public_target(app_label, model, object_id)
+        if not ct:
+            return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
+        profile_id = request.session.get(SESSION_KEY)
+        data = discussion_page(ct, object_id, profile_id, request.GET.get('page', 1), request.GET.get('sort', 'top'))
+        focus = request.GET.get('focus', '')
+        if focus.isdigit():
+            target = comment_queryset(ct, object_id).filter(pk=int(focus)).first()
+            if target:
+                root_id = target.parent_id or target.pk
+                data['focus_thread'] = serialize_comment(comment_queryset(ct, object_id).get(pk=root_id), profile_id)
+        return JsonResponse(data)
 
-        if (app_label, model) not in COMMENTABLE_CONTENT_TYPES:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        try:
-            ct = ContentType.objects.get(app_label=app_label, model=model)
-        except ContentType.DoesNotExist:
-            return JsonResponse({'error': 'Invalid content type'}, status=404)
-
-        # Get parent comments only
-        qs = Comment.objects.filter(
-            content_type=ct, 
-            object_id=object_id, 
-            is_approved=True, 
-            parent__isnull=True
-        ).select_related('author').prefetch_related('reactions', 'reactions__author')
-
-        # Annotate reply_count (approved-only) so serialize_comment never falls
-        # back to a per-comment COUNT query (N+1). Matches the serializer's
-        # approved-reply semantics.
-        qs = qs.annotate(
-            reply_count=Count('replies', filter=Q(replies__is_approved=True), distinct=True)
-        )
-
-        if sort == 'top':
-            # Sorting formula: Score interactions dynamically
-            qs = qs.annotate(
-                rcount=Count('reactions', distinct=True)
-            ).order_by('-rcount', '-reply_count', '-created_at')
-        else:
-            qs = qs.order_by('-created_at')
-
-        paginator = Paginator(qs, 10)
-        page_obj = paginator.get_page(page)
-
-        tg_profile_id = request.session.get(SESSION_KEY)
-        data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
-
-        return JsonResponse({
-            'comments': data,
-            'has_next': page_obj.has_next(),
-            'total_count': paginator.count
-        })
 
 class ListRepliesView(View):
-    """
-    GET /interactions/comments/<parent_id>/replies/?page=1
-    """
     def get(self, request, parent_id):
-        try:
-            page = max(1, int(request.GET.get('page', 1)))
-        except (ValueError, TypeError):
-            page = 1
-        qs = Comment.objects.filter(
-            parent_id=parent_id, 
-            is_approved=True
-        ).select_related('author').prefetch_related('reactions', 'reactions__author').order_by('created_at')
-        
-        paginator = Paginator(qs, 10)
-        page_obj = paginator.get_page(page)
-
-        tg_profile_id = request.session.get(SESSION_KEY)
-        data = [serialize_comment(c, tg_profile_id) for c in page_obj.object_list]
-
+        parent = public_comment(parent_id)
+        if not parent or parent.parent_id:
+            return JsonResponse({'error': _('This discussion is unavailable.')}, status=404)
+        qs = comment_queryset(parent.content_type, parent.object_id).filter(parent_id=parent_id).order_by('created_at', 'pk')
+        page = request.GET.get('page', 1)
+        focus = request.GET.get('focus', '')
+        if focus.isdigit():
+            target = qs.filter(pk=int(focus)).first()
+            if target:
+                before = qs.filter(Q(created_at__lt=target.created_at) | Q(created_at=target.created_at, pk__lt=target.pk)).count()
+                page = before // 10 + 1
+        result = Paginator(qs, 10).get_page(page)
         return JsonResponse({
-            'replies': data,
-            'has_next': page_obj.has_next()
+            'replies': [serialize_comment(c, request.session.get(SESSION_KEY)) for c in result.object_list],
+            'has_next': result.has_next(),
+            'page': result.number,
+            'total_count': result.paginator.count,
         })

@@ -309,7 +309,6 @@ msgid "Mobile"
 msgstr "Мобильные"
 
 # ── Interactions / comments (2026-07-10) ──
-
 msgid "likes"
 msgstr "лайков"
 
@@ -440,7 +439,6 @@ msgid "Your comment has been posted successfully."
 msgstr "Комментарий опубликован!"
 
 # ── Orbit section (2026-07-12) ──
-
 msgid "Orbit · Visitors"
 msgstr "Орбита · Гости"
 
@@ -454,7 +452,6 @@ msgid "Signed in with Telegram — each one orbits at their own pace."
 msgstr "Гости, вошедшие через Telegram — каждый вращается со своей скоростью."
 
 # ── Gallery wall (2026-07-12) ──
-
 msgid "Gallery · Frames"
 msgstr "Галерея · Кадры"
 
@@ -465,12 +462,10 @@ msgid "Show more"
 msgstr "Показать ещё"
 
 # ── Lightbox (2026-07-17) ──
-
 msgid "Tap to reveal"
 msgstr "Нажмите, чтобы открыть"
 
 # ── Bio / person-entity page (2026-07-29) ──
-
 msgid "About"
 msgstr "Обо мне"
 
@@ -504,3 +499,9 @@ msgstr "Поиск проектов"
 
 msgid "No matching projects"
 msgstr "Подходящих проектов нет"
+
+msgid "This discussion is unavailable."
+msgstr "Обсуждение недоступно."
+
+msgid "Invalid reaction."
+msgstr "Некорректная реакция."

@@ -310,7 +310,6 @@ msgid "Mobile"
 msgstr "Mobil"
 
 # ── Interactions / comments (2026-07-10) ──
-
 msgid "likes"
 msgstr "layk"
 
@@ -441,7 +440,6 @@ msgid "Your comment has been posted successfully."
 msgstr "Komment joylandi!"
 
 # ── Orbit section (2026-07-12) ──
-
 msgid "Orbit · Visitors"
 msgstr "Orbita · Mehmonla"
 
@@ -455,7 +453,6 @@ msgid "Signed in with Telegram — each one orbits at their own pace."
 msgstr "Saytga Telegram orqali girganla — har biri o'z tezligida aylanadi."
 
 # ── Gallery wall (2026-07-12) ──
-
 msgid "Gallery · Frames"
 msgstr "Galereya · Kadrla"
 
@@ -466,12 +463,10 @@ msgid "Show more"
 msgstr "Yana ko'rila"
 
 # ── Lightbox (2026-07-17) ──
-
 msgid "Tap to reveal"
 msgstr "Bosib ochila"
 
 # ── Bio / person-entity page (2026-07-29) ──
-
 msgid "About"
 msgstr "Man haqimda"
 
@@ -505,3 +500,9 @@ msgstr "Loyihani izlash"
 
 msgid "No matching projects"
 msgstr "Mos loyiha topilmadi"
+
+msgid "This discussion is unavailable."
+msgstr "Bu muhokama ochilmayapti."
+
+msgid "Invalid reaction."
+msgstr "Reaksiya noto‘g‘ri."

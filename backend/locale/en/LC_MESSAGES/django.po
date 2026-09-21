@@ -298,7 +298,6 @@ msgid "Mobile"
 msgstr ""
 
 # ── Bio / person-entity page (2026-07-29) ──
-
 msgid "About"
 msgstr ""
 
@@ -332,3 +331,9 @@ msgstr "Search projects"
 
 msgid "No matching projects"
 msgstr "No matching projects"
+
+msgid "This discussion is unavailable."
+msgstr "This discussion is unavailable."
+
+msgid "Invalid reaction."
+msgstr "Invalid reaction."
