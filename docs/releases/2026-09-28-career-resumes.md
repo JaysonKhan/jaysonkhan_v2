@@ -25,4 +25,18 @@ Source: the owner's refreshed files in `/Users/mac/Documents/Resume/`.
 - All four gettext catalogs compiled. Only pre-existing missing-header metadata warnings.
 - Chrome: English Home timeline and About content verified; 390px mobile view has no horizontal overflow; both download targets exceed 44px height.
 
-Production verification will be recorded after deployment.
+## Production verification
+
+- Deployed feature commit `b13a8e888f391537d58ec0ceb64a9be3eb14737c` through `./deploy.sh`; exit 0, migration applied, assets collected, both copy seeders completed, and health checks green.
+- At deployment, local HEAD, origin/main and server HEAD matched the feature commit. `jaysonkhan` and `nginx` are active; `/health/` reports application, database and cache OK. No error-priority service journal entries in the checked window.
+- All eight Home/About routes (xo/uz/ru/en) returned HTTP 200 and two PDF download links. PDF responses are `application/pdf`; downloaded SHA-256 values match the source files listed above.
+- Chrome production Home shows all five roles with corrected month/year dates. About shows current work and education. Both download buttons were clicked successfully and saved readable filenames; no browser console errors were recorded.
+- Existing production Khorezm copy, logos and company URLs were compared before/after and remain unchanged. There are now five career rows.
+- Pre-existing server checkout changes to `server-manager.sh` and unrelated untracked files were preserved; this release did not alter them.
+- Screenshot and HTTP/backup evidence are saved locally under `/Users/mac/Documents/Resume/verification/`.
+
+Public PDFs:
+- https://jaysonkhan.com/static/resumes/jahongir-kuziboev-software-engineer-en.d48c6bd6fa67.pdf
+- https://jaysonkhan.com/static/resumes/jahongir-kuziboev-mobile-developer-en.56b758807d06.pdf
+
+This verification record is committed and pushed separately after the feature deployment; it requires no application restart.
