@@ -454,3 +454,7 @@ msgstr "Read more"
 
 msgid "Show less"
 msgstr "Show less"
+
+#: presentation/web/templates/web/partials/resume_downloads.html
+msgid "English · 2 pages each"
+msgstr "English · 2 pages each"

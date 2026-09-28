@@ -28,6 +28,7 @@ overwrite it. Design: shared portrait/lightbox and XIVA INK tokens (docs/DESIGN-
                     <a class="btn btn-primary" href="{% url 'contact' %}">{{ bio.cta_btn }} ↗</a>
                     <a class="btn" href="{% url 'projects' %}">{% trans "Work" %} ↗</a>
                 </div>
+                {% include "web/partials/resume_downloads.html" %}
             </div>
             {% if site_settings.about_image %}
             <div class="bio-portrait fade-up">{% include "web/partials/portrait.html" with portrait_eager=True %}</div>

@@ -625,3 +625,7 @@ msgstr "Davomini o‘qish"
 
 msgid "Show less"
 msgstr "Qisqartirish"
+
+#: presentation/web/templates/web/partials/resume_downloads.html
+msgid "English · 2 pages each"
+msgstr "Ingliz tilida · har biri 2 bet"

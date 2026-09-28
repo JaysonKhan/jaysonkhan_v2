@@ -77,15 +77,13 @@ COPY = {
         "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, UzExam va EduStats "
               "asoschisiman. Bitta odam + 24/7 AI-agentla bilan test platformala, AI mentorla va ta'lim "
               "analitikasi quraman. 85k+ ochiq savol va 21k+ ro'yxatdan o'tgan foydalanuvchi — UzExam'da.",
-        "uz": "Men Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, UzExam va EduStats "
-              "asoschisiman. Bir odam + 24/7 AI-agentlar bilan test platformalari, AI mentorlar va ta'lim "
-              "analitikasi quraman. 85k+ ochiq savol va 21k+ ro'yxatdan o'tgan foydalanuvchi — UzExam'da.",
-        "ru": "Я Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик, основатель UzExam и "
-              "EduStats. Один человек + AI-агенты 24/7: строю тестовые платформы, AI-менторов и образовательную"
-              " аналитику. 85k+ опубликованных вопросов и 21k+ зарегистрированных пользователей в UzExam.",
-        "en": "I'm Jayson Khan (Jahongir Qo'ziboyev) — an AI, mobile and full-stack developer, founder of "
-              "UzExam and EduStats. One human + a 24/7 AI-agent workforce building testing platforms, AI "
-              "mentors and education analytics. 85k+ published questions and 21k+ registered users on UzExam.",
+        "uz": ('Consort Group’da Mobile Developer sifatida Growz va Bizon ilovalariga AI va xarita funksiyalarini '
+               'qo‘shish ustida ishlayman. UzExam asoschisiman: yettita Flutter ilovasi va Django platformasini '
+               'rivojlantiraman. EduStats ham o‘z loyiham.'),
+        "ru": ('Mobile Developer в Consort Group: работаю над AI-интеграциями и картами в Growz и Bizon. Основал '
+               'UzExam, где развиваю семь Flutter-приложений и платформу на Django. Также создал EduStats.'),
+        "en": ('Mobile Developer at Consort Group, working on AI integrations and maps in Growz and Bizon. I '
+               'founded UzExam, where I develop seven Flutter apps and the Django platform, and created EduStats.'),
     },
     "availability_badge": {
         "xo": "AI EdTech hamkorlikka ochiq",
@@ -95,9 +93,9 @@ COPY = {
     },
     "about_title": {
         "xo": "AI EdTech Founder",
-        "uz": "AI EdTech Founder",
-        "ru": "AI EdTech Founder",
-        "en": "AI EdTech Founder",
+        "uz": 'Mobil ilovalar va o‘z mahsulotlarim.',
+        "ru": 'Мобильные приложения и собственные продукты.',
+        "en": 'Mobile engineering and products of my own.',
     },
     "about_description": {
         "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, AI "
@@ -106,24 +104,13 @@ COPY = {
               "AI-agentlada; strategiya, kontent sifati va mas'uliyat — manda. Natija: 3 oyda yolg'iz qurilgan "
               "UzExam (85k+ ochiq savol, 7 mobil ilova) va 53k+ Telegram auditoriyali EduStats. President Tech "
               "Award 2026 ishtirokchisiman.",
-        "uz": "Men Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, AI EdTech founder. "
-              "Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovalar, TaxPay fintech)."
-              " Endi studio davri: kod, QA, monitoring va incident-response — 24/7 AI-agentlarda; strategiya, "
-              "kontent sifati va mas'uliyat — menda. Natija: 3 oyda yolg'iz qurilgan UzExam (85k+ ochiq savol, "
-              "7 mobil ilova) va 53k+ Telegram auditoriyali EduStats. President Tech Award 2026 "
-              "ishtirokchisiman.",
-        "ru": "Я Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик, AI EdTech founder. В"
-              " мобильную эру за 3+ года выпустил 25+ приложений (корпоративные приложения в UIC Group, финтех "
-              "TaxPay). Теперь эра студии: код, QA, мониторинг и incident-response — на AI-агентах 24/7; "
-              "стратегия, качество контента и ответственность — на мне. Результат: UzExam, построенный в "
-              "одиночку за 3 месяца (85k+ опубликованных вопросов, 7 мобильных приложений), и EduStats с "
-              "аудиторией 53k+ пользователей Telegram. Участник President Tech Award 2026.",
-        "en": "I'm Jayson Khan (Jahongir Qo'ziboyev) — an AI, mobile and full-stack developer and AI EdTech "
-              "founder. In the mobile era I shipped 25+ apps over 3+ years (corporate apps at UIC Group, the "
-              "TaxPay fintech). Now it's the studio era: code, QA, monitoring and incident response run on AI "
-              "agents 24/7 — strategy, content quality and accountability stay with me. The result: UzExam "
-              "built solo in 3 months (85k+ published questions, 7 mobile apps) and EduStats with a 53k+ "
-              "registered Telegram audience. President Tech Award 2026 participant.",
+        "uz": ('Consort Group’da Mobile Developer sifatida Growz va Bizon ilovalariga AI va xarita funksiyalarini '
+               'qo‘shish ustida ishlayman. UzExam asoschisiman: yettita Flutter ilovasi va Django platformasini '
+               'rivojlantiraman. EduStats ham o‘z loyiham.'),
+        "ru": ('Mobile Developer в Consort Group: работаю над AI-интеграциями и картами в Growz и Bizon. Основал '
+               'UzExam, где развиваю семь Flutter-приложений и платформу на Django. Также создал EduStats.'),
+        "en": ('Mobile Developer at Consort Group, working on AI integrations and maps in Growz and Bizon. I '
+               'founded UzExam, where I develop seven Flutter apps and the Django platform, and created EduStats.'),
     },
     # ── Stats bar: labels MUST travel with the counts (the 2026-06 deploy
     #    updated counts only and left mobile-era labels → "40k+ Years experience").
@@ -313,79 +300,109 @@ PLAIN = {
     "stat_4_suffix": "k+",
 }
 
-# Experience timeline wording from the 2026-07 resume. Rows are matched by
+# Experience timeline wording from the confirmed 2026-09 resume. Rows are matched by
 # `company__icontains` and NEVER created here (rows/dates stay admin-owned) —
 # only position/description wording is code-owned.
-EXPERIENCE = [
-    {
-        "match": "UzExam",
-        "position": {
-            "xo": "Founder & AI EdTech Specialist",
-            "uz": "Founder & AI EdTech Specialist",
-            "ru": "Founder & AI EdTech Specialist",
-            "en": "Founder & AI EdTech Specialist",
-        },
-        "description": {
-            "xo": "85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. IELTS, Multilevel, "
-                  "SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, Telegram va Flutter'da.",
-            "uz": "85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. IELTS, Multilevel, "
-                  "SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, Telegram va Flutter'da.",
-            "ru": "85k+ опубликованных вопросов, 21k+ зарегистрированных пользователей и 7 мобильных "
-                  "приложений: IELTS, Multilevel, SAT, DTM, национальный сертификат, автотест и интервью.",
-            "en": "85k+ published questions, 21k+ registered users and 7 mobile apps: IELTS, Multilevel, SAT, "
-                  "DTM, national certification, driving tests and interviews.",
-        },
-    },
-    {
-        "match": "Soliq",
-        "position": {
-            "xo": "Software Engineer — Flutter / Fintech",
-            "uz": "Software Engineer — Flutter / Fintech",
-            "ru": "Software Engineer — Flutter / Fintech",
-            "en": "Software Engineer — Flutter / Fintech",
-        },
-        "description": {
-            "xo": "TaxPay fintech to'lov ilovasini noldan qurdim: Flutter + Clean Architecture, karta ulash, OTP, tranzaksiyala va PCI talablariga mos REST integratsiyala. Ilova production-ready darajaga yetkazildi.",
-            "uz": "TaxPay fintech to'lov ilovasini noldan qurdim: Flutter + Clean Architecture, karta ulash, OTP, tranzaksiyalar va PCI talablariga mos REST integratsiyalar. Ilova production-ready darajaga yetkazildi.",
-            "ru": "Построил финтех-приложение TaxPay с нуля: Flutter + Clean Architecture, привязка карт, OTP, транзакции и PCI-совместимые REST-интеграции. Доведено до production-ready уровня.",
-            "en": "Built TaxPay, a fintech payment app, from scratch: Flutter + Clean Architecture, card binding, OTP, transaction processing and PCI-aware REST integrations. Delivered to production-ready stage.",
-        },
-    },
-    {
-        "match": "AIBA",
-        "position": {
-            "xo": "Mobile Team Lead — AI Business Assistant",
-            "uz": "Mobile Team Lead — AI Business Assistant",
-            "ru": "Mobile Team Lead — AI Business Assistant",
-            "en": "Mobile Team Lead — AI Business Assistant",
-        },
-        "description": {
-            "xo": "AIBA loyihasida mobil jamoaga yetakchilik qildim: AI vositala, generativ servisla va aqlli assistent funksiyalarini mobil ilovalarga qo'shdik; code review va mentorlik manda edi.",
-            "uz": "AIBA loyihasida mobil jamoaga yetakchilik qildim: AI vositalar, generativ servislar va aqlli assistent funksiyalarini mobil ilovalarga qo'shdik; code review va mentorlik menda edi.",
-            "ru": "Возглавлял мобильную команду проекта AIBA: интегрировали AI-инструменты, генеративные сервисы и функции интеллектуального ассистента в мобильные приложения; вёл code review и менторил инженеров.",
-            "en": "Led the mobile team on AIBA: integrated AI tools, generative services and intelligent assistant features into mobile apps; ran code reviews and mentored engineers.",
-        },
-    },
-    {
-        "match": "UIC",
-        "position": {
-            "xo": "Flutter Mobile Engineer",
-            "uz": "Flutter Mobile Engineer",
-            "ru": "Flutter Mobile Engineer",
-            "en": "Flutter Mobile Engineer",
-        },
-        "description": {
-            "xo": "20+ korporativ mobil ilova qurdim (Flutter, Clean Architecture, BLoC): yuklanishni ~40% tezlashtirdim, 15+ REST API, audio/video streaming, to'lov tizimla va murakkab animatsiyala. CI/CD yo'lga qo'yishda qatnashdim.",
-            "uz": "20+ korporativ mobil ilova qurdim (Flutter, Clean Architecture, BLoC): yuklanishni ~40% tezlashtirdim, 15+ REST API, audio/video streaming, to'lov tizimlari va murakkab animatsiyalar. CI/CD yo'lga qo'yishda qatnashdim.",
-            "ru": "Разработал 20+ корпоративных мобильных приложений (Flutter, Clean Architecture, BLoC): ускорил загрузку на ~40%, 15+ REST API, аудио/видео стриминг, платёжные системы и сложные анимации. Участвовал в настройке CI/CD.",
-            "en": "Developed 20+ corporate mobile apps (Flutter, Clean Architecture, BLoC): cut load times ~40%, integrated 15+ REST APIs, built audio/video streaming, payment systems and complex animations. Helped establish CI/CD pipelines.",
-        },
-    },
-]
+EXPERIENCE = [{'match': 'Consort',
+               'position': {'xo': 'Mobile Developer',
+                            'uz': 'Mobile Developer',
+                            'ru': 'Mobile Developer',
+                            'en': 'Mobile Developer'},
+               'description': {'xo': 'Growz va Bizon ilovalari ustida ishlayman. Hozir ikkala mobil mahsulotga AI '
+                                     'integratsiya qilish va xarita funksiyalarini ishlab chiqish bilan '
+                                     'shug‘ullanaman.',
+                               'uz': 'Growz va Bizon ilovalari ustida ishlayman. Hozir ikkala mobil mahsulotga AI '
+                                     'integratsiya qilish va xarita funksiyalarini ishlab chiqish bilan '
+                                     'shug‘ullanaman.',
+                               'ru': 'Работаю над приложениями Growz и Bizon. Сейчас занимаюсь интеграцией AI в '
+                                     'оба мобильных продукта и разработкой функций карты.',
+                               'en': 'Develop Flutter features for Growz and Bizon. Current work focuses on '
+                                     'integrating AI into both mobile products and building and improving map '
+                                     'features.'}},
+              {'match': 'UzExam',
+               'position': {'xo': 'Founder & AI EdTech Specialist',
+                            'uz': 'Asoschi va Mobile / Full-Stack Developer',
+                            'ru': 'Основатель и Mobile / Full-Stack Developer',
+                            'en': 'Founder & Mobile / Full-Stack Developer'},
+               'description': {'xo': "85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. "
+                                     'IELTS, Multilevel, SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, '
+                                     "Telegram va Flutter'da.",
+                               'uz': 'UzExam asoschisi sifatida IELTS, Multilevel, SAT, DTM, Milliy sertifikat, '
+                                     'Avtotest va Intervyu uchun yettita Flutter ilovasini ishlab chiqaman. '
+                                     'Umumiy mobil arxitektura, autentifikatsiya, mashqlar, obuna va Django '
+                                     'backendini yuritaman. EduStats ta’lim platformasini ham yaratganman.',
+                               'ru': 'Основал UzExam и разрабатываю семь Flutter-приложений: IELTS, Multilevel, '
+                                     'SAT, DTM, Milliy sertifikat, Avtotest и Intervyu. Поддерживаю общую '
+                                     'мобильную архитектуру, авторизацию, тренировочные задания, подписки и '
+                                     'Django-бэкенд. Также создал образовательную платформу EduStats.',
+                               'en': 'Founded UzExam and develop seven Flutter apps: IELTS, Multilevel, SAT, DTM, '
+                                     'Milliy sertifikat, Avtotest and Intervyu. Maintain shared mobile '
+                                     'architecture, authentication, practice flows, subscriptions and the Django '
+                                     'backend. Also created the EduStats education platform.'}},
+              {'match': 'Soliq',
+               'position': {'xo': 'Software Engineer — Flutter / Fintech',
+                            'uz': 'Flutter Developer · TaxPay',
+                            'ru': 'Flutter Developer · TaxPay',
+                            'en': 'Flutter Developer · TaxPay'},
+               'description': {'xo': "TaxPay fintech to'lov ilovasini noldan qurdim: Flutter + Clean "
+                                     'Architecture, karta ulash, OTP, tranzaksiyala va PCI talablariga mos REST '
+                                     'integratsiyala. Ilova production-ready darajaga yetkazildi.',
+                               'uz': 'TaxPay to‘lov ilovasini Flutter, Clean Architecture va BLoC asosida qurdim. '
+                                     'Karta ulash, OTP, to‘lovlar va tranzaksiyalar tarixini ishlab chiqdim. '
+                                     'Ilova ishga tushirishga tayyor holatga yetkazildi, ammo bo‘lim yopilgach '
+                                     'ommaga chiqarilmadi.',
+                               'ru': 'Разработал TaxPay на Flutter с Clean Architecture и BLoC: привязка карт, '
+                                     'OTP, платежи и история транзакций. Приложение было готово к запуску, но '
+                                     'после закрытия отдела не вышло в публичный доступ.',
+                               'en': 'Built TaxPay with Flutter, Clean Architecture and BLoC: card binding, OTP '
+                                     'verification, payments and transaction history. Delivered the app to a '
+                                     'production-ready stage; it was not publicly released after the department '
+                                     'closed.'}},
+              {'match': 'AIBA',
+               'position': {'xo': 'Mobile Team Lead — AI Business Assistant',
+                            'uz': 'Mobile Team Lead · AI Business Assistant',
+                            'ru': 'Mobile Team Lead · AI Business Assistant',
+                            'en': 'Mobile Team Lead · AI Business Assistant'},
+               'description': {'xo': 'AIBA loyihasida mobil jamoaga yetakchilik qildim: AI vositala, generativ '
+                                     "servisla va aqlli assistent funksiyalarini mobil ilovalarga qo'shdik; code "
+                                     'review va mentorlik manda edi.',
+                               'uz': 'AI assistent funksiyalari, autentifikatsiya, push-bildirishnomalar, SQLite '
+                                     'orqali oflayn saqlash va ko‘p tilli interfeys ustida ishladim. Mobil jamoa '
+                                     'vazifalarini muvofiqlashtirdim, kodni ko‘rib chiqish va dasturchilarga '
+                                     'yordam berishda qatnashdim.',
+                               'ru': 'Работал над функциями AI-ассистента, авторизацией, push-уведомлениями, '
+                                     'офлайн-хранилищем SQLite и многоязычным интерфейсом. Координировал задачи '
+                                     'мобильной команды, участвовал в ревью кода и помогал разработчикам.',
+                               'en': 'Worked on AI assistant features, authentication, push notifications, SQLite '
+                                     'offline storage and multilingual interfaces. Coordinated mobile tasks, '
+                                     'reviewed code and supported other developers.'}},
+              {'match': 'UIC',
+               'position': {'xo': 'Flutter Mobile Engineer',
+                            'uz': 'Flutter Developer',
+                            'ru': 'Flutter Developer',
+                            'en': 'Flutter Developer'},
+               'description': {'xo': '20+ korporativ mobil ilova qurdim (Flutter, Clean Architecture, BLoC): '
+                                     "yuklanishni ~40% tezlashtirdim, 15+ REST API, audio/video streaming, to'lov "
+                                     "tizimla va murakkab animatsiyala. CI/CD yo'lga qo'yishda qatnashdim.",
+                               'uz': 'Android va iOS uchun korporativ Flutter ilovalarini ishlab chiqdim. REST '
+                                     'API, mahalliy saqlash, media, to‘lov interfeyslari va ko‘p tilli UI bilan '
+                                     'ishladim. Keshlash va refaktoring orqali ilovalarni yaxshiladim; code '
+                                     'review, CI/CD va reliz tayyorlashda qatnashdim.',
+                               'ru': 'Разрабатывал корпоративные Flutter-приложения для Android и iOS. Работал с '
+                                     'REST API, локальным хранением, медиа, платёжными интерфейсами и '
+                                     'локализацией. Улучшал приложения через кеширование и рефакторинг; '
+                                     'участвовал в ревью кода, CI/CD и подготовке релизов.',
+                               'en': 'Developed corporate Flutter applications for Android and iOS. Implemented '
+                                     'REST integrations, local storage, media playback, payment interfaces and '
+                                     'multilingual UI. Improved responsiveness through caching and refactoring; '
+                                     'contributed to code reviews, CI/CD and release preparation.'}}]
 
 
 def set_translated(obj, field, values):
     for lang in LANGS:
+        # Preserve the owner's existing Khorezm voice; initialize it only when empty.
+        if lang == "xo" and getattr(obj, f"{field}_xo", None):
+            continue
         attr = f"{field}_{lang}"
         if hasattr(obj, attr):
             setattr(obj, attr, values[lang])
@@ -437,7 +454,7 @@ class Command(BaseCommand):
 
         # Rewrite legacy "VibeCoder" identity in Experience timeline rows.
         # position is a translated field → patch every language column present.
-        suffixes = ("", "_xo", "_uz", "_ru", "_en")
+        suffixes = ("_uz", "_ru", "_en")
         fixed = 0
         for exp in Experience.objects.all():
             changed = False

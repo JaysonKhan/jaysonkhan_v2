@@ -140,10 +140,8 @@
                     <a href="{% url 'team' %}" class="btn">{% trans "Team" %}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </a>
-                    {% if site_settings.resume_file %}
-                    <a href="{{ site_settings.resume_file.url }}" download class="btn">{{ site_settings.resume_button_text|default:_("Download CV") }}</a>
-                    {% endif %}
                 </div>
+                {% include "web/partials/resume_downloads.html" %}
             </div>
             <div class="reveal" style="transition-delay: .1s;">
                 {% with waka=site_settings.wakatime_stats %}
@@ -200,9 +198,9 @@
                             {% if exp.company_url %}<a href="{{ exp.company_url }}" target="_blank" rel="noopener">{{ exp.company }}</a>{% else %}{{ exp.company }}{% endif %}{% if exp.location %} · {{ exp.location }}{% endif %}
                         </span>
                     </div>
-                    <p class="exp-row__desc">{{ exp.description|truncatewords:30 }}</p>
+                    <p class="exp-row__desc">{{ exp.description }}</p>
                     <span class="exp-row__dates">
-                        {{ exp.start_date|date:"Y" }} — {% if exp.is_current %}<span class="present">{% trans "PRESENT" %}</span>{% else %}{{ exp.end_date|date:"Y" }}{% endif %}
+                        {{ exp.start_date|date:"m.Y" }} — {% if exp.is_current %}<span class="present">{% trans "PRESENT" %}</span>{% else %}{{ exp.end_date|date:"m.Y" }}{% endif %}
                     </span>
                 </div>
                 {% endfor %}

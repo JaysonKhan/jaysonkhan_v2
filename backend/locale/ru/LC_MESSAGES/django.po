@@ -624,3 +624,7 @@ msgstr "Читать далее"
 
 msgid "Show less"
 msgstr "Свернуть"
+
+#: presentation/web/templates/web/partials/resume_downloads.html
+msgid "English · 2 pages each"
+msgstr "На английском · по 2 страницы"
