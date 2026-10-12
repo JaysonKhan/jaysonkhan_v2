@@ -228,3 +228,8 @@ else:
 # ── Admin customization ─────────────────────────────────────────────────────
 # Ensure admin URL is not 'admin/' — must be customized via ADMIN_URL env var
 # The URL is read from .env in config/urls.py (default is 'admin/' ONLY for dev)
+
+# Ochiq standart kalit (`env-key-missing`) yoki qisqa kalit bilan prod KO'TARILMAYDI: sessiya,
+# CSRF va parol-tiklash tokenlari shu kalit bilan imzolanadi — u ma'lum bo'lsa ularni soxtalashtirish mumkin.
+if SECRET_KEY in ('', 'env-key-missing') or len(SECRET_KEY) < 32:
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY is missing or too short for production.')

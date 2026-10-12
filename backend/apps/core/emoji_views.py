@@ -232,6 +232,11 @@ def emoji_manager(request):
             errors = []
             # 3 ID fields (BigIntegerField, nullable)
             for id_field, label in CONFIG_ID_FIELDS:
+                # Owner ID = server-bot buyruqlarining kaliti (`/ip`, `/restart`, `/backup` — uchala
+                # loyihaning admin IP-ro'yxati ham). Uni faqat superuser o'zgartiradi: oddiy staff
+                # o'z Telegram ID'sini yozib o'sha buyruqlarni egallab olardi.
+                if id_field == 'telegram_owner_id' and not request.user.is_superuser:
+                    continue
                 raw = request.POST.get(id_field, '').strip()
                 if not raw:
                     if getattr(site, id_field) is not None:

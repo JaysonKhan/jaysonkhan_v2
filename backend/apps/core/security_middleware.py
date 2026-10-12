@@ -142,6 +142,13 @@ class AdminIPRestrictionMiddleware:
         if request.path.startswith(f'/{self.admin_url}'):
             from core.allowed_ips import get_dynamic_ips
             allowed = set(self.env_ips) | set(get_dynamic_ips())
+            # Bo'sh ro'yxat = darvoza YOPIQ: bot `/ip` «hammasini o'chirish» yoki shared-fayl
+            # yo'qolishi admin'ni butun internetga ochib qo'yardi (prod.py faqat BOOT paytida
+            # tekshiradi). Kirish uchun @Jaysonkhanbot `/ip add` — restart shart emas.
+            if not allowed and getattr(settings, 'ADMIN_GATE_FAIL_CLOSED', not settings.DEBUG):
+                logger.error('[Security] admin allowlist bo‘sh — /%s yopiq', self.admin_url)
+                from django.http import Http404
+                raise Http404
             if allowed:
                 client_ip = _get_client_ip(request)
                 if client_ip not in allowed:

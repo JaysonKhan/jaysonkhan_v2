@@ -326,6 +326,11 @@ class SiteSettingsContactAdmin(_ProxySettingsMixin, ModelAdmin):
 
 @admin.register(SiteSettingsTelegram)
 class SiteSettingsTelegramAdmin(_ProxySettingsMixin, ModelAdmin):
+    def get_readonly_fields(self, request, obj=None):
+        # Owner ID = server-bot buyruqlari (`/ip`, `/restart`, `/backup`) kaliti — faqat superuser.
+        base = tuple(super().get_readonly_fields(request, obj))
+        return base if request.user.is_superuser else base + ('telegram_owner_id',)
+
     fieldsets = (
         ('Bot konfiguratsiyasi', {
             'description': 'Owner ID va guruh ID — /id buyrug\'i bilan aniqlash mumkin.',

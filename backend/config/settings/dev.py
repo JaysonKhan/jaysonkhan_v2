@@ -14,3 +14,6 @@ ALLOWED_HOSTS = ['*']
 SERVE_MEDIA = True
 
 # Additional dev settings here
+
+# Lokal/test: bo'sh admin IP-ro'yxati panelni yopmaydi (prod'da yopadi — security_middleware).
+ADMIN_GATE_FAIL_CLOSED = False

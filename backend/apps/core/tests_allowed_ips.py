@@ -195,3 +195,24 @@ class MyIpViewTest(_TmpFileMixin, TestCase):
         resp = self.client.get('/myip/', HTTP_X_REAL_IP='203.0.113.5')
         content = resp.content.decode()
         self.assertIn(f'https://t.me/TestBot?start=addip_{encode_ip("203.0.113.5")}', content)
+
+
+class EmptyAllowlistFailClosedTest(TestCase):
+    """Bo'sh ro'yxat (env ∪ bot-fayl) prod'da admin'ni YOPADI — ochib yubormaydi."""
+
+    def _call(self):
+        from unittest.mock import patch
+        mw = AdminIPRestrictionMiddleware(lambda r: HttpResponse('ok'))
+        mw.env_ips = []
+        request = RequestFactory().get(f'/{mw.admin_url}', REMOTE_ADDR='203.0.113.9')
+        with patch('core.allowed_ips.get_dynamic_ips', return_value=[]):
+            return mw(request)
+
+    @override_settings(ADMIN_GATE_FAIL_CLOSED=True)
+    def test_empty_allowlist_closes_admin(self):
+        with self.assertRaises(Http404):
+            self._call()
+
+    @override_settings(ADMIN_GATE_FAIL_CLOSED=False)
+    def test_dev_keeps_admin_open(self):
+        self.assertEqual(self._call().status_code, 200)
