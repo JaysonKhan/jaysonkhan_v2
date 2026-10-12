@@ -2,7 +2,7 @@
 
 Idempotent; deploy.sh runs it on every deploy — these Project rows are
 code-owned. Facts checked 2026-09-21 through read-only production counts and current
-JaysonServer repositories; definitions and exact counts: docs/project-facts-2026-09.md. The legacy standalone `talabaovozi` card is
+JaysonServer repositories; definitions and exact counts: docs/archive/project-facts-2026-09.md. The legacy standalone `talabaovozi` card is
 hidden here: TalabaOvozi was rebranded into EduStats (web + @TalabaOvvoziBot),
 so one card tells that story.
 """

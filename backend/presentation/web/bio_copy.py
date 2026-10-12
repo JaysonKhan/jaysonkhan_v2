@@ -16,7 +16,7 @@ Target queries this page exists to answer (all four scripts):
 EVERY factual claim here is sourced from copy already shipped in
 `ops/management/commands/apply_edtech_founder_copy.py` (2026-07 resume +
 UzExam PTA-2026 docs). Product counts were refreshed on 2026-09-21 from
-read-only production aggregates; see docs/project-facts-2026-09.md.
+read-only production aggregates; see docs/archive/project-facts-2026-09.md.
 
 `xo` is the Khorezm dialect — the owner's signature voice (-la plural,
 man/mani, gal/girish, qale). Reword only after the owner approves.

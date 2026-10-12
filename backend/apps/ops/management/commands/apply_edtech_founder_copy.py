@@ -9,7 +9,7 @@ resume, and rewrites any legacy "VibeCoder" Experience-timeline title.
 
 Facts source (2026-07): resume + UzExam PTA-2026 docs — 3+ yrs experience,
 Career facts: 25+ apps shipped (UIC 20+, freelance 5+). Product facts refreshed
-2026-09-21; see docs/project-facts-2026-09.md for counts and definitions.
+2026-09-21; see docs/archive/project-facts-2026-09.md for counts and definitions.
 """
 from __future__ import annotations
 
