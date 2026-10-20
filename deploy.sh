@@ -28,12 +28,16 @@ deploy_mail() {
         echo 'origin/main advanced; rebase and rerun checks'; exit 1;
     }
     git push origin HEAD:main
-    local mail_stage mail_sha server_sha
+    local mail_stage mail_sha server_sha mail_status=0
     mail_sha=$(git rev-parse HEAD)
     mail_stage=$(ssh -o BatchMode=yes -o ConnectTimeout=10 jaysonkhan 'mktemp -d /var/tmp/jaysonkhan-mail.XXXXXXXX' | tail -1)
     [[ $mail_stage =~ ^/var/tmp/jaysonkhan-mail\.[a-zA-Z0-9]+$ ]] || exit 1
     git archive HEAD ops/mail | ssh jaysonkhan \
-        "tar -xf - -C '$mail_stage' && sudo bash '$mail_stage/ops/mail/install.sh' '$mail_sha'"
+        "tar -xf - -C '$mail_stage' && sudo bash '$mail_stage/ops/mail/install.sh' '$mail_sha'" || mail_status=$?
+    # Staging is scratch: remove it on success AND failure (path regex-validated above;
+    # root may have written into it). Orphans bloated the daily chkrootkit report.
+    ssh jaysonkhan "sudo rm -rf '$mail_stage'" || echo "Staging $mail_stage not removed; delete it by hand"
+    [[ $mail_status == 0 ]] || { echo 'Mail release failed'; exit "$mail_status"; }
     server_sha=$(ssh jaysonkhan 'sudo cat /var/lib/jaysonkhan-mail/RELEASE' | tail -1)
     [[ $server_sha == "$mail_sha" ]] || { echo 'Mail release SHA mismatch'; exit 1; }
     echo "Mail-only release verified: $mail_sha"

@@ -81,6 +81,8 @@ class MailSafetyTests(unittest.TestCase):
         self.assertNotIn('git_push_local', block)
         self.assertNotIn('migrate', block)
         self.assertNotIn('deploy_web', block)
+        # Staging is removed on success and failure (orphans bloated chkrootkit reports).
+        self.assertIn("sudo rm -rf '$mail_stage'", block)
         self.assertIn('== --mail', deploy)
         self.assertLess(deploy.index('== --mail'), deploy.index('git add -A'))
 
