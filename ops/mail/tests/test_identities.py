@@ -79,6 +79,23 @@ class SenderProvisioningTests(unittest.TestCase):
             sync.sync(self.db, self.aliases, True)
         self.assertEqual(self.rows(), before)
 
+    def test_system_addresses_are_routed_but_never_provisioned_as_senders(self):
+        # root@ (cron, chkrootkit) and postmaster@ (RFC 5321) reach the inbox via Postfix aliases;
+        # they must not become send-as profiles on the next --mail deploy.
+        self.aliases.write_text(json.dumps({'admin@jaysonkhan.com': [
+            'root@jaysonkhan.com', 'Postmaster@jaysonkhan.com', 'support@jaysonkhan.com']}))
+        self.assertEqual(sync.sync(self.db, self.aliases), 1)
+        self.assertEqual(sync.sync(self.db, self.aliases, True), 1)
+        emails = {row[1] for row in self.rows()}
+        self.assertIn('support@jaysonkhan.com', emails)
+        self.assertFalse({'root@jaysonkhan.com', 'postmaster@jaysonkhan.com'} & emails)
+        # A profile the owner created by hand is theirs: sync neither deletes nor duplicates it.
+        with sqlite3.connect(self.db) as db:
+            db.execute("INSERT INTO identities(user_id,email,name) VALUES (1,'postmaster@jaysonkhan.com','By hand')")
+        before = self.rows()
+        self.assertEqual(sync.sync(self.db, self.aliases, True), 0)
+        self.assertEqual(self.rows(), before)
+
     def test_legacy_foreign_default_preserved_but_own_primary_provisioned(self):
         with sqlite3.connect(self.db) as db:
             db.execute("INSERT INTO users VALUES (4,'jaysonkhan@jaysonkhan.com','127.0.0.1')")

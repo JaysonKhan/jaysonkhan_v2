@@ -2,6 +2,8 @@
 
 Only adds missing active aliases to existing JaysonKhan users. Never modifies a
 profile, signature, default sender, preference, credential or another domain.
+Receiving-only system addresses (root@, postmaster@) are never provisioned as
+sender profiles; an identity the owner created by hand is left alone.
 BEGIN IMMEDIATE makes parallel invocations idempotent on this SQLite deployment.
 Run after configure.py and after the installer's consistent database backup.
 """
@@ -13,6 +15,9 @@ import sqlite3
 
 
 ADDRESS = re.compile(r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@jaysonkhan\.com", re.I)
+# Postfix routes root@ (cron, chkrootkit) and postmaster@ (RFC 5321) to the owner's inbox
+# (uzexam ops/mail/reliability.py), but a person never sends AS them from webmail.
+SYSTEM_LOCAL_PARTS = frozenset({'root', 'postmaster'})
 
 
 def address(value):
@@ -29,7 +34,9 @@ def sync(db_path, alias_path, apply=False):
     for mailbox, aliases in raw.items():
         if not isinstance(aliases, list):
             raise ValueError('Alias list required')
-        mapping[address(mailbox)] = sorted({address(alias) for alias in aliases} - {address(mailbox)})
+        box = address(mailbox)
+        mapping[box] = sorted(alias for alias in {address(a) for a in aliases} - {box}
+                              if alias.split('@', 1)[0] not in SYSTEM_LOCAL_PARTS)
     # mode=rw prevents a typo from silently creating a new empty database.
     db = sqlite3.connect(Path(db_path).resolve().as_uri() + '?mode=rw', uri=True, timeout=15)
     try:

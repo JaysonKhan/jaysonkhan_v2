@@ -44,6 +44,9 @@ Django, business data, mail content, credentials, routing or 2FA changes.
    accounts on IMAP backend `127.0.0.1`. SQLite BEGIN IMMEDIATE + one transaction
    makes repeated runs idempotent. Names, signatures, default flags and historical
    profiles are preserved. Dry-run is the default; installer passes `--apply`.
+   Receiving-only system addresses (`root@`, `postmaster@` — routed to the owner's
+   inbox by uzexam `ops/mail/reliability.py`) are never provisioned as sender
+   profiles (`SYSTEM_LOCAL_PARTS`, 2026-10-20); the owner may still add one by hand.
 4. Plugin exposes only the authenticated mailbox's aliases, after full 2FA.
    Identity dropdown/save uses an allowlist. A historical unowned default is not
    preselected in a new message/reply; no stored preferences are rewritten.
