@@ -13,17 +13,22 @@ Why this design:
   • Image extension inline (`<image:image>` per URL) — project covers and
     blog featured images surface in Google Images for the personal brand
     keywords ("JaysonKhan", "Qo'ziboyev Jahongir", "vibecoder").
-  • Hreflang alternates per URL — 4 language variants (xo, uz, ru, en)
-    point to each other so Google clusters them as one entity per page.
+  • Every locale is its own <url> (/xo/, /uz/, /ru/, /en/) and carries
+    hreflang alternates (uz/ru/en + x-default → /xo/) so Google clusters
+    them as one entity per page. Output is identical for every requester —
+    locations and captions are built under explicit translation.override().
   • Per-section caching — projects/posts only regenerated hourly.
 
 Cache: 1 hour. Crawlers hit /sitemap.xml hourly; data churns daily.
 """
 from datetime import datetime, timezone
+from functools import wraps
 
 from blog.models import Post
 from django.contrib.sitemaps import Sitemap
+from django.contrib.sitemaps import views as sitemap_views
 from django.urls import reverse
+from django.utils import translation
 from portfolio.models import GalleryImage, Project
 
 # ── Constants ─────────────────────────────────────────────────────────────
@@ -118,11 +123,16 @@ class ImageSitemapMixin:
     def get_urls(self, page=1, site=None, protocol=None):
         urls = super().get_urls(page=page, site=site, protocol=protocol)
         for url_info in urls:
-            entries = [
-                {"loc": _abs(url), "caption": caption or ""}
-                for url, caption in self.images(url_info["item"])
-                if url
-            ]
+            # Every sitemap here is i18n=True, so items are (obj, lang) pairs.
+            # Captions come from translated fields — build them under the
+            # entry's own locale, not the requester's Accept-Language.
+            obj, lang = url_info["item"]
+            with translation.override(lang):
+                entries = [
+                    {"loc": _abs(url), "caption": caption or ""}
+                    for url, caption in self.images(obj)
+                    if url
+                ]
             if entries:
                 url_info["images"] = entries
         return urls
@@ -133,16 +143,21 @@ class ImageSitemapMixin:
 class StaticSitemap(ImageSitemapMixin, Sitemap):
     """Top-level pages — home is priority 1.0, others weighted by importance.
 
-    Lists only the canonical /xo/ URL per page; hreflang alternates point to
-    /uz/, /ru/, /en/ siblings + x-default.
+    Every locale is its own <url> (/xo/, /uz/, /ru/, /en/); hreflang
+    alternates on each point to the uz/ru/en siblings + x-default → /xo/.
 
-    The homepage entry also carries the whole gallery wall. Without it those
+    The homepage entries also carry the whole gallery wall. Without it those
     photos are effectively invisible to Google Images: only the first
     GALLERY_PAGE_SIZE frames are server-rendered and the rest arrive through
     the JS `gallery_feed` endpoint, which a crawler never fetches.
     """
 
     protocol = "https"
+    # Django pairs every item with every language and calls location() under
+    # translation.override(lang) — <loc> no longer depends on the requester's
+    # Accept-Language (it used to list only the request's locale).
+    i18n = True
+    languages = LANGUAGES
 
     # NOTE: don't name this `_items` — collides with Sitemap._items().
     PAGES = [
@@ -160,7 +175,8 @@ class StaticSitemap(ImageSitemapMixin, Sitemap):
         return self.PAGES
 
     def location(self, item):
-        # `reverse()` with i18n_patterns returns /<lang>/path/ for current locale.
+        # `reverse()` with i18n_patterns returns /<lang>/path/ for the locale
+        # Django activated for this (item, lang) pair.
         return reverse(item[0])
 
     def priority(self, item):
@@ -192,9 +208,11 @@ class StaticSitemap(ImageSitemapMixin, Sitemap):
 # ── Projects ──────────────────────────────────────────────────────────────
 
 class ProjectSitemap(ImageSitemapMixin, Sitemap):
-    """Every visible portfolio project + cover image inline."""
+    """Every visible portfolio project + cover image inline, one <url> per locale."""
 
     protocol = "https"
+    i18n = True
+    languages = LANGUAGES
     changefreq = "monthly"
     priority = 0.8
     limit = 5000
@@ -224,9 +242,11 @@ class ProjectSitemap(ImageSitemapMixin, Sitemap):
 # ── Blog ──────────────────────────────────────────────────────────────────
 
 class PostSitemap(ImageSitemapMixin, Sitemap):
-    """Every published blog post + featured image inline."""
+    """Every published blog post + featured image inline, one <url> per locale."""
 
     protocol = "https"
+    i18n = True
+    languages = LANGUAGES
     changefreq = "weekly"
     priority = 0.7
     limit = 5000
@@ -286,3 +306,25 @@ SITEMAPS = {
     "projects": ProjectSitemap,
     "blog": PostSitemap,
 }
+
+
+# ── Language-neutral views ────────────────────────────────────────────────
+
+def _language_neutral(view):
+    """Run a sitemap view under the default locale.
+
+    Every <loc> and caption above is already built under an explicit
+    translation.override(lang); this keeps anything else in the render (and
+    anything added later) from picking up the requester's Accept-Language.
+    """
+
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        with translation.override(DEFAULT_LANG):
+            return view(request, *args, **kwargs)
+
+    return wrapped
+
+
+sitemap_index_view = _language_neutral(sitemap_views.index)
+sitemap_section_view = _language_neutral(sitemap_views.sitemap)

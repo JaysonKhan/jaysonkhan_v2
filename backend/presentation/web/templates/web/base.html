@@ -48,13 +48,18 @@
     {% if LANGUAGE_CODE == 'ru' or LANGUAGE_CODE == 'en' %}<meta property="og:locale:alternate" content="uz_UZ">{% endif %}
     <meta property="og:title" content="{% block og_title %}{{ site_settings.site_title }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description }}{% endblock %}">
-    <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{% endblock %}">
+    {# og:url — request.path is locale-prefixed, so every page (not just the root) gets its own URL. #}
+    <meta property="og:url" content="{{ site_settings.og_url }}{% block og_path %}{{ request.path }}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    {% if site_settings.og_image %}
+    {% comment %}og_image — ONE og:image + twitter:image set per page. Detail
+    templates override this block with their own absolute image URL instead of
+    appending a second (relative) set.{% endcomment %}
+    {% block og_image %}{% if site_settings.og_image %}
     <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    {% endif %}
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}">
+    {% endif %}{% endblock %}
 
     <meta name="twitter:card" content="summary_large_image">
     {% if site_settings.twitter_handle %}
@@ -62,9 +67,6 @@
     {% endif %}
     <meta name="twitter:title" content="{% block twitter_title %}{{ site_settings.site_title }}{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description }}{% endblock %}">
-    {% if site_settings.og_image %}
-    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}">
-    {% endif %}
 
     <script type="application/ld+json">
     {
@@ -73,10 +75,9 @@
         {
           "@type": "Person",
           "@id": "{{ site_settings.og_url }}#person",
-          "name": "{{ site_settings.site_author }}",
+          "name": "Jayson Khan",
           "alternateName": [
             "JaysonKhan",
-            "Jayson Khan",
             "Jahongir Qo'ziboyev",
             "Qo'ziboyev Jahongir",
             "Kuziboev Jahongir",
@@ -194,17 +195,36 @@
           },
           "areaServed": {"@type": "Country", "name": "Uzbekistan"}
         },
+        {% comment %}Products the Person founded — their own @id on their own
+        domains, linked back through `founder` so the entity graph is one
+        connected component.{% endcomment %}
+        {
+          "@type": "Organization",
+          "@id": "https://uzexam.uz/#organization",
+          "name": "UzExam",
+          "url": "https://uzexam.uz",
+          "founder": {"@id": "{{ site_settings.og_url }}#person"}
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://edustats.uz/#organization",
+          "name": "EduStats",
+          "alternateName": ["Edustats"],
+          "url": "https://edustats.uz",
+          "founder": {"@id": "{{ site_settings.og_url }}#person"}
+        },
         {
           "@type": "WebSite",
           "@id": "{{ site_settings.og_url }}#website",
           "url": "{{ site_settings.og_url }}",
-          "name": "{{ site_settings.site_title }}",
+          "name": "Jayson Khan",
+          "alternateName": ["JaysonKhan", "Jahongir Qo'ziboyev"],
           "description": "{{ site_settings.meta_description|escapejs }}",
           "publisher": {"@id": "{{ site_settings.og_url }}#person"},
           "inLanguage": "{{ LANGUAGE_CODE|default:'uz' }}",
           "potentialAction": {
             "@type": "SearchAction",
-            "target": "{{ site_settings.og_url }}/blog/search/?q={search_term_string}",
+            "target": "{{ site_settings.og_url }}{% url 'blog_search' %}?q={search_term_string}",
             "query-input": "required name=search_term_string"
           }
         }{% block jsonld_extra %}{% endblock %}
@@ -218,8 +238,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&display=swap">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
-
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     {% if site_settings.google_analytics_id %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
@@ -484,6 +502,11 @@
     </script>
 
     {% block extra_js %}{% endblock %}
+
+    {% comment %}Sync on purpose, and directly above the auto-login script that
+    reads window.Telegram: scripts execute in document order, so it is ready by
+    then, while no longer blocking first paint from <head>.{% endcomment %}
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <script>
     /* Telegram WebApp auto-login */

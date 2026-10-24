@@ -8,11 +8,15 @@
 {% block twitter_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
 {% block twitter_description %}{{ project.get_card_description|truncatewords:30 }}{% endblock %}
 
+{% comment %}Replaces the generic banner with the project cover (absolute URL —
+OG rejects relative ones). No width/height: Project stores none, and reading
+them off the ImageField would open the file on every render.{% endcomment %}
+{% block og_image %}{% if project.image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ project.image.url }}">
+{% else %}{{ block.super }}{% endif %}{% endblock %}
+
 {% block extra_head %}
-{% if project.image %}
-<meta property="og:image" content="{{ project.image.url }}">
-<meta name="twitter:image" content="{{ project.image.url }}">
-{% endif %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

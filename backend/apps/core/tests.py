@@ -362,20 +362,21 @@ class GallerySitemapTest(TestCase):
 
     def test_other_static_pages_carry_no_images(self):
         """Only the homepage owns the wall — a stray image block elsewhere would
-        tell Google the same photos live on five different URLs."""
+        tell Google the same photos live on five different URLs. (The four
+        locale entries of the homepage are the same page and all carry it.)"""
         import xml.etree.ElementTree as ET
 
         root = ET.fromstring(self.client.get('/sitemap-static.xml').content)
         for url in root.findall('s:url', self.NS):
             loc = url.find('s:loc', self.NS).text
-            if loc.rstrip('/').endswith('/xo'):
+            if loc.rstrip('/').endswith(('/xo', '/uz', '/ru', '/en')):
                 continue
             with self.subTest(loc=loc):
                 self.assertEqual(url.findall('.//image:loc', self.NS), [])
 
     def test_project_and_post_sitemaps_still_emit_their_single_image(self):
         """The mixin moved from one image to a list — the older sitemaps must
-        keep working."""
+        keep working: exactly one image, on each locale's entry."""
         import xml.etree.ElementTree as ET
 
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -390,6 +391,268 @@ class GallerySitemapTest(TestCase):
             is_visible=True,
         )
         root = ET.fromstring(self.client.get('/sitemap-projects.xml').content)
-        locs = [e.text for e in root.findall('.//image:loc', self.NS)]
-        self.assertEqual(len(locs), 1)
-        self.assertIn('proj', locs[0])
+        urls = root.findall('s:url', self.NS)
+        self.assertEqual(len(urls), 4)  # one <url> per locale
+        for url in urls:
+            locs = [e.text for e in url.findall('.//image:loc', self.NS)]
+            self.assertEqual(len(locs), 1)
+            self.assertIn('proj', locs[0])
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SitemapI18nTest(TestCase):
+    """Every locale is its own <url>, and the XML is the same for every
+    requester.
+
+    Before 2026-10-25 <loc> was built under the request's language, so a
+    crawler sending Accept-Language: en got 13 /en/ URLs out of 52 — and
+    cache_page then served that copy to everyone with the same header.
+    """
+
+    NS = GallerySitemapTest.NS
+    LANGS = ('xo', 'uz', 'ru', 'en')
+    GIF = (b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00'
+           b'\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+
+    def setUp(self):
+        cache.clear()  # sitemap views are cache_page'd — see GallerySitemapTest
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def _urls(self, path, **extra):
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(self.client.get(path, **extra).content)
+        return root.findall('s:url', self.NS)
+
+    def _locs(self, path, **extra):
+        return [u.find('s:loc', self.NS).text for u in self._urls(path, **extra)]
+
+    def test_static_sitemap_lists_every_locale(self):
+        from core.sitemaps import StaticSitemap
+
+        # An English requester still gets all four locales.
+        locs = self._locs('/sitemap-static.xml', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(len(locs), len(StaticSitemap.PAGES) * len(self.LANGS))
+        for lang in self.LANGS:
+            with self.subTest(lang=lang):
+                self.assertIn(f'https://testserver/{lang}/about/', locs)
+
+    def test_project_and_post_sitemaps_list_every_locale(self):
+        from blog.models import Post
+        from django.contrib.auth import get_user_model
+        from portfolio.models import Project
+
+        Project.objects.create(title='Listed', slug='listed', is_visible=True)
+        Project.objects.create(title='Hidden', slug='hidden', is_visible=False)
+        author = get_user_model().objects.create_user(
+            username='sitemap-author', email='sitemap@example.com', password='secret123')
+        Post.objects.create(title='Listed', slug='listed', author=author, is_published=True)
+        Post.objects.create(title='Draft', slug='draft', author=author, is_published=False)
+        for section, path in (('projects', 'projects'), ('blog', 'blog')):
+            with self.subTest(section=section):
+                self.assertEqual(
+                    sorted(self._locs(f'/sitemap-{section}.xml', HTTP_ACCEPT_LANGUAGE='ru')),
+                    sorted(f'https://testserver/{lang}/{path}/listed/' for lang in self.LANGS),
+                )
+
+    def test_output_does_not_depend_on_accept_language(self):
+        from datetime import datetime
+        from datetime import timezone as dt_timezone
+        from unittest import mock
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from portfolio.models import Project
+
+        # Translated title → translated caption: the strongest place for a
+        # request language to leak.
+        Project.objects.create(
+            title_xo='Loyiha', title_uz='Loyiha', title_ru='Проект', title_en='Project',
+            slug='probe', is_visible=True,
+            image=SimpleUploadedFile('probe.gif', self.GIF, content_type='image/gif'),
+        )
+        # StaticSitemap stamps lastmod with `now` — pin it so a second boundary
+        # between two requests cannot fake a difference.
+        fixed = datetime(2026, 10, 25, tzinfo=dt_timezone.utc)
+        for section in ('static', 'projects'):
+            with self.subTest(section=section), mock.patch('core.sitemaps._now', return_value=fixed):
+                bodies = set()
+                for lang in self.LANGS:
+                    cache.clear()
+                    bodies.add(self.client.get(f'/sitemap-{section}.xml', HTTP_ACCEPT_LANGUAGE=lang).content)
+                self.assertEqual(len(bodies), 1)
+
+    def test_captions_follow_the_entry_locale(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from portfolio.models import Project
+
+        Project.objects.create(
+            title_xo='Loyiha', title_uz='Loyiha', title_ru='Проект', title_en='Project',
+            slug='probe', is_visible=True,
+            image=SimpleUploadedFile('probe.gif', self.GIF, content_type='image/gif'),
+        )
+        expected = {'/ru/': 'Проект', '/en/': 'Project', '/uz/': 'Loyiha', '/xo/': 'Loyiha'}
+        urls = self._urls('/sitemap-projects.xml', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(len(urls), 4)
+        for url in urls:
+            loc = url.find('s:loc', self.NS).text
+            caption = url.find('.//image:caption', self.NS).text
+            prefix = next(p for p in expected if p in loc)
+            with self.subTest(loc=loc):
+                self.assertIn(expected[prefix], caption)
+
+    def test_hreflang_alternates_unchanged(self):
+        """uz/ru/en siblings + x-default → /xo/ on every locale's entry. 'xo'
+        is not an ISO code and stays out of hreflang (Ahrefs 2026-08-03)."""
+        xhtml = {'xhtml': 'http://www.w3.org/1999/xhtml'}
+        urls = self._urls('/sitemap-static.xml', HTTP_HOST='jaysonkhan.com')
+        self.assertTrue(urls)
+        for url in urls:
+            loc = url.find('s:loc', self.NS).text
+            with self.subTest(loc=loc):
+                links = {link.get('hreflang'): link.get('href') for link in url.findall('xhtml:link', xhtml)}
+                self.assertEqual(sorted(links), ['en', 'ru', 'uz', 'x-default'])
+                path = loc.split('jaysonkhan.com/', 1)[1][3:]  # drop the "xo/" etc. prefix
+                self.assertEqual(links['x-default'], f'https://jaysonkhan.com/xo/{path}')
+                self.assertEqual(links['en'], f'https://jaysonkhan.com/en/{path}')
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class HeadMetaTest(TestCase):
+    """base.html Open Graph + JSON-LD contract (technical audit 2026-10-25)."""
+
+    GIF = (b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00\x00'
+           b'\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;')
+    LANGS = ('xo', 'uz', 'ru', 'en')
+
+    @classmethod
+    def setUpTestData(cls):
+        from blog.models import Post
+        from django.contrib.auth import get_user_model
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from portfolio.models import Project
+
+        settings = SiteSettings.objects.first() or SiteSettings.objects.create()
+        settings.og_image = 'og/banner.png'
+        settings.github_url = 'https://github.com/JaysonKhan'
+        settings.linkedin_url = 'https://www.linkedin.com/in/jaysonkhan/'
+        settings.telegram_url = 'https://t.me/jaysonkhan'
+        settings.apps_section_visible = True
+        settings.save()
+        author = get_user_model().objects.create_user(
+            username='og-author', email='og@example.com', password='secret123')
+        cls.post = Post.objects.create(
+            title='With image', slug='with-image', author=author, is_published=True,
+            featured_image=SimpleUploadedFile('post.gif', cls.GIF, content_type='image/gif'))
+        cls.bare_post = Post.objects.create(
+            title='No image', slug='no-image', author=author, is_published=True)
+        cls.project = Project.objects.create(
+            title='With cover', slug='with-cover', is_visible=True,
+            image=SimpleUploadedFile('cover.gif', cls.GIF, content_type='image/gif'))
+
+    def setUp(self):
+        cache.clear()  # SiteSettings is cached 5 min — start every test from the row above
+
+    @classmethod
+    def tearDownClass(cls):
+        cache.clear()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def _meta(self, html, attr, name):
+        import re
+
+        return re.findall(rf'<meta {attr}="{name}" content="([^"]*)"', html)
+
+    def _graph(self, path):
+        import json
+
+        html = self.client.get(path).content.decode()
+        raw = html.split('<script type="application/ld+json">')[1].split('</script>')[0]
+        return json.loads(raw)['@graph']
+
+    def test_og_url_is_the_current_localized_page(self):
+        """Was hardcoded to the site root on every template except /about/."""
+        for path in ('/xo/', '/en/blog/', '/uz/about/', f'/ru/projects/{self.project.slug}/'):
+            with self.subTest(path=path):
+                html = self.client.get(path).content.decode()
+                self.assertEqual(self._meta(html, 'property', 'og:url'), [f'https://jaysonkhan.com{path}'])
+
+    def test_detail_pages_emit_one_absolute_og_image(self):
+        """Used to emit the generic banner AND a relative page image — two
+        sets, the second invalid for OG."""
+        for path in (self.post.get_absolute_url(), self.project.get_absolute_url()):
+            with self.subTest(path=path):
+                html = self.client.get(path).content.decode()
+                og = self._meta(html, 'property', 'og:image')
+                self.assertEqual(len(og), 1)
+                self.assertEqual(og, self._meta(html, 'name', 'twitter:image'))
+                self.assertTrue(og[0].startswith('http://testserver/media/'), og[0])
+                self.assertNotIn('banner', og[0])
+                # Post/Project store no dimensions — never claim the banner's 1200x630.
+                self.assertEqual(self._meta(html, 'property', 'og:image:width'), [])
+
+    def test_detail_page_without_image_keeps_the_site_banner(self):
+        html = self.client.get(self.bare_post.get_absolute_url()).content.decode()
+        self.assertEqual(self._meta(html, 'property', 'og:image'), ['http://testserver/media/og/banner.png'])
+        self.assertEqual(self._meta(html, 'property', 'og:image:width'), ['1200'])
+
+    def test_every_jsonld_block_parses(self):
+        """The @graph is hand-assembled — one stray comma kills every rich
+        result on the page silently."""
+        import json
+
+        pages = ['/xo/', '/en/about/', '/ru/blog/', '/uz/projects/', '/xo/team/', '/en/contact/',
+                 self.post.get_absolute_url(), self.project.get_absolute_url()]
+        for path in pages:
+            with self.subTest(path=path):
+                html = self.client.get(path).content.decode()
+                blocks = html.split('<script type="application/ld+json">')[1:]
+                self.assertTrue(blocks)
+                for block in blocks:
+                    json.loads(block.split('</script>')[0])
+
+    def test_website_node_is_identical_in_every_locale(self):
+        """Was the HTML-escaped <title> ("Qo&#x27;ziboyev … &amp;"), different
+        per locale, with a SearchAction target that 302'd to the locale URL."""
+        for lang in self.LANGS:
+            with self.subTest(lang=lang):
+                site = next(n for n in self._graph(f'/{lang}/') if n['@type'] == 'WebSite')
+                self.assertEqual(site['name'], 'Jayson Khan')
+                self.assertEqual(site['alternateName'], ['JaysonKhan', "Jahongir Qo'ziboyev"])
+                target = site['potentialAction']['target']
+                self.assertEqual(target, f'https://jaysonkhan.com/{lang}/blog/search/?q={{search_term_string}}')
+                self.assertEqual(self.client.get(f'/{lang}/blog/search/', {'q': 'x'}).status_code, 200)
+
+    def test_entity_graph_links_the_products_to_the_person(self):
+        graph = self._graph('/en/')
+        by_id = {n['@id']: n for n in graph if '@id' in n}
+        person = by_id['https://jaysonkhan.com#person']
+        self.assertEqual(person['name'], 'Jayson Khan')
+        self.assertIn("Jahongir Qo'ziboyev", person['alternateName'])
+        for url in ('https://github.com/JaysonKhan', 'https://www.linkedin.com/in/jaysonkhan/',
+                    'https://t.me/jaysonkhan'):
+            self.assertIn(url, person['sameAs'])
+        for org_id, url in (('https://uzexam.uz/#organization', 'https://uzexam.uz'),
+                            ('https://edustats.uz/#organization', 'https://edustats.uz')):
+            with self.subTest(org=org_id):
+                org = by_id[org_id]
+                self.assertEqual(org['@type'], 'Organization')
+                self.assertEqual(org['url'], url)
+                self.assertEqual(org['founder'], {'@id': person['@id']})
+
+    def test_telegram_sdk_loads_in_body_right_before_the_auto_login(self):
+        """Moved out of <head> (sync = render-blocking). It must stay a sync
+        script and be the one immediately preceding the inline auto-login,
+        which reads window.Telegram the moment it runs."""
+        html = self.client.get('/xo/').content.decode()
+        tag = '<script src="https://telegram.org/js/telegram-web-app.js"></script>'
+        self.assertEqual(html.count('telegram-web-app.js'), 1)
+        sdk = html.index(tag)
+        login = html.index('/* Telegram WebApp auto-login */')
+        self.assertLess(html.index('<body'), sdk)
+        self.assertLess(sdk, login)
+        self.assertEqual(html[sdk + len(tag):login].count('<script'), 1)

@@ -9,11 +9,15 @@
 {% block twitter_title %}{{ post.title }} | {{ site_settings.site_author }}{% endblock %}
 {% block twitter_description %}{{ post.excerpt }}{% endblock %}
 
+{% comment %}Replaces the generic banner with the post image (absolute URL — OG
+rejects relative ones). No width/height: Post stores none, and reading them off
+the ImageField would open the file on every render.{% endcomment %}
+{% block og_image %}{% if post.featured_image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
+{% else %}{{ block.super }}{% endif %}{% endblock %}
+
 {% block extra_head %}
-{% if post.featured_image %}
-<meta property="og:image" content="{{ post.featured_image.url }}">
-<meta name="twitter:image" content="{{ post.featured_image.url }}">
-{% endif %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

@@ -1,7 +1,7 @@
 import environ
 from blog.feeds import LatestPostsAtomFeed, LatestPostsFeed
 from core.emoji_views import emoji_manager
-from core.sitemaps import SITEMAPS
+from core.sitemaps import SITEMAPS, sitemap_index_view, sitemap_section_view
 from core.views import (
     health_check,
     humans_txt,
@@ -14,18 +14,15 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.sitemaps.views import index as sitemap_index
-from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
+from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
-from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 
 env = environ.Env()
 
@@ -58,12 +55,14 @@ urlpatterns = [
     path('llms.txt', cache_page(86400)(llms_txt), name='llms_txt'),
     # /sitemap.xml — sitemap-index pointing to per-section sub-sitemaps.
     # Search Console shows coverage per section; debug index issues per-segment.
+    # Views are language-neutral wrappers (core.sitemaps) — same XML for every
+    # Accept-Language.
     path('sitemap.xml',
-         cache_page(3600)(sitemap_index),
+         cache_page(3600)(sitemap_index_view),
          {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap_section'},
          name='sitemap_index'),
     path('sitemap-<section>.xml',
-         cache_page(3600)(sitemap),
+         cache_page(3600)(sitemap_section_view),
          {'sitemaps': sitemaps},
          name='sitemap_section'),
 
