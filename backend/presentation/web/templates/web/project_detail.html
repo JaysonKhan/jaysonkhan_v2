@@ -1,5 +1,5 @@
 {% extends 'web/base.html' %}
-{% load i18n %}
+{% load i18n partner_links %}
 
 {% block title %}{{ project.title }} | {{ site_settings.site_author }}{% endblock %}
 {% block meta_description %}{{ project.get_card_description|truncatewords:25 }}{% endblock %}
@@ -129,7 +129,7 @@ them off the ImageField would open the file on every render.{% endcomment %}
                     <span class="mono-label">{% trans "Channels" %}</span>
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
                         {% if project.web_page_url %}
-                        <a href="{{ project.web_page_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">{% trans "Visit live" %} <span class="mono" style="color: var(--accent-2);">↗</span></a>
+                        <a href="{{ project.web_page_url|partner_utm:'project_detail' }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">{% trans "Visit live" %} <span class="mono" style="color: var(--accent-2);">↗</span></a>
                         {% endif %}
                         {% if project.app_store_url %}
                         <a href="{{ project.app_store_url }}" target="_blank" rel="noopener" class="btn btn-sm" style="justify-content: space-between;">App Store <span class="mono" style="color: var(--accent-2);">↗</span></a>

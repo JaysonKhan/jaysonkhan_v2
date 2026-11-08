@@ -304,3 +304,35 @@ class ProjectFactsRefreshTest(TestCase):
                 self.assertNotIn('52k+', edustats.short_description)
                 self.assertNotIn('60k+', uzexam.short_description)
                 self.assertEqual(self.client.get(reverse("projects")).status_code, 200)
+
+
+class PartnerUtmFilterTest(TestCase):
+    """Cross-site links to sibling properties carry utm_source=jaysonkhan."""
+
+    def test_sibling_host_gets_utm_and_keeps_query(self):
+        from portfolio.templatetags.partner_links import partner_utm
+
+        out = partner_utm('https://uzexam.uz/c/dtm/?lang=uz#top', 'project_detail')
+        self.assertTrue(out.startswith('https://uzexam.uz/c/dtm/?'))
+        self.assertIn('lang=uz', out)
+        self.assertIn('utm_source=jaysonkhan', out)
+        self.assertIn('utm_medium=referral', out)
+        self.assertIn('utm_campaign=project_detail', out)
+        self.assertTrue(out.endswith('#top'))
+        self.assertIn('utm_source=jaysonkhan', partner_utm('https://www.edustats.uz/universitet/1/'))
+
+    def test_third_party_and_already_tagged_urls_untouched(self):
+        from portfolio.templatetags.partner_links import partner_utm
+
+        self.assertEqual(partner_utm('https://apply.tuit.uz/'), 'https://apply.tuit.uz/')
+        self.assertEqual(partner_utm('https://notuzexam.uz/'), 'https://notuzexam.uz/')
+        tagged = 'https://edustats.uz/?utm_source=x'
+        self.assertEqual(partner_utm(tagged), tagged)
+        self.assertEqual(partner_utm(''), '')
+
+    def test_project_page_renders_tagged_live_link(self):
+        Project.objects.create(title='UzExam', slug='uzexam-live', is_visible=True, web_page_url='https://uzexam.uz/')
+        resp = self.client.get(reverse('project_detail', kwargs={'slug': 'uzexam-live'}), follow=True)
+        self.assertEqual(resp.status_code, 200)
+        html = resp.content.decode()
+        self.assertIn('https://uzexam.uz/?utm_source=jaysonkhan&amp;utm_medium=referral&amp;utm_campaign=project_detail', html)
