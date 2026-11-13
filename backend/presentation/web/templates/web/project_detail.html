@@ -2,7 +2,7 @@
 {% load i18n partner_links %}
 
 {% block title %}{{ project.title }} | {{ site_settings.site_author }}{% endblock %}
-{% block meta_description %}{{ project.get_card_description|truncatewords:25 }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
 {% block og_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}
 {% block og_description %}{{ project.get_card_description|truncatewords:30 }}{% endblock %}
 {% block twitter_title %}{{ project.title }} — {{ site_settings.site_author }}{% endblock %}

@@ -235,6 +235,11 @@ TELEGRAM_AUTH_MAX_AGE_SECONDS = env.int('TELEGRAM_AUTH_MAX_AGE_SECONDS', default
 TELEGRAM_WEBHOOK_SECRET = env('TELEGRAM_WEBHOOK_SECRET', default='')
 TELEGRAM_WEBHOOK_DOMAIN = env('TELEGRAM_WEBHOOK_DOMAIN', default='https://jaysonkhan.com')
 
+# IndexNow — Bing/Yandex (+Seznam/Naver) instant-indexing protocol.
+# `manage.py indexnow` POSTs changed public URLs to api.indexnow.org.
+# The key is NOT a secret: it is published at /<key>.txt and only proves ownership.
+INDEXNOW_KEY = env('INDEXNOW_KEY', default='afc6d61ad91aed8e811f1e4d377e38e2')
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

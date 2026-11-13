@@ -41,6 +41,9 @@ $BEGIN
 2 * * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run cron_health_check >> $LOG 2>&1
 0 9 * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
 5 0 1 * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run monthly_log_report >> $LOG 2>&1
+# SEO: IndexNow — changed sitemap URLs to Bing/Yandex (05:47, clear of the
+# EduStats 05:17 and UzExam 05:37 IndexNow runs on this server).
+47 5 * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run indexnow >> $LOG 2>&1
 $END
 EOF
 )

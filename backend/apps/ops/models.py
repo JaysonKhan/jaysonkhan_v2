@@ -95,3 +95,23 @@ class CronRun(models.Model):
     @property
     def is_running(self) -> bool:
         return self.status == CronStatus.RUNNING
+
+
+class IndexNowUrl(models.Model):
+    """Last state of a public URL that IndexNow accepted.
+
+    `manage.py indexnow` compares every sitemap URL's content fingerprint
+    with this row and submits only what changed since.
+    """
+
+    url = models.CharField(max_length=500, unique=True)
+    fingerprint = models.CharField(max_length=40)
+    submitted_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'IndexNow URL'
+        verbose_name_plural = 'IndexNow URLs'
+        ordering = ('url',)
+
+    def __str__(self):
+        return self.url

@@ -80,6 +80,8 @@ jaysonkhan_v2/
 - **Comments / likes / reactions** — generic FK (ContentType), works on both `Post` and `Project`.
 - **i18n** — 14 models registered with `django-modeltranslation` (incl. SiteSettings proxies), real per-language URLs, `hreflang` alternates, plus `Person.alternateName` (10 ism varianti) for SEO.
 - **AI-bot policy** — opposite of EduStats: `robots.txt` BLOCKS AI bots here (not allow).
+- **IndexNow (Bing/Yandex)** — key file `/<INDEXNOW_KEY>.txt` (`core.views.indexnow_key`; the key is public by design). `manage.py indexnow` follows the sitemap and submits only the URLs whose content fingerprint changed since the last accepted run (`ops.IndexNowUrl`; `--limit` 100 = first-run cap, `--dry-run`, `--all`). A rejected POST raises → FAILED `CronRun`, nothing recorded, next run retries (a first-day 403 `SiteVerificationNotCompleted` is expected). Server only — a local DB has other content, use `--dry-run`.
+- **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run
 
@@ -163,7 +165,7 @@ python manage.py register_bot_commands
 ```
 
 - Adding a monitored service = add a dict to `MONITORED_SERVICES` in `apps/servermonitor/metrics.py` (single source of truth; use REAL systemd unit names — `postfix@-`, `postgresql@16-main`).
-- All 5 crons (check_cpu_alert, service_health_check, cron_health_check, server_health_report, monthly_log_report) run through `manage.py cron_run <target>` (writes `ops.CronRun` history). Crontab = managed marker block installed by `security/install-servermonitor-cron.sh` (deploy.sh runs it; its "4 crons" echo is stale). Never add bare crontab lines — `cron_health_check` flags them as overdue.
+- All 6 crons (check_cpu_alert, service_health_check, cron_health_check, server_health_report, monthly_log_report, indexnow) run through `manage.py cron_run <target>` (writes `ops.CronRun` history). Crontab = managed marker block installed by `security/install-servermonitor-cron.sh` (deploy.sh runs it; its "4 crons" echo is stale). Never add bare crontab lines — `cron_health_check` flags them as overdue.
 - Server clock is CEST/CET; Tashkent = server +3h in summer (CEST), +4h in winter (CET). Cron schedules are in server time.
 
 ## 6. Important things to keep in mind
@@ -266,5 +268,6 @@ EMAIL_HOST EMAIL_PORT EMAIL_HOST_USER EMAIL_HOST_PASSWORD
 
 # Integrations
 WAKATIME_API_KEY                # fetch_wakatime cron (homepage widget)
+INDEXNOW_KEY                    # optional — a default key is baked into settings (public, served at /<key>.txt)
 
 ```

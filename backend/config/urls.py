@@ -5,6 +5,7 @@ from core.sitemaps import SITEMAPS, sitemap_index_view, sitemap_section_view
 from core.views import (
     health_check,
     humans_txt,
+    indexnow_key,
     llms_txt,
     myip_view,
     robots_txt,
@@ -49,6 +50,8 @@ urlpatterns = [
     # ── SEO ────────────────────────────────────────────────────────────────────
     # robots.txt cached 1 day (rarely changes, served on every crawl)
     path('robots.txt', cache_page(86400)(robots_txt), name='robots_txt'),
+    # IndexNow ownership proof — /<key>.txt (the key is public by design)
+    path(f'{settings.INDEXNOW_KEY}.txt', indexnow_key, name='indexnow_key'),
     # humans.txt — E-E-A-T signal (real human team behind the site)
     path('humans.txt', cache_page(86400)(humans_txt), name='humans_txt'),
     # llms.txt — GEO: entity brief for AI answer engines (ChatGPT/Perplexity/Claude)

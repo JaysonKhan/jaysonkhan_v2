@@ -34,3 +34,7 @@ LOG=/var/log/jaysonkhan/cron.log
 
 # Daily at 09:00 Berlin (11:00 Tashkent) — full server health report
 0 9 * * *     cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run server_health_report >> $LOG 2>&1
+
+# ── SEO ──────────────────────────────────────────────────────────────────────
+# Daily at 05:47 Berlin — IndexNow: changed sitemap URLs to Bing/Yandex
+47 5 * * *    cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run indexnow             >> $LOG 2>&1

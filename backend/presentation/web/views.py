@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
@@ -28,8 +29,20 @@ from portfolio.models import Project
 from portfolio.services import PortfolioRepository, PortfolioService, filter_projects
 
 from .bio_copy import NAME_GROUPS, SKILL_GROUPS, get_bio
+from .seo import meta_description, plain_text, translated
 
 logger = logging.getLogger(__name__)
+
+
+def _detail_description(obj, teaser, body_field):
+    """Meta description of a post/project page: its teaser, finished with the
+    body in the page's own language and then the site description when short."""
+    return meta_description(
+        teaser,
+        plain_text(translated(obj, body_field)),
+        SiteSettingsService.get().meta_description,
+    )
+
 
 # Visitor count cache — avoids COUNT(*) on every page render
 _VISITOR_COUNT_CACHE_KEY = 'visitor_count'
@@ -233,6 +246,8 @@ class ProjectDetailView(AppsGuardMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_interactions_context(self.request, self.object))
+        context['meta_description'] = _detail_description(
+            self.object, truncatewords(self.object.get_card_description(), 25), 'description_rich')
         # "Next project" footer link — next visible project in display order, wraps around
         ordered = list(
             Project.objects.filter(is_visible=True)
@@ -274,6 +289,7 @@ class BlogDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(_interactions_context(self.request, self.object))
+        context['meta_description'] = _detail_description(self.object, self.object.excerpt, 'content_rich')
         # Related posts by shared tags
         blog_service = BlogService(BlogRepository())
         context['related_posts'] = blog_service.get_related_posts(self.object)
@@ -328,6 +344,10 @@ class TeamView(TemplateView):
             }
             for m in members
         }
+        # The ru/en intro is a 62-character one-liner — the crew's roles finish it.
+        site = SiteSettingsService.get()
+        context['meta_description'] = meta_description(
+            site.team_intro, ', '.join(m.role for m in members if m.role), site.meta_description)
         return context
 
 

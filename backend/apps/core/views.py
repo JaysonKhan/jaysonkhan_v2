@@ -345,6 +345,19 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
 
 
+# ── IndexNow key file ──────────────────────────────────────────────────────────
+
+def indexnow_key(request):
+    """Serve /<INDEXNOW_KEY>.txt — IndexNow ownership proof (Bing/Yandex).
+
+    The key is public by design: `manage.py indexnow` points `keyLocation`
+    at this URL and the engines fetch it to verify the submitter owns the host.
+    """
+    from django.conf import settings
+
+    return HttpResponse(settings.INDEXNOW_KEY, content_type="text/plain")
+
+
 # ── humans.txt — E-E-A-T signal ────────────────────────────────────────────────
 
 def humans_txt(request):
