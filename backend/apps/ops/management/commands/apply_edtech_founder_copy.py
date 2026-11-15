@@ -9,7 +9,7 @@ resume, and rewrites any legacy "VibeCoder" Experience-timeline title.
 
 Facts source (2026-07): resume + UzExam PTA-2026 docs — 3+ yrs experience,
 Career facts: 25+ apps shipped (UIC 20+, freelance 5+). Product facts refreshed
-2026-09-21; see docs/archive/project-facts-2026-09.md for counts and definitions.
+2026-11-15; see docs/archive/project-facts-2026-11.md for counts and definitions.
 """
 from __future__ import annotations
 
@@ -39,12 +39,12 @@ COPY = {
     # the seeder raises on save. Legal name + role terms come first.
     "meta_description": {
         "xo": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI, mobil va full-stack dasturchi, UzExam va "
-              "EduStats asoschisi. 25+ ilova, 85k+ savol.",
+              "EduStats asoschisi. 25+ ilova, 167k+ savol.",
         "uz": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI, mobil va full-stack dasturchi, UzExam va "
-              "EduStats asoschisi. 25+ ilova, 85k+ savol.",
+              "EduStats asoschisi. 25+ ilova, 167k+ savol.",
         "ru": "Jayson Khan (Жахонгир Кузибоев) — AI, мобильный и full-stack разработчик из Узбекистана, основатель UzExam и EduStats. 25+ приложений.",
         "en": "Jayson Khan (Jahongir Qo'ziboyev) — AI, mobile and full-stack developer in Uzbekistan, founder "
-              "of UzExam and EduStats. 25+ apps, 85k+ questions.",
+              "of UzExam and EduStats. 25+ apps, 167k+ questions.",
     },
     # max_length=255 — Google ignores this tag entirely, Yandex weighs it
     # lightly, so spend the budget on the name variants and role terms that
@@ -76,7 +76,7 @@ COPY = {
     "hero_subtitle": {
         "xo": "Man Jayson Khan (Jahongir Qo'ziboyev) — AI, mobil va full-stack dasturchi, UzExam va EduStats "
               "asoschisiman. Bitta odam + 24/7 AI-agentla bilan test platformala, AI mentorla va ta'lim "
-              "analitikasi quraman. 85k+ ochiq savol va 21k+ ro'yxatdan o'tgan foydalanuvchi — UzExam'da.",
+              "analitikasi quraman. 167k+ ochiq savol va 39k+ ro'yxatdan o'tgan foydalanuvchi — UzExam'da.",
         "uz": ('Consort Group’da Mobile Developer sifatida Growz va Bizon ilovalariga AI va xarita funksiyalarini '
                'qo‘shish ustida ishlayman. UzExam asoschisiman: yettita Flutter ilovasi va Django platformasini '
                'rivojlantiraman. EduStats ham o‘z loyiham.'),
@@ -102,7 +102,7 @@ COPY = {
               "EdTech founder. Mobil davrda 3+ yilda 25+ ilova yetkazganman (UIC Group'da korporativ ilovala, "
               "TaxPay fintech). Endi studio davri: kod, QA, monitoring va incident-response — 24/7 "
               "AI-agentlada; strategiya, kontent sifati va mas'uliyat — manda. Natija: 3 oyda yolg'iz qurilgan "
-              "UzExam (85k+ ochiq savol, 7 mobil ilova) va 53k+ Telegram auditoriyali EduStats. President Tech "
+              "UzExam (167k+ ochiq savol, 7 mobil ilova) va 54k+ Telegram auditoriyali EduStats. President Tech "
               "Award 2026 ishtirokchisiman.",
         "uz": ('Consort Group’da Mobile Developer sifatida Growz va Bizon ilovalariga AI va xarita funksiyalarini '
                'qo‘shish ustida ishlayman. UzExam asoschisiman: yettita Flutter ilovasi va Django platformasini '
@@ -226,13 +226,13 @@ COPY = {
             {"q": "Jahongir Qo'ziboyev kim?", "a": "Jahongir Qo'ziboyev (internetda Jayson Khan) — O'zbekistonda ishlaydigan AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. Kirilda Жаҳонгир Қўзибоев, ruschada Жахонгир Кузибоев deb yoziladi."},
             {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va EduStats asoschisi. Test platformala, ta'lim analitikasi va AI mentor tizimlarini quradi. President Tech Award 2026 ishtirokchisi."},
             {"q": "UzExam nima?", "a": "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon"
-                                       " platformasi: 85k+ ochiq savol, imtihon yo‘nalishla (DTM, IELTS, "
+                                       " platformasi: 167k+ ochiq savol, imtihon yo‘nalishla (DTM, IELTS, "
                                        "SAT, Avtotest va boshqala), takrorlanmas savolla (Uniqueness "
                                        "Engine), SM-2 va antifraud reyting. Telegram bilan chambarchas "
                                        "ishlaydi."},
             {"q": "EduStats nima?", "a": "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi "
-                                         "platformasi: universitetla reytingi, 53k+ Telegram "
-                                         "foydalanuvchili auditoriyasi va 121 OTM o'tish ballari "
+                                         "platformasi: universitetla reytingi, 54k+ Telegram "
+                                         "foydalanuvchili auditoriyasi va 126 OTM o'tish ballari "
                                          "(2020–2025)."},
             {"q": "Bitta odam bularni qale eplaydi?", "a": "Arxitektura shunaqa: kod yozish, UI, QA, monitoring va tungi incident-response — 24/7 AI-agentlada. Strategiya, kontent sifati, mijozla va mas'uliyat — founderda. Shu tandem 3 oyda 54 modulli jonli platformani yolg'iz qurishga imkon berdi."},
             {"q": "Jayson Khan nimaga ixtisoslashgan?", "a": "Ta'limda AI, adaptiv test va imtihon platformala, ta'lim analitikasi, o'quvchi progressi, AI mentorla va mahsulot strategiyasi."},
@@ -241,10 +241,10 @@ COPY = {
         "uz": [
             {"q": "Jahongir Qo'ziboyev kim?", "a": "Jahongir Qo'ziboyev (internetda Jayson Khan) — O'zbekistonda ishlaydigan AI, mobil va full-stack dasturchi, UzExam va EduStats asoschisi. Kirilda Жаҳонгир Қўзибоев, ruschada Жахонгир Кузибоев deb yoziladi."},
             {"q": "Jayson Khan kim?", "a": "Jayson Khan (Jahongir Qo'ziboyev) — O'zbekistonda AI EdTech mutaxassisi, UzExam va EduStats asoschisi. Test platformalari, ta'lim analitikasi va AI mentor tizimlarini quradi. President Tech Award 2026 ishtirokchisi."},
-            {"q": "UzExam nima?", "a": "UzExam — 85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 "
+            {"q": "UzExam nima?", "a": "UzExam — 167k+ ochiq savol, 39k+ ro'yxatdan o'tgan foydalanuvchi va 7 "
                                        "mobil ilova. IELTS, Multilevel, SAT, DTM, Milliy sertifikat, Avtotest "
                                        "va Intervyu — web, Telegram va Flutter'da."},
-            {"q": "EduStats nima?", "a": "EduStats — 53k+ Telegram foydalanuvchi, katalogda 193 faol OTM va 121"
+            {"q": "EduStats nima?", "a": "EduStats — 54k+ Telegram foydalanuvchi, katalogda 208 faol OTM va 126"
                                          " OTM bo'yicha o'tish ballari. Talabalar fikri, reytinglar va manbali "
                                          "ta'lim statistikasi bir joyda."},
             {"q": "Bir odam bularning hammasini qanday uddalaydi?", "a": "Arxitektura shunday qurilgan: kod yozish, UI, QA, monitoring va tungi incident-response — 24/7 AI-agentlarda. Strategiya, kontent sifati, mijozlar va mas'uliyat — founderda. Shu tandem 3 oyda 54 modulli jonli platformani yolg'iz qurishga imkon berdi."},
@@ -254,12 +254,12 @@ COPY = {
         "ru": [
             {"q": "Кто такой Жахонгир Кузибоев?", "a": "Жахонгир Кузибоев (в интернете — Jayson Khan) — AI, мобильный и full-stack разработчик из Узбекистана, основатель UzExam и EduStats. По-узбекски Jahongir Qo'ziboyev, узбекской кириллицей Жаҳонгир Қўзибоев."},
             {"q": "Кто такой Jayson Khan?", "a": "Jayson Khan (Жахонгир Кузибоев) — AI EdTech специалист, основатель UzExam и EduStats из Ташкента, Узбекистан. Строит тестовые платформы, образовательную аналитику и системы AI-менторов. Участник President Tech Award 2026."},
-            {"q": "Что такое UzExam?", "a": "UzExam — 85k+ опубликованных вопросов, 21k+ "
+            {"q": "Что такое UzExam?", "a": "UzExam — 167k+ опубликованных вопросов, 39k+ "
                                                     "зарегистрированных пользователей и 7 мобильных приложений: "
                                                     "IELTS, Multilevel, SAT, DTM, национальный сертификат, "
                                                     "автотест и интервью."},
-            {"q": "Что такое EduStats?", "a": "EduStats — 53k+ пользователей Telegram, 193 активных вуза в "
-                                                      "каталоге и проходные баллы для 121 вуза. Отзывы студентов, "
+            {"q": "Что такое EduStats?", "a": "EduStats — 54k+ пользователей Telegram, 208 активных вузов в "
+                                                      "каталоге и проходные баллы для 126 вузов. Отзывы студентов, "
                                                       "рейтинги и статистика образования с указанием источников."},
             {"q": "Как один человек справляется со всем этим?", "a": "Так устроена архитектура: код, UI, QA, мониторинг и ночной incident-response — на AI-агентах 24/7. Стратегия, качество контента, клиенты и ответственность — на основателе. Этот тандем позволил в одиночку построить живую платформу из 54 модулей за 3 месяца."},
             {"q": "На чём специализируется Jayson Khan?", "a": "AI в образовании, адаптивные тестовые и экзаменационные платформы, образовательная аналитика, прогресс студентов, AI-менторы и продуктовая стратегия."},
@@ -268,11 +268,11 @@ COPY = {
         "en": [
             {"q": "Who is Jahongir Qo'ziboyev?", "a": "Jahongir Qo'ziboyev (known online as Jayson Khan) is an AI, mobile and full-stack developer based in Uzbekistan and the founder of UzExam and EduStats. Also spelled Жаҳонгир Қўзибоев (Uzbek Cyrillic) and Жахонгир Кузибоев (Russian)."},
             {"q": "Who is Jayson Khan?", "a": "Jayson Khan (Jahongir Qo'ziboyev) is an AI EdTech specialist and founder of UzExam and EduStats, based in Tashkent, Uzbekistan. He builds testing platforms, education analytics and AI mentor systems. President Tech Award 2026 participant."},
-            {"q": "What is UzExam?", "a": "UzExam — 85k+ published questions, 21k+ registered users and 7 "
+            {"q": "What is UzExam?", "a": "UzExam — 167k+ published questions, 39k+ registered users and 7 "
                                           "mobile apps: IELTS, Multilevel, SAT, DTM, national certification, "
                                           "driving tests and interviews."},
-            {"q": "What is EduStats?", "a": "EduStats — 53k+ Telegram users, 193 active university listings and"
-                                            " admission scores for 121 universities. Student reviews, rankings "
+            {"q": "What is EduStats?", "a": "EduStats — 54k+ Telegram users, 208 active university listings and"
+                                            " admission scores for 126 universities. Student reviews, rankings "
                                             "and source-backed education statistics."},
             {"q": "How does one person run all of this?", "a": "By architecture: coding, UI, QA, monitoring and 3 AM incident response run on AI agents 24/7. Strategy, content quality, customers and accountability stay with the founder. That tandem shipped a live 54-module platform solo in 3 months."},
             {"q": "What does Jayson Khan specialize in?", "a": "AI in education, adaptive testing and exam platforms, education analytics, student progress tracking, AI mentors and product strategy."},
@@ -289,14 +289,14 @@ PLAIN = {
     "nav_cta_url": "/contact/",
     "hero_location": "Tashkent · Uzbekistan",
     # Stats bar counts — keep in sync with the stat_N_label entries in COPY:
-    # 3+ years · 25+ apps · 85k+ published questions · 21k+ UzExam registered users
+    # 3+ years · 25+ apps · 167k+ published questions · 39k+ UzExam registered users
     "stat_1_count": 3,
     "stat_1_suffix": "+",
     "stat_2_count": 25,
     "stat_2_suffix": "+",
-    "stat_3_count": 85,
+    "stat_3_count": 167,
     "stat_3_suffix": "k+",
-    "stat_4_count": 21,
+    "stat_4_count": 39,
     "stat_4_suffix": "k+",
 }
 
@@ -308,23 +308,24 @@ EXPERIENCE = [{'match': 'Consort',
                             'uz': 'Mobile Developer',
                             'ru': 'Mobile Developer',
                             'en': 'Mobile Developer'},
-               'description': {'xo': 'Growz va Bizon ilovalari ustida ishlayman. Hozir ikkala mobil mahsulotga AI '
-                                     'integratsiya qilish va xarita funksiyalarini ishlab chiqish bilan '
-                                     'shug‘ullanaman.',
-                               'uz': 'Growz va Bizon ilovalari ustida ishlayman. Hozir ikkala mobil mahsulotga AI '
-                                     'integratsiya qilish va xarita funksiyalarini ishlab chiqish bilan '
-                                     'shug‘ullanaman.',
-                               'ru': 'Работаю над приложениями Growz и Bizon. Сейчас занимаюсь интеграцией AI в '
-                                     'оба мобильных продукта и разработкой функций карты.',
-                               'en': 'Develop Flutter features for Growz and Bizon. Current work focuses on '
-                                     'integrating AI into both mobile products and building and improving map '
-                                     'features.'}},
+               'description': {'xo': 'Growz (Google Play’da 100 mingdan ortiq o‘rnatish) va Bizon ilovalari ustida '
+                                     'ishlayman: real vaqtdagi ovozli AI-yordamchi, AI-chat, rasm orqali tashxis, '
+                                     'Google Maps’dagi xarita funksiyalari va tuproq datchigi integratsiyasi.',
+                               'uz': 'Growz (Google Play’da 100 mingdan ortiq o‘rnatish) va Bizon ilovalari ustida '
+                                     'ishlayman: real vaqtdagi ovozli AI-yordamchi, AI-chat, rasm orqali tashxis, '
+                                     'Google Maps’dagi xarita funksiyalari va tuproq datchigi integratsiyasi.',
+                               'ru': 'Работаю над приложениями Growz (100 тыс.+ установок в Google Play) и Bizon: '
+                                     'голосовой AI-ассистент в реальном времени, AI-чат, диагностика по фото, '
+                                     'карты на Google Maps и интеграция датчика почвы.',
+                               'en': 'Build Flutter features for Growz and Bizon (Growz has 100K+ installs on Google Play): '
+                                     'a real-time AI voice assistant, AI chat, photo-based diagnosis, map features '
+                                     'on Google Maps and a soil-sensor integration.'}},
               {'match': 'UzExam',
                'position': {'xo': 'Founder & AI EdTech Specialist',
                             'uz': 'Asoschi va Mobile / Full-Stack Developer',
                             'ru': 'Основатель и Mobile / Full-Stack Developer',
                             'en': 'Founder & Mobile / Full-Stack Developer'},
-               'description': {'xo': "85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. "
+               'description': {'xo': "167k+ ochiq savol, 39k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. "
                                      'IELTS, Multilevel, SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, '
                                      "Telegram va Flutter'da.",
                                'uz': 'UzExam asoschisi sifatida IELTS, Multilevel, SAT, DTM, Milliy sertifikat, '

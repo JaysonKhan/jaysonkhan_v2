@@ -292,13 +292,13 @@ class ProjectFactsRefreshTest(TestCase):
             call_command('apply_edtech_founder_copy', stdout=io.StringIO())
         self.assertEqual(Project.objects.filter(slug__in=['uzexam','edustats','vaygo']).count(), 3)
         edustats = Project.objects.get(slug='edustats')
-        self.assertEqual([s['v'] for s in edustats.stats], ['53k+', '193', '121'])
+        self.assertEqual([s['v'] for s in edustats.stats], ['54k+', '208', '126'])
         uzexam = Project.objects.get(slug='uzexam')
-        self.assertEqual([s['v'] for s in uzexam.stats], ['85k+', '21k+', '7'])
+        self.assertEqual([s['v'] for s in uzexam.stats], ['167k+', '39k+', '7'])
         self.assertIn('Flutter', list(uzexam.technologies.values_list('name', flat=True)))
         self.assertNotIn('Flutter', list(edustats.technologies.values_list('name', flat=True)))
         settings = SiteSettings.load()
-        self.assertEqual((settings.stat_3_count, settings.stat_4_count), (85, 21))
+        self.assertEqual((settings.stat_3_count, settings.stat_4_count), (167, 39))
         for lang in ('xo','uz','ru','en'):
             with override(lang):
                 self.assertNotIn('52k+', edustats.short_description)

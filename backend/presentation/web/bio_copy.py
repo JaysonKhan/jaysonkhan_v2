@@ -59,7 +59,7 @@ BIO = {
         "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobil va full-stack dasturchi",
         "meta_description": (
             "Jahongir Qo'ziboyev (Jayson Khan) — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, UzExam va"
-            " EduStats asoschisi. 25+ ilova, 85k+ savol."
+            " EduStats asoschisi. 25+ ilova, 167k+ savol."
         ),
         "eyebrow": "Kim u? · AI · Mobil · Full-stack · Toshkent",
         "h1": "Jahongir Qo'ziboyev",
@@ -93,12 +93,12 @@ BIO = {
                 "h2": "Nima quraman",
                 "body": [
                     "UzExam (uzexam.uz) — O'zbekiston uchun universal, adaptiv imtihon platformasi. 3 "
-                    "oyda yolg'iz qurilgan: 7 mobil ilova, 21k+ ro'yxatdan o'tgan foydalanuvchi, 85k+ "
+                    "oyda yolg'iz qurilgan: 7 mobil ilova, 39k+ ro'yxatdan o'tgan foydalanuvchi, 167k+ "
                     "ochiq savol, imtihon yo‘nalishla (DTM, IELTS, SAT, Avtotest va boshqala), "
                     "takrorlanmas savolla (Uniqueness Engine), SM-2 takrorlash, antifraud reyting, B2B "
                     "tenant tizimi va Click/Stars to'lovla.",
                     "EduStats (edustats.uz) — talabalar fikri va ta'lim analitikasi platformasi: "
-                    "universitetla reytingi, 53k+ Telegram auditoriyasi va 121 OTM o'tish"
+                    "universitetla reytingi, 54k+ Telegram auditoriyasi va 126 OTM o'tish"
                     " ballari (2020–2025).",
                     "Ikkalasi ham jonli production'da ishlayapti. President Tech Award 2026 "
                     "ishtirokchisiman.",
@@ -180,10 +180,10 @@ BIO = {
             {
                 "h2": "Nima quraman",
                 "body": [
-                    "UzExam — 85k+ ochiq savol, 21k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. IELTS, "
+                    "UzExam — 167k+ ochiq savol, 39k+ ro'yxatdan o'tgan foydalanuvchi va 7 mobil ilova. IELTS, "
                     "Multilevel, SAT, DTM, Milliy sertifikat, Avtotest va Intervyu — web, Telegram va "
                     "Flutter'da.",
-                    "EduStats — 53k+ Telegram foydalanuvchi, katalogda 193 faol OTM va 121 OTM bo'yicha o'tish "
+                    "EduStats — 54k+ Telegram foydalanuvchi, katalogda 208 faol OTM va 126 OTM bo'yicha o'tish "
                     "ballari. Talabalar fikri, reytinglar va manbali ta'lim statistikasi bir joyda.",
                     "Ikkalasi ham jonli production'da. President Tech Award 2026 ishtirokchisiman.",
                 ],
@@ -262,10 +262,10 @@ BIO = {
             {
                 "h2": "Что я строю",
                 "body": [
-                    "UzExam — 85k+ опубликованных вопросов, 21k+ зарегистрированных пользователей и 7 мобильных"
+                    "UzExam — 167k+ опубликованных вопросов, 39k+ зарегистрированных пользователей и 7 мобильных"
                     " приложений: IELTS, Multilevel, SAT, DTM, национальный сертификат, автотест и интервью.",
-                    "EduStats — 53k+ пользователей Telegram, 193 активных вуза в каталоге и проходные баллы для"
-                    " 121 вуза. Отзывы студентов, рейтинги и статистика образования с указанием источников.",
+                    "EduStats — 54k+ пользователей Telegram, 208 активных вузов в каталоге и проходные баллы для"
+                    " 126 вузов. Отзывы студентов, рейтинги и статистика образования с указанием источников.",
                     "Оба продукта работают в живом production. Участник President Tech Award 2026.",
                 ],
             },
@@ -343,10 +343,10 @@ BIO = {
             {
                 "h2": "What I build",
                 "body": [
-                    "UzExam — 85k+ published questions, 21k+ registered users and 7 mobile apps: IELTS, "
+                    "UzExam — 167k+ published questions, 39k+ registered users and 7 mobile apps: IELTS, "
                     "Multilevel, SAT, DTM, national certification, driving tests and interviews.",
-                    "EduStats — 53k+ Telegram users, 193 active university listings and admission scores for "
-                    "121 universities. Student reviews, rankings and source-backed education statistics.",
+                    "EduStats — 54k+ Telegram users, 208 active university listings and admission scores for "
+                    "126 universities. Student reviews, rankings and source-backed education statistics.",
                     "Both run in live production. President Tech Award 2026 participant.",
                 ],
             },

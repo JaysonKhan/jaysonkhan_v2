@@ -35,7 +35,7 @@ LANGS = ('xo', 'uz', 'ru', 'en')
 SWEEP_MIN = 70
 
 SITE = ("Jayson Khan (Jahongir Qo'ziboyev) — AI, mobile and full-stack developer in Uzbekistan, "
-        "founder of UzExam and EduStats. 25+ apps, 85k+ questions.")
+        "founder of UzExam and EduStats. 25+ apps, 167k+ questions.")
 
 
 class MetaDescriptionBuilderTest(SimpleTestCase):
