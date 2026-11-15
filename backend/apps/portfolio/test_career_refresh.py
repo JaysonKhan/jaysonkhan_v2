@@ -68,3 +68,21 @@ class CareerRefreshTest(TestCase):
                         self.assertContains(response, f'href="/static/{path}" download=')
                         with open(finders.find(path), "rb") as pdf:
                             self.assertEqual(pdf.read(5), b"%PDF-")
+
+    def test_xo_fact_refresh_changes_only_the_figures(self):
+        settings = SiteSettings.load()
+        settings.about_description_xo = "Man quraman. 85k+ ochiq savol va 21k+ foydalanuvchi, 53k+ auditoriya."
+        settings.save()
+        Experience.objects.all().delete()
+        row = Experience.objects.create(
+            company="UzExam.uz", description_xo="85k+ ochiq savol, 193 faol OTM va 121 OTM.",
+            start_date=date(2026, 4, 1), is_current=True,
+        )
+        migration = import_module("portfolio.migrations.0024_refresh_xo_product_facts")
+        for _ in range(2):  # repeatable
+            migration.refresh_facts(apps, SimpleNamespace(connection=connection))
+        settings.refresh_from_db()
+        row.refresh_from_db()
+        self.assertEqual(settings.about_description_xo,
+                         "Man quraman. 167k+ ochiq savol va 39k+ foydalanuvchi, 54k+ auditoriya.")
+        self.assertEqual(row.description_xo, "167k+ ochiq savol, 208 faol OTM va 126 OTM.")
