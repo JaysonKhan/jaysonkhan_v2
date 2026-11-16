@@ -213,6 +213,11 @@ def robots_txt(request):
       • AI scrapers (GPTBot, ClaudeBot, anthropic-ai, CCBot, Bytespider): Disallow
       • Yandex Host directive: canonical to jaysonkhan.com
       • Single Sitemap line: points to /sitemap.xml (the index)
+
+    Internal search results (`/<lang>/blog/search/`) are closed in every group that lists `/api/`:
+    Googlebot fetched the literal SearchAction template `?q={search_term_string}` from the WebSite
+    JSON-LD and Search Console filed it as a Soft 404 (2026-11-09 alert). A named group replaces `*`,
+    so the rule has to be repeated per group.
     """
     sitemap_url = request.build_absolute_uri(reverse("sitemap_index"))
     humans_url = request.build_absolute_uri(reverse("humans_txt"))
@@ -225,6 +230,7 @@ def robots_txt(request):
         "User-agent: *",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /auth/",
         "Disallow: /jk-dinadmin/",
         "Disallow: /admin/",
@@ -237,6 +243,7 @@ def robots_txt(request):
         "User-agent: Googlebot",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /auth/",
         "Disallow: /admin/",
         "Disallow: /jk-dinadmin/",
@@ -244,6 +251,7 @@ def robots_txt(request):
         "User-agent: Bingbot",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /auth/",
         "Disallow: /admin/",
         "Disallow: /jk-dinadmin/",
@@ -252,6 +260,7 @@ def robots_txt(request):
         "User-agent: YandexBot",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /auth/",
         "Disallow: /admin/",
         "Disallow: /jk-dinadmin/",
@@ -260,11 +269,13 @@ def robots_txt(request):
         "User-agent: DuckDuckBot",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /admin/",
         "",
         "User-agent: Applebot",
         "Allow: /",
         "Disallow: /api/",
+        "Disallow: /*/blog/search/",
         "Disallow: /admin/",
         "",
         "# ─── Image crawlers — full access for Google Images / Yandex ─────",
