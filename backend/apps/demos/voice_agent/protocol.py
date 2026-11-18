@@ -9,6 +9,14 @@ If the user interrupts you, stop the previous topic and answer what they just sa
 Always reply in the language the user speaks."""
 
 
+def turn_detection(s: VoiceAgentSettings) -> dict:
+    if s.turn_detection == "semantic_vad":
+        config = {"type": "semantic_vad", "eagerness": s.vad_eagerness}
+    else:
+        config = {"type": "server_vad", "silence_duration_ms": s.vad_silence_ms}
+    return config | {"create_response": True, "interrupt_response": True}
+
+
 def session_update(s: VoiceAgentSettings) -> dict:
     session = {
         "type": "realtime",
@@ -18,12 +26,7 @@ def session_update(s: VoiceAgentSettings) -> dict:
             "input": {
                 "format": {"type": "audio/pcm", "rate": 24000},
                 "transcription": {"model": "gpt-transcribe"},
-                "turn_detection": {
-                    "type": "server_vad",
-                    "silence_duration_ms": s.vad_silence_ms,
-                    "create_response": True,
-                    "interrupt_response": True,
-                },
+                "turn_detection": turn_detection(s),
             },
             "output": {"format": {"type": "audio/pcm", "rate": 24000}, "voice": s.voice},
         },

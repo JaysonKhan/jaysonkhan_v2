@@ -1,9 +1,12 @@
 """Pure-Python parts of the voice agent demo: latency math, call limits, call tokens."""
 
+from dataclasses import replace
 from unittest import TestCase
 
+from demos.voice_agent.config import VoiceAgentSettings
 from demos.voice_agent.latency import BYTES_PER_MS, AudioClock, Turn, frame_levels
 from demos.voice_agent.limits import CallLimiter, LimitReached
+from demos.voice_agent.protocol import session_update
 from demos.voice_agent.tokens import issue_token, verify_token
 
 from .fake_realtime import tone
@@ -108,3 +111,16 @@ class CallTokenTest(TestCase):
         self.assertFalse(verify_token("other-secret", token))
         for junk in ("", "abc", "1.2", "x.y.z"):
             self.assertFalse(verify_token(self.SECRET, junk))
+
+
+class SessionConfigTest(TestCase):
+    def test_turn_detection_follows_the_settings(self):
+        base = VoiceAgentSettings.from_env()
+        server = session_update(replace(base, turn_detection="server_vad", vad_silence_ms=300))
+        semantic = session_update(replace(base, turn_detection="semantic_vad", vad_eagerness="high"))
+        server_td = server["session"]["audio"]["input"]["turn_detection"]
+        semantic_td = semantic["session"]["audio"]["input"]["turn_detection"]
+        self.assertEqual(server_td["type"], "server_vad")
+        self.assertEqual(server_td["silence_duration_ms"], 300)
+        self.assertEqual(semantic_td, {"type": "semantic_vad", "eagerness": "high",
+                                       "create_response": True, "interrupt_response": True})

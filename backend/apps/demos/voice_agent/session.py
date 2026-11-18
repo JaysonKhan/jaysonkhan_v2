@@ -23,6 +23,10 @@ from .protocol import session_update
 
 log = logging.getLogger("voice")
 
+# How far back from the VAD stop point to look for the last speech frame. server_vad stops
+# silence_duration_ms after speech; semantic_vad can wait a few seconds after a trailing-off phrase.
+SPEECH_END_LOOKBACK_MS = 4000
+
 
 class BrowserLink(Protocol):
     """The browser end of a call. A Starlette/FastAPI WebSocket satisfies it as is."""
@@ -181,8 +185,7 @@ class CallSession:
         now = time.monotonic()
         stop_ms = event["audio_end_ms"]
         # Find where the user really stopped: the last speech frame before the VAD stop point.
-        lookback = self.s.vad_silence_ms + 1000
-        voiced_end = self.clock.last_voiced_ms(stop_ms - lookback, stop_ms)
+        voiced_end = self.clock.last_voiced_ms(stop_ms - SPEECH_END_LOOKBACK_MS, stop_ms)
         speech_end_at = self.clock.arrival_time(voiced_end if voiced_end is not None else stop_ms) or now
         self.turn_count += 1
         self.pending_turn = Turn(self.turn_count, speech_end_at, now, speech_end_from_vad=voiced_end is None)

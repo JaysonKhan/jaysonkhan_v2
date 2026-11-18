@@ -34,6 +34,8 @@ class VoiceRelayTest(IsolatedAsyncioTestCase):
             voice="marin",
             reasoning_effort="low",
             vad_silence_ms=500,
+            turn_detection="server_vad",
+            vad_eagerness="auto",
             realtime_url=f"ws://127.0.0.1:{self.upstream.sockets[0].getsockname()[1]}",
             secret_key=SECRET,
             max_concurrent=2,
