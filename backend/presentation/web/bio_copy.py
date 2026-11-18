@@ -9,9 +9,9 @@ Why a Python dict and not SiteSettings/`{% trans %}`:
 
 Target queries this page exists to answer (all four scripts):
     Jahongir Qo'ziboyev · Qo'ziboyev Jahongir · Жаҳонгир Қўзибоев ·
-    Жахонгир Кузибоев · Jayson Khan · AI dasturchi · mobil dasturchi ·
-    full stack dasturchi · Flutter dasturchi · AI разработчик ·
-    мобильный разработчик · AI developer · mobile developer
+    Жахонгир Кузибоев · Jayson Khan · Voice AI Engineer · ovozli AI ·
+    AI dasturchi · AI разработчик · голосовой AI · AI engineer
+    (role wording switched to Voice AI Engineer on 2026-11-18, owner's request)
 
 EVERY factual claim here is sourced from copy already shipped in
 `ops/management/commands/apply_edtech_founder_copy.py` (2026-07 resume +
@@ -47,32 +47,33 @@ NAME_GROUPS = [
 ]
 
 SKILL_GROUPS = [
-    ("Mobile", "Flutter · Dart · Clean Architecture · BLoC · iOS · Android"),
+    ("Voice AI", "Real-time audio streaming · WebSockets · Socket.IO · PCM audio · turn-taking · echo prevention"),
+    ("AI", "LLM APIs (Claude, Gemini, OpenAI) · AI pipelines · vision-model checks · Claude Code"),
     ("Backend", "Python · Django · DRF · FastAPI · aiogram · PostgreSQL · Redis"),
-    ("AI", "AI-agent orchestration · Claude Code · AI mentor systems · AI-assisted engineering"),
+    ("Mobile clients", "Flutter · Kotlin · iOS · Android"),
     ("Web / DevOps", "JavaScript · TypeScript · HTMX · Nginx · Linux · CI/CD"),
 ]
 
 BIO = {
     # ── XO — Khorezm dialect, owner's signature voice ────────────────────
     "xo": {
-        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobil va full-stack dasturchi",
+        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — Voice AI Engineer",
         "meta_description": (
-            "Jahongir Qo'ziboyev (Jayson Khan) — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, UzExam va"
+            "Jahongir Qo'ziboyev (Jayson Khan) — Xorazmdan chiqqan Voice AI Engineer, UzExam va"
             " EduStats asoschisi. 25+ ilova, 167k+ savol."
         ),
-        "eyebrow": "Kim u? · AI · Mobil · Full-stack · Toshkent",
+        "eyebrow": "Kim u? · Voice AI Engineer · Toshkent",
         "h1": "Jahongir Qo'ziboyev",
         "h1_em": "(Jayson Khan)",
         "lede": (
             "Man Jahongir Qo'ziboyev — internetda Jayson Khan nomi bilan tanilganman. "
             "Xorazmdan chiqqanman, Toshkentda ishlayman. Mobil dasturchi bo'lib boshlab, "
-            "3+ yilda 25+ ilova yetkazganman; endi AI dasturchi va EdTech founder sifatida "
+            "3+ yilda 25+ ilova yetkazganman; endi Voice AI Engineer va EdTech founder sifatida "
             "24/7 AI-agentla bilan test platformala, ta'lim analitikasi va AI mentorla quraman."
         ),
         "sections": [
             {
-                "h2": "Mobil dasturchilikdan AI dasturchilikkacha",
+                "h2": "Mobil dasturchilikdan Voice AI'gacha",
                 "body": [
                     "Yo'lni Flutter mobil dasturchi bo'lib boshlaganman. UIC Group'da 20+ korporativ "
                     "mobil ilova qurdim — Clean Architecture va BLoC, yuklanish ~40% tez, 15+ REST API, "
@@ -83,7 +84,9 @@ BIO = {
                     "mentorlik manda edi. Soliq yo'nalishida TaxPay fintech to'lov ilovasini noldan "
                     "qurdim — Flutter, karta ulash, OTP, tranzaksiyala va PCI talablariga mos REST "
                     "integratsiyala.",
-                    "Bugun full-stack ishlayman: mobil oldingi tajriba ustiga Python/Django backend, "
+                    "Bugun Consort Group'da Voice AI Engineer'man: Growz'dagi real vaqtli ovozli AI "
+                    "agronomni qurdim — oqimli audio, navbat bilan gaplashish, aks-sadoni bostirish.",
+                    "Full-stack tomoni ham manda: mobil oldingi tajriba ustiga Python/Django backend, "
                     "PostgreSQL, Nginx va Linux server boshqaruvi qo'shildi. Kod, QA, monitoring va "
                     "tungi incident-response — 24/7 AI-agentlada; strategiya, kontent sifati va "
                     "mas'uliyat — manda.",
@@ -115,8 +118,8 @@ BIO = {
         "faq": [
             {
                 "q": "Jahongir Qo'ziboyev kim?",
-                "a": "Jahongir Qo'ziboyev (Jayson Khan) — O'zbekistonda ishlaydigan AI, mobil va "
-                     "full-stack dasturchi, UzExam va EduStats asoschisi. Xorazmdan, Toshkentda "
+                "a": "Jahongir Qo'ziboyev (Jayson Khan) — O'zbekistonda ishlaydigan Voice AI "
+                     "Engineer, UzExam va EduStats asoschisi. Xorazmdan, Toshkentda "
                      "yashaydi. President Tech Award 2026 ishtirokchisi.",
             },
             {
@@ -126,9 +129,9 @@ BIO = {
             },
             {
                 "q": "Qanaqa dasturchi?",
-                "a": "Mobil tomondan Flutter/Dart (25+ ilova), backend tomondan Python/Django va "
-                     "FastAPI, ustiga AI-agent orkestratsiyasi. Ya'ni mobil dasturchi + full-stack "
-                     "dasturchi + AI dasturchi — uchalasi bitta odamda.",
+                "a": "Voice AI Engineer: real vaqtda ishlaydigan ovozli AI yordamchila quraman — "
+                     "WebSocket, oqimli audio, LLM API. Backend tomondan Python/Django, mobil "
+                     "tomondan Flutter (25+ ilova).",
             },
             {
                 "q": "Qaysi ilovalarni qurgan?",
@@ -142,40 +145,43 @@ BIO = {
             },
         ],
         "cta_title": "Loyiha bormi?",
-        "cta_text": "Mobil ilova, AI mahsulot yo EdTech platforma — brifni tashlang, qolganini surishtiraman.",
+        "cta_text": "Ovozli AI yordamchi, AI mahsulot yo EdTech platforma — brifni tashlang, qolganini surishtiraman.",
         "cta_btn": "Bog'lanish",
     },
 
     # ── UZ — standard Latin Uzbek ────────────────────────────────────────
     "uz": {
-        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobil va full-stack dasturchi",
+        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — Voice AI Engineer",
         "meta_description": (
-            ('Jahongir Qo‘ziboyev (Jayson Khan) — Consort Group’da Mobile Developer va UzExam asoschisi. Flutter '
-             'ilovalari, Django platformalari va EduStats.')
+            ('Jahongir Qo‘ziboyev (Jayson Khan) — Consort Group’da Voice AI Engineer va UzExam asoschisi. Real '
+             'vaqtda ishlaydigan ovozli AI yordamchilar va LLM.')
         ),
-        "eyebrow": "Men haqimda · AI · Mobil · Full-stack · Toshkent",
+        "eyebrow": "Men haqimda · Voice AI Engineer · Toshkent",
         "h1": "Jahongir Qo'ziboyev",
         "h1_em": "(Jayson Khan)",
         "lede": (
-            ('Consort Group’da Mobile Developer sifatida Growz va Bizon ilovalariga AI va xarita funksiyalarini '
-             'qo‘shish ustida ishlayman. UzExam asoschisiman: yettita Flutter ilovasi va Django platformasini '
-             'rivojlantiraman. EduStats ham o‘z loyiham.')
+            ('Consort Group’da Voice AI Engineer sifatida Growz ilovasining real vaqtda ishlaydigan ovozli AI '
+             'agronomini qurganman. UzExam asoschisiman: Django platformasi, yettita mobil ilova va LLM asosidagi '
+             'AI quvurlarini rivojlantiraman. EduStats ham o‘z loyiham.')
         ),
         "sections": [
             {
                 "h2": 'Ish tajribasi va ta’lim',
-                "body": ['2026-yil iyunidan Consort Group’da Mobile Developer bo‘lib ishlayman. Growz va Bizon Flutter '
-                         'ilovalariga AI integratsiya qilish va xarita funksiyalarini rivojlantirish bilan shug‘ullanaman.',
-                         '2026-yil yanvar–aprel oylarida Soliq servis AJ’da TaxPay’ni Flutter, Clean Architecture va BLoC '
+                "body": ['2026-yil iyunidan Consort Group’da Voice AI Engineer bo‘lib ishlayman. Growz’dagi ovozli AI '
+                         'agronomni qurdim: Socket.IO orqali real vaqtdagi ovozli suhbat, oqimli PCM audio, navbat bilan '
+                         'gaplashish, aks-sadoni bostirish va audio fokusni boshqarish. Bizon’da oqimli AI-chatni, '
+                         'Growz’da rasm orqali tashxisni ham chiqardim.',
+                         '2026-yil yanvar–aprel oylarida Soliq servis AJ’da Software Engineer sifatida TaxPay’ni Flutter, '
+                         'Clean Architecture va BLoC '
                          'asosida qurdim. Karta ulash, OTP, to‘lovlar va tranzaksiyalar tarixini ishlab chiqdim. Ilova ishga '
                          'tushirishga tayyor holatga yetdi, ammo bo‘lim yopilgach ommaga chiqarilmadi.',
-                         '2023-yil sentabridan 2025-yil dekabrigacha UIC Group’da Android va iOS uchun Flutter ilovalari, '
-                         'API integratsiyalari va ilova unumdorligi ustida ishladim. Shu davrda AI Business Assistant '
+                         '2023-yil sentabridan 2025-yil dekabrigacha UIC Group’da Software Engineer sifatida Android va iOS '
+                         'ilovalari, API integratsiyalari va ilova unumdorligi ustida ishladim. Shu davrda AI Business Assistant '
                          'loyihasida ham (2025-yil avgust–noyabr) assistent funksiyalarini ishlab chiqdim va mobil jamoa '
                          'vazifalarini muvofiqlashtirdim.',
                          '2026-yilda Toshkent axborot texnologiyalari universitetining Dasturiy injiniring yo‘nalishini '
-                         'bakalavr darajasi bilan tamomladim. Hozirgi ishlarim Flutter ilovalari, Django API, PostgreSQL, '
-                         'Redis va o‘z mahsulotlarimni doimiy rivojlantirishni qamrab oladi.'],
+                         'bakalavr darajasi bilan tamomladim. Hozirgi ishlarim ovozli AI, LLM integratsiyalari, Django API, '
+                         'PostgreSQL, Redis va o‘z mahsulotlarimni doimiy rivojlantirishni qamrab oladi.'],
             },
             {
                 "h2": "Nima quraman",
@@ -199,7 +205,7 @@ BIO = {
         "faq": [
             {
                 "q": "Jahongir Qo'ziboyev kim?",
-                "a": ('Toshkentda Consort Group’da ishlaydigan Mobile Developer va UzExam asoschisi. EduStats’ni ham '
+                "a": ('Toshkentda Consort Group’da ishlaydigan Voice AI Engineer va UzExam asoschisi. EduStats’ni ham '
                       'yaratganman. Jahongir Qo‘ziboyev va Jayson Khan — bir inson.'),
             },
             {
@@ -209,13 +215,14 @@ BIO = {
             },
             {
                 "q": "U qanday dasturchi?",
-                "a": ('Flutter’da Android va iOS ilovalari, Python va Django’da backend servislarini yarataman. Hozir AI '
-                      'integratsiyalari, xaritalar, imtihonga tayyorgarlik va ta’lim ma’lumotlari bilan ishlayman.'),
+                "a": ('Voice AI Engineer: odamlar ovoz bilan gaplashadigan, real vaqtda ishlaydigan AI yordamchilarni '
+                      'quraman (WebSocket, oqimli audio, LLM API). Backend — Python va Django, mobil mijozlar — Flutter '
+                      'va Kotlin.'),
             },
             {
                 "q": "Qaysi ilovalarni qurgan?",
-                "a": ('Consort Group’da Growz va Bizon, Soliq servis AJ’da TaxPay, UIC Group’da korporativ Flutter '
-                      'ilovalari va AI Business Assistant. O‘z loyihalarim: yettita UzExam ilovasi, UzExam web '
+                "a": ('Consort Group’da Growz’ning ovozli AI agronomi va Bizon AI-chati, Soliq servis AJ’da TaxPay, '
+                      'UIC Group’da korporativ ilovalar va AI Business Assistant. O‘z loyihalarim: yettita UzExam ilovasi, UzExam web '
                       'platformasi va EduStats.'),
             },
             {
@@ -225,39 +232,43 @@ BIO = {
             },
         ],
         "cta_title": "Loyihangiz bormi?",
-        "cta_text": "Mobil ilova, AI mahsulot yoki EdTech platforma — brifni tashlang, qolganini o'zim aniqlayman.",
+        "cta_text": "Ovozli AI yordamchi, AI mahsulot yoki EdTech platforma — brifni tashlang, qolganini o'zim aniqlayman.",
         "cta_btn": "Bog'lanish",
     },
 
     # ── RU ───────────────────────────────────────────────────────────────
     "ru": {
-        "seo_title": "Жахонгир Кузибоев (Jayson Khan) — AI, мобильный и full-stack разработчик",
+        "seo_title": "Жахонгир Кузибоев (Jayson Khan) — Voice AI Engineer",
         "meta_description": (
-            ('Жахонгир Кузибоев (Jayson Khan) — Mobile Developer в Consort Group и основатель UzExam. '
-             'Flutter-приложения, Django-платформы и EduStats.')
+            ('Жахонгир Кузибоев (Jayson Khan) — Voice AI Engineer в Consort Group и основатель UzExam. Голосовые '
+             'AI-ассистенты в реальном времени, LLM и Django-платформы.')
         ),
-        "eyebrow": "Обо мне · AI · Mobile · Full-stack · Ташкент",
+        "eyebrow": "Обо мне · Voice AI Engineer · Ташкент",
         "h1": "Жахонгир Кузибоев",
         "h1_em": "(Jayson Khan)",
         "lede": (
-            ('Mobile Developer в Consort Group: работаю над AI-интеграциями и картами в Growz и Bizon. Основал '
-             'UzExam, где развиваю семь Flutter-приложений и платформу на Django. Также создал EduStats.')
+            ('Voice AI Engineer в Consort Group: разработал голосового AI-агронома в Growz — живой голосовой '
+             'диалог в реальном времени. Основал UzExam: платформа на Django, семь мобильных приложений и '
+             'AI-конвейеры на LLM. Также создал EduStats.')
         ),
         "sections": [
             {
                 "h2": 'Опыт работы и образование',
-                "body": ['С июня 2026 года работаю Mobile Developer в Consort Group над Flutter-приложениями Growz и Bizon. '
-                         'Сейчас занимаюсь интеграцией AI и развитием функций карты в обоих продуктах.',
-                         'С января по апрель 2026 года разрабатывал TaxPay в Soliq servis AJ на Flutter с Clean Architecture '
+                "body": ['С июня 2026 года работаю Voice AI Engineer в Consort Group. Разработал голосового AI-агронома в '
+                         'Growz: голосовой диалог в реальном времени через Socket.IO, потоковое PCM-аудио, очередность '
+                         'реплик, подавление эха и управление аудиофокусом. Также выпустил потоковый AI-чат в Bizon и '
+                         'диагностику растений по фото в Growz.',
+                         'С января по апрель 2026 года работал Software Engineer в Soliq servis AJ: разрабатывал TaxPay на '
+                         'Flutter с Clean Architecture '
                          'и BLoC. Реализовал привязку карт, OTP, платежи и историю транзакций. Приложение было готово к '
                          'запуску, но после закрытия отдела не вышло в публичный доступ.',
-                         'С сентября 2023 по декабрь 2025 года работал в UIC Group: разрабатывал Flutter-приложения для '
-                         'Android и iOS, интегрировал API и улучшал производительность. В этот период также работал над AI '
+                         'С сентября 2023 по декабрь 2025 года работал Software Engineer в UIC Group: разрабатывал '
+                         'приложения для Android и iOS, интегрировал API и улучшал производительность. В этот период также работал над AI '
                          'Business Assistant (август–ноябрь 2025): создавал функции ассистента и координировал мобильные '
                          'задачи.',
                          'В 2026 году окончил Ташкентский университет информационных технологий по направлению «Программная '
-                         'инженерия», степень бакалавра. Сейчас работаю с Flutter-клиентами, Django API, PostgreSQL и Redis, '
-                         'а также развиваю и поддерживаю собственные продукты.'],
+                         'инженерия», степень бакалавра. Сейчас работаю с голосовым AI, LLM-интеграциями, Django API, '
+                         'PostgreSQL и Redis, а также развиваю и поддерживаю собственные продукты.'],
             },
             {
                 "h2": "Что я строю",
@@ -280,7 +291,7 @@ BIO = {
         "faq": [
             {
                 "q": "Кто такой Жахонгир Кузибоев?",
-                "a": ('Mobile Developer в Consort Group в Ташкенте и основатель UzExam. Также создал EduStats. Жахонгир '
+                "a": ('Voice AI Engineer в Consort Group в Ташкенте и основатель UzExam. Также создал EduStats. Жахонгир '
                       'Кузибоев и Jayson Khan — один человек.'),
             },
             {
@@ -290,13 +301,14 @@ BIO = {
             },
             {
                 "q": "Какой он разработчик?",
-                "a": ('Разрабатываю приложения для Android и iOS на Flutter и бэкенд-сервисы на Python и Django. Сейчас '
-                      'работаю с AI-интеграциями, картами, подготовкой к экзаменам и образовательными данными.'),
+                "a": ('Voice AI Engineer: создаю голосовых AI-ассистентов, с которыми разговаривают в реальном времени '
+                      '(WebSockets, потоковое аудио, API LLM). Бэкенд — Python и Django, мобильные клиенты — Flutter '
+                      'и Kotlin.'),
             },
             {
                 "q": "Какие приложения он сделал?",
-                "a": ('Growz и Bizon в Consort Group, TaxPay в Soliq servis AJ, корпоративные Flutter-приложения и AI '
-                      'Business Assistant в UIC Group. Собственные проекты: семь приложений UzExam, веб-платформа UzExam '
+                "a": ('Голосовой AI-агроном в Growz и AI-чат в Bizon (Consort Group), TaxPay в Soliq servis AJ, '
+                      'корпоративные приложения и AI Business Assistant в UIC Group. Собственные проекты: семь приложений UzExam, веб-платформа UzExam '
                       'и EduStats.'),
             },
             {
@@ -306,39 +318,43 @@ BIO = {
             },
         ],
         "cta_title": "Есть проект?",
-        "cta_text": "Мобильное приложение, AI-продукт или EdTech-платформа — пришлите бриф, остальное уточню сам.",
+        "cta_text": "Голосовой AI-ассистент, AI-продукт или EdTech-платформа — пришлите бриф, остальное уточню сам.",
         "cta_btn": "Связаться",
     },
 
     # ── EN ───────────────────────────────────────────────────────────────
     "en": {
-        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — AI, Mobile & Full-Stack Developer",
+        "seo_title": "Jahongir Qo'ziboyev (Jayson Khan) — Voice AI Engineer",
         "meta_description": (
-            ('Jahongir Qo’ziboyev (Jayson Khan), Mobile Developer at Consort Group and founder of UzExam. '
-             'Flutter apps, Django platforms and EduStats.')
+            ('Jahongir Qo’ziboyev (Jayson Khan), Voice AI Engineer at Consort Group and founder of UzExam. '
+             'Real-time AI voice assistants, LLM pipelines and Django platforms.')
         ),
-        "eyebrow": "About · AI · Mobile · Full-stack · Tashkent",
+        "eyebrow": "About · Voice AI Engineer · Tashkent",
         "h1": "Jahongir Qo'ziboyev",
         "h1_em": "(Jayson Khan)",
         "lede": (
-            ('Mobile Developer at Consort Group, working on AI integrations and maps in Growz and Bizon. I '
-             'founded UzExam, where I develop seven Flutter apps and the Django platform, and created EduStats.')
+            ('Voice AI Engineer at Consort Group: I built the real-time voice AI agronomist in Growz. I founded '
+             'UzExam, where I develop the Django platform, seven mobile apps and LLM-based AI pipelines, and '
+             'created EduStats.')
         ),
         "sections": [
             {
                 "h2": 'Work and education',
-                "body": ['Since June 2026, I have worked as a Mobile Developer at Consort Group on Growz and Bizon. My '
-                         'current focus is AI integration and map features in both Flutter applications.',
-                         'From January to April 2026, I built TaxPay at Soliq servis AJ with Flutter, Clean Architecture and '
+                "body": ['Since June 2026, I have worked as a Voice AI Engineer at Consort Group. I built the voice AI '
+                         'agronomist in Growz: a real-time voice conversation over Socket.IO with streamed PCM audio, '
+                         'turn-taking, echo prevention and audio-focus handling. I also delivered the streaming AI chat in '
+                         'Bizon and photo-based crop diagnosis in Growz.',
+                         'From January to April 2026, as a Software Engineer at Soliq servis AJ, I built TaxPay with '
+                         'Flutter, Clean Architecture and '
                          'BLoC. I implemented card binding, OTP verification, payments and transaction history. The app '
                          'reached a production-ready stage but was not publicly released after the department closed.',
-                         'I worked at UIC Group from September 2023 to December 2025, building Android and iOS applications '
-                         'with Flutter, integrating APIs and improving app performance. During this period I also worked on '
+                         'I worked as a Software Engineer at UIC Group from September 2023 to December 2025, building '
+                         'Android and iOS applications, integrating APIs and improving app performance. During this period I also worked on '
                          'AI Business Assistant (August–November 2025), developing assistant features and coordinating '
                          'mobile tasks.',
                          'I graduated from Tashkent University of Information Technologies in 2026 with a bachelor’s degree '
-                         'in Software Engineering. My work now spans Flutter clients, Django APIs, PostgreSQL, Redis and the '
-                         'day-to-day maintenance of my own products.'],
+                         'in Software Engineering. My work now spans voice AI, LLM integrations, Django APIs, PostgreSQL, '
+                         'Redis and the day-to-day maintenance of my own products.'],
             },
             {
                 "h2": "What I build",
@@ -361,7 +377,7 @@ BIO = {
         "faq": [
             {
                 "q": "Who is Jahongir Qo'ziboyev?",
-                "a": ('Mobile Developer at Consort Group in Tashkent and founder of UzExam. I also created EduStats. '
+                "a": ('Voice AI Engineer at Consort Group in Tashkent and founder of UzExam. I also created EduStats. '
                       'Jahongir Qo’ziboyev and Jayson Khan are the same person.'),
             },
             {
@@ -371,13 +387,13 @@ BIO = {
             },
             {
                 "q": "What kind of developer is he?",
-                "a": ('I build Android and iOS applications with Flutter and backend services with Python and Django. My '
-                      'current work includes AI integrations, maps, exam practice and education data.'),
+                "a": ('A Voice AI Engineer: I build real-time AI assistants that people talk to (WebSockets, streamed '
+                      'audio, LLM APIs). Backend in Python and Django, mobile clients in Flutter and Kotlin.'),
             },
             {
                 "q": "Which apps has he built?",
-                "a": ('Growz and Bizon at Consort Group; TaxPay at Soliq servis AJ; corporate Flutter apps and AI '
-                      'Business Assistant at UIC Group. My own projects include seven UzExam apps, the UzExam web '
+                "a": ('The voice AI agronomist in Growz and the AI chat in Bizon at Consort Group; TaxPay at Soliq '
+                      'servis AJ; corporate apps and AI Business Assistant at UIC Group. My own projects include seven UzExam apps, the UzExam web '
                       'platform and EduStats.'),
             },
             {
@@ -387,7 +403,7 @@ BIO = {
             },
         ],
         "cta_title": "Got a project?",
-        "cta_text": "A mobile app, an AI product or an EdTech platform — send the brief, I'll take it from there.",
+        "cta_text": "A voice AI assistant, an AI product or an EdTech platform — send the brief, I'll take it from there.",
         "cta_btn": "Get in touch",
     },
 }

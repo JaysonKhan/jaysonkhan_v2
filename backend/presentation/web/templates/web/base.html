@@ -104,30 +104,29 @@
           "url": "{{ site_settings.og_url }}",
           "mainEntityOfPage": {"@id": "{{ site_settings.og_url }}/about/#profilepage"},
           "jobTitle": [
-            "AI Developer",
-            "Mobile Developer (Flutter)",
-            "Full-Stack Developer",
+            "Voice AI Engineer",
+            "AI Engineer",
             "AI EdTech Specialist · Founder of UzExam and Edustats",
-            "AI dasturchi · Mobil dasturchi · Full-stack dasturchi",
-            "Сунъий интеллект дастурчи · Мобил дастурчи · Фулл-стек дастурчи",
-            "AI разработчик · Мобильный разработчик · Full-stack разработчик"
+            "Voice AI Engineer · AI dasturchi",
+            "Voice AI Engineer · Сунъий интеллект дастурчи",
+            "Voice AI Engineer · AI-разработчик"
           ],
           "hasOccupation": [
             {
               "@type": "Occupation",
-              "name": "AI Developer",
+              "name": "Voice AI Engineer",
               "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
-              "skills": "AI-agent orchestration, AI mentors, AI-assisted engineering, LLM product development"
+              "skills": "Real-time AI voice assistants, audio streaming over WebSockets and Socket.IO, turn-taking, echo prevention, LLM APIs (Claude, Gemini, OpenAI)"
             },
             {
               "@type": "Occupation",
-              "name": "Mobile Application Developer",
+              "name": "AI Engineer",
               "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
-              "skills": "Flutter, Dart, Clean Architecture, BLoC, iOS, Android, REST integrations"
+              "skills": "LLM integration, AI pipelines, vision-model content checks, AI-agent orchestration, AI-assisted engineering"
             },
             {
               "@type": "Occupation",
-              "name": "Full-Stack Developer",
+              "name": "Backend Engineer",
               "occupationLocation": {"@type": "Country", "name": "Uzbekistan"},
               "skills": "Python, Django, DRF, FastAPI, PostgreSQL, Redis, Nginx, Linux, CI/CD"
             },
@@ -155,9 +154,11 @@
             "addressCountry": "UZ"
           },
           "knowsAbout": [
+            "Voice AI", "Conversational AI", "Real-time Audio Streaming", "WebSockets", "Socket.IO",
+            "Large Language Models", "LLM Integration",
             "Artificial Intelligence", "EdTech", "UzExam", "Edustats", "Education Analytics",
             "Testing Platforms", "AI Mentors", "Student Progress Analytics", "Product Strategy",
-            "Flutter", "Dart", "Mobile Engineering", "iOS Development", "Android Development",
+            "Flutter", "Dart", "Kotlin", "iOS Development", "Android Development",
             "Python", "Django", "Backend Engineering", "Full-Stack Development", "REST API",
             "PostgreSQL", "Redis", "DevOps", "Linux Server Administration",
             "Telegram Bot Development", "aiogram", "FastAPI",
@@ -175,7 +176,7 @@
           "image": {
             "@type": "ImageObject",
             "url": "{{ request.scheme }}://{{ request.get_host }}{% if site_settings.about_image %}{{ site_settings.about_image.url }}{% else %}{{ site_settings.og_image.url }}{% endif %}",
-            "caption": "Jahongir Qo'ziboyev (Jayson Khan) — AI, mobile & full-stack developer, Tashkent, Uzbekistan"
+            "caption": "Jahongir Qo'ziboyev (Jayson Khan) — Voice AI Engineer, Tashkent, Uzbekistan"
           }{% endif %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url or site_settings.telegram_url %},
           "sameAs": [{% if site_settings.github_url %}"{{ site_settings.github_url }}"{% endif %}{% if site_settings.github_url and site_settings.linkedin_url %}, {% endif %}{% if site_settings.linkedin_url %}"{{ site_settings.linkedin_url }}"{% endif %}{% if site_settings.twitter_url and site_settings.linkedin_url %}, {% elif site_settings.twitter_url and site_settings.github_url %}, {% endif %}{% if site_settings.twitter_url %}"{{ site_settings.twitter_url }}"{% endif %}{% if site_settings.telegram_url %}{% if site_settings.github_url or site_settings.linkedin_url or site_settings.twitter_url %}, {% endif %}"{{ site_settings.telegram_url }}"{% endif %}]{% endif %}
         },

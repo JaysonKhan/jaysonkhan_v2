@@ -48,11 +48,12 @@ class CareerRefreshTest(TestCase):
         current = Experience.objects.get(company_en="Consort Group LLC")
         self.assertEqual(current.start_date, date(2026, 6, 1))
         self.assertTrue(current.is_current)
-        self.assertIn("Growz and Bizon", current.description_en)
+        self.assertEqual(current.position_en, "Voice AI Engineer")
+        self.assertIn("voice AI agronomist", current.description_en)
         aiba = Experience.objects.get(company_en="AI Business Assistant (AIBA)")
         self.assertEqual(aiba.end_date, date(2025, 11, 30))
 
-    def test_both_english_resumes_are_downloadable_on_home_and_about_in_all_locales(self):
+    def test_voice_ai_resumes_are_downloadable_on_home_and_about_in_all_locales(self):
         settings = SiteSettings.load()
         settings.about_title_en = "About me"
         settings.about_title_xo = "Man haqimda"
@@ -63,8 +64,8 @@ class CareerRefreshTest(TestCase):
                 with self.subTest(lang=lang, page=page):
                     response = self.client.get(f"/{lang}/{page}")
                     self.assertEqual(response.status_code, 200)
-                    for role in ("software-engineer", "mobile-developer"):
-                        path = f"resumes/jahongir-kuziboev-{role}-en.pdf"
+                    for lang_code in ("en", "ru"):
+                        path = f"resumes/jahongir-kuziboev-voice-ai-engineer-{lang_code}.pdf"
                         self.assertContains(response, f'href="/static/{path}" download=')
                         with open(finders.find(path), "rb") as pdf:
                             self.assertEqual(pdf.read(5), b"%PDF-")
@@ -86,3 +87,34 @@ class CareerRefreshTest(TestCase):
         self.assertEqual(settings.about_description_xo,
                          "Man quraman. 167k+ ochiq savol va 39k+ foydalanuvchi, 54k+ auditoriya.")
         self.assertEqual(row.description_xo, "167k+ ochiq savol, 208 faol OTM va 126 OTM.")
+
+    def test_voice_ai_title_refresh_swaps_only_role_wording(self):
+        settings = SiteSettings.load()
+        settings.about_description_xo = ("Man Jayson Khan — Xorazmdan chiqqan AI, mobil va full-stack dasturchi, "
+                                         "AI EdTech founder.")
+        settings.hero_eyebrow_xo = "AI · Mobil · Full-stack dasturchi · UzExam · EduStats · O'zbekiston"
+        settings.save()
+        Experience.objects.all().delete()
+        consort = Experience.objects.create(
+            company="Consort Group LLC", position_xo="Mobile Developer", position_en="Mobile Developer",
+            start_date=date(2026, 6, 1), is_current=True,
+        )
+        uic = Experience.objects.create(
+            company="UIC Group", position_xo="Flutter Mobile Engineer", start_date=date(2023, 9, 1),
+        )
+        custom = Experience.objects.create(
+            company="AI Business Assistant (AIBA)", position_xo="Mobile Team Lead — AI Business Assistant",
+            start_date=date(2025, 8, 1),
+        )
+        migration = import_module("portfolio.migrations.0025_voice_ai_engineer_titles")
+        for _ in range(2):  # repeatable
+            migration.refresh_titles(apps, SimpleNamespace(connection=connection))
+        settings.refresh_from_db()
+        for row in (consort, uic, custom):
+            row.refresh_from_db()
+        self.assertEqual(settings.about_description_xo,
+                         "Man Jayson Khan — Xorazmdan chiqqan Voice AI Engineer, AI EdTech founder.")
+        self.assertEqual(settings.hero_eyebrow_xo, "Voice AI Engineer · UzExam · EduStats · O'zbekiston")
+        self.assertEqual((consort.position_xo, consort.position_en), ("Voice AI Engineer", "Voice AI Engineer"))
+        self.assertEqual(uic.position_xo, "Software Engineer")
+        self.assertEqual(custom.position_xo, "Mobile Team Lead — AI Business Assistant")
