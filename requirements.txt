@@ -45,3 +45,9 @@ tzdata==2025.3
 typing_extensions==4.15.0
 django-modeltranslation>=0.18,<1.0
 django-rosetta>=0.10,<1.0
+
+# Voice agent demo relay — ASGI, separate systemd service `jaysonkhan-voice`
+# (Gunicorn sync workers can't hold WebSockets; Django still serves the page)
+starlette==1.10.0
+uvicorn==0.54.0
+websockets==17.4

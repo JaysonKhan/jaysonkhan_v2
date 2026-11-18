@@ -629,3 +629,192 @@ msgstr "Qisqartirish"
 #: presentation/web/templates/web/partials/resume_downloads.html
 msgid "English · 2 pages each"
 msgstr "Ingliz tilida · har biri 2 bet"
+
+#: presentation/web/templates/web/base.html
+msgid "Demo"
+msgstr "Demo"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Voice agent demo"
+msgstr "Ovozli agent demosi"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Live demo"
+msgstr "Jonli demo"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Talk to my <span class=\"serif-i\">voice</span> agent."
+msgstr "Mening <span class=\"serif-i\">ovozli</span> agentim bilan gaplashing."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "It listens, answers out loud and stops the moment you interrupt. Every answer shows how fast it came."
+msgstr "U tinglaydi, ovoz chiqarib javob beradi va gapini bo'lsangiz darhol to'xtaydi. Har bir javob qancha tez kelgani ko'rsatiladi."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Press Start call and say hello"
+msgstr "«Qo'ng'iroqni boshlash»ni bosing va salom bering"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Start call"
+msgstr "Qo'ng'iroqni boshlash"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Who is talking, over the last 10 seconds"
+msgstr "So'nggi 10 soniyada kim gapirdi"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Transcript"
+msgstr "Suhbat matni"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "What you and the agent say shows up here."
+msgstr "Siz va agent aytgan gaplar shu yerda chiqadi."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Response time per turn"
+msgstr "Har javobning tezligi"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Turn"
+msgstr "Navbat"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Total"
+msgstr "Jami"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Turn detector"
+msgstr "Navbat detektori"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Model"
+msgstr "Model"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Each answer adds a row: from the end of your speech to the agent's first sound."
+msgstr "Har javob bitta qator qo'shadi: gapingiz tugagan paytdan agentning birinchi tovushigacha."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "How it works"
+msgstr "Qanday ishlaydi"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "The hard parts, <span class=\"serif-i\">measured</span>."
+msgstr "Qiyin joylari <span class=\"serif-i\">o'lchab</span> ko'rsatilgan."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Streaming"
+msgstr "Oqim"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Barge-in"
+msgstr "Gapni bo'lish"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Response time"
+msgstr "Javob tezligi"
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Your microphone streams to a Python server over a WebSocket in 20 ms frames, and the reply streams back the same way."
+msgstr "Mikrofoningiz Python serverga WebSocket orqali 20 ms lik bo'laklarda oqib boradi, javob ham xuddi shunday qaytadi."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Talk over the agent and it goes quiet at once. It also forgets the part of its answer you didn't hear."
+msgstr "Agent gapirayotganda gapirsangiz, u darhol jim bo'ladi. Javobining siz eshitmagan qismini esa unutadi."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for."
+msgstr "Serverda o'lchanadi: gapingizning so'nggi lahzasidan agent ovozining birinchi baytigacha. Shundan yarim soniyasi navbat detektori kutadigan pauza."
+
+#: presentation/web/templates/web/voice_agent_demo.html
+#, python-format
+msgid "Speech model: OpenAI gpt-realtime-2.1-mini. One call lasts up to %(minutes)s minutes. Use headphones so the agent doesn't hear itself."
+msgstr "Nutq modeli: OpenAI gpt-realtime-2.1-mini. Bitta qo'ng'iroq %(minutes)s daqiqagacha davom etadi. Agent o'zini eshitmasligi uchun quloqchin taqing."
+
+#: presentation/web/views.py
+msgid "A live real-time voice agent: talk to it in your browser, interrupt it at any moment and see how fast every answer arrives."
+msgstr "Jonli, real vaqtda ishlaydigan ovozli agent: brauzerda u bilan gaplashing, istalgan payt gapini bo'ling va har bir javob qancha tez kelganini ko'ring."
+
+#: presentation/web/views.py
+msgid "Connecting…"
+msgstr "Ulanmoqda…"
+
+#: presentation/web/views.py
+msgid "Listening"
+msgstr "Tinglayapti"
+
+#: presentation/web/views.py
+msgid "You're talking"
+msgstr "Siz gapiryapsiz"
+
+#: presentation/web/views.py
+msgid "Thinking"
+msgstr "O'ylayapti"
+
+#: presentation/web/views.py
+msgid "Agent is talking"
+msgstr "Agent gapiryapti"
+
+#: presentation/web/views.py
+msgid "Agent stopped for you"
+msgstr "Agent sizga yo'l berdi"
+
+#: presentation/web/views.py
+msgid "Call ended"
+msgstr "Qo'ng'iroq tugadi"
+
+#: presentation/web/views.py
+msgid "End call"
+msgstr "Qo'ng'iroqni tugatish"
+
+#: presentation/web/views.py
+msgid "Agent"
+msgstr "Agent"
+
+#: presentation/web/views.py
+msgid "Start a call to see who has the floor"
+msgstr "Kim gapirayotganini ko'rish uchun qo'ng'iroqni boshlang"
+
+#: presentation/web/views.py
+msgid "cut"
+msgstr "kesildi"
+
+#: presentation/web/views.py
+msgid "Median"
+msgstr "Mediana"
+
+#: presentation/web/views.py
+msgid "You cut in after {s} s. The agent went quiet {ms} ms after you started talking."
+msgstr "Siz {s} soniyadan keyin gapni bo'ldingiz. Agent siz gapira boshlaganingizdan {ms} ms o'tib jim bo'ldi."
+
+#: presentation/web/views.py
+msgid "Microphone access is blocked. Allow it in the address bar, then press Start call again."
+msgstr "Mikrofonga ruxsat yo'q. Manzil satrida ruxsat bering va «Qo'ng'iroqni boshlash»ni qayta bosing."
+
+#: presentation/web/views.py
+msgid "The connection closed. Press Start call to try again."
+msgstr "Aloqa uzildi. Qayta urinish uchun «Qo'ng'iroqni boshlash»ni bosing."
+
+#: presentation/web/views.py
+msgid "This page has expired. Reload it and try again."
+msgstr "Sahifa eskirgan. Uni yangilang va qayta urinib ko'ring."
+
+#: presentation/web/views.py
+msgid "Two calls are already running. Try again in a few minutes."
+msgstr "Hozir ikkita qo'ng'iroq ketyapti. Bir necha daqiqadan keyin urinib ko'ring."
+
+#: presentation/web/views.py
+msgid "You've used today's calls for this demo. Come back tomorrow."
+msgstr "Bugungi qo'ng'iroqlaringiz tugadi. Ertaga qayting."
+
+#: presentation/web/views.py
+msgid "The demo has used up today's minutes. Come back tomorrow."
+msgstr "Demo bugungi daqiqalarini sarflab bo'ldi. Ertaga qayting."
+
+#: presentation/web/views.py
+msgid "That was the {min}-minute limit for one call. Press Start call for another one."
+msgstr "Bitta qo'ng'iroq uchun {min} daqiqalik chegara tugadi. Yana gaplashish uchun «Qo'ng'iroqni boshlash»ni bosing."
+
+#: presentation/web/views.py
+msgid "The voice service isn't available right now. Try again later."
+msgstr "Ovoz xizmati hozir ishlamayapti. Keyinroq urinib ko'ring."

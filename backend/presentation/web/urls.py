@@ -11,6 +11,7 @@ from .views import (
     ProjectDetailView,
     ProjectListView,
     TeamView,
+    VoiceAgentDemoView,
 )
 
 # NOTE: tg-app/ (Telegram Mini App trampoline) is intentionally registered
@@ -28,4 +29,5 @@ urlpatterns = [
     path('blog/<slug:slug>/', BlogDetailView.as_view(), name='blog_detail'),
     path('team/', TeamView.as_view(), name='team'),
     path('contact/', ContactView.as_view(), name='contact'),
+    path('demos/voice-agent/', VoiceAgentDemoView.as_view(), name='voice_agent_demo'),
 ]

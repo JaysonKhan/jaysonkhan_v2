@@ -1,0 +1,27 @@
+# Voice agent demo relay — serves ONLY the WebSocket /demos/voice-agent/ws (ASGI).
+# The page itself is Django (jaysonkhan.service); Gunicorn sync workers can't hold WebSockets.
+# Installed and restarted by deploy.sh; nginx: `location = /demos/voice-agent/ws`.
+# Health: curl --unix-socket /run/jaysonkhan-voice/voice.sock http://localhost/demos/voice-agent/health
+[Unit]
+Description=jaysonkhan voice agent demo relay (uvicorn, WebSocket)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/jaysonkhan/backend
+# Read by systemd as root (the file is 600 deploy): OPENAI_API_KEY, DJANGO_SECRET_KEY, VOICE_*
+EnvironmentFile=/var/www/jaysonkhan/.env
+Environment="PATH=/var/www/jaysonkhan/backend/venv/bin" "PYTHONUNBUFFERED=1" "PYTHONDONTWRITEBYTECODE=1"
+RuntimeDirectory=jaysonkhan-voice
+ExecStart=/var/www/jaysonkhan/backend/venv/bin/uvicorn presentation.realtime.voice_agent:app \
+          --uds /run/jaysonkhan-voice/voice.sock --no-access-log
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,115 @@
+{% extends 'web/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Voice agent demo" %} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block og_title %}{% trans "Voice agent demo" %} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block twitter_title %}{% trans "Voice agent demo" %} | {{ site_settings.site_author }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<main class="voice-demo">
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">{% trans "Live demo" %}</span>
+            {% trans 'Talk to my <span class="serif-i">voice</span> agent.' as headline %}
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ headline|safe }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "It listens, answers out loud and stops the moment you interrupt. Every answer shows how fast it came." %}</p>
+        </div>
+    </section>
+
+    {# ========================== THE CALL ========================== #}
+    <section class="section voice-demo__stage">
+        <div class="container voice-demo__layout">
+            <div class="card voice-call">
+                <div class="voice-call__bar">
+                    <p class="display-sm voice-call__state" id="voice-state" data-state="idle" aria-live="polite">
+                        <span class="voice-call__dot" aria-hidden="true"></span><span id="voice-state-text">{% trans "Press Start call and say hello" %}</span>
+                    </p>
+                    <div class="voice-call__actions">
+                        <span class="voice-call__timer" id="voice-timer" hidden></span>
+                        <button type="button" class="btn btn-primary" id="voice-toggle">
+                            <span id="voice-toggle-text">{% trans "Start call" %}</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <canvas class="voice-call__floor" id="voice-floor" role="img" aria-label="{% trans 'Who is talking, over the last 10 seconds' %}"></canvas>
+                <p class="voice-call__error" id="voice-error" role="alert" hidden></p>
+            </div>
+
+            <div class="voice-demo__panels">
+                <section class="voice-panel" aria-labelledby="voice-transcript-title">
+                    <h2 class="mono-label" id="voice-transcript-title">{% trans "Transcript" %}</h2>
+                    <ol class="voice-transcript" id="voice-transcript">
+                        <li class="voice-transcript__empty">{% trans "What you and the agent say shows up here." %}</li>
+                    </ol>
+                </section>
+                <section class="voice-panel" aria-labelledby="voice-turns-title">
+                    <div class="voice-panel__head">
+                        <h2 class="mono-label" id="voice-turns-title">{% trans "Response time per turn" %}</h2>
+                        <p class="voice-median" id="voice-median"></p>
+                    </div>
+                    <div class="voice-turns-wrap">
+                        <table class="atable voice-turns">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans "Turn" %}</th>
+                                    <th scope="col">{% trans "Total" %}</th>
+                                    <th scope="col">{% trans "Turn detector" %}</th>
+                                    <th scope="col">{% trans "Model" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voice-turns">
+                                <tr class="voice-turns__empty">
+                                    <td colspan="4">{% trans "Each answer adds a row: from the end of your speech to the agent's first sound." %}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    {# ========================== HOW IT WORKS ========================== #}
+    <section class="section voice-how">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "How it works" %}</span>
+                    {% trans 'The hard parts, <span class="serif-i">measured</span>.' as how_headline %}
+                    <h2 class="display-md">{{ how_headline|safe }}</h2>
+                </div>
+            </div>
+            <div class="voice-how__body">
+                <div class="voice-how__rows">
+                    <div class="voice-how__row reveal">
+                        <h3 class="display-sm">{% trans "Streaming" %}</h3>
+                        <p>{% trans "Your microphone streams to a Python server over a WebSocket in 20 ms frames, and the reply streams back the same way." %}</p>
+                    </div>
+                    <div class="voice-how__row reveal">
+                        <h3 class="display-sm">{% trans "Barge-in" %}</h3>
+                        <p>{% trans "Talk over the agent and it goes quiet at once. It also forgets the part of its answer you didn't hear." %}</p>
+                    </div>
+                    <div class="voice-how__row reveal">
+                        <h3 class="display-sm">{% trans "Response time" %}</h3>
+                        <p>{% trans "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for." %}</p>
+                    </div>
+                </div>
+                <p class="voice-how__note">{% blocktrans with minutes=call_minutes %}Speech model: OpenAI gpt-realtime-2.1-mini. One call lasts up to {{ minutes }} minutes. Use headphones so the agent doesn't hear itself.{% endblocktrans %}</p>
+            </div>
+        </div>
+    </section>
+</main>
+{{ voice_config|json_script:"voice-config" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/voice-agent.js' %}" defer></script>
+{% endblock %}

@@ -2895,3 +2895,215 @@ html.tm-open {
 .proj-card__stats { flex-wrap: wrap; }
 .proj-stat__l { color: var(--fg-2); line-height: 1.45; max-width: 160px; }
 .proj-card__year { color: var(--fg-3); }
+
+/* ════════════════════════ VOICE AGENT DEMO (/demos/voice-agent/) ════════════════════════
+   Live call card (state, floor canvas), transcript + per-turn latency table, how-it-works rows.
+   Floor canvas colors are read from these same tokens by static/js/voice-agent.js. */
+.voice-demo__stage {
+  padding-top: 24px;
+}
+.voice-demo__layout {
+  display: grid;
+  gap: 48px;
+}
+.voice-call {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 3vw, 32px);
+}
+.voice-call__bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.voice-call__state {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+.voice-call__dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--line-3);
+}
+.voice-call__state[data-state="listening"] .voice-call__dot {
+  box-shadow: inset 0 0 0 3px var(--fg-1);
+}
+.voice-call__state[data-state="user_speaking"] .voice-call__dot {
+  background: var(--fg-0);
+  box-shadow: none;
+}
+.voice-call__state[data-state="thinking"] .voice-call__dot {
+  box-shadow: inset 0 0 0 3px var(--accent-2);
+}
+.voice-call__state[data-state="agent_speaking"] .voice-call__dot {
+  background: var(--accent-2);
+  box-shadow: none;
+}
+.voice-call__state[data-state="interrupted"] .voice-call__dot {
+  background: var(--accent);
+  box-shadow: none;
+}
+.voice-call__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.voice-call__timer {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--fg-2);
+}
+.voice-call__floor {
+  display: block;
+  width: 100%;
+  height: 220px;
+}
+.voice-call__error {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--bad);
+  border-radius: var(--r-md);
+  background: color-mix(in oklch, var(--bad) 12%, transparent);
+  color: var(--fg-0);
+}
+.voice-demo__panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+.voice-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+.voice-panel h2 {
+  margin: 0;
+}
+.voice-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.voice-median {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+.voice-median strong {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+.voice-transcript {
+  display: grid;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.voice-transcript__line,
+.voice-transcript__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-1);
+}
+.voice-transcript__empty {
+  color: var(--fg-3);
+}
+.voice-transcript__line--agent .mono-label {
+  color: var(--accent-2);
+}
+.voice-transcript__cut {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.voice-transcript__text {
+  flex-basis: 100%;
+  color: var(--fg-1);
+}
+.voice-turns-wrap {
+  overflow-x: auto;
+}
+.voice-turns tbody tr {
+  cursor: default;
+}
+.voice-turns td {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.voice-turns th:not(:first-child),
+.voice-turns td:not(:first-child) {
+  text-align: right;
+}
+.voice-turns .voice-turns__total {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+.voice-turns .voice-turns__empty td,
+.voice-turns .voice-turns__note td {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  white-space: normal;
+  color: var(--fg-3);
+}
+.voice-turns .voice-turns__note td {
+  padding-top: 0;
+  color: var(--fg-2);
+}
+.voice-how__body {
+  display: grid;
+  gap: 32px;
+}
+.voice-how__row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line-1);
+}
+.voice-how__row h3,
+.voice-how__row p {
+  margin: 0;
+}
+.voice-how__row p {
+  max-width: 64ch;
+  color: var(--fg-1);
+}
+.voice-how__note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-3);
+}
+@media (max-width: 900px) {
+  .voice-demo__panels {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .voice-how__row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .voice-call__floor {
+    height: 180px;
+  }
+  .voice-call__actions .btn {
+    min-height: 44px;
+  }
+}

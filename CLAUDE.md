@@ -44,10 +44,13 @@ jaysonkhan_v2/
 │   │   ├── interactions/     TelegramProfile, Comment (generic FK), Like, Reaction
 │   │   ├── servermonitor/    psutil metrics + Telegram /status, /tariff, /logs
 │   │   ├── telegram/         Telegram bot helpers / webhook glue
-│   │   └── ops/              ad-hoc ops/cron utilities
+│   │   ├── ops/              ad-hoc ops/cron utilities
+│   │   └── demos/            live demos — voice_agent/ (framework-free: session, latency,
+│   │                         limits, tokens) + its tests + `manage.py voice_bench`
 │   ├── presentation/         Delivery layer
 │   │   ├── api/              DRF ViewSets + Serializers (DefaultRouter)
 │   │   │                     Full + lightweight "List" serializers for infinite scroll
+│   │   ├── realtime/         ASGI (Starlette) — ONLY the voice demo WebSocket, own systemd unit
 │   │   └── web/              SSR class-based views
 │   │       └── templates/web/  base.html, home, projects, blog, contact, partials
 │   ├── locale/               .po/.mo (xo, uz, ru, en)
@@ -81,6 +84,15 @@ jaysonkhan_v2/
 - **i18n** — 14 models registered with `django-modeltranslation` (incl. SiteSettings proxies), real per-language URLs, `hreflang` alternates, plus `Person.alternateName` (10 ism varianti) for SEO.
 - **AI-bot policy** — opposite of EduStats: `robots.txt` BLOCKS AI bots here (not allow).
 - **IndexNow (Bing/Yandex)** — key file `/<INDEXNOW_KEY>.txt` (`core.views.indexnow_key`; the key is public by design). `manage.py indexnow` follows the sitemap and submits only the URLs whose content fingerprint changed since the last accepted run (`ops.IndexNowUrl`; `--limit` 100 = first-run cap, `--dry-run`, `--all`). A rejected POST raises → FAILED `CronRun`, nothing recorded, next run retries (a first-day 403 `SiteVerificationNotCompleted` is expected). Server only — a local DB has other content, use `--dry-run`.
+- **Voice agent demo (2026-11-19)** — page `/<lang>/demos/voice-agent/` (Django, menu "Demo"); its WebSocket
+  `/demos/voice-agent/ws` is a SEPARATE ASGI process (`presentation/realtime/voice_agent.py`, systemd
+  `jaysonkhan-voice`, unit in `security/systemd/`, socket `/run/jaysonkhan-voice/voice.sock`) because
+  Gunicorn sync workers can't hold WebSockets — don't move it into Django views. It relays to the OpenAI
+  Realtime API (`gpt-realtime-2.1-mini`) on the owner's key: every call costs money, so the relay checks a
+  15-min HMAC token issued by the page (key derived from `DJANGO_SECRET_KEY`) and caps calls (2 at once,
+  5/IP/day, 180 s each, 60 min/day; `VOICE_*` env). Nginx: only that page gets `microphone=(self)`.
+  deploy.sh installs/restarts the unit and checks its health. Local: `runserver --insecure` + relay on :8765
+  (`dev.py` points the page there); offline upstream: `python -m demos.tests.fake_realtime`.
 - **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run
@@ -269,5 +281,10 @@ EMAIL_HOST EMAIL_PORT EMAIL_HOST_USER EMAIL_HOST_PASSWORD
 # Integrations
 WAKATIME_API_KEY                # fetch_wakatime cron (homepage widget)
 INDEXNOW_KEY                    # optional — a default key is baked into settings (public, served at /<key>.txt)
+
+# Voice agent demo relay (systemd jaysonkhan-voice reads the same .env)
+OPENAI_API_KEY                  # Realtime API — billed per call; use a project with a hard spend limit
+VOICE_MAX_CONCURRENT VOICE_CALLS_PER_IP_PER_DAY VOICE_MAX_CALL_SECONDS VOICE_MINUTES_PER_DAY  # 2 / 5 / 180 / 60
+VOICE_REALTIME_MODEL VOICE_REALTIME_VOICE VOICE_REASONING_EFFORT VOICE_VAD_SILENCE_MS             # optional
 
 ```

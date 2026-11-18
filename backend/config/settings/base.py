@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'telegram',
     'servermonitor',
     'ops',
+    'demos',  # live demos (voice agent); its WebSocket runs in presentation/realtime
 ]
 
 MIDDLEWARE = [
@@ -239,6 +240,13 @@ TELEGRAM_WEBHOOK_DOMAIN = env('TELEGRAM_WEBHOOK_DOMAIN', default='https://jayson
 # `manage.py indexnow` POSTs changed public URLs to api.indexnow.org.
 # The key is NOT a secret: it is published at /<key>.txt and only proves ownership.
 INDEXNOW_KEY = env('INDEXNOW_KEY', default='afc6d61ad91aed8e811f1e4d377e38e2')
+
+# ── Voice agent demo (apps/demos, page /<lang>/demos/voice-agent/) ───────────
+# The WebSocket is served by the separate ASGI relay (systemd jaysonkhan-voice),
+# which reads OPENAI_API_KEY and VOICE_* from the same .env. '' = same origin
+# /demos/voice-agent/ws (nginx routes it to the relay).
+VOICE_AGENT_WS_URL = env('VOICE_AGENT_WS_URL', default='')
+VOICE_MAX_CALL_SECONDS = env.int('VOICE_MAX_CALL_SECONDS', default=180)
 
 # REST Framework settings
 REST_FRAMEWORK = {

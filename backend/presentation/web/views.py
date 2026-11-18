@@ -10,6 +10,8 @@ from contact.spam_protection import (
 )
 from core.models import PageView
 from core.services import SiteSettingsService
+from demos.voice_agent.tokens import issue_token
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -17,6 +19,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.templatetags.static import static
 from django.template.defaultfilters import truncatewords
 from django.urls import reverse
 from django.utils.translation import get_language
@@ -570,3 +573,54 @@ class TgAppRouterView(View):
 
         # Default — home page
         return reverse('home')
+
+
+class VoiceAgentDemoView(TemplateView):
+    """Live voice agent demo. Django renders the page; the WebSocket is the ASGI relay's
+    (presentation/realtime/voice_agent.py). The page carries a short-lived call token."""
+
+    template_name = 'web/voice_agent_demo.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        minutes = max(1, settings.VOICE_MAX_CALL_SECONDS // 60)
+        context['call_minutes'] = minutes
+        context['meta_description'] = _(
+            'A live real-time voice agent: talk to it in your browser, interrupt it at any moment '
+            'and see how fast every answer arrives.'
+        )
+        context['voice_config'] = {
+            'token': issue_token(settings.SECRET_KEY),
+            'wsUrl': settings.VOICE_AGENT_WS_URL,
+            'workletUrl': static('js/voice-agent-worklets.js'),
+            'maxMinutes': minutes,
+            'text': {
+                'idle': _('Press Start call and say hello'),
+                'connecting': _('Connecting…'),
+                'listening': _('Listening'),
+                'user_speaking': _("You're talking"),
+                'thinking': _('Thinking'),
+                'agent_speaking': _('Agent is talking'),
+                'interrupted': _('Agent stopped for you'),
+                'ended': _('Call ended'),
+                'start': _('Start call'),
+                'end': _('End call'),
+                'you': _('You'),
+                'agent': _('Agent'),
+                'floor_empty': _('Start a call to see who has the floor'),
+                'cut': _('cut'),
+                'median': _('Median'),
+                'barge_in': _('You cut in after {s} s. The agent went quiet {ms} ms after you started talking.'),
+                'errors': {
+                    'mic_blocked': _('Microphone access is blocked. Allow it in the address bar, then press Start call again.'),
+                    'closed': _('The connection closed. Press Start call to try again.'),
+                    'bad_token': _('This page has expired. Reload it and try again.'),
+                    'busy': _('Two calls are already running. Try again in a few minutes.'),
+                    'ip_daily': _("You've used today's calls for this demo. Come back tomorrow."),
+                    'daily_budget': _("The demo has used up today's minutes. Come back tomorrow."),
+                    'time_up': _('That was the {min}-minute limit for one call. Press Start call for another one.'),
+                    'unavailable': _("The voice service isn't available right now. Try again later."),
+                },
+            },
+        }
+        return context

@@ -174,6 +174,15 @@ if $DEPLOY_JK; then
         sudo systemctl reload nginx"
     ok "  $JK_SERVICE restarted"
 
+    # ── Voice agent demo relay (ASGI WebSocket; unit file lives in the repo) ──
+    info "  Voice demo relay (jaysonkhan-voice)..."
+    remote "sudo install -m 644 $JK_DIR/security/systemd/jaysonkhan-voice.service /etc/systemd/system/jaysonkhan-voice.service && \
+        sudo systemctl daemon-reload && \
+        sudo systemctl enable --quiet jaysonkhan-voice && \
+        sudo systemctl restart jaysonkhan-voice" \
+        && ok "  jaysonkhan-voice restarted" \
+        || { warn "  jaysonkhan-voice failed — sudo journalctl -u jaysonkhan-voice -n 50"; ALL_OK=false; }
+
     # ── Server Monitor setup ─────────────────────────────────────────────────
     info "  Server Monitor: register bot commands..."
     remote "source $JK_VENV && \
@@ -228,6 +237,16 @@ if $DEPLOY_JK; then
             ok "  Health endpoint: OK"
         else
             warn "  Health endpoint: $HEALTH_CODE"
+        fi
+        # Voice demo relay: answers on its unix socket and has an OpenAI key.
+        VOICE_HEALTH=$(remote "curl -s --max-time 5 --unix-socket /run/jaysonkhan-voice/voice.sock http://localhost/demos/voice-agent/health" || echo "")
+        if [[ "$VOICE_HEALTH" == *'"configured":true'* ]]; then
+            ok "  Voice demo relay: ${DIM}$VOICE_HEALTH${RESET}"
+        elif [[ "$VOICE_HEALTH" == *'"ok":true'* ]]; then
+            warn "  Voice demo relay up, but OPENAI_API_KEY is missing in /var/www/jaysonkhan/.env"
+        else
+            warn "  Voice demo relay not answering — sudo journalctl -u jaysonkhan-voice -n 50"
+            ALL_OK=false
         fi
         # Server monitor crontab check — managed block must be present.
         CRON_BLOCK=$(remote "crontab -l 2>/dev/null | grep -c '^# JK_SERVERMONITOR_BEGIN$' || true")

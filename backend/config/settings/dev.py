@@ -17,3 +17,7 @@ SERVE_MEDIA = True
 
 # Lokal/test: bo'sh admin IP-ro'yxati panelni yopmaydi (prod'da yopadi — security_middleware).
 ADMIN_GATE_FAIL_CLOSED = False
+
+# Voice agent demo: runserver can't serve the WebSocket — run the relay next to it:
+#   cd backend && venv/bin/uvicorn presentation.realtime.voice_agent:app --port 8765
+VOICE_AGENT_WS_URL = env('VOICE_AGENT_WS_URL', default='ws://127.0.0.1:8765/demos/voice-agent/ws')

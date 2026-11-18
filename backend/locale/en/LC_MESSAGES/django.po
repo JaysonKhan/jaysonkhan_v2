@@ -458,3 +458,192 @@ msgstr "Show less"
 #: presentation/web/templates/web/partials/resume_downloads.html
 msgid "English · 2 pages each"
 msgstr "English · 2 pages each"
+
+#: presentation/web/templates/web/base.html
+msgid "Demo"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Voice agent demo"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Live demo"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Talk to my <span class=\"serif-i\">voice</span> agent."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "It listens, answers out loud and stops the moment you interrupt. Every answer shows how fast it came."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Press Start call and say hello"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Start call"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Who is talking, over the last 10 seconds"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Transcript"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "What you and the agent say shows up here."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Response time per turn"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Turn"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Total"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Turn detector"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Model"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Each answer adds a row: from the end of your speech to the agent's first sound."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "How it works"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "The hard parts, <span class=\"serif-i\">measured</span>."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Streaming"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Barge-in"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Response time"
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Your microphone streams to a Python server over a WebSocket in 20 ms frames, and the reply streams back the same way."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Talk over the agent and it goes quiet at once. It also forgets the part of its answer you didn't hear."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for."
+msgstr ""
+
+#: presentation/web/templates/web/voice_agent_demo.html
+#, python-format
+msgid "Speech model: OpenAI gpt-realtime-2.1-mini. One call lasts up to %(minutes)s minutes. Use headphones so the agent doesn't hear itself."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "A live real-time voice agent: talk to it in your browser, interrupt it at any moment and see how fast every answer arrives."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Connecting…"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Listening"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "You're talking"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Thinking"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Agent is talking"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Agent stopped for you"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Call ended"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "End call"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Agent"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Start a call to see who has the floor"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "cut"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Median"
+msgstr ""
+
+#: presentation/web/views.py
+msgid "You cut in after {s} s. The agent went quiet {ms} ms after you started talking."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Microphone access is blocked. Allow it in the address bar, then press Start call again."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "The connection closed. Press Start call to try again."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "This page has expired. Reload it and try again."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "Two calls are already running. Try again in a few minutes."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "You've used today's calls for this demo. Come back tomorrow."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "The demo has used up today's minutes. Come back tomorrow."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "That was the {min}-minute limit for one call. Press Start call for another one."
+msgstr ""
+
+#: presentation/web/views.py
+msgid "The voice service isn't available right now. Try again later."
+msgstr ""
