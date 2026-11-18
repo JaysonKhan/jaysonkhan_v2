@@ -44,10 +44,12 @@ class SecurityHeadersMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        # Permissions-Policy — disable dangerous browser APIs
-        response['Permissions-Policy'] = (
+        # Permissions-Policy — disable dangerous browser APIs. setdefault: a view may
+        # grant one feature to itself (the voice demo page allows the microphone).
+        response.setdefault(
+            'Permissions-Policy',
             'camera=(), microphone=(), geolocation=(), payment=(), '
-            'usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
+            'usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
         )
 
         # Cross-Origin headers

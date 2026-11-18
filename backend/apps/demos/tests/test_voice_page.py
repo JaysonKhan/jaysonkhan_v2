@@ -47,3 +47,10 @@ class VoiceAgentDemoPageTest(TestCase):
             demo_url = reverse("voice_agent_demo")
         self.assertEqual(demo_url, "/en/demos/voice-agent/")
         self.assertEqual(html.count(f'href="{demo_url}"'), 2)  # desktop menu + mobile menu
+
+    def test_only_the_demo_page_may_use_the_microphone(self):
+        with translation.override("en"):
+            demo = self.client.get(reverse("voice_agent_demo"))
+            about = self.client.get(reverse("about"))
+        self.assertIn("microphone=(self)", demo["Permissions-Policy"])
+        self.assertIn("microphone=()", about["Permissions-Policy"])

@@ -580,6 +580,16 @@ class VoiceAgentDemoView(TemplateView):
     (presentation/realtime/voice_agent.py). The page carries a short-lived call token."""
 
     template_name = 'web/voice_agent_demo.html'
+    # The only page allowed to use the microphone (nginx sends the same value for this path).
+    PERMISSIONS_POLICY = (
+        'camera=(), microphone=(self), geolocation=(), payment=(), '
+        'usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
+    )
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        response['Permissions-Policy'] = self.PERMISSIONS_POLICY  # SecurityHeadersMiddleware keeps it
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
