@@ -10,6 +10,7 @@ from contact.spam_protection import (
 )
 from core.models import PageView
 from core.services import SiteSettingsService
+from demos.voice_agent.config import VoiceAgentSettings
 from demos.voice_agent.tokens import issue_token
 from django.conf import settings
 from django.contrib import messages
@@ -593,8 +594,10 @@ class VoiceAgentDemoView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        minutes = max(1, settings.VOICE_MAX_CALL_SECONDS // 60)
+        voice = VoiceAgentSettings.from_env()  # the relay reads the same VOICE_* variables
+        minutes = max(1, voice.max_call_seconds // 60)
         context['call_minutes'] = minutes
+        context['vad_pause_ms'] = voice.vad_silence_ms
         context['meta_description'] = _(
             'A live real-time voice agent: talk to it in your browser, interrupt it at any moment '
             'and see how fast every answer arrives.'

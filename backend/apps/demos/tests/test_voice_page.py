@@ -40,6 +40,7 @@ class VoiceAgentDemoPageTest(TestCase):
             html = self.client.get(reverse("voice_agent_demo")).content.decode()
         self.assertIn("Начать звонок", html)
         self.assertEqual(self.config(html)["text"]["listening"], "Слушает")
+        self.assertIn("Из них 400 мс детектор реплики", html)  # the pause comes from VOICE_VAD_SILENCE_MS
 
     def test_every_page_links_to_the_demo_from_the_menu(self):
         with translation.override("en"):

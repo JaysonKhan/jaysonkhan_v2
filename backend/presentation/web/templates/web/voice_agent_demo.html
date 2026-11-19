@@ -99,7 +99,7 @@
                     </div>
                     <div class="voice-how__row reveal">
                         <h3 class="display-sm">{% trans "Response time" %}</h3>
-                        <p>{% trans "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for." %}</p>
+                        <p>{% blocktrans with pause=vad_pause_ms %}Measured on the server, from the last moment of your speech to the first byte of the agent's audio. {{ pause }} ms of it is the silence the turn detector waits for before it decides you are done.{% endblocktrans %}</p>
                     </div>
                 </div>
                 <p class="voice-how__note">{% blocktrans with minutes=call_minutes %}Speech model: OpenAI gpt-realtime-2.1-mini. One call lasts up to {{ minutes }} minutes. Use headphones so the agent doesn't hear itself.{% endblocktrans %}</p>

@@ -723,8 +723,9 @@ msgid "Talk over the agent and it goes quiet at once. It also forgets the part o
 msgstr "Agent gapirayotganda gapirsangiz, u darhol jim bo'ladi. Javobining siz eshitmagan qismini esa unutadi."
 
 #: presentation/web/templates/web/voice_agent_demo.html
-msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for."
-msgstr "Serverda o'lchanadi: gapingizning so'nggi lahzasidan agent ovozining birinchi baytigacha. Shundan yarim soniyasi navbat detektori kutadigan pauza."
+#, python-format
+msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. %(pause)s ms of it is the silence the turn detector waits for before it decides you are done."
+msgstr "Serverda o'lchanadi: gapingizning so'nggi lahzasidan agent ovozining birinchi baytigacha. Shundan %(pause)s ms navbat detektori gapingiz tugaganini aniqlash uchun kutadigan jimlik."
 
 #: presentation/web/templates/web/voice_agent_demo.html
 #, python-format

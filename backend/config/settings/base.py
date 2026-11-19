@@ -243,10 +243,10 @@ INDEXNOW_KEY = env('INDEXNOW_KEY', default='afc6d61ad91aed8e811f1e4d377e38e2')
 
 # ── Voice agent demo (apps/demos, page /<lang>/demos/voice-agent/) ───────────
 # The WebSocket is served by the separate ASGI relay (systemd jaysonkhan-voice),
-# which reads OPENAI_API_KEY and VOICE_* from the same .env. '' = same origin
+# which reads OPENAI_API_KEY and VOICE_* from the same .env (the page view reads the
+# same VOICE_* via demos.voice_agent.config). '' = same origin
 # /demos/voice-agent/ws (nginx routes it to the relay).
 VOICE_AGENT_WS_URL = env('VOICE_AGENT_WS_URL', default='')
-VOICE_MAX_CALL_SECONDS = env.int('VOICE_MAX_CALL_SECONDS', default=180)
 
 # REST Framework settings
 REST_FRAMEWORK = {

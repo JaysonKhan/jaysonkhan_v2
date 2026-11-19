@@ -722,8 +722,9 @@ msgid "Talk over the agent and it goes quiet at once. It also forgets the part o
 msgstr "Заговорите поверх агента, и он сразу замолчит. А ту часть ответа, которую вы не услышали, он забудет."
 
 #: presentation/web/templates/web/voice_agent_demo.html
-msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. Half a second of it is the pause the turn detector waits for."
-msgstr "Измеряется на сервере: от последнего момента вашей речи до первого байта звука агента. Полсекунды из этого времени детектор реплики ждёт паузу."
+#, python-format
+msgid "Measured on the server, from the last moment of your speech to the first byte of the agent's audio. %(pause)s ms of it is the silence the turn detector waits for before it decides you are done."
+msgstr "Измеряется на сервере: от последнего момента вашей речи до первого байта звука агента. Из них %(pause)s мс детектор реплики ждёт тишину, прежде чем решить, что вы закончили."
 
 #: presentation/web/templates/web/voice_agent_demo.html
 #, python-format

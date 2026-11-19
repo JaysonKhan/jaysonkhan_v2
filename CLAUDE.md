@@ -93,6 +93,9 @@ jaysonkhan_v2/
   5/IP/day, 180 s each, 60 min/day; `VOICE_*` env). Nginx: only that page gets `microphone=(self)`.
   deploy.sh installs/restarts the unit and checks its health. Local: `runserver --insecure` + relay on :8765
   (`dev.py` points the page there); offline upstream: `python -m demos.tests.fake_realtime`.
+  Tuning (2026-11-19, `voice_bench` on the server, end of speech -> first audio byte): server_vad 500 ms ≈ 1.2 s,
+  **400 ms ≈ 1.08 s (default)**, 300 ms saves ~0.1 s more but risks cutting in on slow speakers;
+  semantic_vad high ≈ 1.7 s and reasoning `minimal` ≈ `low` — both no gain. Detector wait ≈ silence + ~280 ms.
 - **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run
@@ -286,5 +289,6 @@ INDEXNOW_KEY                    # optional — a default key is baked into setti
 OPENAI_API_KEY                  # Realtime API — billed per call; use a project with a hard spend limit
 VOICE_MAX_CONCURRENT VOICE_CALLS_PER_IP_PER_DAY VOICE_MAX_CALL_SECONDS VOICE_MINUTES_PER_DAY  # 2 / 5 / 180 / 60
 VOICE_REALTIME_MODEL VOICE_REALTIME_VOICE VOICE_REASONING_EFFORT VOICE_VAD_SILENCE_MS             # optional
+VOICE_TURN_DETECTION VOICE_VAD_EAGERNESS   # server_vad (default) | semantic_vad + low/medium/high/auto
 
 ```
