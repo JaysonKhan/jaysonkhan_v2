@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'ops',
     'demos',  # live demos (voice agent); its WebSocket runs in presentation/realtime
     'apptelemetry',  # My Services: opt-in telemetry + feedback for the owner's open-source apps
+    'proxies',  # owner-managed outbound proxy pool, published to the other sites on this server
 ]
 
 MIDDLEWARE = [
@@ -218,6 +219,8 @@ ADMIN_ALLOWED_IPS = [ip.strip() for ip in env.list('ADMIN_ALLOWED_IPS', default=
 # above at request time; shared by every site on the server.
 ADMIN_ALLOWED_IPS_FILE = env('ADMIN_ALLOWED_IPS_FILE', default='/var/www/shared/admin_allowed_ips.json')
 ADMIN_URL_PREFIX = env('ADMIN_URL', default='admin/')
+# Proxy pool published for UzExam / EduStats (proxies.services.export_shared).
+PROXY_POOL_FILE = env('PROXY_POOL_FILE', default='/var/www/shared/proxies.json')
 
 # ── File Upload Security ─────────────────────────────────────────────────────
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB
@@ -519,6 +522,24 @@ UNFOLD = {
                         "icon": "query_stats",
                         "link": f"{_A}apptelemetry/telemetryrecord/",
                         "permission": lambda r: r.user.has_perm("apptelemetry.view_telemetryrecord"),
+                    },
+                ],
+            },
+            {
+                "title": "Proxy hovuzi",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Proxylar",
+                        "icon": "lan",
+                        "link": f"{_A}proxies/proxy/",
+                        "permission": lambda r: r.user.has_perm("proxies.view_proxy"),
+                    },
+                    {
+                        "title": "TXT import",
+                        "icon": "upload_file",
+                        "link": f"{_A}proxies/proxy/import/",
+                        "permission": lambda r: r.user.has_perm("proxies.add_proxy"),
                     },
                 ],
             },

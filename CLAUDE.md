@@ -11,7 +11,8 @@ hokimiyatbot-proxy were removed; don't resurrect them. **One exception, by the
 owner's explicit decision on 2026-11-25:** "My Services" (`apps/apptelemetry`) —
 pages + an opt-in telemetry/feedback collector for the owner's OWN open-source
 apps (today only LiveBridge). It is not a revival of those services; anything
-beyond it still needs the owner's decision.
+beyond it still needs the owner's decision. **Second owner decision of the same day:** `apps/proxies` — the outbound
+proxy pool the owner manages here for the other sites on this server (admin only, no public page).
 
 ## 2. Tech stack
 
@@ -120,6 +121,15 @@ jaysonkhan_v2/
   purge_service_telemetry` (raw records > 180 days by `received_at`; installs + feedback kept), daily 04:27 in the
   cron block. Public figures are cached 5 min. Tests: `backend/venv/bin/python backend/manage.py test apptelemetry
   --settings=config.settings.dev`.
+- **Proxy pool (2026-11-25, `apps/proxies`)** — owner-managed outbound HTTP proxies for the OTHER sites on this server;
+  this site never sends traffic through them. Unfold admin "Proxy hovuzi": the list (switch on/off) and the TXT import
+  page `<ADMIN_URL>proxies/proxy/import/` (one `login:parol@ip:port` per line; a re-import refreshes passwords and never
+  re-enables a proxy the owner switched off; "replace" deletes the rest, except when the file has no readable line).
+  Every admin change republishes the active proxies to `PROXY_POOL_FILE` (default `/var/www/shared/proxies.json`, 0600,
+  handed to the directory owner: this service runs as root, the readers as `deploy`). The file format lives in the
+  `proxies/services.py` docstring; readers are per-repo copies (UzExam `apps/core/proxy_pool.py`), so keep it backward
+  compatible. Never log a proxy URL (it carries the provider's credentials). Tests: `backend/venv/bin/python
+  backend/manage.py test proxies --settings=config.settings.dev`.
 - **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run

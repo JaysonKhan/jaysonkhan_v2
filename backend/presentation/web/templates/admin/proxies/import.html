@@ -1,0 +1,64 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}Proxy import | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page fade-in" style="max-width: 860px; margin: 0 auto; padding: 28px 4px 80px;">
+
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">INFRA·001</span>
+                <span class="pe-dot"></span>
+                <span>Proxy hovuzi · jami {{ total_count }} · faol {{ active_count }}</span>
+            </div>
+            <h1 class="page-title">Proxy <em>import.</em></h1>
+            <p class="page-sub">Provayder bergan TXT faylni yuklang. Har qatorda bitta proxy: <span class="mono">login:parol@ip:port</span>.</p>
+        </div>
+        <div class="page-actions">
+            <a href="{% url 'admin:proxies_proxy_changelist' %}" class="btn">Ro'yxat</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: 26px;">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <p role="alert" style="color: var(--danger); margin: 0 0 18px;">{{ form.non_field_errors|join:' ' }}</p>
+                {% endif %}
+
+                <div style="margin-bottom: 22px;">
+                    <label class="label-mono" for="{{ form.file.id_for_label }}" style="display: block; margin-bottom: 8px;">{{ form.file.label }}</label>
+                    <input type="file" name="{{ form.file.html_name }}" id="{{ form.file.id_for_label }}" accept=".txt,text/plain">
+                    {% if form.file.errors %}<p role="alert" style="color: var(--danger); margin: 6px 0 0;">{{ form.file.errors|join:' ' }}</p>{% endif %}
+                </div>
+
+                <div style="margin-bottom: 22px;">
+                    <label class="label-mono" for="{{ form.text.id_for_label }}" style="display: block; margin-bottom: 8px;">{{ form.text.label }}</label>
+                    {{ form.text }}
+                </div>
+
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 26px;">
+                    {{ form.replace }}
+                    <div>
+                        <label class="label-mono" for="{{ form.replace.id_for_label }}" style="cursor: pointer;">{{ form.replace.label }}</label>
+                        <p style="color: var(--fg-3); font-size: 13px; margin: 4px 0 0;">Belgilanmasa, eski proxylar qoladi va faqat yangilari qo'shiladi.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Import qilish</button>
+            </form>
+        </div>
+        <div class="card-foot" style="padding: 16px 26px; color: var(--fg-3); font-size: 13px;">
+            Importdan keyin faol proxylar <span class="mono">{{ pool_file }}</span> fayliga yoziladi. UzExam va EduStats shu fayldan o'qiydi — deploy yoki restart kerak emas.
+        </div>
+    </div>
+</div>
+{% endblock %}
