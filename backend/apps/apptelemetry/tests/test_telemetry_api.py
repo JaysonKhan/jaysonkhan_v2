@@ -113,6 +113,20 @@ class TelemetryRecordRulesTest(ServicesTestCase):
         ]
         self.assertEqual(self.send(records).json(), {'accepted': 1, 'ignored': 9})
 
+    def test_session_languages_are_any_two_different_codes(self):
+        records = [
+            session_start(session=1, target='tr', my='en'),      # any pair
+            session_start(session=2, target='yue'),              # three-letter code; no myLang = Uzbek
+            session_start(session=3, target='English'),          # not a code
+            session_start(session=4, target='EN'),
+            session_start(session=5, target='de', my='de'),      # a language into itself
+            {**session_start(session=6), 'targetLang': 7},
+            {**session_start(session=7, target='en'), 'myLang': 'x'},
+        ]
+        self.assertEqual(self.send(records).json(), {'accepted': 2, 'ignored': 5})
+        stored = TelemetryRecord.objects.filter(type='session_start').order_by('session')
+        self.assertEqual([(r.session, r.my_lang, r.target_lang) for r in stored], [(1, 'en', 'tr'), (2, 'uz', 'yue')])
+
     def test_resending_a_batch_stores_nothing_twice(self):
         install_id = str(uuid.uuid4())
         records = [session_start(), turn(turn_id=1), turn(turn_id=2, minutes=8)]

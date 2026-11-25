@@ -27,7 +27,9 @@ MAX_CLOCK_SKEW = timedelta(days=1)
 
 DIRECTIONS = ('out', 'in')
 MODES = ('captions', 'incoming', 'bidirectional')
-TARGET_LANGS = ('en', 'ru')
+# Session languages: the codes of the client's language table (ISO 639-1, or 639-3 where there is none).
+LANG_RE = re.compile(r'[a-z]{2,3}')
+DEFAULT_MY_LANG = 'uz'
 OUT_COMMITS = ('manual', 'vad', 'turn_prediction')
 RATINGS = ('good', 'bad', 'none')
 ERROR_CODE_RE = re.compile(r'[a-z0-9_]{1,48}')
@@ -85,6 +87,12 @@ def _choice(record: dict, key: str, choices: tuple) -> str:
     value = record.get(key)
     if value not in choices:
         raise _Invalid(key)
+    return value
+
+
+def _lang(value) -> str:
+    if not isinstance(value, str) or not LANG_RE.fullmatch(value):
+        raise _Invalid('lang')
     return value
 
 
@@ -176,7 +184,11 @@ def _parse_record(record, now: datetime) -> dict:
 
     if kind == T.SESSION_START:
         fields['mode'] = _choice(record, 'mode', MODES)
-        fields['target_lang'] = _choice(record, 'targetLang', TARGET_LANGS)
+        # `myLang` is optional (clients older than the language choice always spoke Uzbek).
+        fields['my_lang'] = _lang(record.get('myLang', DEFAULT_MY_LANG))
+        fields['target_lang'] = _lang(record.get('targetLang'))
+        if fields['my_lang'] == fields['target_lang']:
+            raise _Invalid('lang')
         fields['out_commit'] = _choice(record, 'outCommit', OUT_COMMITS)
     elif kind == T.TURN:
         fields['direction'] = _choice(record, 'direction', DIRECTIONS)

@@ -24,8 +24,8 @@ class StatsTest(ServicesTestCase):
     def stats(self):
         return StatsService().public_stats('livebridge', use_cache=False)
 
-    def add_install(self, e2e_values, target='en', version='1.0.0+1', direction='out'):
-        records = [session_start(target=target)] + [
+    def add_install(self, e2e_values, target='en', version='1.0.0+1', direction='out', my=None):
+        records = [session_start(target=target, my=my)] + [
             turn(turn_id=i, e2e=value, direction=direction, minutes=9 - i % 5) for i, value in enumerate(e2e_values)
         ]
         response = self.send(records, str(uuid.uuid4()), app_version=version)
@@ -75,6 +75,15 @@ class StatsTest(ServicesTestCase):
         self.assertEqual([(p['source'], p['target']) for p in stats['pairs']], [('uz', 'ru')])
         self.assertEqual(stats['versions'], [{'version': '1.1.0+2', 'installs': 5, 'share': 71}])
         self.assertTrue(stats['breakdowns_hidden'])
+
+    def test_any_language_pair_is_broken_down_in_both_directions(self):
+        # The owner speaks Turkish, the other side German: `out` is Turkish -> German, `in` is German -> Turkish.
+        for _ in range(5):
+            self.add_install([800], target='de', my='tr')
+            self.add_install([900], target='de', my='tr', direction='in')
+        stats = self.stats()
+        self.assertEqual([(p['source'], p['target'], p['turns']) for p in stats['pairs']],
+                         [('de', 'tr', 5), ('tr', 'de', 5)])
 
     def test_errors_ratings_and_late_e2e(self):
         install_id = str(uuid.uuid4())

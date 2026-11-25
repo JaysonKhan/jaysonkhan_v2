@@ -25,7 +25,7 @@ from django.shortcuts import redirect, render
 from django.templatetags.static import static
 from django.template.defaultfilters import truncatewords
 from django.urls import reverse
-from django.utils.translation import get_language
+from django.utils.translation import get_language, get_language_info
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
@@ -661,6 +661,17 @@ class ServicesIndexView(TemplateView):
         return context
 
 
+def _language_label(code: str) -> str:
+    """A session language's name in the page language; the bare code when Django has no name for it."""
+    own = {'uz': _('Uzbek'), 'en': _('English'), 'ru': _('Russian')}
+    if code in own:
+        return str(own[code])
+    try:
+        return get_language_info(code)['name_translated']
+    except KeyError:
+        return code
+
+
 class LiveBridgeStatsView(TemplateView):
     """Public LiveBridge figures — aggregates of opt-in telemetry only (apptelemetry.services)."""
 
@@ -669,9 +680,8 @@ class LiveBridgeStatsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         stats = StatsService().public_stats(APP_LIVEBRIDGE)
-        languages = {'uz': _('Uzbek'), 'en': _('English'), 'ru': _('Russian')}
         for pair in stats['pairs']:
-            pair['label'] = f"{languages.get(pair['source'], pair['source'])} → {languages.get(pair['target'], pair['target'])}"
+            pair['label'] = f"{_language_label(pair['source'])} → {_language_label(pair['target'])}"
         context['stats'] = stats
         context['min_installs'] = MIN_INSTALLS
         context['window_days'] = WINDOW_DAYS

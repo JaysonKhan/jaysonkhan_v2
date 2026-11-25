@@ -86,7 +86,10 @@ class TelemetryRecord(models.Model):
 
     # session_start
     mode = models.CharField(max_length=16, blank=True)
-    target_lang = models.CharField(max_length=2, blank=True)
+    # The owner's and the remote participant's language (2–3 letter codes). Rows stored before my_lang existed
+    # have it empty, which means Uzbek.
+    my_lang = models.CharField(max_length=3, blank=True)
+    target_lang = models.CharField(max_length=3, blank=True)
     out_commit = models.CharField(max_length=16, blank=True)
 
     # session_end

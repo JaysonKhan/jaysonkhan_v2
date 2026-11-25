@@ -17,7 +17,7 @@ from django.utils import timezone
 
 from .models import AppFeedback, AppInstall, TelemetryRecord
 from .repositories import TelemetryRepository
-from .validation import parse_record
+from .validation import DEFAULT_MY_LANG, parse_record
 
 MIN_INSTALLS = 5
 WINDOW_DAYS = 30
@@ -111,10 +111,10 @@ class _Window:
         since = now - timedelta(days=WINDOW_DAYS)
         self.since = since
         # A session may have started shortly before the window.
-        targets = {
-            (install, session): lang
-            for install, session, lang in repository.records(
-                app, since - timedelta(days=1), (T.SESSION_START,), ('install_id', 'session', 'target_lang'),
+        languages = {
+            (install, session): (my or DEFAULT_MY_LANG, remote)
+            for install, session, my, remote in repository.records(
+                app, since - timedelta(days=1), (T.SESSION_START,), ('install_id', 'session', 'my_lang', 'target_lang'),
             )
         }
         self.turns: dict[tuple, dict] = {}
@@ -128,11 +128,12 @@ class _Window:
             if kind == T.E2E:
                 e2e_late[key] = e2e
                 continue
-            remote = targets.get((install, session))  # the remote participant's language
-            pair = None
-            if remote:
-                # out = the owner speaks Uzbek, translated into the remote's language; in = back into Uzbek
-                pair = ('uz', remote) if direction == 'out' else (remote, 'uz')
+            pair = languages.get((install, session))  # (the owner's language, the remote participant's)
+            if pair and pair[1]:
+                # out = the owner's speech translated into the remote's language; in = the other way round
+                pair = pair if direction == 'out' else (pair[1], pair[0])
+            else:
+                pair = None
             self.turns[key] = {
                 'install': install, 'e2e': e2e, 'model': model, 'version': version, 't': t, 'pair': pair,
             }

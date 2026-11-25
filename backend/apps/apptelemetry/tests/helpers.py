@@ -21,9 +21,12 @@ def recent(minutes: int = 0) -> str:
     return iso(datetime.now(dt_timezone.utc) - timedelta(minutes=minutes))
 
 
-def session_start(session=1, target='en', minutes=10):
-    return {'type': 'session_start', 't': recent(minutes), 'session': session, 'mode': 'bidirectional',
-            'targetLang': target, 'outCommit': 'manual'}
+def session_start(session=1, target='en', minutes=10, my=None):
+    record = {'type': 'session_start', 't': recent(minutes), 'session': session, 'mode': 'bidirectional',
+              'targetLang': target, 'outCommit': 'manual'}
+    if my:
+        record['myLang'] = my
+    return record
 
 
 def turn(session=1, turn_id=1, e2e=1350, direction='out', minutes=9, **extra):

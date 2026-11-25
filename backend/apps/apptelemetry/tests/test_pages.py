@@ -69,6 +69,13 @@ class PublicPagesTest(ServicesTestCase):
         self.assertNotIn('Uzbek → English', html)
         self.assertIn('Shown once at least 5 installs contribute.', html)
 
+    def test_other_language_pairs_are_named_in_the_page_language(self):
+        for _ in range(5):
+            self.send([session_start(target='de', my='tr'), turn()], str(uuid.uuid4()))
+        with translation.override('en'):
+            html = self.client.get(reverse('services_livebridge')).content.decode()
+        self.assertIn('Turkish → German', html)
+
     def test_index_renders_in_every_language_and_links_to_the_app(self):
         for lang in LANGS:
             with self.subTest(lang=lang), translation.override(lang):
