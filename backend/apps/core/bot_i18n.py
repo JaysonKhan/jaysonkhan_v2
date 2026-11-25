@@ -676,6 +676,10 @@ TEXTS: dict[str, dict[str, str]] = {
               "<b>Тема:</b> {subject}\n<b>Сообщение:</b> {body}",
     },
     'adm.contact_open': {'uz': "Admin panelda ko'rish", 'ru': "Открыть в админке"},
+    'adm.feedback_new': {
+        'uz': "{icon} Yangi fikr ({app}):\n<b>Baho:</b> {rating} · <b>Versiya:</b> {version}\n{body}",
+        'ru': "{icon} Новый отзыв ({app}):\n<b>Оценка:</b> {rating} · <b>Версия:</b> {version}\n{body}",
+    },
     'adm.btn_site': {'uz': "🌐 Sayt", 'ru': "🌐 Сайт"},
 
     # ── /lang ───────────────────────────────────────────────────────────────

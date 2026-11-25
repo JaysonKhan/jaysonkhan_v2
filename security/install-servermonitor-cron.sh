@@ -44,6 +44,8 @@ $BEGIN
 # SEO: IndexNow — changed sitemap URLs to Bing/Yandex (05:47, clear of the
 # EduStats 05:17 and UzExam 05:37 IndexNow runs on this server).
 47 5 * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run indexnow >> $LOG 2>&1
+# My Services: delete raw telemetry records older than 180 days (feedback is kept).
+27 4 * * *   cd $PROJECT_DIR/backend && DJANGO_SETTINGS_MODULE=$DJ_SETTINGS $PYTHON $MANAGE cron_run purge_service_telemetry >> $LOG 2>&1
 $END
 EOF
 )

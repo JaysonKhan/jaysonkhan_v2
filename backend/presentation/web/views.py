@@ -2,6 +2,8 @@ import json
 import logging
 from urllib.parse import urlencode
 
+from apptelemetry.models import APP_LIVEBRIDGE
+from apptelemetry.services import MIN_INSTALLS, WINDOW_DAYS, StatsService
 from blog.models import Post
 from blog.services import BlogRepository, BlogService
 from contact.services import ContactRepository, ContactService
@@ -636,4 +638,46 @@ class VoiceAgentDemoView(TemplateView):
                 },
             },
         }
+        return context
+
+
+# ── My Services (apps/apptelemetry) ─────────────────────────────────────────
+
+LIVEBRIDGE_GITHUB_URL = 'https://github.com/JaysonKhan/livebridge'
+
+
+class ServicesIndexView(TemplateView):
+    """"My Services": the owner's open-source apps (today: LiveBridge)."""
+
+    template_name = 'web/services_index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['livebridge_github_url'] = LIVEBRIDGE_GITHUB_URL
+        context['meta_description'] = _(
+            'Open-source apps I build and maintain, with live, anonymous usage figures: '
+            'how many people use them and how fast they work.'
+        )
+        return context
+
+
+class LiveBridgeStatsView(TemplateView):
+    """Public LiveBridge figures — aggregates of opt-in telemetry only (apptelemetry.services)."""
+
+    template_name = 'web/services_livebridge.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        stats = StatsService().public_stats(APP_LIVEBRIDGE)
+        languages = {'uz': _('Uzbek'), 'en': _('English'), 'ru': _('Russian')}
+        for pair in stats['pairs']:
+            pair['label'] = f"{languages.get(pair['source'], pair['source'])} → {languages.get(pair['target'], pair['target'])}"
+        context['stats'] = stats
+        context['min_installs'] = MIN_INSTALLS
+        context['window_days'] = WINDOW_DAYS
+        context['livebridge_github_url'] = LIVEBRIDGE_GITHUB_URL
+        context['meta_description'] = _(
+            'LiveBridge, a macOS real-time call interpreter between Uzbek and English or Russian: '
+            'installs, translation speed and quality from anonymous opt-in statistics.'
+        )
         return context

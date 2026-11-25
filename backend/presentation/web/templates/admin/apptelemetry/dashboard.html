@@ -1,0 +1,190 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}LiveBridge | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page fade-in" style="max-width: 1480px; margin: 0 auto; padding: 28px 4px 80px;" id="lb-dashboard">
+
+    {# ========================== HEADER ========================== #}
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">SVC·001</span>
+                <span class="pe-dot"></span>
+                <span>My Services · opt-in telemetriya · so'nggi 30 kun</span>
+            </div>
+            <h1 class="page-title">LiveBridge <em>ichkaridan.</em></h1>
+            <p class="page-sub">Faqat raqamlar: kechikish, xatolar, baholar. Bu sahifada 5-o'rnatish chegarasi yo'q — ommaviy sahifada esa bor.</p>
+        </div>
+        <div class="page-actions">
+            <a href="{% url 'services_livebridge' %}" class="btn" target="_blank" rel="noopener">Ommaviy sahifa</a>
+            <a href="{% url 'admin:apptelemetry_appfeedback_changelist' %}" class="btn btn-primary">Fikrlar ({{ stats.feedback_total }})</a>
+        </div>
+    </div>
+
+    {# ========================== KPI ========================== #}
+    <div class="jk-grid jk-grid-4" style="margin-bottom: 24px;">
+        <div class="kpi kpi-ink">
+            <div class="kpi-head"><span class="label-mono">O'rnatishlar</span></div>
+            <div class="kpi-num">{{ stats.installs_total }}</div>
+            <div class="kpi-foot"><span>Faol 7 / 30 kun</span><span class="mono">{{ stats.active_7 }} / {{ stats.active_30 }}</span></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-head"><span class="label-mono">E2E p50 / p95</span></div>
+            <div class="kpi-num">{{ stats.latency.p50|default_if_none:"—" }}<span class="unit">ms</span></div>
+            <div class="kpi-foot"><span>p95</span><span class="mono">{{ stats.latency.p95|default_if_none:"—" }} ms · {{ stats.latency.turns }} turn</span></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-head"><span class="label-mono">Xato / 100 turn</span></div>
+            <div class="kpi-num">{{ stats.errors_per_100|default_if_none:"—" }}</div>
+            <div class="kpi-foot"><span>Jami tarjima</span><span class="mono">{{ stats.turns_total }}</span></div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-head"><span class="label-mono">Yaxshi baho</span></div>
+            <div class="kpi-num">{{ stats.good_share|default_if_none:"—" }}<span class="unit">%</span></div>
+            <div class="kpi-foot"><span>good / bad / none</span><span class="mono">{{ stats.ratings.good }} / {{ stats.ratings.bad }} / {{ stats.ratings.none }}</span></div>
+        </div>
+    </div>
+
+    {# ========================== CHARTS ========================== #}
+    <div class="card" style="margin-bottom: 24px;">
+        <div class="card-head">
+            <h3>Kechikish <em style="font-style: italic;">/ kunlar</em></h3>
+            <span class="label-mono">E2E · P50 · P95 · MS</span>
+        </div>
+        <div class="card-body" style="padding: 22px 26px; height: 300px;"><canvas id="lb-chart-day" aria-label="E2E latency by day"></canvas></div>
+    </div>
+
+    <div class="jk-grid jk-grid-2" style="margin-bottom: 24px;">
+        <div class="card">
+            <div class="card-head"><h3>Tarjima modeli</h3><span class="label-mono">P50 · P95 · MS</span></div>
+            <div class="card-body" style="padding: 22px 26px; height: 280px;"><canvas id="lb-chart-model" aria-label="Latency by model"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Ilova versiyasi</h3><span class="label-mono">P50 · P95 · MS</span></div>
+            <div class="card-body" style="padding: 22px 26px; height: 280px;"><canvas id="lb-chart-version" aria-label="Latency by app version"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Xatolar</h3><span class="label-mono">KOD · SONI</span></div>
+            <div class="card-body" style="padding: 22px 26px; height: 280px;"><canvas id="lb-chart-errors" aria-label="Errors by code"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-head"><h3>Baholar</h3><span class="label-mono">GOOD · BAD · NONE</span></div>
+            <div class="card-body" style="padding: 22px 26px; height: 280px;"><canvas id="lb-chart-ratings" aria-label="Rating split"></canvas></div>
+        </div>
+    </div>
+
+    {# ========================== FEEDBACK ========================== #}
+    <div class="card">
+        <div class="card-head">
+            <h3>So'nggi fikrlar</h3>
+            <span class="label-mono">{{ stats.feedback_total }} TA</span>
+        </div>
+        <div class="card-body">
+            {% if stats.feedback %}
+            <table class="editorial-table">
+                <thead>
+                    <tr><th>Vaqt</th><th>Baho</th><th>Versiya</th><th>Til</th><th>Xabar</th></tr>
+                </thead>
+                <tbody>
+                    {% for fb in stats.feedback %}
+                    <tr>
+                        <td class="mono">{{ fb.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="mono">{{ fb.rating|default_if_none:"—" }}</td>
+                        <td class="mono">{{ fb.app_version|default:"—" }}</td>
+                        <td class="mono">{{ fb.ui_language|default:"—" }}</td>
+                        <td><a href="{% url 'admin:apptelemetry_appfeedback_change' fb.pk %}">{{ fb.message|truncatechars:140 }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty" style="margin: 22px;">Hali fikr yo'q.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{{ charts|json_script:"lb-charts" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    if (!window.Chart) { return; }
+    var data = JSON.parse(document.getElementById("lb-charts").textContent);
+    var probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+
+    // Chart.js can't parse oklch(): paint each XIVA INK token once and read it back as rgba().
+    function token(name, alpha) {
+        var value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        probe.clearRect(0, 0, 1, 1);
+        probe.fillStyle = value;
+        probe.fillRect(0, 0, 1, 1);
+        var px = probe.getImageData(0, 0, 1, 1).data;
+        return "rgba(" + px[0] + "," + px[1] + "," + px[2] + "," + (alpha === undefined ? 1 : alpha) + ")";
+    }
+    var data2 = token("--accent-2"), data2Soft = token("--accent-2", 0.35), accent = token("--accent");
+    var muted = token("--fg-3"), grid = token("--fg-4", 0.25);
+    Chart.defaults.color = muted;
+    Chart.defaults.borderColor = grid;
+    Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim() || "monospace";
+    Chart.defaults.maintainAspectRatio = false;
+
+    function latencyBars(id, rows) {
+        new Chart(document.getElementById(id), {
+            type: "bar",
+            data: {
+                labels: rows.map(function (r) { return r.label + " (" + r.turns + ")"; }),
+                datasets: [
+                    { label: "p50", data: rows.map(function (r) { return r.p50; }), backgroundColor: data2, hoverBackgroundColor: data2 },
+                    { label: "p95", data: rows.map(function (r) { return r.p95; }), backgroundColor: data2Soft, hoverBackgroundColor: data2Soft }
+                ]
+            },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    new Chart(document.getElementById("lb-chart-day"), {
+        type: "line",
+        data: {
+            labels: data.byDay.map(function (r) { return r.day.slice(5); }),
+            datasets: [
+                { label: "p50", data: data.byDay.map(function (r) { return r.p50; }), borderColor: data2, backgroundColor: data2, spanGaps: true, tension: 0.25 },
+                { label: "p95", data: data.byDay.map(function (r) { return r.p95; }), borderColor: accent, backgroundColor: accent, spanGaps: true, tension: 0.25 }
+            ]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+    latencyBars("lb-chart-model", data.byModel);
+    latencyBars("lb-chart-version", data.byVersion);
+
+    new Chart(document.getElementById("lb-chart-errors"), {
+        type: "bar",
+        data: {
+            labels: data.errors.map(function (r) { return r.code; }),
+            datasets: [
+                { label: "jami", data: data.errors.map(function (r) { return r.count; }), backgroundColor: data2, hoverBackgroundColor: data2 },
+                { label: "fatal", data: data.errors.map(function (r) { return r.fatal; }), backgroundColor: accent, hoverBackgroundColor: accent }
+            ]
+        },
+        options: { indexAxis: "y", scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    new Chart(document.getElementById("lb-chart-ratings"), {
+        type: "doughnut",
+        data: {
+            labels: ["good", "bad", "none"],
+            datasets: [{
+                data: [data.ratings.good, data.ratings.bad, data.ratings.none],
+                backgroundColor: [data2, accent, grid],
+                hoverBackgroundColor: [data2, accent, grid],
+                borderWidth: 0
+            }]
+        }
+    });
+})();
+</script>
+{% endblock %}

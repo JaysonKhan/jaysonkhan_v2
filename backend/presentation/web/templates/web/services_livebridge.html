@@ -1,0 +1,196 @@
+{% extends 'web/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "LiveBridge in numbers" %} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block og_title %}{% trans "LiveBridge in numbers" %} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block twitter_title %}{% trans "LiveBridge in numbers" %} | {{ site_settings.site_author }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<main class="svc">
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'services' %}" class="eyebrow page-hero__eyebrow fade-up">{% trans "My Services" %}</a>
+            {% trans 'LiveBridge, <span class="serif-i">in numbers</span>.' as headline %}
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ headline|safe }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "A macOS app that interprets a call between Uzbek and English or Russian as it happens. These figures come only from people who switched on anonymous statistics." %}</p>
+            <div class="svc-actions fade-up" style="animation-delay: .3s;">
+                <a href="{{ livebridge_github_url }}" class="btn btn-primary" target="_blank" rel="noopener">
+                    {% trans "Source code on GitHub" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {% if stats.empty %}
+    {# ========================== EMPTY STATE ========================== #}
+    <section class="section">
+        <div class="container">
+            <div class="card svc-empty" data-svc-empty>
+                <h2 class="display-sm">{% trans "No figures yet" %}</h2>
+                <p>{% trans "Nobody has shared statistics yet. As soon as the first installs send their numbers, they appear here." %}</p>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    {# ========================== USAGE ========================== #}
+    <section class="section svc-figures">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "Usage" %}</span>
+                    <h2 class="display-md">{% trans "Who uses it" %}</h2>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="installs">{{ stats.installs_total }}</span></div>
+                    <p class="stat-cell__label">{% trans "Installs in total" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="active7">{{ stats.active_7 }}</span></div>
+                    <p class="stat-cell__label">{% trans "Active in the last 7 days" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="active30">{{ stats.active_30 }}</span></div>
+                    <p class="stat-cell__label">{% trans "Active in the last 30 days" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="turns">{{ stats.turns_total }}</span></div>
+                    <p class="stat-cell__label">{% trans "Translated turns" %}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ========================== SPEED + QUALITY ========================== #}
+    <section class="section svc-figures">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% blocktrans with days=window_days %}Last {{ days }} days{% endblocktrans %}</span>
+                    {% trans 'Speed and <span class="serif-i">quality</span>' as speed_headline %}
+                    <h2 class="display-md">{{ speed_headline|safe }}</h2>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="p50">{{ stats.latency.p50|default_if_none:"—" }}</span>{% if stats.latency.p50 is not None %}<span class="stat-cell__suffix">ms</span>{% endif %}</div>
+                    <p class="stat-cell__label">{% trans "Median time to translated speech" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="p95">{{ stats.latency.p95|default_if_none:"—" }}</span>{% if stats.latency.p95 is not None %}<span class="stat-cell__suffix">ms</span>{% endif %}</div>
+                    <p class="stat-cell__label">{% trans "95 of every 100 turns are faster than this" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="errors">{{ stats.errors_per_100|default_if_none:"—" }}</span></div>
+                    <p class="stat-cell__label">{% trans "Errors per 100 turns" %}</p>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-cell__value"><span class="stat-cell__num" data-stat="good">{{ stats.good_share|default_if_none:"—" }}</span>{% if stats.good_share is not None %}<span class="stat-cell__suffix">%</span>{% endif %}</div>
+                    <p class="stat-cell__label">{% trans "Of rated turns marked good" %}</p>
+                </div>
+            </div>
+            <p class="svc-note">{% trans "Time to translated speech: from releasing the talk key to the first translated sound, measured by the app." %}</p>
+
+            <div class="svc-tables">
+                <section class="svc-panel" aria-labelledby="svc-pairs-title">
+                    <h3 class="mono-label" id="svc-pairs-title">{% trans "By language" %}</h3>
+                    {% if stats.pairs %}
+                    <div class="svc-table-wrap">
+                        <table class="atable svc-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans "Translation" %}</th>
+                                    <th scope="col">{% trans "Turns" %}</th>
+                                    <th scope="col">{% trans "Median" %}</th>
+                                    <th scope="col">p95</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pair in stats.pairs %}
+                                <tr>
+                                    <td>{{ pair.label }}</td>
+                                    <td>{{ pair.turns }}</td>
+                                    <td>{{ pair.p50|default_if_none:"—" }}{% if pair.p50 is not None %} ms{% endif %}</td>
+                                    <td>{{ pair.p95|default_if_none:"—" }}{% if pair.p95 is not None %} ms{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="svc-empty-line">{% blocktrans with n=min_installs %}Shown once at least {{ n }} installs contribute.{% endblocktrans %}</p>
+                    {% endif %}
+                </section>
+
+                <section class="svc-panel" aria-labelledby="svc-versions-title">
+                    <h3 class="mono-label" id="svc-versions-title">{% trans "App versions in use" %}</h3>
+                    {% if stats.versions %}
+                    <div class="svc-table-wrap">
+                        <table class="atable svc-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans "Version" %}</th>
+                                    <th scope="col">{% trans "Share of installs" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in stats.versions %}
+                                <tr>
+                                    <td>{{ row.version }}</td>
+                                    <td>{{ row.share }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="svc-empty-line">{% blocktrans with n=min_installs %}Shown once at least {{ n }} installs contribute.{% endblocktrans %}</p>
+                    {% endif %}
+                </section>
+            </div>
+
+            {% if stats.breakdowns_hidden and stats.pairs or stats.breakdowns_hidden and stats.versions %}
+            <p class="svc-note">{% blocktrans with n=min_installs %}Rows with fewer than {{ n }} installs are not shown.{% endblocktrans %}</p>
+            {% endif %}
+            <p class="svc-note">{% trans "Last updated" %}: <time datetime="{{ stats.last_updated|date:'c' }}">{{ stats.last_updated|date:"Y-m-d H:i" }}</time> (UTC+5)</p>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========================== WHAT IS SENT ========================== #}
+    <section class="section svc-privacy">
+        <div class="container">
+            <div class="section-head reveal">
+                <div class="section-head__titles">
+                    <span class="eyebrow">{% trans "Privacy" %}</span>
+                    {% trans 'What the app <span class="serif-i">sends</span>' as privacy_headline %}
+                    <h2 class="display-md">{{ privacy_headline|safe }}</h2>
+                </div>
+            </div>
+            <div class="svc-list">
+                <div class="svc-row reveal">
+                    <h3 class="display-sm">{% trans "Only if you agree" %}</h3>
+                    <p>{% trans "Statistics are off until you switch on “Share anonymous statistics” in the app. You can switch it off at any time." %}</p>
+                </div>
+                <div class="svc-row reveal">
+                    <h3 class="display-sm">{% trans "Numbers only" %}</h3>
+                    <p>{% trans "Timings, counts, error codes and your ratings. Never what was said, never audio, never device names or keys." %}</p>
+                </div>
+                <div class="svc-row reveal">
+                    <h3 class="display-sm">{% trans "A random id" %}</h3>
+                    <p>{% trans "Each install is a random number made by the app, not tied to your computer, account or network. Addresses are not stored with the statistics, and raw records are deleted after 180 days." %}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

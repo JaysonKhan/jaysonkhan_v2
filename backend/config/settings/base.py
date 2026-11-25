@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'servermonitor',
     'ops',
     'demos',  # live demos (voice agent); its WebSocket runs in presentation/realtime
+    'apptelemetry',  # My Services: opt-in telemetry + feedback for the owner's open-source apps
 ]
 
 MIDDLEWARE = [
@@ -488,6 +489,36 @@ UNFOLD = {
                         "permission": lambda r: r.user.has_perm(
                             "interactions.view_channelshare"
                         ),
+                    },
+                ],
+            },
+            {
+                "title": "My Services",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "LiveBridge dashboard",
+                        "icon": "monitoring",
+                        "link": f"{_A}apptelemetry/telemetryrecord/dashboard/",
+                        "permission": lambda r: r.user.has_perm("apptelemetry.view_telemetryrecord"),
+                    },
+                    {
+                        "title": "Fikrlar (feedback)",
+                        "icon": "rate_review",
+                        "link": f"{_A}apptelemetry/appfeedback/",
+                        "permission": lambda r: r.user.has_perm("apptelemetry.view_appfeedback"),
+                    },
+                    {
+                        "title": "O'rnatishlar",
+                        "icon": "devices",
+                        "link": f"{_A}apptelemetry/appinstall/",
+                        "permission": lambda r: r.user.has_perm("apptelemetry.view_appinstall"),
+                    },
+                    {
+                        "title": "Telemetriya yozuvlari",
+                        "icon": "query_stats",
+                        "link": f"{_A}apptelemetry/telemetryrecord/",
+                        "permission": lambda r: r.user.has_perm("apptelemetry.view_telemetryrecord"),
                     },
                 ],
             },

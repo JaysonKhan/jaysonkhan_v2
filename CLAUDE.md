@@ -7,7 +7,11 @@ Production: **https://jaysonkhan.com** — 4 languages (xo/uz/ru/en), SSR-first
 Django site with a small DRF API for infinite scroll, plus an admin panel
 with a psutil-based server monitor + owner-only Telegram bot (Django webhook,
 not polling). **Portfolio-only since 2026-05-31** — osint / botproxy /
-hokimiyatbot-proxy were removed; don't resurrect them.
+hokimiyatbot-proxy were removed; don't resurrect them. **One exception, by the
+owner's explicit decision on 2026-11-25:** "My Services" (`apps/apptelemetry`) —
+pages + an opt-in telemetry/feedback collector for the owner's OWN open-source
+apps (today only LiveBridge). It is not a revival of those services; anything
+beyond it still needs the owner's decision.
 
 ## 2. Tech stack
 
@@ -45,8 +49,10 @@ jaysonkhan_v2/
 │   │   ├── servermonitor/    psutil metrics + Telegram /status, /tariff, /logs
 │   │   ├── telegram/         Telegram bot helpers / webhook glue
 │   │   ├── ops/              ad-hoc ops/cron utilities
-│   │   └── demos/            live demos — voice_agent/ (framework-free: session, latency,
-│   │                         limits, tokens) + its tests + `manage.py voice_bench`
+│   │   ├── demos/            live demos — voice_agent/ (framework-free: session, latency,
+│   │   │                     limits, tokens) + its tests + `manage.py voice_bench`
+│   │   └── apptelemetry/     My Services — opt-in telemetry + feedback of the owner's
+│   │                         open-source apps (LiveBridge), aggregates, retention cmd
 │   ├── presentation/         Delivery layer
 │   │   ├── api/              DRF ViewSets + Serializers (DefaultRouter)
 │   │   │                     Full + lightweight "List" serializers for infinite scroll
@@ -96,6 +102,24 @@ jaysonkhan_v2/
   Tuning (2026-11-19, `voice_bench` on the server, end of speech -> first audio byte): server_vad 500 ms ≈ 1.2 s,
   **400 ms ≈ 1.08 s (default)**, 300 ms saves ~0.1 s more but risks cutting in on slow speakers;
   semantic_vad high ≈ 1.7 s and reasoning `minimal` ≈ `low` — both no gain. Detector wait ≈ silence + ~280 ms.
+- **My Services (2026-11-25, `apps/apptelemetry`)** — pages `/<lang>/services/` (menu "My Services", next to
+  "Demo") and `/<lang>/services/livebridge/` (the bare `/services/livebridge/` the app links to is redirected by
+  LocaleMiddleware). Ingestion API (non-localised, public, unauthenticated, CSRF-exempt DRF views without auth or
+  DRF throttles, `presentation/api/services_views.py`): `POST /api/services/v1/telemetry/` (202
+  `{accepted, ignored}`) and `POST /api/services/v1/feedback/` (201). The wire contract is NOT here: it lives in
+  the LiveBridge repo `docs/telemetry-api.md` (v1) — change it there first. Validation/clamping:
+  `apptelemetry/validation.py`; de-dup = unique (install, session, type, direction, turn_id, t), no turn = `turn_id=0`, `direction=''`;
+  lifetime turns live in `AppInstall.turns_count` (survive the purge). Rate limits on the Django cache
+  (`apptelemetry/ratelimit.py`: 60 req/address/h, 20 000 records/install/day, 5 feedback/address/h → 429 +
+  `Retry-After`). **Privacy rules:** never store a raw IP (only a daily-rotating salted HMAC in cache keys), no
+  bodies in logs, no cookies; public pages show aggregates only and a breakdown row only with ≥ 5 installs
+  (`MIN_INSTALLS`); feedback text, e-mails and per-install data are owner-only (admin). Owner side: unfold admin
+  "My Services" (read-only installs/records, feedback inbox) + dashboard `<ADMIN_URL>apptelemetry/telemetryrecord/dashboard/`
+  (Chart.js CDN; admin view = staff login + admin IP allowlist). New feedback → Telegram admin group via
+  `NotificationService.log_service_feedback` (message capped at 500 chars, no e-mail). Retention: `manage.py
+  purge_service_telemetry` (raw records > 180 days by `received_at`; installs + feedback kept), daily 04:27 in the
+  cron block. Public figures are cached 5 min. Tests: `backend/venv/bin/python backend/manage.py test apptelemetry
+  --settings=config.settings.dev`.
 - **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run
@@ -180,7 +204,7 @@ python manage.py register_bot_commands
 ```
 
 - Adding a monitored service = add a dict to `MONITORED_SERVICES` in `apps/servermonitor/metrics.py` (single source of truth; use REAL systemd unit names — `postfix@-`, `postgresql@16-main`).
-- All 6 crons (check_cpu_alert, service_health_check, cron_health_check, server_health_report, monthly_log_report, indexnow) run through `manage.py cron_run <target>` (writes `ops.CronRun` history). Crontab = managed marker block installed by `security/install-servermonitor-cron.sh` (deploy.sh runs it; its "4 crons" echo is stale). Never add bare crontab lines — `cron_health_check` flags them as overdue.
+- All 7 crons (check_cpu_alert, service_health_check, cron_health_check, server_health_report, monthly_log_report, indexnow, purge_service_telemetry) run through `manage.py cron_run <target>` (writes `ops.CronRun` history). Crontab = managed marker block installed by `security/install-servermonitor-cron.sh` (deploy.sh runs it; its "4 crons" echo is stale). Never add bare crontab lines — `cron_health_check` flags them as overdue.
 - Server clock is CEST/CET; Tashkent = server +3h in summer (CEST), +4h in winter (CET). Cron schedules are in server time.
 
 ## 6. Important things to keep in mind

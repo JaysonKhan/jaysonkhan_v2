@@ -8,8 +8,10 @@ from .views import (
     ContactView,
     GalleryFeedView,
     HomeView,
+    LiveBridgeStatsView,
     ProjectDetailView,
     ProjectListView,
+    ServicesIndexView,
     TeamView,
     VoiceAgentDemoView,
 )
@@ -30,4 +32,8 @@ urlpatterns = [
     path('team/', TeamView.as_view(), name='team'),
     path('contact/', ContactView.as_view(), name='contact'),
     path('demos/voice-agent/', VoiceAgentDemoView.as_view(), name='voice_agent_demo'),
+    # My Services (apps/apptelemetry). The LiveBridge app links to the bare /services/livebridge/;
+    # LocaleMiddleware redirects it to the visitor's language prefix.
+    path('services/', ServicesIndexView.as_view(), name='services'),
+    path('services/livebridge/', LiveBridgeStatsView.as_view(), name='services_livebridge'),
 ]

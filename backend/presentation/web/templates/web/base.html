@@ -280,6 +280,7 @@
                     <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                     {% endif %}
                     <a href="{% url 'voice_agent_demo' %}" class="nav-link {% if request.resolver_match.url_name == 'voice_agent_demo' %}active{% endif %}">{% trans "Demo" %}</a>
+                    <a href="{% url 'services' %}" class="nav-link {% if request.resolver_match.url_name == 'services' or request.resolver_match.url_name == 'services_livebridge' %}active{% endif %}">{% trans "My Services" %}</a>
                     <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
                     <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Team" %}</a>
                     <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>
@@ -318,6 +319,7 @@
                 <a href="{% url 'projects' %}" class="nav-link {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}active{% endif %}">{% trans "Work" %}</a>
                 {% endif %}
                 <a href="{% url 'voice_agent_demo' %}" class="nav-link {% if request.resolver_match.url_name == 'voice_agent_demo' %}active{% endif %}">{% trans "Demo" %}</a>
+                <a href="{% url 'services' %}" class="nav-link {% if request.resolver_match.url_name == 'services' or request.resolver_match.url_name == 'services_livebridge' %}active{% endif %}">{% trans "My Services" %}</a>
                 <a href="{% url 'blog_list' %}" class="nav-link {% if request.resolver_match.url_name == 'blog_list' or request.resolver_match.url_name == 'blog_detail' or request.resolver_match.url_name == 'blog_search' %}active{% endif %}">{% trans "Journal" %}</a>
                 <a href="{% url 'team' %}" class="nav-link {% if request.resolver_match.url_name == 'team' %}active{% endif %}">{% trans "Team" %}</a>
                 <a href="{% url 'contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">{% trans "Contact" %}</a>

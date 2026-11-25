@@ -6,6 +6,7 @@ from .views import (
     PostViewSet, ContactMessageViewSet, SiteSettingsView,
     ShareToChannelView,
 )
+from .services_views import FeedbackView, TelemetryIngestView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -19,6 +20,9 @@ router.register(r'contact', ContactMessageViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    # My Services (apptelemetry) — public ingestion for the owner's open-source apps
+    path('services/v1/telemetry/', TelemetryIngestView.as_view(), name='services_telemetry'),
+    path('services/v1/feedback/', FeedbackView.as_view(), name='services_feedback'),
     path('site-settings/', SiteSettingsView.as_view(), name='site-settings'),
     path('share-to-channel/', ShareToChannelView.as_view(), name='share-to-channel'),
 ]

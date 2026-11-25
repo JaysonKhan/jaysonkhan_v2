@@ -818,3 +818,243 @@ msgstr "Это был лимит в {min} мин на один звонок. Н�
 #: presentation/web/views.py
 msgid "The voice service isn't available right now. Try again later."
 msgstr "Голосовой сервис сейчас недоступен. Попробуйте позже."
+
+#: presentation/web/templates/web/base.html
+msgid "My Services"
+msgstr "Мои сервисы"
+
+#: presentation/web/templates/web/services_index.html
+msgid "Open source"
+msgstr "Открытый код"
+
+#: presentation/web/templates/web/services_index.html
+msgid "Apps I build and <span class=\"serif-i\">share</span>."
+msgstr "Приложения, которые я делаю и <span class=\"serif-i\">отдаю</span>."
+
+#: presentation/web/templates/web/services_index.html
+msgid ""
+"Free, open-source tools. Each one shows live figures from the people who "
+"chose to share anonymous statistics."
+msgstr ""
+"Бесплатные инструменты с открытым кодом. У каждого — живые цифры от тех, кто "
+"согласился делиться анонимной статистикой."
+
+#: presentation/web/templates/web/services_index.html
+msgid ""
+"A real-time interpreter for calls: you speak Uzbek, the other side hears "
+"English or Russian in your own voice, and their answers come back to you in "
+"Uzbek."
+msgstr ""
+"Синхронный переводчик для звонков: вы говорите по-узбекски, собеседник слышит"
+" английский или русский вашим голосом, а его ответы возвращаются к вам на "
+"узбекском."
+
+#: presentation/web/templates/web/services_index.html
+msgid "Live figures"
+msgstr "Живые цифры"
+
+#: presentation/web/views.py
+msgid ""
+"Open-source apps I build and maintain, with live, anonymous usage figures: "
+"how many people use them and how fast they work."
+msgstr ""
+"Приложения с открытым кодом, которые я делаю и поддерживаю, и их живые "
+"анонимные цифры: сколько людей ими пользуется и насколько быстро они "
+"работают."
+
+#: presentation/web/views.py
+msgid ""
+"LiveBridge, a macOS real-time call interpreter between Uzbek and English or "
+"Russian: installs, translation speed and quality from anonymous opt-in "
+"statistics."
+msgstr ""
+"LiveBridge — приложение для macOS, синхронно переводящее звонок между "
+"узбекским и английским или русским: установки, скорость и качество перевода "
+"по добровольной анонимной статистике."
+
+#: presentation/web/views.py
+msgid "Uzbek"
+msgstr "Узбекский"
+
+#: presentation/web/views.py
+msgid "English"
+msgstr "Английский"
+
+#: presentation/web/views.py
+msgid "Russian"
+msgstr "Русский"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "LiveBridge in numbers"
+msgstr "LiveBridge в цифрах"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "LiveBridge, <span class=\"serif-i\">in numbers</span>."
+msgstr "LiveBridge <span class=\"serif-i\">в цифрах</span>."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"A macOS app that interprets a call between Uzbek and English or Russian as it"
+" happens. These figures come only from people who switched on anonymous "
+"statistics."
+msgstr ""
+"Приложение для macOS, которое переводит звонок между узбекским и английским "
+"или русским прямо во время разговора. Эти цифры — только от тех, кто включил "
+"анонимную статистику."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Source code on GitHub"
+msgstr "Исходный код на GitHub"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "No figures yet"
+msgstr "Цифр пока нет"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Nobody has shared statistics yet. As soon as the first installs send their "
+"numbers, they appear here."
+msgstr ""
+"Пока никто не поделился статистикой. Как только первые установки пришлют свои"
+" цифры, они появятся здесь."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Usage"
+msgstr "Использование"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Who uses it"
+msgstr "Кто пользуется"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Installs in total"
+msgstr "Всего установок"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Active in the last 7 days"
+msgstr "Активны за 7 дней"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Active in the last 30 days"
+msgstr "Активны за 30 дней"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Translated turns"
+msgstr "Переведённых реплик"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Last %(days)s days"
+msgstr "Последние %(days)s дней"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Speed and <span class=\"serif-i\">quality</span>"
+msgstr "Скорость и <span class=\"serif-i\">качество</span>"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Median time to translated speech"
+msgstr "Время до переведённой речи (медиана)"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "95 of every 100 turns are faster than this"
+msgstr "95 реплик из 100 быстрее этого"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Errors per 100 turns"
+msgstr "Ошибок на 100 реплик"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Of rated turns marked good"
+msgstr "Оценённых реплик отмечены «хорошо»"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Time to translated speech: from releasing the talk key to the first "
+"translated sound, measured by the app."
+msgstr ""
+"Время до переведённой речи: от отпускания клавиши разговора до первого звука "
+"перевода, измеряет само приложение."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "By language"
+msgstr "По языкам"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Translation"
+msgstr "Перевод"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Turns"
+msgstr "Реплик"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Shown once at least %(n)s installs contribute."
+msgstr "Появится, когда данные пришлют не меньше %(n)s установок."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "App versions in use"
+msgstr "Версии в работе"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Version"
+msgstr "Версия"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Share of installs"
+msgstr "Доля установок"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Rows with fewer than %(n)s installs are not shown."
+msgstr "Строки, где меньше %(n)s установок, не показываются."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Last updated"
+msgstr "Обновлено"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Privacy"
+msgstr "Приватность"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "What the app <span class=\"serif-i\">sends</span>"
+msgstr "Что приложение <span class=\"serif-i\">отправляет</span>"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Only if you agree"
+msgstr "Только с вашего согласия"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Statistics are off until you switch on “Share anonymous statistics” in the "
+"app. You can switch it off at any time."
+msgstr ""
+"Статистика выключена, пока вы не включите в приложении «Делиться анонимной "
+"статистикой». Выключить можно в любой момент."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Numbers only"
+msgstr "Только цифры"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Timings, counts, error codes and your ratings. Never what was said, never "
+"audio, never device names or keys."
+msgstr ""
+"Время, количества, коды ошибок и ваши оценки. Никогда — что было сказано, "
+"звук, названия устройств или ключи."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "A random id"
+msgstr "Случайный идентификатор"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Each install is a random number made by the app, not tied to your computer, "
+"account or network. Addresses are not stored with the statistics, and raw "
+"records are deleted after 180 days."
+msgstr ""
+"Каждая установка — это случайный номер, созданный приложением, он не связан с"
+" вашим компьютером, аккаунтом или сетью. Адреса не хранятся вместе со "
+"статистикой, исходные записи удаляются через 180 дней."

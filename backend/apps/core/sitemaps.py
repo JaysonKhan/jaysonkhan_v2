@@ -171,6 +171,9 @@ class StaticSitemap(ImageSitemapMixin, Sitemap):
         ("contact", 0.6, "monthly"),
         # Live voice agent demo (apps/demos) — the Voice AI proof page.
         ("voice_agent_demo", 0.8, "monthly"),
+        # My Services (apps/apptelemetry) — open-source apps + their live aggregate figures.
+        ("services", 0.6, "monthly"),
+        ("services_livebridge", 0.7, "weekly"),
     ]
 
     def items(self):

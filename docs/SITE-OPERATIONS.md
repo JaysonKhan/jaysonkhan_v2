@@ -108,8 +108,9 @@ curl -s -o /dev/null -w '%{http_code}' https://jaysonkhan.com/xo/   # 200
 
 **Telegram bot (owner-only):** `/start /notifications /status /services /disk /tariff /logs [service] [lines] /backup`
 
-**Cron'lar (5 ta, hammasi `manage.py cron_run <target>` orqali, tarixi `ops.CronRun` da):**
-check_cpu_alert · service_health_check · cron_health_check · server_health_report · monthly_log_report.
+**Cron'lar (7 ta, hammasi `manage.py cron_run <target>` orqali, tarixi `ops.CronRun` da):**
+check_cpu_alert · service_health_check · cron_health_check · server_health_report · monthly_log_report ·
+indexnow · purge_service_telemetry (My Services: 180 kundan eski xom telemetriya yozuvlarini o'chiradi, 04:27).
 Crontab — `security/install-servermonitor-cron.sh` o'rnatadigan marker-blok; qo'lda qator QO'SHMANG.
 
 **Loglarni ko'rish:**

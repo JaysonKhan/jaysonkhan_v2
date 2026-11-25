@@ -819,3 +819,242 @@ msgstr "Bitta qo'ng'iroq uchun {min} daqiqalik chegara tugadi. Yana gaplashish u
 #: presentation/web/views.py
 msgid "The voice service isn't available right now. Try again later."
 msgstr "Ovoz xizmati hozir ishlamayapti. Keyinroq urinib ko'ring."
+
+#: presentation/web/templates/web/base.html
+msgid "My Services"
+msgstr "Mening servislarim"
+
+#: presentation/web/templates/web/services_index.html
+msgid "Open source"
+msgstr "Ochiq kod"
+
+#: presentation/web/templates/web/services_index.html
+msgid "Apps I build and <span class=\"serif-i\">share</span>."
+msgstr "Men yaratib, <span class=\"serif-i\">ulashadigan</span> ilovalar."
+
+#: presentation/web/templates/web/services_index.html
+msgid ""
+"Free, open-source tools. Each one shows live figures from the people who "
+"chose to share anonymous statistics."
+msgstr ""
+"Bepul, ochiq kodli vositalar. Har birida anonim statistika ulashishni "
+"tanlagan foydalanuvchilardan kelgan jonli raqamlar bor."
+
+#: presentation/web/templates/web/services_index.html
+msgid ""
+"A real-time interpreter for calls: you speak Uzbek, the other side hears "
+"English or Russian in your own voice, and their answers come back to you in "
+"Uzbek."
+msgstr ""
+"Qo'ng'iroqlar uchun jonli tarjimon: siz o'zbekcha gapirasiz, suhbatdoshingiz "
+"sizning ovozingizda inglizcha yoki ruscha eshitadi, uning javobi sizga "
+"o'zbekcha qaytadi."
+
+#: presentation/web/templates/web/services_index.html
+msgid "Live figures"
+msgstr "Jonli raqamlar"
+
+#: presentation/web/views.py
+msgid ""
+"Open-source apps I build and maintain, with live, anonymous usage figures: "
+"how many people use them and how fast they work."
+msgstr ""
+"Men yaratib, qo'llab-quvvatlayotgan ochiq kodli ilovalar va ularning jonli, "
+"anonim raqamlari: nechta odam foydalanadi va qanchalik tez ishlaydi."
+
+#: presentation/web/views.py
+msgid ""
+"LiveBridge, a macOS real-time call interpreter between Uzbek and English or "
+"Russian: installs, translation speed and quality from anonymous opt-in "
+"statistics."
+msgstr ""
+"LiveBridge — o'zbek va ingliz yoki rus tillari o'rtasida qo'ng'iroqni jonli "
+"tarjima qiluvchi macOS ilovasi: o'rnatishlar, tarjima tezligi va sifati "
+"ixtiyoriy anonim statistikadan."
+
+#: presentation/web/views.py
+msgid "Uzbek"
+msgstr "O'zbekcha"
+
+#: presentation/web/views.py
+msgid "English"
+msgstr "Inglizcha"
+
+#: presentation/web/views.py
+msgid "Russian"
+msgstr "Ruscha"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "LiveBridge in numbers"
+msgstr "LiveBridge raqamlarda"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "LiveBridge, <span class=\"serif-i\">in numbers</span>."
+msgstr "LiveBridge <span class=\"serif-i\">raqamlarda</span>."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"A macOS app that interprets a call between Uzbek and English or Russian as it"
+" happens. These figures come only from people who switched on anonymous "
+"statistics."
+msgstr ""
+"O'zbek va ingliz yoki rus tillari o'rtasidagi qo'ng'iroqni shu zahoti tarjima"
+" qiladigan macOS ilovasi. Bu raqamlar faqat anonim statistikani yoqqan "
+"foydalanuvchilardan keladi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Source code on GitHub"
+msgstr "GitHub'dagi manba kodi"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "No figures yet"
+msgstr "Hozircha raqamlar yo'q"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Nobody has shared statistics yet. As soon as the first installs send their "
+"numbers, they appear here."
+msgstr ""
+"Hozircha hech kim statistika ulashmagan. Birinchi o'rnatishlar raqamlarini "
+"yuborishi bilan ular shu yerda paydo bo'ladi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Usage"
+msgstr "Foydalanish"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Who uses it"
+msgstr "Kim foydalanmoqda"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Installs in total"
+msgstr "Jami o'rnatishlar"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Active in the last 7 days"
+msgstr "So'nggi 7 kunda faol"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Active in the last 30 days"
+msgstr "So'nggi 30 kunda faol"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Translated turns"
+msgstr "Tarjima qilingan replikalar"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Last %(days)s days"
+msgstr "So'nggi %(days)s kun"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Speed and <span class=\"serif-i\">quality</span>"
+msgstr "Tezlik va <span class=\"serif-i\">sifat</span>"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Median time to translated speech"
+msgstr "Tarjima qilingan nutqqacha vaqt (mediana)"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "95 of every 100 turns are faster than this"
+msgstr "Har 100 replikadan 95 tasi bundan tezroq"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Errors per 100 turns"
+msgstr "Har 100 replikaga xatolar"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Of rated turns marked good"
+msgstr "Baholangan replikalardan «yaxshi»"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Time to translated speech: from releasing the talk key to the first "
+"translated sound, measured by the app."
+msgstr ""
+"Tarjima qilingan nutqqacha vaqt: gapirish tugmasini qo'yib yuborgandan "
+"tarjimaning birinchi tovushigacha, ilova o'zi o'lchaydi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "By language"
+msgstr "Tillar bo'yicha"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Translation"
+msgstr "Tarjima"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Turns"
+msgstr "Replikalar"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Shown once at least %(n)s installs contribute."
+msgstr "Kamida %(n)s ta o'rnatish ma'lumot berganda ko'rsatiladi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "App versions in use"
+msgstr "Foydalanilayotgan versiyalar"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Version"
+msgstr "Versiya"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Share of installs"
+msgstr "O'rnatishlardagi ulushi"
+
+#: presentation/web/templates/web/services_livebridge.html
+#, python-format
+msgid "Rows with fewer than %(n)s installs are not shown."
+msgstr "%(n)s tadan kam o'rnatishga ega qatorlar ko'rsatilmaydi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Last updated"
+msgstr "So'nggi yangilanish"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Privacy"
+msgstr "Maxfiylik"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "What the app <span class=\"serif-i\">sends</span>"
+msgstr "Ilova nimani <span class=\"serif-i\">yuboradi</span>"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Only if you agree"
+msgstr "Faqat roziligingiz bilan"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Statistics are off until you switch on “Share anonymous statistics” in the "
+"app. You can switch it off at any time."
+msgstr ""
+"Ilovada «Anonim statistikani ulashish»ni yoqmaguningizcha statistika o'chiq. "
+"Uni istalgan vaqtda o'chirib qo'yishingiz mumkin."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Numbers only"
+msgstr "Faqat raqamlar"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Timings, counts, error codes and your ratings. Never what was said, never "
+"audio, never device names or keys."
+msgstr ""
+"Vaqtlar, sonlar, xato kodlari va sizning baholaringiz. Nima deyilgani, ovoz, "
+"qurilma nomlari yoki kalitlar hech qachon yuborilmaydi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "A random id"
+msgstr "Tasodifiy identifikator"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid ""
+"Each install is a random number made by the app, not tied to your computer, "
+"account or network. Addresses are not stored with the statistics, and raw "
+"records are deleted after 180 days."
+msgstr ""
+"Har bir o'rnatish — ilova yaratgan tasodifiy raqam, u kompyuteringiz, "
+"akkauntingiz yoki tarmog'ingizga bog'lanmagan. Manzillar statistika bilan "
+"birga saqlanmaydi, xom yozuvlar 180 kundan so'ng o'chiriladi."

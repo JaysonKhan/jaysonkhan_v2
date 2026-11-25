@@ -311,6 +311,25 @@ class NotificationService:
         button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': admin_url}]]}
         self._send_to_admin_group(text, profile=None, event_type='contact', reply_markup=button, site=site)
 
+    def log_service_feedback(self, feedback) -> None:
+        """New feedback from a My Services app (apptelemetry). The e-mail is never included."""
+        lang = owner_lang()
+        text = t(
+            'adm.feedback_new', lang, icon=ce('contact_msg', '📩'),
+            app=escape(feedback.app),
+            rating=f'{feedback.rating}/5' if feedback.rating else '—',
+            version=escape(feedback.app_version or '—'),
+            body=escape(feedback.message[:500]),
+        )
+        try:
+            from django.urls import reverse
+            path = reverse('admin:apptelemetry_appfeedback_change', args=[feedback.pk])
+        except Exception:
+            admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/').rstrip('/') + '/'
+            path = f'/{admin_prefix}apptelemetry/appfeedback/{feedback.pk}/change/'
+        button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': f'{self._domain}{path}'}]]}
+        self._send_to_admin_group(text, profile=None, event_type='feedback', reply_markup=button)
+
     # ── Private helpers ──────────────────────────────────────────────────────
 
     @staticmethod

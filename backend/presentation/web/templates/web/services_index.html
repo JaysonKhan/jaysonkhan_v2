@@ -1,0 +1,51 @@
+{% extends 'web/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "My Services" %} | {{ site_settings.site_author }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block og_title %}{% trans "My Services" %} | {{ site_settings.site_author }}{% endblock %}
+{% block og_description %}{{ meta_description }}{% endblock %}
+{% block twitter_title %}{% trans "My Services" %} | {{ site_settings.site_author }}{% endblock %}
+{% block twitter_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<main class="svc">
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <span class="eyebrow page-hero__eyebrow fade-up">{% trans "Open source" %}</span>
+            {% trans 'Apps I build and <span class="serif-i">share</span>.' as headline %}
+            <h1 class="display-xl fade-up" style="animation-delay: .1s;">{{ headline|safe }}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "Free, open-source tools. Each one shows live figures from the people who chose to share anonymous statistics." %}</p>
+        </div>
+    </section>
+
+    {# ========================== THE APPS ========================== #}
+    <section class="section">
+        <div class="container svc-list">
+            <article class="svc-row reveal">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">LiveBridge</h2>
+                    <div class="svc-tags">
+                        <span class="tag">macOS</span>
+                        <span class="tag">{% trans "Open source" %}</span>
+                    </div>
+                </div>
+                <div class="svc-row__body">
+                    <p>{% trans "A real-time interpreter for calls: you speak Uzbek, the other side hears English or Russian in your own voice, and their answers come back to you in Uzbek." %}</p>
+                    <div class="svc-actions">
+                        <a href="{% url 'services_livebridge' %}" class="btn btn-primary">
+                            {% trans "Live figures" %}
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </a>
+                        <a href="{{ livebridge_github_url }}" class="btn" target="_blank" rel="noopener">GitHub</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+{% endblock %}

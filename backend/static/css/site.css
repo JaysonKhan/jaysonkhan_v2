@@ -3107,3 +3107,113 @@ html.tm-open {
     min-height: 44px;
   }
 }
+
+/* ════════════════════════ MY SERVICES (/services/, /services/livebridge/) ════════════════════════
+   The owner's open-source apps and their public, aggregate-only figures (apps/apptelemetry). */
+.svc-figures + .svc-figures {
+  padding-top: 0;
+}
+.svc-list {
+  display: grid;
+}
+.svc-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr;
+  gap: 24px;
+  padding: 28px 0;
+  border-top: 1px solid var(--line-1);
+}
+.svc-row h2,
+.svc-row h3,
+.svc-row p {
+  margin: 0;
+}
+.svc-row p {
+  max-width: 64ch;
+  color: var(--fg-1);
+}
+.svc-row__head,
+.svc-row__body {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.svc-tags,
+.svc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.page-hero__inner .svc-actions {
+  margin-top: 32px;
+}
+.svc-empty {
+  display: grid;
+  gap: 12px;
+  padding: clamp(24px, 4vw, 40px);
+}
+.svc-empty h2,
+.svc-empty p {
+  margin: 0;
+}
+.svc-empty p {
+  color: var(--fg-2);
+}
+.svc-note {
+  margin: 24px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-3);
+}
+.svc-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 56px;
+}
+.svc-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+.svc-panel h3 {
+  margin: 0;
+}
+.svc-empty-line {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-1);
+  color: var(--fg-3);
+}
+.svc-table-wrap {
+  overflow-x: auto;
+}
+.svc-table tbody tr {
+  cursor: default;
+}
+.svc-table td {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.svc-table th:not(:first-child),
+.svc-table td:not(:first-child) {
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .svc-row,
+  .svc-tables {
+    grid-template-columns: 1fr;
+  }
+  .svc-row {
+    gap: 10px;
+  }
+  .svc-tables {
+    gap: 36px;
+  }
+  .svc-actions .btn {
+    min-height: 44px;
+  }
+}
