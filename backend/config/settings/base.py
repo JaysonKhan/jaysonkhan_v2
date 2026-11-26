@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'demos',  # live demos (voice agent); its WebSocket runs in presentation/realtime
     'apptelemetry',  # My Services: opt-in telemetry + feedback for the owner's open-source apps
     'proxies',  # owner-managed outbound proxy pool, published to the other sites on this server
+    'livebridge',  # LiveBridge accounts: Google sign-in, app connection, balance, Polar packages
 ]
 
 MIDDLEWARE = [
@@ -251,6 +252,23 @@ INDEXNOW_KEY = env('INDEXNOW_KEY', default='afc6d61ad91aed8e811f1e4d377e38e2')
 # same VOICE_* via demos.voice_agent.config). '' = same origin
 # /demos/voice-agent/ws (nginx routes it to the relay).
 VOICE_AGENT_WS_URL = env('VOICE_AGENT_WS_URL', default='')
+
+# ── LiveBridge accounts (apps/livebridge) ────────────────────────────────────
+# Empty values switch the matching feature off (fail closed): no Google client →
+# sign-in "not configured"; no Polar token → checkout 503; no webhook secret → 403;
+# no gateway secret → the internal calls answer 404.
+GOOGLE_OAUTH_CLIENT_ID = env('GOOGLE_OAUTH_CLIENT_ID', default='')
+GOOGLE_OAUTH_CLIENT_SECRET = env('GOOGLE_OAUTH_CLIENT_SECRET', default='')
+POLAR_API_BASE = env('POLAR_API_BASE', default='https://sandbox-api.polar.sh')
+POLAR_ACCESS_TOKEN = env('POLAR_ACCESS_TOKEN', default='')
+POLAR_WEBHOOK_SECRET = env('POLAR_WEBHOOK_SECRET', default='')
+LIVEBRIDGE_GATEWAY_SECRET = env('LIVEBRIDGE_GATEWAY_SECRET', default='')
+# Units: 6000 = one package minute; speech-to-text per second per lane; speech per character.
+LIVEBRIDGE_TRIAL_UNITS = env.int('LIVEBRIDGE_TRIAL_UNITS', default=30000)
+LIVEBRIDGE_TRIALS_PER_DAY = env.int('LIVEBRIDGE_TRIALS_PER_DAY', default=50)
+LIVEBRIDGE_STT_UNITS_PER_SECOND = env.int('LIVEBRIDGE_STT_UNITS_PER_SECOND', default=12)
+LIVEBRIDGE_TTS_UNITS_PER_CHAR = env.int('LIVEBRIDGE_TTS_UNITS_PER_CHAR', default=5)
+LIVEBRIDGE_UNITS_PER_MINUTE = env.int('LIVEBRIDGE_UNITS_PER_MINUTE', default=6000)
 
 # REST Framework settings
 REST_FRAMEWORK = {
