@@ -136,7 +136,8 @@ class LegalPagesTest(TestCase):
             account = signed_in.get(reverse('account')).content.decode()
         for package in Package.objects.filter(is_active=True):
             price = f'${package.price_cents / 100:g}'
-            self.assertIn(f'{price},', terms)
+            units = f'{package.units:,}'.replace(',', '&nbsp;')
+            self.assertIn(f'{price}, {units} units', terms)
             self.assertIn(f'>{price}<', account)
         self.assertIn('Sales tax or VAT is added at checkout where it applies.', account)
 

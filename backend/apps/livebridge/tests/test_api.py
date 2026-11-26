@@ -139,8 +139,8 @@ class DeviceApiTest(ApiTestCase):
         response = self.call('get', 'packages/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [
-            {'code': 'starter', 'price_cents': 600, 'currency': 'usd', 'units': 360_000, 'minutes': 60},
-            {'code': 'medium', 'price_cents': 1700, 'currency': 'usd', 'units': 1_200_000, 'minutes': 200},
+            {'code': 'starter', 'price_cents': 600, 'currency': 'usd', 'units': 270_000, 'minutes': 45},
+            {'code': 'medium', 'price_cents': 1700, 'currency': 'usd', 'units': 1_140_000, 'minutes': 190},
             {'code': 'large', 'price_cents': 4500, 'currency': 'usd', 'units': 3_600_000, 'minutes': 600},
         ])
         Package.objects.filter(code='medium').update(is_active=False)

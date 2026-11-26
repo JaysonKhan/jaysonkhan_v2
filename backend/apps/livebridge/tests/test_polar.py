@@ -40,6 +40,7 @@ class PolarWebhookTest(TestCase):
     def setUp(self):
         self.account = Account.objects.create(google_sub='sub-1', email='person@example.com', public_id=ACCOUNT_ID)
         Package.objects.filter(code='starter').update(polar_product_id=PRODUCT_ID)
+        self.starter_units = Package.objects.get(code='starter').units
 
     def deliver(self, event, *, timestamp=None, msg_id='msg_test_1', key=STANDARD_KEY, sig=None, body=None):
         body = body if body is not None else json.dumps(event).encode()
@@ -89,7 +90,7 @@ class PolarWebhookTest(TestCase):
         event = fixture('order_paid.json')
         self.assertEqual(self.deliver(event, msg_id='msg_1').status_code, 202)
         self.assertEqual(self.deliver(event, msg_id='msg_1').status_code, 202)  # Polar retried a slow delivery
-        self.assertEqual(self.balance(), 360_000)
+        self.assertEqual(self.balance(), self.starter_units)
         entry = LedgerEntry.objects.get()
         self.assertEqual((entry.kind, entry.reference), (LedgerEntry.PURCHASE, ORDER_ID))
         self.assertEqual(entry.details, {'package': 'starter', 'total_cents': 500, 'net_cents': 500, 'currency': 'usd'})
@@ -99,7 +100,7 @@ class PolarWebhookTest(TestCase):
         event = fixture('order_paid.json')
         event['data']['customer']['external_id'] = None
         self.deliver(event)
-        self.assertEqual(self.balance(), 360_000)
+        self.assertEqual(self.balance(), self.starter_units)
 
     def test_unmatched_order_is_logged_not_credited(self):
         for name, change in (('product', lambda d: d.update(product_id='unknown-product')),
@@ -132,7 +133,7 @@ class PolarWebhookTest(TestCase):
         event = fixture('order_paid.json')
         event['data']['customer']['external_id'] = str(other.public_id)  # an older id on the same Polar customer
         self.deliver(event)
-        self.assertEqual(self.balance(), 360_000)
+        self.assertEqual(self.balance(), self.starter_units)
         other.refresh_from_db()
         self.assertEqual(other.balance_units, 0)
 
@@ -140,7 +141,8 @@ class PolarWebhookTest(TestCase):
         self.deliver(fixture('order_paid.json'))
         partial = fixture('order_refunded.json')
         self.deliver(partial, msg_id='msg_r1')
-        self.assertEqual(self.balance(), 180_000)
+        half = self.starter_units * 250 // 500
+        self.assertEqual(self.balance(), self.starter_units - half)
         full = copy.deepcopy(partial)
         full['data'].update(refunded_amount=500, status='refunded')
         self.deliver(full, msg_id='msg_r2')
@@ -148,13 +150,13 @@ class PolarWebhookTest(TestCase):
         self.deliver(full, msg_id='msg_r2')
         self.deliver(partial, msg_id='msg_r1')
         refunds = LedgerEntry.objects.filter(kind=LedgerEntry.REFUND).order_by('pk')
-        self.assertEqual([r.units for r in refunds], [-180_000, -180_000])
-        self.assertEqual(refunds[0].details, {'order': ORDER_ID, 'refunded_cents': 250, 'asked': 180_000})
+        self.assertEqual([r.units for r in refunds], [-half, -(self.starter_units - half)])
+        self.assertEqual(refunds[0].details, {'order': ORDER_ID, 'refunded_cents': 250, 'asked': half})
         self.assertEqual(self.balance(), 0)
 
     def test_refund_never_goes_below_zero(self):
         self.deliver(fixture('order_paid.json'))
-        wallet.record_usage(self.account, 'sess', 1, 0, 0, 62_000)  # 310 000 units used
+        wallet.record_usage(self.account, 'sess', 1, 0, 0, (self.starter_units - 50_000) // 5)  # all but 50 000 used
         self.assertEqual(self.balance(), 50_000)
         full = fixture('order_refunded.json')
         full['data']['refunded_amount'] = 500
