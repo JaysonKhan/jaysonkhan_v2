@@ -1322,3 +1322,11 @@ msgstr "Ваш аккаунт"
 #: presentation/web/templates/web/services_livebridge.html
 msgid "Sign in"
 msgstr "Войти"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Buy"
+msgstr "Купить"
+
+#: presentation/web/account_views.py
+msgid "Payment is not available right now. Please try again later."
+msgstr "Оплата сейчас недоступна. Попробуйте позже."

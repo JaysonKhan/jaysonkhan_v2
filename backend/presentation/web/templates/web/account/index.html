@@ -68,12 +68,13 @@
                 </div>
                 <div class="svc-row__body">
                     <div class="svc-table-wrap">
-                        <table class="atable svc-table lb-table">
+                        <table class="atable svc-table lb-table lb-table--packages">
                             <thead>
                                 <tr>
                                     <th scope="col">{% trans "Package" %}</th>
                                     <th scope="col">{% trans "Price" %}</th>
                                     <th scope="col">{% trans "Minutes" %}</th>
+                                    <th scope="col"><span class="lb-sr">{% trans "Buy" %}</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -82,6 +83,7 @@
                                     <td class="lb-table__name">{{ package.label }}</td>
                                     <td>{{ package.price }}</td>
                                     <td>{% blocktrans with n=package.minutes %}≈ {{ n }} min{% endblocktrans %}</td>
+                                    <td class="lb-table__action"><a href="{% url 'account_buy' package.code %}" class="btn btn-sm">{% trans "Buy" %}</a></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

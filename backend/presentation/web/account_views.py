@@ -24,7 +24,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_GET, require_POST
-from livebridge import devices, google, wallet
+from livebridge import devices, google, polar, wallet
 from livebridge.models import Device, DeviceGrant, LedgerEntry, Package
 from livebridge.session import current_account, sign_in, sign_out
 
@@ -214,6 +214,21 @@ def account_connect(request):
         devices.deny(grant)
         context['state'] = 'cancelled'
     return render(request, 'web/account/connect.html', context)
+
+
+@require_GET
+def account_buy(request, code: str):
+    """The account page's "Buy": creates a Polar checkout for the package and sends the person there."""
+    account = current_account(request)
+    if account is None:
+        return _sign_in_redirect(request)
+    package = get_object_or_404(Package, code=code, is_active=True)
+    success_url = request.build_absolute_uri(reverse('account_purchase_done')) + '?checkout_id={CHECKOUT_ID}'
+    try:
+        return redirect(polar.create_checkout(account, package, success_url))
+    except polar.PolarError:
+        messages.error(request, _('Payment is not available right now. Please try again later.'))
+        return redirect('account')
 
 
 @require_GET

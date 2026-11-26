@@ -3237,6 +3237,20 @@ html.tm-open {
 .lb-brand {
   white-space: nowrap;
 }
+.lb-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.lb-table td.lb-table__action {
+  padding-block: 8px;
+}
+.lb-table__action .btn {
+  font-family: var(--font-sans);
+}
 .lb-muted {
   margin: 0;
   color: var(--fg-2);
@@ -3353,5 +3367,11 @@ html.tm-open {
   .lb-table th,
   .lb-table td {
     padding-inline: 8px;
+  }
+  .lb-table--packages td {
+    white-space: normal;
+  }
+  .lb-table__action .btn {
+    padding-inline: 12px;
   }
 }

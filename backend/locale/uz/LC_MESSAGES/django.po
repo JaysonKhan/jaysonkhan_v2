@@ -1322,3 +1322,11 @@ msgstr "Hisobingiz"
 #: presentation/web/templates/web/services_livebridge.html
 msgid "Sign in"
 msgstr "Kirish"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Buy"
+msgstr "Sotib olish"
+
+#: presentation/web/account_views.py
+msgid "Payment is not available right now. Please try again later."
+msgstr "Hozir to'lov qilib bo'lmaydi. Keyinroq urinib ko'ring."
