@@ -58,8 +58,14 @@ class WalletTest(TestCase):
         self.assertEqual(wallet.record_usage(self.account, 'sess', 2, 0, 0, 0), (0, 9926))
         usage = LedgerEntry.objects.filter(kind=LedgerEntry.USAGE)
         self.assertEqual(usage.count(), 1)
-        self.assertEqual(usage.get().reference, 'sess:1')
+        self.assertEqual(usage.get().reference, f'{self.account.pk}:sess:1')
         self.assertEqual(usage.get().details, {'stt_ms_out': 1000, 'stt_ms_in': 1000, 'tts_chars': 10, 'asked': 74})
+
+    def test_the_same_session_id_on_two_accounts_is_charged_twice(self):
+        other = make_account(2)
+        for account in (self.account, other):
+            wallet.credit(account, 1000, LedgerEntry.ADJUSTMENT, f'adj:{account.pk}')
+            self.assertEqual(wallet.record_usage(account, 'sess', 1, 1000, 0, 0), (12, 988))
 
     def test_trial_rules(self):
         self.assertEqual(wallet.grant_trial(self.account, 'device-aaaa', now=NOW), 'granted')

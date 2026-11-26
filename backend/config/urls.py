@@ -19,6 +19,7 @@ from django.urls import include, path, re_path
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from interactions.notifications.webhook import TelegramWebhookView
+from presentation.api import livebridge_internal_views
 from presentation.web.account_views import google_callback, google_start
 from presentation.web.views import TgAppRouterView, custom_404_view, custom_500_view
 from rest_framework_simplejwt.views import (
@@ -51,6 +52,9 @@ urlpatterns = [
     # ── LiveBridge accounts: Google sign-in (non-localised: the redirect URI registered at Google) ──
     path('auth/google/start/', google_start, name='livebridge_google_start'),
     path('auth/google/callback/', google_callback, name='livebridge_google_callback'),
+    # LiveBridge gateway → site (local socket + signature only; 404 for everyone else)
+    path('internal/livebridge/v1/authorize/', livebridge_internal_views.authorize, name='livebridge_internal_authorize'),
+    path('internal/livebridge/v1/usage/', livebridge_internal_views.usage, name='livebridge_internal_usage'),
 
     # ── SEO ────────────────────────────────────────────────────────────────────
     # robots.txt cached 1 day (rarely changes, served on every crawl)
