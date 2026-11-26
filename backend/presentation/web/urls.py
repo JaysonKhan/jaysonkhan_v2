@@ -8,6 +8,9 @@ from .account_views import (
     account_page,
     account_purchase_done,
     account_sign_out,
+    livebridge_privacy,
+    livebridge_refunds,
+    livebridge_terms,
 )
 from .views import (
     AboutView,
@@ -45,6 +48,9 @@ urlpatterns = [
     # LocaleMiddleware redirects it to the visitor's language prefix.
     path('services/', ServicesIndexView.as_view(), name='services'),
     path('services/livebridge/', LiveBridgeStatsView.as_view(), name='services_livebridge'),
+    path('services/livebridge/terms/', livebridge_terms, name='livebridge_terms'),
+    path('services/livebridge/privacy/', livebridge_privacy, name='livebridge_privacy'),
+    path('services/livebridge/refunds/', livebridge_refunds, name='livebridge_refunds'),
     # LiveBridge accounts (apps/livebridge) — Google sign-in lives outside i18n_patterns in config/urls.py
     path('account/', account_page, name='account'),
     path('account/connect/', account_connect, name='account_connect'),

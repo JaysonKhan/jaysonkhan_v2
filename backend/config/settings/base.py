@@ -542,6 +542,24 @@ UNFOLD = {
                         "link": f"{_A}apptelemetry/telemetryrecord/",
                         "permission": lambda r: r.user.has_perm("apptelemetry.view_telemetryrecord"),
                     },
+                    {
+                        "title": "LiveBridge hisoblari",
+                        "icon": "account_balance_wallet",
+                        "link": f"{_A}livebridge/account/",
+                        "permission": lambda r: r.user.has_perm("livebridge.view_account"),
+                    },
+                    {
+                        "title": "Hisob-kitob (ledger)",
+                        "icon": "receipt_long",
+                        "link": f"{_A}livebridge/ledgerentry/",
+                        "permission": lambda r: r.user.has_perm("livebridge.view_ledgerentry"),
+                    },
+                    {
+                        "title": "Paketlar (Polar)",
+                        "icon": "sell",
+                        "link": f"{_A}livebridge/package/",
+                        "permission": lambda r: r.user.has_perm("livebridge.view_package"),
+                    },
                 ],
             },
             {

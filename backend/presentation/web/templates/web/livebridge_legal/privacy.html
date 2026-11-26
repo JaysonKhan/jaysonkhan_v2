@@ -1,0 +1,34 @@
+{% extends 'web/livebridge_legal/base.html' %}
+
+{% block legal_title %}Privacy policy{% endblock %}
+{% block legal_heading %}Privacy policy{% endblock %}
+
+{% block legal_body %}
+<p>This policy covers JK - LiveBridge accounts and the hosted service. "We" means the operator of this website.</p>
+
+<h2 class="display-sm">What an account holds</h2>
+<ul>
+    <li>Your Google account id, e-mail address and name, which Google gives us when you sign in. We never see your Google password.</li>
+    <li>Your balance and its history: the free trial, purchases, usage, refunds and manual adjustments.</li>
+    <li>Usage counters for each call: seconds of audio and numbers of characters. Never what was said.</li>
+    <li>The names of the computers you connect, and when each was connected and last used.</li>
+</ul>
+
+<h2 class="display-sm">Audio and text</h2>
+<p>During a call, audio and text pass through our hosted gateway to the speech recognition, translation and speech synthesis providers it uses (today ElevenLabs and Google Gemini) and back to your app. We do not store them.</p>
+
+<h2 class="display-sm">Payments</h2>
+<p>Payments are handled by Polar, the merchant of record. We receive the order, its amount and the account it belongs to. Your card or other payment details stay with Polar and never reach us.</p>
+
+<h2 class="display-sm">Cookies</h2>
+<p>The website uses a session cookie to keep you signed in to your account. The app keeps its sign-in in your computer's secure credential store.</p>
+
+<h2 class="display-sm">Anonymous statistics</h2>
+<p>The app's optional anonymous statistics are separate from accounts and are not linked to them.</p>
+
+<h2 class="display-sm">Deleting your account</h2>
+<p>You can ask for your account to be deleted on the account page. It is deleted within 30 days. Records of purchases are kept, without your name or e-mail address, for as long as the law requires.</p>
+
+<h2 class="display-sm">Contact</h2>
+<p>Questions about your data are welcome through the <a href="{% url 'contact' %}">contact page</a>.</p>
+{% endblock %}

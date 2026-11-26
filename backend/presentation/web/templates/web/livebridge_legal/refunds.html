@@ -1,0 +1,14 @@
+{% extends 'web/livebridge_legal/base.html' %}
+
+{% block legal_title %}Refund policy{% endblock %}
+{% block legal_heading %}Refund policy{% endblock %}
+
+{% block legal_body %}
+<ul>
+    <li>Within 14 days of a purchase, the unused part of the package is refunded on request. Units already used are not refunded.</li>
+    <li>To ask for a refund, write through the <a href="{% url 'contact' %}">contact page</a> with the e-mail address of your account and the date of the purchase.</li>
+    <li>Refunds are paid by Polar, the merchant of record, to the payment method you used.</li>
+    <li>When a refund is made, the units of that purchase are taken off your balance in proportion to the amount refunded, but never below zero.</li>
+    <li>The free trial has no cash value and is not refunded.</li>
+</ul>
+{% endblock %}

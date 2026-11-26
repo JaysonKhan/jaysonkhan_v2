@@ -12,7 +12,8 @@ owner's explicit decision on 2026-11-25:** "My Services" (`apps/apptelemetry`) �
 pages + an opt-in telemetry/feedback collector for the owner's OWN open-source
 apps (today only LiveBridge). It is not a revival of those services; anything
 beyond it still needs the owner's decision. **Second owner decision of the same day:** `apps/proxies` — the outbound
-proxy pool the owner manages here for the other sites on this server (admin only, no public page).
+proxy pool the owner manages here for the other sites on this server (admin only, no public page). **Third, 2026-11-26:**
+`apps/livebridge` — accounts, balance and Polar payments for LiveBridge's hosted service (section 4).
 
 ## 2. Tech stack
 
@@ -130,6 +131,21 @@ jaysonkhan_v2/
   `proxies/services.py` docstring; readers are per-repo copies (UzExam `apps/core/proxy_pool.py`), so keep it backward
   compatible. Never log a proxy URL (it carries the provider's credentials). Tests: `backend/venv/bin/python
   backend/manage.py test proxies --settings=config.settings.dev`.
+- **LiveBridge accounts (2026-11-26, `apps/livebridge`)** — owner-approved paid service for LiveBridge (design: LiveBridge
+  repo `docs/specs/2026-11-26-accounts-paid-service-voices-design.md`; the site's API contract is the local, git-ignored
+  `docs/LIVEBRIDGE-ACCOUNTS.md`). Customers are `livebridge.Account` rows keyed by the Google subject id — NOT the staff
+  `User` and NOT Telegram visitors; the session key is `lb_account` only (`livebridge/session.py`), never Django's
+  `login`/`logout` (they would flush the Telegram key and a staff login). Google sign-in = server-side redirect flow + PKCE
+  (`/auth/google/start|callback/`, non-localised; the callback is the redirect URI registered at Google). The app connects
+  with a device grant (`/<lang>/account/connect/?code=XXXX-XXXX`) and gets opaque rotating tokens (only SHA-256 hashes
+  stored). Every balance change goes through `livebridge/wallet.py` (locked row, append-only `LedgerEntry`, unique
+  `(kind, reference)` = idempotency; never below zero). App API `/api/livebridge/v1/…`; Polar (merchant of record, sandbox
+  first) checkout + webhook `/api/livebridge/v1/polar/webhook/`; gateway calls `/internal/livebridge/v1/{authorize,usage}/`
+  exist only on the Gunicorn socket (no `X-Real-IP`/`X-Forwarded-For`) with an HMAC signature — everything else gets 404.
+  Pages `/<lang>/account/…` + legal drafts `/<lang>/services/livebridge/{terms,privacy,refunds}/` (noindex). Admin: My Services
+  → "LiveBridge hisoblari" (balance only via "Balansni tuzatish" with a reason), "Hisob-kitob (ledger)" read-only,
+  "Paketlar (Polar)" (paste Polar product ids per environment). Empty secret = feature off. Never log tokens, codes,
+  e-mails or webhook bodies. Tests: `backend/venv/bin/python backend/manage.py test livebridge --settings=config.settings.dev`.
 - **Meta descriptions** — blog/project/team pages build theirs with `presentation/web/seo.py` (`meta_description`: teaser → same-language body / crew roles → site description; extends anything under 100 chars, never past 160). `translated()` keeps an xo-fallback body out of ru/en/uz descriptions. List pages use the seeded `*_page_subtitle` copy — `core/tests_meta_description.py` sweeps every sitemap URL × 4 locales for ≥ 70 chars.
 
 ## 5. How to run
@@ -324,5 +340,11 @@ OPENAI_API_KEY                  # Realtime API — billed per call; use a projec
 VOICE_MAX_CONCURRENT VOICE_CALLS_PER_IP_PER_DAY VOICE_MAX_CALL_SECONDS VOICE_MINUTES_PER_DAY  # 2 / 5 / 180 / 60
 VOICE_REALTIME_MODEL VOICE_REALTIME_VOICE VOICE_REASONING_EFFORT VOICE_VAD_SILENCE_MS             # optional
 VOICE_TURN_DETECTION VOICE_VAD_EAGERNESS   # server_vad (default) | semantic_vad + low/medium/high/auto
+
+# LiveBridge accounts (apps/livebridge) — empty = that feature is off
+GOOGLE_OAUTH_CLIENT_ID GOOGLE_OAUTH_CLIENT_SECRET   # Google web client; redirect URI https://jaysonkhan.com/auth/google/callback/
+POLAR_API_BASE POLAR_ACCESS_TOKEN POLAR_WEBHOOK_SECRET   # sandbox API by default
+LIVEBRIDGE_GATEWAY_SECRET                       # shared with the LiveBridge gateway (internal calls)
+LIVEBRIDGE_TRIAL_UNITS LIVEBRIDGE_TRIALS_PER_DAY LIVEBRIDGE_STT_UNITS_PER_SECOND LIVEBRIDGE_TTS_UNITS_PER_CHAR LIVEBRIDGE_UNITS_PER_MINUTE  # 30000 / 50 / 12 / 5 / 6000
 
 ```

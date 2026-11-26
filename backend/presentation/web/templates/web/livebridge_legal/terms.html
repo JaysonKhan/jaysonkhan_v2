@@ -1,0 +1,41 @@
+{% extends 'web/livebridge_legal/base.html' %}
+
+{% block legal_title %}Terms of service{% endblock %}
+{% block legal_heading %}Terms of service{% endblock %}
+
+{% block legal_body %}
+<p>These terms apply to the paid JK - LiveBridge service: the hosted translation that runs on our servers and is paid for from the balance of a JK - LiveBridge account. "We" means the operator of this website. The app itself is open source; if you use it with your own provider keys or your own gateway, you need no account and the payment parts of these terms do not apply to you.</p>
+
+<h2 class="display-sm">1. The service</h2>
+<p>JK - LiveBridge is a desktop app for macOS and Windows that interprets a call between two languages as it happens: it listens, turns speech into text, translates it and, if you choose, speaks the translation. With an account, the speech recognition, translation and speech synthesis run on our hosted gateway.</p>
+
+<h2 class="display-sm">2. Your account</h2>
+<p>You sign in with a Google account. Keep that Google account secure: anyone who can sign in to it can use your balance. You can connect several copies of the app to one account and sign any of them out on the account page.</p>
+
+<h2 class="display-sm">3. Units and packages</h2>
+<ul>
+    <li>Your balance is kept in units. 6&nbsp;000 units are about one minute of a call voiced in both directions.</li>
+    <li>Speech recognition costs 12 units per second of audio, for each direction that is listened to. Spoken translation costs 5 units per character. Translation itself is included.</li>
+    <li>A new account receives a one-time free trial of 30&nbsp;000 units (about 5 minutes) when it first connects the app: once per Google account and once per computer, while the daily number of trials lasts.</li>
+    <li>Packages are one-time purchases: Starter, $5, 360&nbsp;000 units; Medium, $15, 1&nbsp;200&nbsp;000 units; Large, $40, 3&nbsp;600&nbsp;000 units.</li>
+    <li>We may change the rates or packages. A change is announced on this page and applies to units used after it; units you already bought stay on your balance.</li>
+</ul>
+
+<h2 class="display-sm">4. Payments</h2>
+<p>Payments are processed by Polar (polar.sh), which acts as the merchant of record: Polar sells the package to you, takes the payment, handles sales tax and sends the receipt. Prices are in US dollars; tax may be added at checkout depending on where you live.</p>
+
+<h2 class="display-sm">5. How usage is counted</h2>
+<p>The hosted gateway counts the seconds of audio it sends to speech recognition and the characters it sends to speech synthesis, and takes the matching units from your balance during the call. It never counts or keeps what was said. A call stops when the balance runs out.</p>
+
+<h2 class="display-sm">6. No guarantee of accuracy</h2>
+<p>Speech recognition and machine translation make mistakes. Do not rely on JK - LiveBridge where a wrong translation could cause harm, for example in medical, legal or safety matters. The service is provided as it is, and we do not promise that it is always available.</p>
+
+<h2 class="display-sm">7. Telling the other participants</h2>
+<p>You must tell the other people in a call that it is being transcribed and translated by a machine, and get any consent the law where you and they are requires. The app asks you to confirm this before a call starts.</p>
+
+<h2 class="display-sm">8. Fair use</h2>
+<p>Do not use the service for anything unlawful, do not create several accounts to collect free trials, do not resell access, and do not try to interfere with the service. We may suspend or close an account that is used this way.</p>
+
+<h2 class="display-sm">9. Changes and contact</h2>
+<p>We may update these terms; the date at the top shows the last change. Questions are welcome through the <a href="{% url 'contact' %}">contact page</a>.</p>
+{% endblock %}

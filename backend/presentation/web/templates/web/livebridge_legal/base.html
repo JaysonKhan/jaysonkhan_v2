@@ -1,0 +1,31 @@
+{% extends 'web/base.html' %}
+{% load i18n %}
+
+{% block title %}{% block legal_title %}{% endblock %} | JK - LiveBridge{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<main class="svc lb-account">
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'services_livebridge' %}" class="eyebrow page-hero__eyebrow fade-up">JK - LiveBridge</a>
+            <h1 class="display-lg fade-up" style="animation-delay: .1s;" lang="en">{% block legal_heading %}{% endblock %}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "Last updated" %}: <time datetime="2026-11-26">2026-11-26</time></p>
+        </div>
+    </section>
+
+    <section class="section lb-section">
+        <div class="container lb-stack lb-legal-page">
+            <div class="form-alert form-alert--error" role="note"><p>{% trans "Draft — not yet approved" %}</p></div>
+            <p class="lb-muted">{% trans "The English text is the binding version." %}</p>
+            <article class="lb-legal-text" lang="en">
+                {% block legal_body %}{% endblock %}
+            </article>
+            {% include 'web/livebridge_legal/links.html' %}
+        </div>
+    </section>
+</main>
+{% endblock %}

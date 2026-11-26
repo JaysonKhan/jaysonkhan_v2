@@ -1330,3 +1330,19 @@ msgstr "Sotib olish"
 #: presentation/web/account_views.py
 msgid "Payment is not available right now. Please try again later."
 msgstr "Hozir to'lov qilib bo'lmaydi. Keyinroq urinib ko'ring."
+
+#: presentation/web/templates/web/livebridge_legal/base.html
+msgid "Draft — not yet approved"
+msgstr "Qoralama — hali tasdiqlanmagan"
+
+#: presentation/web/templates/web/livebridge_legal/base.html
+msgid "The English text is the binding version."
+msgstr "Inglizcha matn asosiy (yuridik kuchga ega) hisoblanadi."
+
+#: presentation/web/templates/web/livebridge_legal/links.html
+msgid "Terms"
+msgstr "Shartlar"
+
+#: presentation/web/templates/web/livebridge_legal/links.html
+msgid "Refunds"
+msgstr "Pulni qaytarish"

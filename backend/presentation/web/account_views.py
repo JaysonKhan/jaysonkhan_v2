@@ -24,6 +24,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import TemplateView
 from livebridge import devices, google, polar, wallet
 from livebridge.models import Device, DeviceGrant, LedgerEntry, Package
 from livebridge.session import current_account, sign_in, sign_out
@@ -271,3 +272,10 @@ def account_delete(request):
 def account_sign_out(request):
     sign_out(request)
     return redirect('account')
+
+
+# ── Legal pages (English is binding; drafts until the owner approves them) ───────
+
+livebridge_terms = TemplateView.as_view(template_name='web/livebridge_legal/terms.html')
+livebridge_privacy = TemplateView.as_view(template_name='web/livebridge_legal/privacy.html')
+livebridge_refunds = TemplateView.as_view(template_name='web/livebridge_legal/refunds.html')

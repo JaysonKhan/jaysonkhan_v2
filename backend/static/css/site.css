@@ -3360,6 +3360,48 @@ html.tm-open {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+.lb-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line-1);
+}
+.lb-legal-links a {
+  color: var(--fg-2);
+  transition: color 0.3s var(--ease-out);
+}
+.lb-legal-links a:hover,
+.lb-legal-links a:focus-visible {
+  color: var(--accent);
+}
+.lb-footer {
+  padding-bottom: clamp(48px, 6vw, 80px);
+}
+.lb-legal-page > * {
+  max-width: 72ch;
+}
+.lb-legal-text {
+  display: grid;
+  gap: 16px;
+  max-width: 72ch;
+  color: var(--fg-1);
+}
+.lb-legal-text h2 {
+  margin: 20px 0 0;
+}
+.lb-legal-text p,
+.lb-legal-text ul {
+  margin: 0;
+}
+.lb-legal-text ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+}
+.lb-legal-text a {
+  color: var(--accent);
+}
 @media (max-width: 900px) {
   .lb-account .btn {
     min-height: 44px;

@@ -1330,3 +1330,19 @@ msgstr "Купить"
 #: presentation/web/account_views.py
 msgid "Payment is not available right now. Please try again later."
 msgstr "Оплата сейчас недоступна. Попробуйте позже."
+
+#: presentation/web/templates/web/livebridge_legal/base.html
+msgid "Draft — not yet approved"
+msgstr "Черновик — ещё не утверждён"
+
+#: presentation/web/templates/web/livebridge_legal/base.html
+msgid "The English text is the binding version."
+msgstr "Юридическую силу имеет текст на английском языке."
+
+#: presentation/web/templates/web/livebridge_legal/links.html
+msgid "Terms"
+msgstr "Условия"
+
+#: presentation/web/templates/web/livebridge_legal/links.html
+msgid "Refunds"
+msgstr "Возврат средств"

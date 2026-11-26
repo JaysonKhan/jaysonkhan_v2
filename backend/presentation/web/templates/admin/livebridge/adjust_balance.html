@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+{% load i18n %}
+
+{% block title %}Balansni tuzatish | {{ site_title|default:_('JK-DinAdmin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page fade-in" style="max-width: 760px; margin: 0 auto; padding: 28px 4px 80px;">
+    <div class="page-head">
+        <div class="page-title-wrap">
+            <div class="page-eyebrow">
+                <span class="pe-num">LB·001</span>
+                <span class="pe-dot"></span>
+                <span>LiveBridge · {{ account.email }}</span>
+            </div>
+            <h1 class="page-title">Balansni <em>tuzatish.</em></h1>
+            <p class="page-sub">Hozir: <span class="mono">{{ account.balance_units }}</span> birlik (≈ {{ minutes }} daqiqa). Har tuzatish sabab va sizning e-mailingiz bilan hisob-kitobga yoziladi; o'chirib bo'lmaydi.</p>
+        </div>
+        <div class="page-actions">
+            <a href="{% url 'admin:livebridge_account_change' account.pk %}" class="btn">Hisobga qaytish</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: 26px;">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div style="margin-bottom: 22px;">
+                    <label class="label-mono" for="{{ field.id_for_label }}" style="display: block; margin-bottom: 8px;">{{ field.label }}</label>
+                    <input class="input-block" type="{% if field.name == 'units' %}number{% else %}text{% endif %}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" required>
+                    {% if field.errors %}<p role="alert" style="color: var(--danger); margin: 6px 0 0;">{{ field.errors|join:' ' }}</p>{% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Yozish</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
