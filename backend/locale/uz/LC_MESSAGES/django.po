@@ -1058,3 +1058,267 @@ msgstr ""
 "Har bir o'rnatish — ilova yaratgan tasodifiy raqam, u kompyuteringiz, "
 "akkauntingiz yoki tarmog'ingizga bog'lanmagan. Manzillar statistika bilan "
 "birga saqlanmaydi, xom yozuvlar 180 kundan so'ng o'chiriladi."
+
+#: presentation/web/account_views.py
+msgid "Sign-in is not configured yet. Please try again later."
+msgstr "Kirish hali sozlanmagan. Keyinroq urinib ko'ring."
+
+#: presentation/web/account_views.py
+msgid "Sign-in expired. Please try again."
+msgstr "Kirish muddati o'tdi. Qayta urinib ko'ring."
+
+#: presentation/web/account_views.py
+msgid "Sign-in cancelled."
+msgstr "Kirish bekor qilindi."
+
+#: presentation/web/account_views.py
+msgid "Too many failed sign-ins. Please try again later."
+msgstr "Muvaffaqiyatsiz kirishlar juda ko'p. Keyinroq urinib ko'ring."
+
+#: presentation/web/account_views.py
+msgid "Sign-in with Google failed. Please try again."
+msgstr "Google orqali kirib bo'lmadi. Qayta urinib ko'ring."
+
+#: presentation/web/account_views.py
+msgid "This account is closed."
+msgstr "Bu hisob yopilgan."
+
+#: presentation/web/account_views.py
+msgid "Starter"
+msgstr "Boshlang'ich"
+
+#: presentation/web/account_views.py
+msgid "Medium"
+msgstr "O'rta"
+
+#: presentation/web/account_views.py
+msgid "Large"
+msgstr "Katta"
+
+#: presentation/web/account_views.py
+msgid "Free trial"
+msgstr "Bepul sinov"
+
+#: presentation/web/account_views.py
+msgid "Purchase"
+msgstr "Xarid"
+
+#: presentation/web/account_views.py
+msgid "Refund"
+msgstr "Qaytarish"
+
+#: presentation/web/account_views.py
+msgid "Adjustment"
+msgstr "Tuzatish"
+
+#: presentation/web/account_views.py
+msgid "Too many wrong codes. Please wait an hour and try again."
+msgstr "Noto'g'ri kod juda ko'p kiritildi. Bir soatdan keyin qayta urinib ko'ring."
+
+#: presentation/web/account_views.py
+msgid "This code is not valid or has expired. Check it in the app."
+msgstr "Bu kod noto'g'ri yoki muddati o'tgan. Ilovadan tekshiring."
+
+#: presentation/web/account_views.py
+#, python-format
+msgid "%(name)s is signed out."
+msgstr "«%(name)s» hisobdan chiqarildi."
+
+#: presentation/web/account_views.py
+msgid "Tick the box to confirm."
+msgstr "Tasdiqlash uchun belgini qo'ying."
+
+#: presentation/web/account_views.py
+msgid "Your account will be deleted within 30 days."
+msgstr "Hisobingiz 30 kun ichida o'chiriladi."
+
+#: presentation/web/templates/web/account/index.html
+msgid "JK - LiveBridge account"
+msgstr "JK - LiveBridge hisobi"
+
+#: presentation/web/templates/web/account/index.html
+msgid "<span class=\"lb-brand\">JK - LiveBridge</span> <span class=\"serif-i\">account</span>"
+msgstr "<span class=\"lb-brand\">JK - LiveBridge</span> <span class=\"serif-i\">hisobi</span>"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Signed in as %(email)s"
+msgstr "Kirilgan hisob: %(email)s"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in to connect the app, see your balance and buy minutes."
+msgstr "Ilovani ulash, balansni ko'rish va daqiqa sotib olish uchun kiring."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in with Google"
+msgstr "Google orqali kirish"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance"
+msgstr "Balans"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "≈ %(n)s min"
+msgstr "≈ %(n)s daqiqa"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "%(units)s units"
+msgstr "%(units)s birlik"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes are counted by real use: a minute voiced both ways is about one minute; captions only cost about a quarter."
+msgstr "Daqiqalar haqiqiy foydalanish bo'yicha sanaladi: ikki tomonga ovozli bir daqiqa — taxminan bir daqiqa, faqat yozuv (subtitr) esa taxminan chorak daqiqa."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Top up"
+msgstr "Hisobni to'ldirish"
+
+#: presentation/web/templates/web/account/index.html
+msgid "One-time payments in US dollars, processed by Polar."
+msgstr "Bir martalik to'lovlar, AQSh dollarida, Polar orqali."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Package"
+msgstr "Paket"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Price"
+msgstr "Narx"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes"
+msgstr "Daqiqalar"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Connected apps"
+msgstr "Ulangan ilovalar"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Connected %(date)s"
+msgstr "Ulangan: %(date)s"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Last used %(date)s"
+msgstr "Oxirgi marta: %(date)s"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Not used yet"
+msgstr "Hali ishlatilmagan"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign out"
+msgstr "Chiqish"
+
+#: presentation/web/templates/web/account/index.html
+msgid "No apps connected yet. Open JK - LiveBridge on your computer and choose “Sign in with Google”."
+msgstr "Hali ilova ulanmagan. Kompyuteringizda JK - LiveBridge'ni oching va «Google orqali kirish»ni tanlang."
+
+#: presentation/web/templates/web/account/index.html
+msgid "History"
+msgstr "Tarix"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Last 50 entries."
+msgstr "Oxirgi 50 ta yozuv."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Date"
+msgstr "Sana"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Entry"
+msgstr "Yozuv"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance after"
+msgstr "Keyingi balans"
+
+#: presentation/web/templates/web/account/index.html
+msgid "No entries yet."
+msgstr "Hali yozuv yo'q."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Account"
+msgstr "Hisob"
+
+#: presentation/web/templates/web/account/index.html
+msgid "I understand that my balance and history will be deleted."
+msgstr "Balansim va tarixim o'chirilishini tushunaman."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Delete my account"
+msgstr "Hisobimni o'chirish"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect the app"
+msgstr "Ilovani ulash"
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "Connect JK - LiveBridge on “%(device)s”?"
+msgstr "JK - LiveBridge «%(device)s» qurilmasida ulansinmi?"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code"
+msgstr "Kod"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Only connect if you started this on your own computer and it shows the same code."
+msgstr "Faqat buni o'z kompyuteringizda boshlagan bo'lsangiz va unda xuddi shu kod ko'rinib turgan bo'lsa ulang."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect"
+msgstr "Ulash"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connected — go back to the app"
+msgstr "Ulandi — ilovaga qayting"
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "%(n)s free minutes added."
+msgstr "%(n)s daqiqa bepul qo'shildi."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Free minutes have run out for today — buy a package to start."
+msgstr "Bugungi bepul daqiqalar tugadi — boshlash uchun paket sotib oling."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Back to your account"
+msgstr "Hisobingizga qaytish"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Not connected. You can close this page."
+msgstr "Ulanmadi. Bu sahifani yopishingiz mumkin."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Enter the code shown in the app."
+msgstr "Ilovada ko'rsatilgan kodni kiriting."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code from the app"
+msgstr "Ilovadagi kod"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Continue"
+msgstr "Davom etish"
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Payment received"
+msgstr "To'lov qabul qilindi"
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Your balance updates within a minute."
+msgstr "Balansingiz bir daqiqa ichida yangilanadi."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Your account"
+msgstr "Hisobingiz"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Sign in"
+msgstr "Kirish"

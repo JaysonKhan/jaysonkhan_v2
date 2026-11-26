@@ -5,20 +5,173 @@
 {% block extra_head %}<meta name="robots" content="noindex">{% endblock %}
 
 {% block content %}
-<main class="svc">
-    <section class="section">
-        <div class="container">
-            <h1 class="display-md">{% trans "JK - LiveBridge account" %}</h1>
-            {% for msg in messages %}<p class="svc-note">{{ msg }}</p>{% endfor %}
+<main class="svc lb-account">
+    {# ========================== PAGE HERO ========================== #}
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'services_livebridge' %}" class="eyebrow page-hero__eyebrow fade-up">JK - LiveBridge</a>
+            {% trans '<span class="lb-brand">JK - LiveBridge</span> <span class="serif-i">account</span>' as headline %}
+            <h1 class="display-lg fade-up" style="animation-delay: .1s;">{{ headline|safe }}</h1>
             {% if account %}
-            <p>{{ account.email }}</p>
-            <form method="post" action="{% url 'account_sign_out' %}">{% csrf_token %}
-                <button type="submit" class="btn btn-ghost">{% trans "Sign out" %}</button>
-            </form>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% blocktrans with email=account.email %}Signed in as {{ email }}{% endblocktrans %}</p>
             {% else %}
-            <a class="btn btn-primary" href="{% url 'livebridge_google_start' %}?next={{ request.path|urlencode }}">{% trans "Sign in with Google" %}</a>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "Sign in to connect the app, see your balance and buy minutes." %}</p>
+            <div class="svc-actions fade-up" style="animation-delay: .3s;">
+                <a href="{% url 'livebridge_google_start' %}?next={{ request.path|urlencode }}" class="btn btn-primary">
+                    {% trans "Sign in with Google" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
             {% endif %}
         </div>
     </section>
+
+    {% if messages %}
+    <section class="lb-messages">
+        <div class="container lb-stack">
+            {% for msg in messages %}
+            <div class="form-alert{% if msg.tags == 'error' %} form-alert--error{% endif %}" role="status"><p>{{ msg }}</p></div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if account %}
+    <section class="section lb-section">
+        <div class="container svc-list">
+            {% if account.deletion_requested_at %}
+            <div class="form-alert form-alert--error" role="status"><p>{% trans "Your account will be deleted within 30 days." %}</p></div>
+            {% endif %}
+
+            {# ---------- Balance ---------- #}
+            <div class="svc-row">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">{% trans "Balance" %}</h2>
+                </div>
+                <div class="svc-row__body">
+                    <p class="lb-balance">
+                        <span class="lb-balance__minutes" data-lb-balance>{% blocktrans with n=balance_minutes %}≈ {{ n }} min{% endblocktrans %}</span>
+                        <span class="mono-label">{% blocktrans with units=balance_units %}{{ units }} units{% endblocktrans %}</span>
+                    </p>
+                    <p>{% trans "Minutes are counted by real use: a minute voiced both ways is about one minute; captions only cost about a quarter." %}</p>
+                </div>
+            </div>
+
+            {# ---------- Packages ---------- #}
+            <div class="svc-row">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">{% trans "Top up" %}</h2>
+                    <p class="lb-muted">{% trans "One-time payments in US dollars, processed by Polar." %}</p>
+                </div>
+                <div class="svc-row__body">
+                    <div class="svc-table-wrap">
+                        <table class="atable svc-table lb-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans "Package" %}</th>
+                                    <th scope="col">{% trans "Price" %}</th>
+                                    <th scope="col">{% trans "Minutes" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for package in packages %}
+                                <tr>
+                                    <td class="lb-table__name">{{ package.label }}</td>
+                                    <td>{{ package.price }}</td>
+                                    <td>{% blocktrans with n=package.minutes %}≈ {{ n }} min{% endblocktrans %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# ---------- Connected apps ---------- #}
+            <div class="svc-row">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">{% trans "Connected apps" %}</h2>
+                </div>
+                <div class="svc-row__body">
+                    {% if devices %}
+                    <ul class="lb-devices">
+                        {% for device in devices %}
+                        <li class="lb-device">
+                            <div class="lb-device__text">
+                                <span class="lb-device__name">{{ device.name }}</span>
+                                <span class="mono-label">{% blocktrans with date=device.created_at|date:"Y-m-d" %}Connected {{ date }}{% endblocktrans %} · {% if device.last_used_at %}{% blocktrans with date=device.last_used_at|date:"Y-m-d H:i" %}Last used {{ date }}{% endblocktrans %}{% else %}{% trans "Not used yet" %}{% endif %}</span>
+                            </div>
+                            <form method="post" action="{% url 'account_device_sign_out' device.pk %}">{% csrf_token %}
+                                <button type="submit" class="btn btn-sm">{% trans "Sign out" %}</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="lb-muted">{% trans "No apps connected yet. Open JK - LiveBridge on your computer and choose “Sign in with Google”." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ---------- History ---------- #}
+            <div class="svc-row">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">{% trans "History" %}</h2>
+                    <p class="lb-muted">{% trans "Last 50 entries." %}</p>
+                </div>
+                <div class="svc-row__body">
+                    {% if entries %}
+                    <div class="svc-table-wrap">
+                        <table class="atable svc-table lb-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{% trans "Date" %}</th>
+                                    <th scope="col" class="lb-table__name">{% trans "Entry" %}</th>
+                                    <th scope="col">{% trans "Minutes" %}</th>
+                                    <th scope="col" class="hide-m">{% trans "Balance after" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in entries %}
+                                <tr>
+                                    <td><time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|date:"Y-m-d H:i" }}</time></td>
+                                    <td class="lb-table__name">{{ entry.label }}</td>
+                                    <td>{{ entry.minutes_delta }}</td>
+                                    <td class="hide-m">{% blocktrans with n=entry.minutes_after %}≈ {{ n }} min{% endblocktrans %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="lb-muted">{% trans "No entries yet." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ---------- Account ---------- #}
+            <div class="svc-row">
+                <div class="svc-row__head">
+                    <h2 class="display-sm">{% trans "Account" %}</h2>
+                </div>
+                <div class="svc-row__body">
+                    <form method="post" action="{% url 'account_sign_out' %}">{% csrf_token %}
+                        <button type="submit" class="btn btn-sm">{% trans "Sign out" %}</button>
+                    </form>
+                    <form method="post" action="{% url 'account_delete' %}" class="lb-delete">{% csrf_token %}
+                        <label class="lb-check">
+                            <input type="checkbox" name="confirm" required>
+                            <span>{% trans "I understand that my balance and history will be deleted." %}</span>
+                        </label>
+                        <div><button type="submit" class="btn btn-sm">{% trans "Delete my account" %}</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
 </main>
 {% endblock %}

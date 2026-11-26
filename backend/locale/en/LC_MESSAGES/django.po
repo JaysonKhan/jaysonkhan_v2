@@ -863,3 +863,267 @@ msgid ""
 "account or network. Addresses are not stored with the statistics, and raw "
 "records are deleted after 180 days."
 msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Sign-in is not configured yet. Please try again later."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Sign-in expired. Please try again."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Sign-in cancelled."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Too many failed sign-ins. Please try again later."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Sign-in with Google failed. Please try again."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "This account is closed."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Starter"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Medium"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Large"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Free trial"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Purchase"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Refund"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Adjustment"
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Too many wrong codes. Please wait an hour and try again."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "This code is not valid or has expired. Check it in the app."
+msgstr ""
+
+#: presentation/web/account_views.py
+#, python-format
+msgid "%(name)s is signed out."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Tick the box to confirm."
+msgstr ""
+
+#: presentation/web/account_views.py
+msgid "Your account will be deleted within 30 days."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "JK - LiveBridge account"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "<span class=\"lb-brand\">JK - LiveBridge</span> <span class=\"serif-i\">account</span>"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Signed in as %(email)s"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in to connect the app, see your balance and buy minutes."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in with Google"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "≈ %(n)s min"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "%(units)s units"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes are counted by real use: a minute voiced both ways is about one minute; captions only cost about a quarter."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Top up"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "One-time payments in US dollars, processed by Polar."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Package"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Price"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Connected apps"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Connected %(date)s"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Last used %(date)s"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Not used yet"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign out"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "No apps connected yet. Open JK - LiveBridge on your computer and choose “Sign in with Google”."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "History"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Last 50 entries."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Date"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Entry"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance after"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "No entries yet."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Account"
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "I understand that my balance and history will be deleted."
+msgstr ""
+
+#: presentation/web/templates/web/account/index.html
+msgid "Delete my account"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect the app"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "Connect JK - LiveBridge on “%(device)s”?"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Only connect if you started this on your own computer and it shows the same code."
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connected — go back to the app"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "%(n)s free minutes added."
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Free minutes have run out for today — buy a package to start."
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Back to your account"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Not connected. You can close this page."
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Enter the code shown in the app."
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code from the app"
+msgstr ""
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Continue"
+msgstr ""
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Payment received"
+msgstr ""
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Your balance updates within a minute."
+msgstr ""
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Your account"
+msgstr ""
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Sign in"
+msgstr ""

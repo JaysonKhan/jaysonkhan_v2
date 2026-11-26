@@ -1,6 +1,13 @@
 from django.urls import path
 
-from .account_views import account_page, account_sign_out
+from .account_views import (
+    account_connect,
+    account_delete,
+    account_device_sign_out,
+    account_page,
+    account_purchase_done,
+    account_sign_out,
+)
 from .views import (
     AboutView,
     BlogDetailView,
@@ -39,5 +46,9 @@ urlpatterns = [
     path('services/livebridge/', LiveBridgeStatsView.as_view(), name='services_livebridge'),
     # LiveBridge accounts (apps/livebridge) — Google sign-in lives outside i18n_patterns in config/urls.py
     path('account/', account_page, name='account'),
+    path('account/connect/', account_connect, name='account_connect'),
+    path('account/purchase/done/', account_purchase_done, name='account_purchase_done'),
+    path('account/devices/<int:pk>/sign-out/', account_device_sign_out, name='account_device_sign_out'),
+    path('account/delete/', account_delete, name='account_delete'),
     path('account/sign-out/', account_sign_out, name='account_sign_out'),
 ]

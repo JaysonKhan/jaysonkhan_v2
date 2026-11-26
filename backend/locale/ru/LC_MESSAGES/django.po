@@ -1058,3 +1058,267 @@ msgstr ""
 "Каждая установка — это случайный номер, созданный приложением, он не связан с"
 " вашим компьютером, аккаунтом или сетью. Адреса не хранятся вместе со "
 "статистикой, исходные записи удаляются через 180 дней."
+
+#: presentation/web/account_views.py
+msgid "Sign-in is not configured yet. Please try again later."
+msgstr "Вход ещё не настроен. Попробуйте позже."
+
+#: presentation/web/account_views.py
+msgid "Sign-in expired. Please try again."
+msgstr "Время входа истекло. Попробуйте ещё раз."
+
+#: presentation/web/account_views.py
+msgid "Sign-in cancelled."
+msgstr "Вход отменён."
+
+#: presentation/web/account_views.py
+msgid "Too many failed sign-ins. Please try again later."
+msgstr "Слишком много неудачных попыток входа. Попробуйте позже."
+
+#: presentation/web/account_views.py
+msgid "Sign-in with Google failed. Please try again."
+msgstr "Не удалось войти через Google. Попробуйте ещё раз."
+
+#: presentation/web/account_views.py
+msgid "This account is closed."
+msgstr "Этот аккаунт закрыт."
+
+#: presentation/web/account_views.py
+msgid "Starter"
+msgstr "Стартовый"
+
+#: presentation/web/account_views.py
+msgid "Medium"
+msgstr "Средний"
+
+#: presentation/web/account_views.py
+msgid "Large"
+msgstr "Большой"
+
+#: presentation/web/account_views.py
+msgid "Free trial"
+msgstr "Пробные минуты"
+
+#: presentation/web/account_views.py
+msgid "Purchase"
+msgstr "Покупка"
+
+#: presentation/web/account_views.py
+msgid "Refund"
+msgstr "Возврат"
+
+#: presentation/web/account_views.py
+msgid "Adjustment"
+msgstr "Корректировка"
+
+#: presentation/web/account_views.py
+msgid "Too many wrong codes. Please wait an hour and try again."
+msgstr "Слишком много неверных кодов. Подождите час и попробуйте снова."
+
+#: presentation/web/account_views.py
+msgid "This code is not valid or has expired. Check it in the app."
+msgstr "Код неверный или устарел. Проверьте его в приложении."
+
+#: presentation/web/account_views.py
+#, python-format
+msgid "%(name)s is signed out."
+msgstr "«%(name)s» отключено от аккаунта."
+
+#: presentation/web/account_views.py
+msgid "Tick the box to confirm."
+msgstr "Поставьте отметку для подтверждения."
+
+#: presentation/web/account_views.py
+msgid "Your account will be deleted within 30 days."
+msgstr "Ваш аккаунт будет удалён в течение 30 дней."
+
+#: presentation/web/templates/web/account/index.html
+msgid "JK - LiveBridge account"
+msgstr "Аккаунт JK - LiveBridge"
+
+#: presentation/web/templates/web/account/index.html
+msgid "<span class=\"lb-brand\">JK - LiveBridge</span> <span class=\"serif-i\">account</span>"
+msgstr "<span class=\"serif-i\">Аккаунт</span> <span class=\"lb-brand\">JK - LiveBridge</span>"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Signed in as %(email)s"
+msgstr "Вы вошли как %(email)s"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in to connect the app, see your balance and buy minutes."
+msgstr "Войдите, чтобы подключить приложение, видеть баланс и покупать минуты."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign in with Google"
+msgstr "Войти через Google"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance"
+msgstr "Баланс"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "≈ %(n)s min"
+msgstr "≈ %(n)s мин"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "%(units)s units"
+msgstr "%(units)s ед."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes are counted by real use: a minute voiced both ways is about one minute; captions only cost about a quarter."
+msgstr "Минуты считаются по реальному использованию: минута с озвучкой в обе стороны — примерно одна минута, только субтитры — около четверти."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Top up"
+msgstr "Пополнить"
+
+#: presentation/web/templates/web/account/index.html
+msgid "One-time payments in US dollars, processed by Polar."
+msgstr "Разовые платежи в долларах США через Polar."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Package"
+msgstr "Пакет"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Price"
+msgstr "Цена"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Minutes"
+msgstr "Минуты"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Connected apps"
+msgstr "Подключённые приложения"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Connected %(date)s"
+msgstr "Подключено: %(date)s"
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "Last used %(date)s"
+msgstr "Последний раз: %(date)s"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Not used yet"
+msgstr "Ещё не использовалось"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Sign out"
+msgstr "Выйти"
+
+#: presentation/web/templates/web/account/index.html
+msgid "No apps connected yet. Open JK - LiveBridge on your computer and choose “Sign in with Google”."
+msgstr "Пока нет подключённых приложений. Откройте JK - LiveBridge на компьютере и выберите «Войти через Google»."
+
+#: presentation/web/templates/web/account/index.html
+msgid "History"
+msgstr "История"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Last 50 entries."
+msgstr "Последние 50 записей."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Date"
+msgstr "Дата"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Entry"
+msgstr "Операция"
+
+#: presentation/web/templates/web/account/index.html
+msgid "Balance after"
+msgstr "Баланс после"
+
+#: presentation/web/templates/web/account/index.html
+msgid "No entries yet."
+msgstr "Записей пока нет."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Account"
+msgstr "Аккаунт"
+
+#: presentation/web/templates/web/account/index.html
+msgid "I understand that my balance and history will be deleted."
+msgstr "Я понимаю, что баланс и история будут удалены."
+
+#: presentation/web/templates/web/account/index.html
+msgid "Delete my account"
+msgstr "Удалить мой аккаунт"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect the app"
+msgstr "Подключение приложения"
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "Connect JK - LiveBridge on “%(device)s”?"
+msgstr "Подключить JK - LiveBridge на «%(device)s»?"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code"
+msgstr "Код"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Only connect if you started this on your own computer and it shows the same code."
+msgstr "Подключайте, только если вы начали это на своём компьютере и там показан тот же код."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connect"
+msgstr "Подключить"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Connected — go back to the app"
+msgstr "Подключено — вернитесь в приложение"
+
+#: presentation/web/templates/web/account/connect.html
+#, python-format
+msgid "%(n)s free minutes added."
+msgstr "Добавлено бесплатных минут: %(n)s."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Free minutes have run out for today — buy a package to start."
+msgstr "Бесплатные минуты на сегодня закончились — купите пакет, чтобы начать."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Back to your account"
+msgstr "Вернуться в аккаунт"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Not connected. You can close this page."
+msgstr "Не подключено. Эту страницу можно закрыть."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Enter the code shown in the app."
+msgstr "Введите код, который показывает приложение."
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Code from the app"
+msgstr "Код из приложения"
+
+#: presentation/web/templates/web/account/connect.html
+msgid "Continue"
+msgstr "Продолжить"
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Payment received"
+msgstr "Платёж получен"
+
+#: presentation/web/templates/web/account/purchase_done.html
+msgid "Your balance updates within a minute."
+msgstr "Баланс обновится в течение минуты."
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Your account"
+msgstr "Ваш аккаунт"
+
+#: presentation/web/templates/web/services_livebridge.html
+msgid "Sign in"
+msgstr "Войти"

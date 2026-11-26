@@ -1,0 +1,26 @@
+{% extends 'web/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment received" %} | JK - LiveBridge{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<main class="svc lb-account">
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'account' %}" class="eyebrow page-hero__eyebrow fade-up">JK - LiveBridge</a>
+            <h1 class="display-lg fade-up" style="animation-delay: .1s;">{% trans "Payment received" %}</h1>
+            <p class="page-hero__sub fade-up" style="animation-delay: .2s;">{% trans "Your balance updates within a minute." %}</p>
+            <div class="svc-actions fade-up" style="animation-delay: .3s;">
+                <a href="{% url 'account' %}" class="btn btn-primary">
+                    {% trans "Back to your account" %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

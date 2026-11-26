@@ -3217,3 +3217,141 @@ html.tm-open {
     min-height: 44px;
   }
 }
+
+/* ════════════════════════ LIVEBRIDGE ACCOUNT (/account/…, apps/livebridge) ════════════════════════
+   Google-signed-in customers of the LiveBridge service: balance, packages, connected apps, history. */
+.lb-messages {
+  padding-top: 24px;
+}
+.lb-stack {
+  display: grid;
+  gap: 12px;
+}
+.lb-stack .form-alert p,
+.lb-section .form-alert p {
+  margin: 0;
+}
+.lb-section {
+  padding-top: clamp(32px, 4vw, 56px);
+}
+.lb-brand {
+  white-space: nowrap;
+}
+.lb-muted {
+  margin: 0;
+  color: var(--fg-2);
+}
+.lb-balance {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  margin: 0;
+}
+.lb-balance__minutes {
+  font-family: var(--font-mono);
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--fg-0);
+}
+.lb-table td.lb-table__name {
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.lb-table th.lb-table__name,
+.lb-table td.lb-table__name {
+  text-align: left;
+}
+.lb-devices {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lb-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 16px 0;
+}
+.lb-device + .lb-device {
+  border-top: 1px solid var(--line-1);
+}
+.lb-device__text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.lb-device__name {
+  font-weight: 600;
+  color: var(--fg-0);
+  overflow-wrap: anywhere;
+}
+.lb-delete {
+  display: grid;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-1);
+}
+.lb-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.lb-check input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+.lb-panel {
+  display: grid;
+  gap: 20px;
+  max-width: 720px;
+  padding: clamp(24px, 4vw, 40px);
+}
+.lb-panel h2,
+.lb-panel p {
+  margin: 0;
+}
+.lb-panel .svc-actions {
+  margin: 0;
+}
+.lb-code-block {
+  display: grid;
+  gap: 8px;
+}
+.lb-code {
+  font-family: var(--font-mono);
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+  color: var(--accent-2);
+  overflow-wrap: anywhere;
+}
+.lb-code-form {
+  display: grid;
+  gap: 16px;
+  max-width: 360px;
+}
+.lb-code-form input {
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+@media (max-width: 900px) {
+  .lb-account .btn {
+    min-height: 44px;
+  }
+  .lb-table th,
+  .lb-table td {
+    padding-inline: 8px;
+  }
+}

@@ -1,0 +1,66 @@
+{% extends 'web/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Connect the app" %} | JK - LiveBridge{% endblock %}
+{% block extra_head %}<meta name="robots" content="noindex">{% endblock %}
+
+{% block content %}
+<main class="svc lb-account">
+    <section class="page-hero">
+        <div class="aurora aurora--page" aria-hidden="true">
+            <div class="blob"></div><div class="blob"></div><div class="blob"></div>
+        </div>
+        <div class="container page-hero__inner">
+            <a href="{% url 'account' %}" class="eyebrow page-hero__eyebrow fade-up">JK - LiveBridge</a>
+            <h1 class="display-lg fade-up" style="animation-delay: .1s;">{% trans "Connect the app" %}</h1>
+        </div>
+    </section>
+
+    <section class="section lb-section">
+        <div class="container">
+            <div class="card lb-panel">
+                {% if state == 'confirm' %}
+                <h2 class="display-sm">{% blocktrans with device=grant.device_name %}Connect JK - LiveBridge on “{{ device }}”?{% endblocktrans %}</h2>
+                <div class="lb-code-block">
+                    <span class="mono-label">{% trans "Code" %}</span>
+                    <span class="lb-code" data-lb-code>{{ grant.user_code }}</span>
+                </div>
+                <p class="lb-muted">{% trans "Only connect if you started this on your own computer and it shows the same code." %}</p>
+                <form method="post" action="{% url 'account_connect' %}" class="svc-actions">{% csrf_token %}
+                    <input type="hidden" name="code" value="{{ grant.user_code }}">
+                    <button type="submit" name="action" value="connect" class="btn btn-primary">
+                        {% trans "Connect" %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                    <button type="submit" name="action" value="cancel" class="btn">{% trans "Cancel" %}</button>
+                </form>
+
+                {% elif state == 'connected' %}
+                <h2 class="display-sm" data-lb-state="connected">{% trans "Connected — go back to the app" %}</h2>
+                {% if trial_outcome == 'granted' %}
+                <p>{% blocktrans with n=trial_minutes %}{{ n }} free minutes added.{% endblocktrans %}</p>
+                {% elif trial_outcome == 'daily_cap' %}
+                <p>{% trans "Free minutes have run out for today — buy a package to start." %}</p>
+                {% endif %}
+                <div class="svc-actions"><a href="{% url 'account' %}" class="btn btn-sm">{% trans "Back to your account" %}</a></div>
+
+                {% elif state == 'cancelled' %}
+                <h2 class="display-sm" data-lb-state="cancelled">{% trans "Not connected. You can close this page." %}</h2>
+                <div class="svc-actions"><a href="{% url 'account' %}" class="btn btn-sm">{% trans "Back to your account" %}</a></div>
+
+                {% else %}
+                <h2 class="display-sm">{% trans "Enter the code shown in the app." %}</h2>
+                {% if error %}<div class="form-alert form-alert--error" role="alert"><p>{{ error }}</p></div>{% endif %}
+                <form method="get" action="{% url 'account_connect' %}" class="lb-code-form">
+                    <div class="field">
+                        <label for="lb-code-input">{% trans "Code from the app" %}</label>
+                        <input type="text" id="lb-code-input" name="code" value="{{ code }}" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX" required>
+                    </div>
+                    <div><button type="submit" class="btn btn-primary">{% trans "Continue" %}</button></div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

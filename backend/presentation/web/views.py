@@ -31,6 +31,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 from interactions.models import Comment, Like
 from interactions.views import get_tg_profile  # session helper
+from livebridge.session import current_account as livebridge_account
 from portfolio.models import Project
 from portfolio.services import PortfolioRepository, PortfolioService, filter_projects
 
@@ -686,6 +687,7 @@ class LiveBridgeStatsView(TemplateView):
         context['min_installs'] = MIN_INSTALLS
         context['window_days'] = WINDOW_DAYS
         context['livebridge_github_url'] = LIVEBRIDGE_GITHUB_URL
+        context['livebridge_signed_in'] = livebridge_account(self.request) is not None
         context['meta_description'] = _(
             'LiveBridge, a real-time call interpreter for macOS and Windows in 90 languages: '
             'installs, translation speed and quality from anonymous opt-in statistics.'

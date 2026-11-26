@@ -43,11 +43,24 @@ def address_hash(request, now: float | None = None) -> str:
     return hmac.new(salt, _get_client_ip(request).encode(), hashlib.sha256).hexdigest()[:32]
 
 
+def _key(limit: Limit, subject: str, window_no: int) -> str:
+    return f'apptelemetry:{limit.name}:{subject}:{window_no}'
+
+
+def exceeded(limit: Limit, subject: str, now: float | None = None) -> int | None:
+    """Seconds to wait when `subject` has already used up `limit` in this window, else None. Counts nothing."""
+    now = time.time() if now is None else now
+    window_no = int(now // limit.window)
+    if (cache.get(_key(limit, subject, window_no)) or 0) >= limit.max_count:
+        return max(1, int((window_no + 1) * limit.window - now))
+    return None
+
+
 def hit(limit: Limit, subject: str, amount: int = 1, now: float | None = None) -> int | None:
     """Count `amount` against `subject`. Returns seconds to wait when over the limit, else None."""
     now = time.time() if now is None else now
     window_no = int(now // limit.window)
-    key = f'apptelemetry:{limit.name}:{subject}:{window_no}'
+    key = _key(limit, subject, window_no)
     # add() sets the TTL on the first hit and is a no-op afterwards; incr() is atomic on Redis
     # (same pattern as contact.spam_protection.is_rate_limited).
     cache.add(key, 0, limit.window + 60)

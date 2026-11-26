@@ -40,13 +40,13 @@ class GoogleSignInTest(TestCase):
         self.assertEqual(response.status_code, 302)
         return response
 
-    def callback(self, info=None, state=None, **query):
+    def callback(self, info=None, state=None, HTTP_ACCEPT_LANGUAGE='en', **query):
         pending = self.client.session.get('lb_google') or {}
         params = {'state': state if state is not None else pending.get('state', ''), 'code': 'auth-code', **query}
         with mock.patch('livebridge.google._post_token',
                         return_value=httpx.Response(200, json={'id_token': 'id-token'})) as post, \
                 mock.patch('livebridge.google._tokeninfo_get', return_value=info or tokeninfo()):
-            response = self.client.get(self.callback_url, params)
+            response = self.client.get(self.callback_url, params, HTTP_ACCEPT_LANGUAGE=HTTP_ACCEPT_LANGUAGE)
         return response, post
 
     def test_start_redirects_with_state_and_pkce(self):
@@ -70,6 +70,20 @@ class GoogleSignInTest(TestCase):
         response = self.start()
         self.assertTrue(response['Location'].endswith('/account/'))
         self.assertNotIn('lb_google', self.client.session)
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='')
+    def test_coming_back_keeps_the_language_of_next(self):
+        response = self.client.get(self.start_url, {'next': '/uz/account/connect/?code=BCDF-GHJK'},
+                                   HTTP_ACCEPT_LANGUAGE='ru')
+        self.assertEqual(response['Location'], '/uz/account/')
+        page = self.client.get(response['Location'])
+        self.assertContains(page, 'Kirish hali sozlanmagan.')
+
+    def test_cancel_comes_back_in_the_language_of_next(self):
+        self.client.get(self.start_url, {'next': '/ru/account/'}, HTTP_ACCEPT_LANGUAGE='en')
+        response, _ = self.callback(error='access_denied', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response['Location'], '/ru/account/')
+        self.assertContains(self.client.get(response['Location']), 'Вход отменён.')
 
     def test_callback_creates_then_finds_the_account(self):
         account_page = reverse('account')
