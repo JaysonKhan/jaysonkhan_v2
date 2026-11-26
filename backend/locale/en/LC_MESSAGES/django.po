@@ -669,9 +669,9 @@ msgstr ""
 
 #: presentation/web/templates/web/services_index.html
 msgid ""
-"A real-time interpreter for calls: you speak Uzbek, the other side hears "
-"English or Russian in your own voice, and their answers come back to you in "
-"Uzbek."
+"A real-time interpreter for calls on macOS and Windows: you speak your "
+"language, the other side hears theirs in a voice you choose, and their "
+"answers come back to you in yours. Any two of 90 languages."
 msgstr ""
 
 #: presentation/web/templates/web/services_index.html
@@ -686,8 +686,8 @@ msgstr ""
 
 #: presentation/web/views.py
 msgid ""
-"LiveBridge, a macOS real-time call interpreter between Uzbek and English or "
-"Russian: installs, translation speed and quality from anonymous opt-in "
+"LiveBridge, a real-time call interpreter for macOS and Windows in 90 "
+"languages: installs, translation speed and quality from anonymous opt-in "
 "statistics."
 msgstr ""
 
@@ -713,9 +713,9 @@ msgstr ""
 
 #: presentation/web/templates/web/services_livebridge.html
 msgid ""
-"A macOS app that interprets a call between Uzbek and English or Russian as it"
-" happens. These figures come only from people who switched on anonymous "
-"statistics."
+"An app for macOS and Windows that interprets a call between any two of 90 "
+"languages as it happens. These figures come only from people who switched "
+"on anonymous statistics."
 msgstr ""
 
 #: presentation/web/templates/web/services_livebridge.html

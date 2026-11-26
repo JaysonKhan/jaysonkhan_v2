@@ -842,13 +842,13 @@ msgstr ""
 
 #: presentation/web/templates/web/services_index.html
 msgid ""
-"A real-time interpreter for calls: you speak Uzbek, the other side hears "
-"English or Russian in your own voice, and their answers come back to you in "
-"Uzbek."
+"A real-time interpreter for calls on macOS and Windows: you speak your "
+"language, the other side hears theirs in a voice you choose, and their "
+"answers come back to you in yours. Any two of 90 languages."
 msgstr ""
-"Qo'ng'iroqlar uchun jonli tarjimon: siz o'zbekcha gapirasiz, suhbatdoshingiz "
-"sizning ovozingizda inglizcha yoki ruscha eshitadi, uning javobi sizga "
-"o'zbekcha qaytadi."
+"macOS va Windows uchun qo'ng'iroqlarda jonli tarjimon: siz o'z tilingizda "
+"gapirasiz, suhbatdoshingiz o'z tilida, siz tanlagan ovozda eshitadi, uning "
+"javobi sizga o'z tilingizda qaytadi. 90 tildan istalgan ikkitasi."
 
 #: presentation/web/templates/web/services_index.html
 msgid "Live figures"
@@ -864,13 +864,13 @@ msgstr ""
 
 #: presentation/web/views.py
 msgid ""
-"LiveBridge, a macOS real-time call interpreter between Uzbek and English or "
-"Russian: installs, translation speed and quality from anonymous opt-in "
+"LiveBridge, a real-time call interpreter for macOS and Windows in 90 "
+"languages: installs, translation speed and quality from anonymous opt-in "
 "statistics."
 msgstr ""
-"LiveBridge — o'zbek va ingliz yoki rus tillari o'rtasida qo'ng'iroqni jonli "
-"tarjima qiluvchi macOS ilovasi: o'rnatishlar, tarjima tezligi va sifati "
-"ixtiyoriy anonim statistikadan."
+"LiveBridge — 90 tilda qo'ng'iroqni jonli tarjima qiluvchi macOS va Windows "
+"ilovasi: o'rnatishlar, tarjima tezligi va sifati ixtiyoriy anonim "
+"statistikadan."
 
 #: presentation/web/views.py
 msgid "Uzbek"
@@ -894,13 +894,13 @@ msgstr "LiveBridge <span class=\"serif-i\">raqamlarda</span>."
 
 #: presentation/web/templates/web/services_livebridge.html
 msgid ""
-"A macOS app that interprets a call between Uzbek and English or Russian as it"
-" happens. These figures come only from people who switched on anonymous "
-"statistics."
+"An app for macOS and Windows that interprets a call between any two of 90 "
+"languages as it happens. These figures come only from people who switched "
+"on anonymous statistics."
 msgstr ""
-"O'zbek va ingliz yoki rus tillari o'rtasidagi qo'ng'iroqni shu zahoti tarjima"
-" qiladigan macOS ilovasi. Bu raqamlar faqat anonim statistikani yoqqan "
-"foydalanuvchilardan keladi."
+"90 tildan istalgan ikkitasi o'rtasidagi qo'ng'iroqni shu zahoti tarjima "
+"qiladigan macOS va Windows ilovasi. Bu raqamlar faqat anonim statistikani "
+"yoqqan foydalanuvchilardan keladi."
 
 #: presentation/web/templates/web/services_livebridge.html
 msgid "Source code on GitHub"

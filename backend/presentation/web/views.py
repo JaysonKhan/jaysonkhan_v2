@@ -687,7 +687,7 @@ class LiveBridgeStatsView(TemplateView):
         context['window_days'] = WINDOW_DAYS
         context['livebridge_github_url'] = LIVEBRIDGE_GITHUB_URL
         context['meta_description'] = _(
-            'LiveBridge, a macOS real-time call interpreter between Uzbek and English or Russian: '
+            'LiveBridge, a real-time call interpreter for macOS and Windows in 90 languages: '
             'installs, translation speed and quality from anonymous opt-in statistics.'
         )
         return context

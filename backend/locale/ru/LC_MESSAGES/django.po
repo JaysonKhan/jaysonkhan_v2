@@ -841,13 +841,13 @@ msgstr ""
 
 #: presentation/web/templates/web/services_index.html
 msgid ""
-"A real-time interpreter for calls: you speak Uzbek, the other side hears "
-"English or Russian in your own voice, and their answers come back to you in "
-"Uzbek."
+"A real-time interpreter for calls on macOS and Windows: you speak your "
+"language, the other side hears theirs in a voice you choose, and their "
+"answers come back to you in yours. Any two of 90 languages."
 msgstr ""
-"Синхронный переводчик для звонков: вы говорите по-узбекски, собеседник слышит"
-" английский или русский вашим голосом, а его ответы возвращаются к вам на "
-"узбекском."
+"Синхронный переводчик для звонков на macOS и Windows: вы говорите на своём "
+"языке, собеседник слышит свой — голосом, который вы выбрали, а его ответы "
+"возвращаются к вам на вашем. Любые два из 90 языков."
 
 #: presentation/web/templates/web/services_index.html
 msgid "Live figures"
@@ -864,13 +864,13 @@ msgstr ""
 
 #: presentation/web/views.py
 msgid ""
-"LiveBridge, a macOS real-time call interpreter between Uzbek and English or "
-"Russian: installs, translation speed and quality from anonymous opt-in "
+"LiveBridge, a real-time call interpreter for macOS and Windows in 90 "
+"languages: installs, translation speed and quality from anonymous opt-in "
 "statistics."
 msgstr ""
-"LiveBridge — приложение для macOS, синхронно переводящее звонок между "
-"узбекским и английским или русским: установки, скорость и качество перевода "
-"по добровольной анонимной статистике."
+"LiveBridge — синхронный переводчик звонков для macOS и Windows на 90 "
+"языках: установки, скорость и качество перевода по добровольной анонимной "
+"статистике."
 
 #: presentation/web/views.py
 msgid "Uzbek"
@@ -894,13 +894,13 @@ msgstr "LiveBridge <span class=\"serif-i\">в цифрах</span>."
 
 #: presentation/web/templates/web/services_livebridge.html
 msgid ""
-"A macOS app that interprets a call between Uzbek and English or Russian as it"
-" happens. These figures come only from people who switched on anonymous "
-"statistics."
+"An app for macOS and Windows that interprets a call between any two of 90 "
+"languages as it happens. These figures come only from people who switched "
+"on anonymous statistics."
 msgstr ""
-"Приложение для macOS, которое переводит звонок между узбекским и английским "
-"или русским прямо во время разговора. Эти цифры — только от тех, кто включил "
-"анонимную статистику."
+"Приложение для macOS и Windows, которое переводит звонок между любыми двумя "
+"из 90 языков прямо во время разговора. Эти цифры — только от тех, кто "
+"включил анонимную статистику."
 
 #: presentation/web/templates/web/services_livebridge.html
 msgid "Source code on GitHub"
