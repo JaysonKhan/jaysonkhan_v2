@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .account_views import account_page, account_sign_out
 from .views import (
     AboutView,
     BlogDetailView,
@@ -36,4 +37,7 @@ urlpatterns = [
     # LocaleMiddleware redirects it to the visitor's language prefix.
     path('services/', ServicesIndexView.as_view(), name='services'),
     path('services/livebridge/', LiveBridgeStatsView.as_view(), name='services_livebridge'),
+    # LiveBridge accounts (apps/livebridge) — Google sign-in lives outside i18n_patterns in config/urls.py
+    path('account/', account_page, name='account'),
+    path('account/sign-out/', account_sign_out, name='account_sign_out'),
 ]

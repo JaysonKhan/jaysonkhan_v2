@@ -352,6 +352,7 @@ LOGGING = {
         'blog': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'contact': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'interactions': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'livebridge': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }
 
