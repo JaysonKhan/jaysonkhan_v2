@@ -981,7 +981,7 @@ msgid "Top up"
 msgstr ""
 
 #: presentation/web/templates/web/account/index.html
-msgid "One-time payments in US dollars, processed by Polar."
+msgid "One-time payments in US dollars, processed by Polar. Sales tax or VAT is added at checkout where it applies."
 msgstr ""
 
 #: presentation/web/templates/web/account/index.html

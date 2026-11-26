@@ -1176,8 +1176,8 @@ msgid "Top up"
 msgstr "Пополнить"
 
 #: presentation/web/templates/web/account/index.html
-msgid "One-time payments in US dollars, processed by Polar."
-msgstr "Разовые платежи в долларах США через Polar."
+msgid "One-time payments in US dollars, processed by Polar. Sales tax or VAT is added at checkout where it applies."
+msgstr "Разовые платежи в долларах США через Polar. Налог или НДС, где он применяется, добавляется при оплате."
 
 #: presentation/web/templates/web/account/index.html
 msgid "Package"

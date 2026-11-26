@@ -1175,8 +1175,8 @@ msgid "Top up"
 msgstr "Hisobni to'ldirish"
 
 #: presentation/web/templates/web/account/index.html
-msgid "One-time payments in US dollars, processed by Polar."
-msgstr "Bir martalik to'lovlar, AQSh dollarida, Polar orqali."
+msgid "One-time payments in US dollars, processed by Polar. Sales tax or VAT is added at checkout where it applies."
+msgstr "Bir martalik to'lovlar, AQSh dollarida, Polar orqali. Soliq yoki QQS kerak bo'lsa, to'lov sahifasida qo'shiladi."
 
 #: presentation/web/templates/web/account/index.html
 msgid "Package"

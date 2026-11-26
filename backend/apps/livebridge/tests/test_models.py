@@ -12,7 +12,7 @@ def make_account(sub='sub-1', email='a@example.com'):
 class ModelsTest(TestCase):
     def test_packages_are_seeded(self):
         rows = list(Package.objects.order_by('sort_order').values_list('code', 'price_cents', 'units'))
-        self.assertEqual(rows, [('starter', 500, 360_000), ('medium', 1500, 1_200_000), ('large', 4000, 3_600_000)])
+        self.assertEqual(rows, [('starter', 600, 360_000), ('medium', 1700, 1_200_000), ('large', 4500, 3_600_000)])
         self.assertTrue(all(p.is_active and p.polar_product_id == '' for p in Package.objects.all()))
 
     def test_google_sub_is_unique(self):

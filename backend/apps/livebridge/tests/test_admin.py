@@ -126,6 +126,20 @@ class LegalPagesTest(TestCase):
                         self.assertNotIn('Draft — not yet approved', html)
                         self.assertNotIn('The English text is the binding version.', html)
 
+    def test_terms_and_account_page_show_the_current_prices(self):
+        with translation.override('en'):
+            terms = self.client.get(reverse('livebridge_terms')).content.decode()
+            signed_in = Client()
+            session = signed_in.session
+            session['lb_account'] = Account.objects.create(google_sub='sub-9', email='p@example.com').pk
+            session.save()
+            account = signed_in.get(reverse('account')).content.decode()
+        for package in Package.objects.filter(is_active=True):
+            price = f'${package.price_cents / 100:g}'
+            self.assertIn(f'{price},', terms)
+            self.assertIn(f'>{price}<', account)
+        self.assertIn('Sales tax or VAT is added at checkout where it applies.', account)
+
     def test_account_page_links_to_the_legal_pages(self):
         with translation.override('en'):
             html = self.client.get(reverse('account')).content.decode()
