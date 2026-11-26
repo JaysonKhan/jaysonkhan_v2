@@ -4,6 +4,8 @@ Plain DRF views without DRF authentication or throttles (the JWT authenticator w
 tokens): bearer tokens go through `livebridge.devices.authenticate`, limits through `apptelemetry.ratelimit`,
 errors are `{"error": code}`. No token, code or e-mail is logged.
 """
+import json
+
 from apptelemetry import ratelimit
 from apptelemetry.validation import EnvelopeError
 from django.conf import settings
@@ -173,3 +175,28 @@ class CheckoutView(_AccountView):
         except polar.PolarError:
             return _error('checkout_unavailable', status.HTTP_503_SERVICE_UNAVAILABLE)
         return Response({'url': url}, status=status.HTTP_201_CREATED)
+
+
+WEBHOOK_MAX_BYTES = 1024 * 1024
+
+
+class PolarWebhookView(_LiveBridgeView):
+    """Polar's order events. Refused (403) without a configured secret or a valid signature; an error while
+    applying the event propagates (500) so Polar retries — applying an event twice changes nothing."""
+
+    http_method_names = ('post',)
+
+    def post(self, request):
+        body = request._request.body
+        if len(body) > WEBHOOK_MAX_BYTES:
+            return _error('too_large', status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        if not polar.verify_webhook(body, request.headers, settings.POLAR_WEBHOOK_SECRET):
+            return _error('invalid_signature', status.HTTP_403_FORBIDDEN)
+        try:
+            event = json.loads(body)
+        except (ValueError, UnicodeDecodeError):
+            return _error('bad_json', status.HTTP_400_BAD_REQUEST)
+        if not isinstance(event, dict):
+            return _error('bad_json', status.HTTP_400_BAD_REQUEST)
+        polar.handle_event(event)
+        return Response(status=status.HTTP_202_ACCEPTED)

@@ -1,0 +1,39 @@
+{
+  "type": "order.paid",
+  "timestamp": "2026-11-26T10:00:00.000000Z",
+  "api_version": "2026-10",
+  "data": {
+    "id": "8a0e3c3e-0000-4000-8000-0000000000a1",
+    "created_at": "2026-11-26T09:59:40.000000Z",
+    "modified_at": "2026-11-26T10:00:00.000000Z",
+    "status": "paid",
+    "paid": true,
+    "subtotal_amount": 500,
+    "discount_amount": 0,
+    "net_amount": 500,
+    "tax_amount": 0,
+    "total_amount": 500,
+    "refunded_amount": 0,
+    "refunded_tax_amount": 0,
+    "currency": "usd",
+    "billing_reason": "purchase",
+    "customer_id": "8a0e3c3e-0000-4000-8000-0000000000c1",
+    "product_id": "8a0e3c3e-0000-4000-8000-0000000000p1",
+    "discount_id": null,
+    "subscription_id": null,
+    "checkout_id": "8a0e3c3e-0000-4000-8000-0000000000k1",
+    "metadata": {"account": "00000000-0000-4000-8000-000000000001", "package": "starter"},
+    "customer": {
+      "id": "8a0e3c3e-0000-4000-8000-0000000000c1",
+      "external_id": "00000000-0000-4000-8000-000000000001",
+      "email": "buyer@example.com",
+      "name": null,
+      "metadata": {}
+    },
+    "product": {
+      "id": "8a0e3c3e-0000-4000-8000-0000000000p1",
+      "name": "JK - LiveBridge Starter",
+      "is_recurring": false
+    }
+  }
+}

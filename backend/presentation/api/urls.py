@@ -13,6 +13,7 @@ from .livebridge_views import (
     LogoutView,
     MeView,
     PackagesView,
+    PolarWebhookView,
     TokenRefreshView,
 )
 from .services_views import FeedbackView, TelemetryIngestView
@@ -40,6 +41,7 @@ urlpatterns = [
     path('livebridge/v1/me/', MeView.as_view(), name='livebridge_me'),
     path('livebridge/v1/packages/', PackagesView.as_view(), name='livebridge_packages'),
     path('livebridge/v1/checkout/', CheckoutView.as_view(), name='livebridge_checkout'),
+    path('livebridge/v1/polar/webhook/', PolarWebhookView.as_view(), name='livebridge_polar_webhook'),
     path('site-settings/', SiteSettingsView.as_view(), name='site-settings'),
     path('share-to-channel/', ShareToChannelView.as_view(), name='share-to-channel'),
 ]
