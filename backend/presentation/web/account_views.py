@@ -16,6 +16,7 @@ from apptelemetry import ratelimit
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Max, Sum
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -25,7 +26,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import TemplateView
-from livebridge import devices, google, polar, wallet
+from livebridge import alerts, devices, google, polar, wallet
 from livebridge.models import Device, DeviceGrant, LedgerEntry, Package
 from livebridge.session import current_account, sign_in, sign_out
 
@@ -124,8 +125,30 @@ def group_digits(number: int) -> str:
 
 
 def _minutes_delta(units: int) -> str:
-    text = f'{units / settings.LIVEBRIDGE_UNITS_PER_MINUTE:+.1f}'
-    return text.replace('-', '\u2212')
+    """Signed minutes for the history: '+60.0', '\u22120.2', '\u2212<0.1'; '0' for an entry that moved nothing."""
+    if units == 0:
+        return '0'
+    sign = '+' if units > 0 else '\u2212'
+    minutes = abs(units) / settings.LIVEBRIDGE_UNITS_PER_MINUTE
+    return f'{sign}<0.1' if minutes < 0.05 else f'{sign}{minutes:.1f}'
+
+
+def _history(account) -> list[dict]:
+    """The last entries, with a call's usage reports (one every few seconds) folded into one row per call."""
+    rows = [{'at': e.created_at, 'label': KIND_LABELS.get(e.kind, e.kind), 'units': e.units,
+             'balance_after': e.balance_after}
+            for e in account.entries.exclude(kind=LedgerEntry.USAGE).order_by('-created_at', '-pk')[:HISTORY_LIMIT]]
+    calls = list(account.entries.filter(kind=LedgerEntry.USAGE).values('details__session')
+                 .annotate(units=Sum('units'), last_pk=Max('pk'), at=Max('created_at'))
+                 .order_by('-last_pk')[:HISTORY_LIMIT])
+    after = dict(LedgerEntry.objects.filter(pk__in=[c['last_pk'] for c in calls]).values_list('pk', 'balance_after'))
+    rows += [{'at': c['at'], 'label': KIND_LABELS[LedgerEntry.USAGE], 'units': c['units'],
+              'balance_after': after[c['last_pk']]} for c in calls]
+    rows.sort(key=lambda row: row['at'], reverse=True)
+    for row in rows:
+        row['minutes_delta'] = _minutes_delta(row['units'])
+        row['minutes_after'] = wallet.minutes(max(row['balance_after'], 0))
+    return rows[:HISTORY_LIMIT]
 
 
 def _sign_in_redirect(request):
@@ -136,11 +159,6 @@ def account_page(request):
     account = current_account(request)
     context = {'account': account}
     if account is not None:
-        entries = list(account.entries.order_by('-created_at', '-pk')[:HISTORY_LIMIT])
-        for entry in entries:
-            entry.label = KIND_LABELS.get(entry.kind, entry.kind)
-            entry.minutes_delta = _minutes_delta(entry.units)
-            entry.minutes_after = wallet.minutes(max(entry.balance_after, 0))
         packages = list(Package.objects.filter(is_active=True).order_by('sort_order'))
         for package in packages:
             package.label = PACKAGE_NAMES.get(package.code, package.code)
@@ -149,7 +167,7 @@ def account_page(request):
         context.update({
             'balance_minutes': wallet.minutes(account.balance_units),
             'balance_units': group_digits(account.balance_units),
-            'entries': entries,
+            'entries': _history(account),
             'packages': packages,
             'devices': account.devices.filter(revoked_at__isnull=True).order_by('-created_at'),
         })
@@ -182,6 +200,8 @@ def account_connect(request):
         return _sign_in_redirect(request)
     if request.method not in ('GET', 'POST'):
         return HttpResponseNotAllowed(['GET', 'POST'])
+    if account.deletion_requested_at:
+        return render(request, 'web/account/connect.html', {'state': 'closing'})
     data = request.POST if request.method == 'POST' else request.GET
     raw_code = (data.get('code') or '').strip()
     context = {'state': 'enter', 'code': raw_code[:20]}
@@ -224,6 +244,12 @@ def account_buy(request, code: str):
     if account is None:
         return _sign_in_redirect(request)
     package = get_object_or_404(Package, code=code, is_active=True)
+    if account.deletion_requested_at:
+        messages.info(request, _('To keep your account, write to us through the contact page.'))
+        return redirect('account')
+    if ratelimit.hit(polar.CHECKOUTS_PER_ACCOUNT, str(account.pk)):
+        messages.error(request, _('Too many checkouts. Please try again in an hour.'))
+        return redirect('account')
     success_url = request.build_absolute_uri(reverse('account_purchase_done')) + '?checkout_id={CHECKOUT_ID}'
     try:
         return redirect(polar.create_checkout(account, package, success_url))
@@ -263,6 +289,7 @@ def account_delete(request):
         for device in account.devices.filter(revoked_at__isnull=True):
             devices.revoke(device)
     logger.info('livebridge.account deletion requested account=%s', account.pk)
+    alerts.owner_alert('deletion_requested', account=account.pk)
     sign_out(request)
     messages.success(request, _('Your account will be deleted within 30 days.'))
     return redirect('account')

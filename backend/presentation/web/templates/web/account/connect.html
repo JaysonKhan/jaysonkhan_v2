@@ -48,6 +48,11 @@
                 <h2 class="display-sm" data-lb-state="cancelled">{% trans "Not connected. You can close this page." %}</h2>
                 <div class="svc-actions"><a href="{% url 'account' %}" class="btn btn-sm">{% trans "Back to your account" %}</a></div>
 
+                {% elif state == 'closing' %}
+                <h2 class="display-sm" data-lb-state="closing">{% trans "Your account will be deleted within 30 days." %}</h2>
+                <p>{% url 'contact' as contact_url %}{% blocktrans %}To keep it, write to us through the <a href="{{ contact_url }}">contact page</a>.{% endblocktrans %}</p>
+                <div class="svc-actions"><a href="{% url 'account' %}" class="btn btn-sm">{% trans "Back to your account" %}</a></div>
+
                 {% else %}
                 <h2 class="display-sm">{% trans "Enter the code shown in the app." %}</h2>
                 {% if error %}<div class="form-alert form-alert--error" role="alert"><p>{{ error }}</p></div>{% endif %}

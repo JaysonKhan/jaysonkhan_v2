@@ -17,7 +17,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from . import wallet
-from .models import Account, Device, DeviceGrant
+from .models import Account, Device, DeviceGrant, RetiredRefreshToken
 
 GRANT_TTL = timedelta(minutes=10)
 ACCESS_TTL = timedelta(minutes=15)
@@ -155,23 +155,22 @@ def _usable(device: Device) -> bool:
 
 
 def refresh(refresh_token: str, now: datetime | None = None) -> TokenPair | None:
-    """Rotates both tokens. A refresh token used a second time signs the device out (a copied store)."""
+    """Rotates both tokens. Any earlier refresh token of the device used again signs it out (a copied store)."""
     now = now or timezone.now()
     hashed = token_hash(refresh_token or '')
     with transaction.atomic():
-        device = Device.objects.select_for_update().select_related('account').filter(refresh_hash=hashed).first()
+        device = Device.objects.select_for_update().filter(refresh_hash=hashed).first()
         if device is None:
-            reused = Device.objects.select_for_update().filter(previous_refresh_hash=hashed,
-                                                               revoked_at__isnull=True).first()
-            if reused is not None:
-                revoke(reused, now=now)
+            retired = RetiredRefreshToken.objects.filter(token_hash=hashed).select_related('device').first()
+            if retired is not None and retired.device.revoked_at is None:
+                revoke(retired.device, now=now)
             return None
         if not _usable(device) or device.refresh_expires_at <= now:
             return None
-        device.previous_refresh_hash = hashed
+        RetiredRefreshToken.objects.create(device=device, token_hash=hashed, created_at=now)
+        RetiredRefreshToken.objects.filter(device=device, created_at__lt=now - REFRESH_TTL).delete()
         pair = _issue(device, now)
-        device.save(update_fields=['previous_refresh_hash', 'access_hash', 'access_expires_at', 'refresh_hash',
-                                   'refresh_expires_at'])
+        device.save(update_fields=['access_hash', 'access_expires_at', 'refresh_hash', 'refresh_expires_at'])
         return pair
 
 

@@ -115,6 +115,15 @@ class DevicesTest(TestCase):
         self.assertIsNone(devices.authenticate(b.access_token, now=at(602)))
         self.assertIsNone(devices.refresh(b.refresh_token, now=at(603)))
 
+    def test_any_old_refresh_token_signs_the_device_out(self):
+        a = self.connect()
+        b = devices.refresh(a.refresh_token, now=at(600))
+        c = devices.refresh(b.refresh_token, now=at(1200))  # a copied store rotated twice
+        self.assertIsNone(devices.refresh(a.refresh_token, now=at(1800)))
+        self.assertIsNotNone(Device.objects.get().revoked_at)
+        self.assertIsNone(devices.authenticate(c.access_token, now=at(1801)))
+        self.assertIsNone(devices.refresh(c.refresh_token, now=at(1802)))
+
     def test_refresh_refuses_expired_and_unknown(self):
         pair = self.connect()
         self.assertIsNone(devices.refresh('lbr_unknown', now=at(10)))

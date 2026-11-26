@@ -43,7 +43,7 @@
     <section class="section lb-section">
         <div class="container svc-list">
             {% if account.deletion_requested_at %}
-            <div class="form-alert form-alert--error" role="status"><p>{% trans "Your account will be deleted within 30 days." %}</p></div>
+            <div class="form-alert form-alert--error" role="status"><p>{% trans "Your account will be deleted within 30 days." %} {% url 'contact' as contact_url %}{% blocktrans %}To keep it, write to us through the <a href="{{ contact_url }}">contact page</a>.{% endblocktrans %}</p></div>
             {% endif %}
 
             {# ---------- Balance ---------- #}
@@ -74,7 +74,7 @@
                                     <th scope="col">{% trans "Package" %}</th>
                                     <th scope="col">{% trans "Price" %}</th>
                                     <th scope="col">{% trans "Minutes" %}</th>
-                                    <th scope="col"><span class="lb-sr">{% trans "Buy" %}</span></th>
+                                    {% if not account.deletion_requested_at %}<th scope="col"><span class="lb-sr">{% trans "Buy" %}</span></th>{% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -83,7 +83,7 @@
                                     <td class="lb-table__name">{{ package.label }}</td>
                                     <td>{{ package.price }}</td>
                                     <td>{% blocktrans with n=package.minutes %}≈ {{ n }} min{% endblocktrans %}</td>
-                                    <td class="lb-table__action"><a href="{% url 'account_buy' package.code %}" class="btn btn-sm">{% trans "Buy" %}</a></td>
+                                    {% if not account.deletion_requested_at %}<td class="lb-table__action"><a href="{% url 'account_buy' package.code %}" class="btn btn-sm">{% trans "Buy" %}</a></td>{% endif %}
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -138,8 +138,8 @@
                             </thead>
                             <tbody>
                                 {% for entry in entries %}
-                                <tr>
-                                    <td><time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|date:"Y-m-d H:i" }}</time></td>
+                                <tr data-lb-entry>
+                                    <td><time datetime="{{ entry.at|date:'c' }}">{{ entry.at|date:"Y-m-d H:i" }}</time></td>
                                     <td class="lb-table__name">{{ entry.label }}</td>
                                     <td>{{ entry.minutes_delta }}</td>
                                     <td class="hide-m">{% blocktrans with n=entry.minutes_after %}≈ {{ n }} min{% endblocktrans %}</td>

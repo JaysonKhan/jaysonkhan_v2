@@ -1346,3 +1346,16 @@ msgstr "Условия"
 #: presentation/web/templates/web/livebridge_legal/links.html
 msgid "Refunds"
 msgstr "Возврат средств"
+
+#: presentation/web/account_views.py
+msgid "To keep your account, write to us through the contact page."
+msgstr "Чтобы сохранить аккаунт, напишите нам через страницу контактов."
+
+#: presentation/web/account_views.py
+msgid "Too many checkouts. Please try again in an hour."
+msgstr "Слишком много попыток оплаты. Попробуйте через час."
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "To keep it, write to us through the <a href=\"%(contact_url)s\">contact page</a>."
+msgstr "Чтобы сохранить его, напишите нам через <a href=\"%(contact_url)s\">страницу контактов</a>."

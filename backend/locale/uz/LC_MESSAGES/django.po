@@ -1346,3 +1346,16 @@ msgstr "Shartlar"
 #: presentation/web/templates/web/livebridge_legal/links.html
 msgid "Refunds"
 msgstr "Pulni qaytarish"
+
+#: presentation/web/account_views.py
+msgid "To keep your account, write to us through the contact page."
+msgstr "Hisobingizni saqlab qolmoqchi bo'lsangiz, aloqa sahifasi orqali yozing."
+
+#: presentation/web/account_views.py
+msgid "Too many checkouts. Please try again in an hour."
+msgstr "To'lov sahifasi juda ko'p ochildi. Bir soatdan keyin qayta urinib ko'ring."
+
+#: presentation/web/templates/web/account/index.html
+#, python-format
+msgid "To keep it, write to us through the <a href=\"%(contact_url)s\">contact page</a>."
+msgstr "Saqlab qolmoqchi bo'lsangiz, <a href=\"%(contact_url)s\">aloqa sahifasi</a> orqali yozing."

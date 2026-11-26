@@ -73,7 +73,7 @@ def record_usage(account: Account, session_id: str, seq: int, stt_ms_out: int, s
         return 0, _balance(account)
     # The account is part of the reference: a session id reused by another account must still be charged.
     entry = debit(account, units, LedgerEntry.USAGE, f'{account.pk}:{session_id}:{seq}',
-                  {'stt_ms_out': stt_ms_out, 'stt_ms_in': stt_ms_in, 'tts_chars': tts_chars})
+                  {'session': session_id, 'stt_ms_out': stt_ms_out, 'stt_ms_in': stt_ms_in, 'tts_chars': tts_chars})
     if entry is None:
         return 0, _balance(account)
     return -entry.units, entry.balance_after

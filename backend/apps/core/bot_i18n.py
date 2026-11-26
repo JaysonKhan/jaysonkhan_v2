@@ -681,6 +681,20 @@ TEXTS: dict[str, dict[str, str]] = {
         'ru': "{icon} Новый отзыв ({app}):\n<b>Оценка:</b> {rating} · <b>Версия:</b> {version}\n{body}",
     },
     'adm.btn_site': {'uz': "🌐 Sayt", 'ru': "🌐 Сайт"},
+    'adm.lb_unmatched_order': {
+        'uz': "{icon} LiveBridge: Polar to'lovi hech bir hisob yoki paketga mos kelmadi (buyurtma {order}). "
+              "Polar'da tekshiring va admin'da balansni qo'lda tuzating.",
+        'ru': "{icon} LiveBridge: платёж Polar не совпал ни с аккаунтом, ни с пакетом (заказ {order}). "
+              "Проверьте в Polar и исправьте баланс вручную в админке.",
+    },
+    'adm.lb_unmatched_refund': {
+        'uz': "{icon} LiveBridge: noma'lum buyurtma uchun Polar qaytarishi (buyurtma {order}). Polar'da tekshiring.",
+        'ru': "{icon} LiveBridge: возврат Polar для неизвестного заказа (заказ {order}). Проверьте в Polar.",
+    },
+    'adm.lb_deletion_requested': {
+        'uz': "{icon} LiveBridge: hisobni o'chirish so'raldi (hisob #{account}). 30 kun ichida admin'da o'chiring.",
+        'ru': "{icon} LiveBridge: запрошено удаление аккаунта (аккаунт #{account}). Удалите в админке в течение 30 дней.",
+    },
 
     # ── /lang ───────────────────────────────────────────────────────────────
     'lang.choose': {

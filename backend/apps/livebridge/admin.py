@@ -88,7 +88,7 @@ class DeviceAdmin(_ReadOnlyAdmin):
     list_filter = (('revoked_at', admin.EmptyFieldListFilter),)
     search_fields = ('name', 'account__email', 'device_id')
     list_select_related = ('account',)
-    exclude = ('access_hash', 'refresh_hash', 'previous_refresh_hash')
+    exclude = ('access_hash', 'refresh_hash')
     ordering = ('-created_at',)
     actions = ('sign_out',)
 

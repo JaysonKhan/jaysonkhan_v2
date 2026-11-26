@@ -59,7 +59,7 @@ class WalletTest(TestCase):
         usage = LedgerEntry.objects.filter(kind=LedgerEntry.USAGE)
         self.assertEqual(usage.count(), 1)
         self.assertEqual(usage.get().reference, f'{self.account.pk}:sess:1')
-        self.assertEqual(usage.get().details, {'stt_ms_out': 1000, 'stt_ms_in': 1000, 'tts_chars': 10, 'asked': 74})
+        self.assertEqual(usage.get().details, {'session': 'sess', 'stt_ms_out': 1000, 'stt_ms_in': 1000, 'tts_chars': 10, 'asked': 74})
 
     def test_the_same_session_id_on_two_accounts_is_charged_twice(self):
         other = make_account(2)

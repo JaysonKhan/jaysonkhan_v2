@@ -330,6 +330,17 @@ class NotificationService:
         button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': f'{self._domain}{path}'}]]}
         self._send_to_admin_group(text, profile=None, event_type='feedback', reply_markup=button)
 
+    def log_livebridge(self, kind: str, **ids) -> None:
+        """LiveBridge accounts need a person (apps/livebridge.alerts). Ids only — never e-mails or tokens."""
+        lang = owner_lang()
+        text = t(f'adm.lb_{kind}', lang, icon=ce('alert', '⚠️'), **{k: escape(str(v)) for k, v in ids.items()})
+        button = None
+        if 'account' in ids:
+            from django.urls import reverse
+            path = reverse('admin:livebridge_account_change', args=[ids['account']])
+            button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': f'{self._domain}{path}'}]]}
+        self._send_to_admin_group(text, profile=None, event_type='livebridge', reply_markup=button)
+
     # ── Private helpers ──────────────────────────────────────────────────────
 
     @staticmethod

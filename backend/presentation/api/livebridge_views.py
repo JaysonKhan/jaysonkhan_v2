@@ -170,6 +170,9 @@ class CheckoutView(_AccountView):
         package = Package.objects.filter(code=code, is_active=True).first() if isinstance(code, str) else None
         if package is None:
             return _error('unknown_package', status.HTTP_404_NOT_FOUND)
+        retry = ratelimit.hit(polar.CHECKOUTS_PER_ACCOUNT, str(self.device.account_id))
+        if retry:
+            return _rate_limited(retry)
         try:
             url = polar.create_checkout(self.device.account, package, purchase_success_url(request))
         except polar.PolarError:

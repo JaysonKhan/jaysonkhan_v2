@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class Account(models.Model):
@@ -34,7 +35,6 @@ class Device(models.Model):
     access_hash = models.CharField(max_length=64, unique=True, null=True)
     access_expires_at = models.DateTimeField(null=True)
     refresh_hash = models.CharField(max_length=64, unique=True)
-    previous_refresh_hash = models.CharField(max_length=64, blank=True, db_index=True)
     refresh_expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True)
@@ -42,6 +42,15 @@ class Device(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RetiredRefreshToken(models.Model):
+    """A refresh token that was rotated away. Presenting it again means a copied credential store: the device
+    is signed out. Kept for as long as a refresh token can live."""
+
+    device = models.ForeignKey(Device, models.CASCADE, related_name='retired_tokens')
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class DeviceGrant(models.Model):

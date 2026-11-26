@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import translation
 
 from livebridge import devices, wallet
-from livebridge.models import Account, Device, DeviceGrant
+from livebridge.models import Account, Device, DeviceGrant, LedgerEntry
 from livebridge.session import SESSION_KEY
 
 LANGS = ('xo', 'uz', 'ru', 'en')
@@ -174,6 +174,45 @@ class AccountPagesTest(TestCase):
         self.assertContains(response, 'person1@example.com')
         for code in ('Starter', 'Medium', 'Large'):
             self.assertContains(response, code)
+
+    def test_history_groups_usage_by_call(self):
+        wallet.credit(self.account, 360_000, LedgerEntry.PURCHASE, 'ord_1')
+        for seq in range(60):  # ten minutes of reports every 10 s
+            wallet.record_usage(self.account, 'sess-a', seq, 1000, 1000, 0)
+        for seq in range(3):
+            wallet.record_usage(self.account, 'sess-b', seq, 1000, 1000, 0)
+        html = self.client.get(reverse('account')).content.decode()
+        self.assertEqual(html.count('data-lb-entry'), 3)
+        self.assertIn('Purchase', html)
+        self.assertIn('\u22120.2', html)  # 60 × 24 units
+
+    def test_a_call_charged_nothing_does_not_look_like_a_credit(self):
+        wallet.record_usage(self.account, 'sess-a', 1, 1000, 1000, 0)  # balance was already zero
+        html = self.client.get(reverse('account')).content.decode()
+        self.assertEqual(html.count('data-lb-entry'), 1)
+        self.assertNotIn('+0.0', html)
+
+    def test_deletion_requested_account_cannot_buy_or_connect(self):
+        self.account.deletion_requested_at = '2026-11-26T12:00Z'
+        self.account.save()
+        page = self.client.get(reverse('account')).content.decode()
+        self.assertNotIn(reverse('account_buy', args=['starter']), page)
+        with mock.patch('livebridge.polar._post') as post:
+            response = self.client.get(reverse('account_buy', args=['starter']), follow=True)
+            post.assert_not_called()
+        self.assertContains(response, 'Your account will be deleted within 30 days.')
+        grant, _ = devices.start_grant('device-0001', 'Work Mac')
+        response = self.client.get(self.connect_url(grant.user_code))
+        self.assertContains(response, 'Your account will be deleted within 30 days.')
+        self.assertNotContains(response, 'name="action"')
+        self.client.post(reverse('account_connect'), {'code': grant.user_code, 'action': 'connect'})
+        grant.refresh_from_db()
+        self.assertEqual(grant.status, DeviceGrant.PENDING)
+
+    def test_delete_request_alerts_the_owner(self):
+        with mock.patch('livebridge.alerts.owner_alert') as alert:
+            self.client.post(reverse('account_delete'), {'confirm': 'on'})
+        alert.assert_called_once_with('deletion_requested', account=self.account.pk)
 
     def test_livebridge_page_links_to_the_account(self):
         account_url = reverse('account')

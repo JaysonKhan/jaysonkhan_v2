@@ -8,6 +8,8 @@ import time
 import uuid
 from pathlib import Path
 
+from unittest import mock
+
 from django.test import TestCase, override_settings
 
 from livebridge import polar, wallet
@@ -112,6 +114,27 @@ class PolarWebhookTest(TestCase):
                 self.assertNotIn('buyer@example.com', ' '.join(logs.output))
         self.assertFalse(LedgerEntry.objects.exists())
         self.assertEqual(self.balance(), 0)
+
+    def test_unmatched_order_alerts_the_owner(self):
+        event = fixture('order_paid.json')
+        event['data']['product_id'] = 'unknown-product'
+        with mock.patch('livebridge.alerts.owner_alert') as alert, self.assertLogs('livebridge', 'ERROR'):
+            self.deliver(event)
+        alert.assert_called_once_with('unmatched_order', order=ORDER_ID)
+        refund = fixture('order_refunded.json')
+        refund['data']['id'] = 'unknown-order'
+        with mock.patch('livebridge.alerts.owner_alert') as alert, self.assertLogs('livebridge', 'ERROR'):
+            self.deliver(refund)
+        alert.assert_called_once_with('unmatched_refund', order='unknown-order')
+
+    def test_checkout_metadata_wins_over_a_stale_customer_id(self):
+        other = Account.objects.create(google_sub='sub-2', email='other@example.com')
+        event = fixture('order_paid.json')
+        event['data']['customer']['external_id'] = str(other.public_id)  # an older id on the same Polar customer
+        self.deliver(event)
+        self.assertEqual(self.balance(), 360_000)
+        other.refresh_from_db()
+        self.assertEqual(other.balance_units, 0)
 
     def test_partial_then_full_refund(self):
         self.deliver(fixture('order_paid.json'))

@@ -16,15 +16,18 @@ import uuid
 from collections.abc import Mapping
 
 import httpx
+from apptelemetry.ratelimit import HOUR, Limit
 from django.conf import settings
 from django.db import transaction
 
-from . import wallet
+from . import alerts, wallet
 from .models import Account, LedgerEntry, Package
 
 logger = logging.getLogger('livebridge')
 
 TIMEOUT = 10.0
+# Each checkout is a blocking call to Polar and a row in the owner's Polar organisation.
+CHECKOUTS_PER_ACCOUNT = Limit('lb_checkout', 10, HOUR)
 
 
 class PolarError(Exception):
@@ -121,13 +124,15 @@ def _account_by_public_id(value) -> Account | None:
 def _order_paid(data: dict) -> None:
     order_id = str(data.get('id') or '')
     customer = data.get('customer') or {}
-    account = (_account_by_public_id(customer.get('external_id'))
-               or _account_by_public_id((data.get('metadata') or {}).get('account')))
+    # The checkout's own metadata first: a Polar customer's external id is set once and can be an older account's.
+    account = (_account_by_public_id((data.get('metadata') or {}).get('account'))
+               or _account_by_public_id(customer.get('external_id')))
     product_id = data.get('product_id')
     package = Package.objects.filter(polar_product_id=product_id).first() if product_id else None
     if not order_id or account is None or package is None:
         # The owner settles it by hand with an adjustment.
         logger.error('livebridge.polar.unmatched order=%s', order_id)
+        alerts.owner_alert('unmatched_order', order=order_id)
         return
     entry = wallet.credit(account, package.units, LedgerEntry.PURCHASE, order_id, {
         'package': package.code, 'total_cents': data.get('total_amount'), 'net_cents': data.get('net_amount'),
@@ -144,6 +149,7 @@ def _order_refunded(data: dict) -> None:
                 if order_id else None)
     if purchase is None or purchase.account_id is None:
         logger.error('livebridge.polar.refund_unmatched order=%s', order_id)
+        alerts.owner_alert('unmatched_refund', order=order_id)
         return
     try:
         net, refunded = int(data.get('net_amount') or 0), int(data.get('refunded_amount') or 0)

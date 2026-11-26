@@ -191,6 +191,21 @@ class CheckoutTest(ApiTestCase):
             self.assertEqual(response.status_code, 503)
             post.assert_not_called()
 
+    def test_checkouts_are_limited_per_account(self):
+        for _ in range(10):
+            self.assertEqual(self.checkout()[0].status_code, 201)
+        response, post = self.checkout()
+        self.assertEqual((response.status_code, response.json()), (429, {'error': 'rate_limited'}))
+        post.assert_not_called()
+        browser = Client()
+        session = browser.session
+        session[SESSION_KEY] = self.account.pk
+        session.save()
+        with translation.override('en'), mock.patch('livebridge.polar._post', return_value=polar_answer()) as post:
+            response = browser.get(reverse('account_buy', args=['starter']), follow=True)
+            post.assert_not_called()
+        self.assertContains(response, 'Too many checkouts. Please try again in an hour.')
+
     def test_unknown_or_inactive_package(self):
         response, post = self.checkout('platinum')
         self.assertEqual((response.status_code, response.json()), (404, {'error': 'unknown_package'}))

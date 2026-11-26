@@ -190,6 +190,7 @@ LOGGING = {
         'blog': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
         'contact': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
         'interactions': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
+        'livebridge': {'handlers': ['file'], 'level': 'WARNING', 'propagate': False},
     },
     'root': {
         'handlers': ['file'],
