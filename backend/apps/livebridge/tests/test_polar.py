@@ -18,8 +18,8 @@ from livebridge.models import Account, LedgerEntry, Package
 URL = '/api/livebridge/v1/polar/webhook/'
 SECRET = 'whsec_' + base64.b64encode(b'test-webhook-key-0123456789abcdef').decode()
 ACCOUNT_ID = uuid.UUID('00000000-0000-4000-8000-000000000001')
-PRODUCT_ID = '8a0e3c3e-0000-4000-8000-0000000000p1'
-ORDER_ID = '8a0e3c3e-0000-4000-8000-0000000000a1'
+PRODUCT_ID = '00000000-0000-4000-8000-000000000002'
+ORDER_ID = '00000000-0000-4000-8000-000000000003'
 FIXTURES = Path(__file__).parent / 'fixtures'
 
 
