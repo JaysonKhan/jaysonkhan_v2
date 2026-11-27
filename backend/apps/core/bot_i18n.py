@@ -680,6 +680,12 @@ TEXTS: dict[str, dict[str, str]] = {
         'uz': "{icon} Yangi fikr ({app}):\n<b>Baho:</b> {rating} · <b>Versiya:</b> {version}\n{body}",
         'ru': "{icon} Новый отзыв ({app}):\n<b>Оценка:</b> {rating} · <b>Версия:</b> {version}\n{body}",
     },
+    'adm.bug_report_new': {
+        'uz': "{icon} Muammo haqida xabar ({app}):\n<b>Versiya:</b> {version} · <b>Tizim:</b> {os}\n"
+              "<b>Ulanish:</b> {mode}\n<b>Mikrofon:</b> {mic}\n<b>Quloqchin:</b> {phones}\n{body}",
+        'ru': "{icon} Сообщение о проблеме ({app}):\n<b>Версия:</b> {version} · <b>Система:</b> {os}\n"
+              "<b>Подключение:</b> {mode}\n<b>Микрофон:</b> {mic}\n<b>Наушники:</b> {phones}\n{body}",
+    },
     'adm.btn_site': {'uz': "🌐 Sayt", 'ru': "🌐 Сайт"},
     'adm.lb_unmatched_order': {
         'uz': "{icon} LiveBridge: Polar to'lovi hech bir hisob yoki paketga mos kelmadi (buyurtma {order}). "

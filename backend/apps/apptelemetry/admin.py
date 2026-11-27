@@ -1,14 +1,17 @@
-"""Owner side of My Services: read-only installs/records, feedback inbox, LiveBridge dashboard.
+"""Owner side of My Services: read-only installs/records, feedback and bug-report inboxes, LiveBridge dashboard.
 
 The dashboard is an admin view (`admin_site.admin_view`), so it inherits the admin's staff login
 and the admin IP allowlist like the other owner pages (UTM builder, asset manager).
 """
+import json
+
 from django.contrib import admin
 from django.shortcuts import render
+from django.utils.html import format_html
 from django.urls import path
 from unfold.admin import ModelAdmin
 
-from .models import APP_LIVEBRIDGE, AppFeedback, AppInstall, TelemetryRecord
+from .models import APP_LIVEBRIDGE, AppBugReport, AppFeedback, AppInstall, TelemetryRecord
 from .services import StatsService
 
 
@@ -89,3 +92,38 @@ class AppFeedbackAdmin(_ReadOnlyAdmin):
     @admin.display(description='E-mail', boolean=True)
     def has_email(self, obj):
         return bool(obj.email)
+
+
+@admin.register(AppBugReport)
+class AppBugReportAdmin(_ReadOnlyAdmin):
+    list_display = ('preview', 'connection_mode', 'app_version', 'os_version', 'ui_language', 'has_email', 'has_log',
+                    'created_at')
+    list_filter = ('app', 'connection_mode', 'app_version', 'ui_language', 'created_at')
+    search_fields = ('message', 'email', 'log')
+    list_select_related = ('install',)
+    ordering = ('-created_at',)
+    fields = ('message', 'email', 'app', 'install', 'app_version', 'os_version', 'platform', 'ui_language',
+              'connection_mode', 'created_at', 'devices_pretty', 'log_pretty')
+    readonly_fields = ('devices_pretty', 'log_pretty')
+
+    @admin.display(description='Message')
+    def preview(self, obj):
+        text = ' '.join(obj.message.split())
+        return text[:90] + ('…' if len(text) > 90 else '')
+
+    @admin.display(description='E-mail', boolean=True)
+    def has_email(self, obj):
+        return bool(obj.email)
+
+    @admin.display(description='Log', boolean=True)
+    def has_log(self, obj):
+        return bool(obj.log)
+
+    @admin.display(description='Devices')
+    def devices_pretty(self, obj):
+        return format_html('<pre style="white-space: pre-wrap">{}</pre>',
+                           json.dumps(obj.device_info, ensure_ascii=False, indent=2))
+
+    @admin.display(description='Diagnostic log')
+    def log_pretty(self, obj):
+        return format_html('<pre style="white-space: pre-wrap; max-height: 70vh; overflow: auto">{}</pre>', obj.log)

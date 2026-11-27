@@ -3,6 +3,9 @@ import uuid
 from unittest import mock
 
 from apptelemetry.models import AppBugReport, AppInstall
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from interactions.notifications.service import NotificationService
 
 from .helpers import BUG_REPORT_URL, FEEDBACK_URL, ServicesTestCase, turn
 
@@ -108,3 +111,76 @@ class BugReportApiTest(ServicesTestCase):
 
     def test_get_is_not_allowed(self):
         self.assertEqual(self.client.get(BUG_REPORT_URL).status_code, 405)
+
+
+class BugReportNotificationTest(ServicesTestCase):
+    def _report(self, **extra):
+        fields = {'app': 'livebridge', 'message': '<b>' + 'y' * 900, 'email': 'secret@example.com',
+                  'app_version': '1.2.1+4', 'os_version': 'Windows 11 (build 26100)', 'connection_mode': 'account',
+                  'device_info': DEVICES, 'log': LOG}
+        fields.update(extra)
+        return AppBugReport.objects.create(**fields)
+
+    def _notify(self, row):
+        documents = []
+
+        def keep(chat_id, path, **kwargs):
+            with open(path, encoding='utf-8') as fh:
+                documents.append((chat_id, path, fh.read(), kwargs))
+            return {'ok': True}
+
+        site = mock.Mock(telegram_admin_group_id=-100123)
+        with mock.patch.object(NotificationService, '_send_to_admin_group') as send, \
+                mock.patch('interactions.notifications.service.TelegramBotAPI') as api, \
+                mock.patch('interactions.notifications.service.SiteSettingsService.get', return_value=site):
+            api.return_value.send_document.side_effect = keep
+            NotificationService().log_service_bug_report(row)
+        return send, documents
+
+    def test_note_has_summary_but_no_email(self):
+        row = self._report()
+        send, _ = self._notify(row)
+        text = send.call_args.args[0]
+        self.assertNotIn('secret@example.com', text)
+        for part in ('livebridge', '1.2.1+4', 'Windows 11 (build 26100)', 'account',
+                     'Headset (AirPods Hands-Free)', 'Speakers (Realtek(R) Audio)'):
+            self.assertIn(part, text)
+        self.assertNotIn('<b>yyy', text)  # escaped
+        self.assertIn('&lt;b&gt;', text)
+        self.assertLess(text.count('y'), 520)
+        url = send.call_args.kwargs['reply_markup']['inline_keyboard'][0][0]['url']
+        self.assertIn(f'/apptelemetry/appbugreport/{row.pk}/change/', url)
+
+    def test_log_goes_as_a_document(self):
+        row = self._report()
+        _, documents = self._notify(row)
+        self.assertEqual(len(documents), 1)
+        chat_id, path, content, _ = documents[0]
+        self.assertEqual(chat_id, -100123)
+        self.assertTrue(path.endswith(f'livebridge-report-{row.pk}.txt'))
+        self.assertIn('"Headset (AirPods Hands-Free)"', content)
+        self.assertIn(LOG.strip(), content)
+        self.assertNotIn('secret@example.com', content)
+        import os
+        self.assertFalse(os.path.exists(path))
+
+    def test_no_document_without_log_or_devices(self):
+        _, documents = self._notify(self._report(log='', device_info={}))
+        self.assertEqual(documents, [])
+
+
+class BugReportAdminTest(ServicesTestCase):
+    def test_list_and_change_page_render_for_staff(self):
+        row = AppBugReport.objects.create(app='livebridge', message='ovoz yo‘q', device_info=DEVICES,
+                                          log=LOG + '<script>x</script>')
+        staff = get_user_model().objects.create_user(
+            username='owner', email='owner@example.com', password='secret123', is_staff=True, is_superuser=True,
+        )
+        self.client.force_login(staff)
+        self.assertEqual(self.client.get(reverse('admin:apptelemetry_appbugreport_changelist')).status_code, 200)
+        response = self.client.get(reverse('admin:apptelemetry_appbugreport_change', args=[row.pk]))
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        self.assertIn('state     connecting', html)
+        self.assertIn('Headset (AirPods Hands-Free)', html)
+        self.assertNotIn('<script>x</script>', html)

@@ -8,8 +8,12 @@ caller (Django view / signal handler) is never blocked.
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
+import shutil
 import sys
+import tempfile
 import threading
 from html import escape
 from typing import Optional
@@ -45,6 +49,19 @@ def fire_and_forget(fn, *args, **kwargs):
         except Exception as exc:
             logger.error('Notification thread error: %s', exc, exc_info=True)
     threading.Thread(target=_wrapper, daemon=True).start()
+
+
+def _device_line(device) -> str:
+    """`name · transport · rate` of one device from a bug report's device object; '—' when there is none."""
+    if not isinstance(device, dict) or not isinstance(device.get('name'), str):
+        return '—'
+    parts = [device['name'][:80]]
+    if isinstance(device.get('transport'), str):
+        parts.append(device['transport'][:16])
+    rate = device.get('sampleRate')
+    if isinstance(rate, (int, float)) and not isinstance(rate, bool) and rate > 0:
+        parts.append(f'{int(rate)} Hz')
+    return ' · '.join(parts)
 
 
 # ── Service ──────────────────────────────────────────────────────────────────
@@ -329,6 +346,51 @@ class NotificationService:
             path = f'/{admin_prefix}apptelemetry/appfeedback/{feedback.pk}/change/'
         button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': f'{self._domain}{path}'}]]}
         self._send_to_admin_group(text, profile=None, event_type='feedback', reply_markup=button)
+
+    def log_service_bug_report(self, report) -> None:
+        """A problem report from a My Services app: a short summary, then the device list and the diagnostic log as
+        a file. The e-mail is never included in either."""
+        lang = owner_lang()
+        devices = report.device_info if isinstance(report.device_info, dict) else {}
+        text = t(
+            'adm.bug_report_new', lang, icon=ce('bug_report', '🐞'),
+            app=escape(report.app),
+            version=escape(report.app_version or '—'),
+            os=escape(report.os_version or '—'),
+            mode=escape(report.connection_mode or '—'),
+            mic=escape(_device_line(devices.get('mic'))),
+            phones=escape(_device_line(devices.get('headphones'))),
+            body=escape(report.message[:500]),
+        )
+        try:
+            from django.urls import reverse
+            path = reverse('admin:apptelemetry_appbugreport_change', args=[report.pk])
+        except Exception:
+            admin_prefix = getattr(settings, 'ADMIN_URL_PREFIX', 'admin/').rstrip('/') + '/'
+            path = f'/{admin_prefix}apptelemetry/appbugreport/{report.pk}/change/'
+        button = {'inline_keyboard': [[{'text': t('adm.contact_open', lang), 'url': f'{self._domain}{path}'}]]}
+        self._send_to_admin_group(text, profile=None, event_type='bug_report', reply_markup=button)
+
+        group_id = SiteSettingsService.get().telegram_admin_group_id
+        if not group_id or not (report.log or devices):
+            return
+        content = (
+            f'{report.app} bug report #{report.pk}\n'
+            f'version: {report.app_version or "-"}\nos: {report.os_version or "-"}\n'
+            f'platform: {report.platform or "-"}\nconnection: {report.connection_mode or "-"}\n'
+            f'ui language: {report.ui_language or "-"}\n\n'
+            f'message:\n{report.message}\n\n'
+            f'devices:\n{json.dumps(devices, ensure_ascii=False, indent=2)}\n\n'
+            f'log:\n{report.log}\n'
+        )
+        folder = tempfile.mkdtemp(prefix='bugreport-')
+        try:
+            file_path = os.path.join(folder, f'{report.app}-report-{report.pk}.txt')
+            with open(file_path, 'w', encoding='utf-8') as fh:
+                fh.write(content)
+            self.api.send_document(group_id, file_path, caption=f'#{report.pk}')
+        finally:
+            shutil.rmtree(folder, ignore_errors=True)
 
     def log_livebridge(self, kind: str, **ids) -> None:
         """LiveBridge accounts need a person (apps/livebridge.alerts). Ids only — never e-mails or tokens."""
