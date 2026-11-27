@@ -15,7 +15,7 @@ from django.db import transaction
 from django.db.models import Count, Max, Sum
 from django.utils import timezone
 
-from .models import AppFeedback, AppInstall, TelemetryRecord
+from .models import AppBugReport, AppFeedback, AppInstall, TelemetryRecord
 from .repositories import TelemetryRepository
 from .validation import DEFAULT_MY_LANG, parse_record
 
@@ -94,12 +94,26 @@ class TelemetryService:
         _notify_owner(feedback)
         return feedback
 
+    def create_bug_report(self, fields: dict) -> AppBugReport:
+        install_id = fields.pop('install_id')
+        install = self.repository.find_install(fields['app'], install_id) if install_id else None
+        report = self.repository.create_bug_report(install=install, **fields)
+        _notify_owner_bug_report(report)
+        return report
+
 
 def _notify_owner(feedback: AppFeedback) -> None:
     """Telegram note to the owner's admin group (no e-mail in it). Never blocks the request."""
     from interactions.notifications.service import NotificationService, fire_and_forget
 
     fire_and_forget(lambda: NotificationService().log_service_feedback(feedback))
+
+
+def _notify_owner_bug_report(report: AppBugReport) -> None:
+    """Telegram note plus the log as a file to the owner's admin group (no e-mail). Never blocks the request."""
+    from interactions.notifications.service import NotificationService, fire_and_forget
+
+    fire_and_forget(lambda: NotificationService().log_service_bug_report(report))
 
 
 # ── aggregates ──────────────────────────────────────────────────────────────

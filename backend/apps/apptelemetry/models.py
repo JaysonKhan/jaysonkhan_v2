@@ -136,3 +136,35 @@ class AppFeedback(models.Model):
 
     def __str__(self):
         return self.message[:60]
+
+
+class AppBugReport(models.Model):
+    """A problem a user reported from the app, with the diagnostic log they chose to include. Owner only.
+
+    The log is redacted by the app (no speech text, keys or tokens) and shown to the user before sending.
+    """
+
+    app = models.CharField(max_length=32, db_index=True)
+    install = models.ForeignKey(
+        AppInstall, null=True, blank=True, on_delete=models.SET_NULL, related_name='bug_reports',
+    )
+    message = models.TextField(max_length=2000)
+    email = models.EmailField(max_length=254, blank=True)
+    app_version = models.CharField(max_length=32, blank=True)
+    os_version = models.CharField(max_length=64, blank=True)
+    platform = models.CharField(max_length=32, blank=True)
+    ui_language = models.CharField(max_length=8, blank=True)
+    # How the app was connected: account, keys (own provider keys), gateway (own gateway) or none.
+    connection_mode = models.CharField(max_length=16, blank=True)
+    # The chosen microphone, headphones, virtual microphone, meeting apps, mode and languages, and the device list.
+    device_info = models.JSONField(default=dict, blank=True)
+    log = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        verbose_name = 'Bug report'
+        verbose_name_plural = 'Bug reports'
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return self.message[:60]

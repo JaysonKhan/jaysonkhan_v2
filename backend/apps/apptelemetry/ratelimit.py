@@ -33,6 +33,7 @@ class Limit:
 TELEMETRY_PER_ADDRESS = Limit('tel_addr', 60, HOUR)
 RECORDS_PER_INSTALL = Limit('tel_inst', 20_000, DAY)
 FEEDBACK_PER_ADDRESS = Limit('fb_addr', 5, HOUR)
+BUG_REPORTS_PER_ADDRESS = Limit('bug_addr', 5, HOUR)
 
 
 def address_hash(request, now: float | None = None) -> str:

@@ -1,4 +1,4 @@
-"""My Services ingestion API — `POST /api/services/v1/telemetry/` and `/feedback/`.
+"""My Services ingestion API — `POST /api/services/v1/telemetry/`, `/feedback/` and `/bug-reports/`.
 
 Contract: LiveBridge repo `docs/telemetry-api.md` (v1). The client is open source, so these are
 public and unauthenticated: no session, no cookies, CSRF-exempt (DRF APIView without
@@ -10,8 +10,10 @@ import json
 from apptelemetry import ratelimit
 from apptelemetry.services import TelemetryService
 from apptelemetry.validation import (
+    BUG_REPORT_MAX_BODY_BYTES,
     MAX_BODY_BYTES,
     EnvelopeError,
+    parse_bug_report,
     parse_envelope,
     parse_feedback,
 )
@@ -90,4 +92,19 @@ class FeedbackView(_PublicIngestView):
         except EnvelopeError as exc:
             return _error(exc.code, status.HTTP_400_BAD_REQUEST)
         TelemetryService().create_feedback(fields)
+        return Response({'ok': True}, status=status.HTTP_201_CREATED)
+
+
+class BugReportView(_PublicIngestView):
+    """A problem report with the app's diagnostic log; the log was shown to the user before sending."""
+
+    def post(self, request):
+        retry = ratelimit.hit(ratelimit.BUG_REPORTS_PER_ADDRESS, ratelimit.address_hash(request))
+        if retry:
+            return _rate_limited(retry)
+        try:
+            fields = parse_bug_report(_read_json(request, BUG_REPORT_MAX_BODY_BYTES))
+        except EnvelopeError as exc:
+            return _error(exc.code, exc.status)
+        TelemetryService().create_bug_report(fields)
         return Response({'ok': True}, status=status.HTTP_201_CREATED)

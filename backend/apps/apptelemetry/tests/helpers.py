@@ -10,6 +10,7 @@ from django.urls import reverse
 
 TELEMETRY_URL = '/api/services/v1/telemetry/'
 FEEDBACK_URL = '/api/services/v1/feedback/'
+BUG_REPORT_URL = '/api/services/v1/bug-reports/'
 CLIENT_IP = '203.0.113.77'
 
 

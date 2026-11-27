@@ -5,7 +5,7 @@ from datetime import datetime
 
 from django.db.models import F
 
-from .models import AppFeedback, AppInstall, TelemetryRecord
+from .models import AppBugReport, AppFeedback, AppInstall, TelemetryRecord
 
 
 class TelemetryRepository:
@@ -47,6 +47,10 @@ class TelemetryRepository:
     @staticmethod
     def create_feedback(**fields) -> AppFeedback:
         return AppFeedback.objects.create(**fields)
+
+    @staticmethod
+    def create_bug_report(**fields) -> AppBugReport:
+        return AppBugReport.objects.create(**fields)
 
     @staticmethod
     def records(app: str, since: datetime, types: tuple[str, ...], fields: tuple[str, ...]):

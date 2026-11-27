@@ -6,6 +6,7 @@ counted as ignored. Only a broken envelope rejects the whole request.
 """
 from __future__ import annotations
 
+import json
 import re
 import uuid
 from datetime import datetime, timedelta
@@ -22,6 +23,11 @@ INT_MAX = 600_000
 SCHEMA = 1
 MESSAGE_MAX = 2000
 EMAIL_MAX = 254
+# Bug reports: the whole body, the diagnostic log and the device object (UTF-8 bytes).
+BUG_REPORT_MAX_BODY_BYTES = 320 * 1024
+LOG_MAX_BYTES = 256 * 1024
+DEVICES_MAX_BYTES = 16 * 1024
+CONNECTION_MODES = ('account', 'keys', 'gateway', 'none')
 # A client clock this far ahead is not trusted: the record is ignored.
 MAX_CLOCK_SKEW = timedelta(days=1)
 
@@ -226,8 +232,8 @@ def _parse_record(record, now: datetime) -> dict:
 
 # ── feedback ────────────────────────────────────────────────────────────────
 
-def parse_feedback(data) -> dict:
-    """Validate a feedback body. Raises EnvelopeError (always 400); returns cleaned fields."""
+def _message_install_email(data) -> tuple[str, uuid.UUID | None, str]:
+    """The fields feedback and bug reports share: app, message, install id, e-mail. Raises EnvelopeError (400)."""
     if not isinstance(data, dict):
         raise EnvelopeError('bad_json')
     if data.get('app') not in APPS:
@@ -253,6 +259,12 @@ def parse_feedback(data) -> dict:
             validate_email(email)
         except ValidationError:
             raise EnvelopeError('bad_email') from None
+    return message.strip(), install_id, email
+
+
+def parse_feedback(data) -> dict:
+    """Validate a feedback body. Raises EnvelopeError (always 400); returns cleaned fields."""
+    message, install_id, email = _message_install_email(data)
 
     rating = data.get('rating')
     if rating is not None and (not _is_int(rating) or not 1 <= rating <= 5):
@@ -261,9 +273,43 @@ def parse_feedback(data) -> dict:
     return {
         'app': data['app'],
         'install_id': install_id,
-        'message': message.strip(),
+        'message': message,
         'email': email,
         'rating': rating,
         'app_version': optional_str(data.get('app_version'), 32),
         'ui_language': ui_language(data.get('ui_language')),
+    }
+
+
+# ── bug reports ─────────────────────────────────────────────────────────────
+
+def parse_bug_report(data) -> dict:
+    """Validate a bug report body. Raises EnvelopeError (400); returns cleaned fields."""
+    message, install_id, email = _message_install_email(data)
+
+    devices = data.get('devices')
+    if devices is None:
+        devices = {}
+    elif not isinstance(devices, dict) or len(json.dumps(devices).encode()) > DEVICES_MAX_BYTES:
+        raise EnvelopeError('bad_devices')
+
+    log = data.get('log')
+    if log is None:
+        log = ''
+    elif not isinstance(log, str) or len(log.encode()) > LOG_MAX_BYTES:
+        raise EnvelopeError('bad_log')
+
+    mode = data.get('connection_mode')
+    return {
+        'app': data['app'],
+        'install_id': install_id,
+        'message': message,
+        'email': email,
+        'app_version': optional_str(data.get('app_version'), 32),
+        'os_version': optional_str(data.get('os_version'), 64),
+        'platform': optional_str(data.get('platform'), 32),
+        'ui_language': ui_language(data.get('ui_language')),
+        'connection_mode': mode if mode in CONNECTION_MODES else '',
+        'device_info': devices,
+        'log': log,
     }

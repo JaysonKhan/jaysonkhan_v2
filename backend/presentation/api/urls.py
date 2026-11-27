@@ -16,7 +16,7 @@ from .livebridge_views import (
     PolarWebhookView,
     TokenRefreshView,
 )
-from .services_views import FeedbackView, TelemetryIngestView
+from .services_views import BugReportView, FeedbackView, TelemetryIngestView
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -33,6 +33,7 @@ urlpatterns = [
     # My Services (apptelemetry) — public ingestion for the owner's open-source apps
     path('services/v1/telemetry/', TelemetryIngestView.as_view(), name='services_telemetry'),
     path('services/v1/feedback/', FeedbackView.as_view(), name='services_feedback'),
+    path('services/v1/bug-reports/', BugReportView.as_view(), name='services_bug_report'),
     # LiveBridge accounts (apps/livebridge) — the desktop app's API, bearer tokens
     path('livebridge/v1/device/start/', DeviceStartView.as_view(), name='livebridge_device_start'),
     path('livebridge/v1/device/token/', DeviceTokenView.as_view(), name='livebridge_device_token'),
