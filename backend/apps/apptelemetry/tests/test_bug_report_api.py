@@ -164,6 +164,18 @@ class BugReportNotificationTest(ServicesTestCase):
         import os
         self.assertFalse(os.path.exists(path))
 
+    def test_account_email_in_the_log_stays_out_of_telegram(self):
+        log = LOG + ('10:00:00.500 connection mode=account email=secret@example.com gateway=bridge.example\n'
+                     '10:00:00.600 error     note email=other@example.com: x\n')
+        row = self._report(log=log)
+        send, documents = self._notify(row)
+        _, _, content, _ = documents[0]
+        self.assertNotIn('secret@example.com', content)
+        self.assertNotIn('other@example.com', content)
+        self.assertIn('connection mode=account email=[hidden] gateway=bridge.example', content)
+        self.assertNotIn('secret@example.com', send.call_args.args[0])
+        self.assertIn('secret@example.com', AppBugReport.objects.get(pk=row.pk).log)  # the admin keeps it
+
     def test_no_document_without_log_or_devices(self):
         _, documents = self._notify(self._report(log='', device_info={}))
         self.assertEqual(documents, [])

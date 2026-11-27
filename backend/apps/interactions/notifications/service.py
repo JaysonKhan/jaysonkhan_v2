@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -49,6 +50,14 @@ def fire_and_forget(fn, *args, **kwargs):
         except Exception as exc:
             logger.error('Notification thread error: %s', exc, exc_info=True)
     threading.Thread(target=_wrapper, daemon=True).start()
+
+
+_EMAIL_RE = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
+
+
+def _hide_emails(text: str) -> str:
+    """Telegram copies of a bug report never carry an e-mail address (the app logs the account's in account mode)."""
+    return _EMAIL_RE.sub('[hidden]', text)
 
 
 def _device_line(device) -> str:
@@ -349,7 +358,8 @@ class NotificationService:
 
     def log_service_bug_report(self, report) -> None:
         """A problem report from a My Services app: a short summary, then the device list and the diagnostic log as
-        a file. The e-mail is never included in either."""
+        a file. No e-mail address reaches Telegram: the report's own is left out and any in the text or the log
+        (the app logs the account's in account mode) is replaced with [hidden]; the admin page keeps the full report."""
         lang = owner_lang()
         devices = report.device_info if isinstance(report.device_info, dict) else {}
         text = t(
@@ -360,7 +370,7 @@ class NotificationService:
             mode=escape(report.connection_mode or '—'),
             mic=escape(_device_line(devices.get('mic'))),
             phones=escape(_device_line(devices.get('headphones'))),
-            body=escape(report.message[:500]),
+            body=escape(_hide_emails(report.message[:500])),
         )
         try:
             from django.urls import reverse
@@ -383,6 +393,7 @@ class NotificationService:
             f'devices:\n{json.dumps(devices, ensure_ascii=False, indent=2)}\n\n'
             f'log:\n{report.log}\n'
         )
+        content = _hide_emails(content)
         folder = tempfile.mkdtemp(prefix='bugreport-')
         try:
             file_path = os.path.join(folder, f'{report.app}-report-{report.pk}.txt')

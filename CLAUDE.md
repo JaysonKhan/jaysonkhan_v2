@@ -121,8 +121,8 @@ jaysonkhan_v2/
   "My Services" (read-only installs/records, feedback inbox) + dashboard `<ADMIN_URL>apptelemetry/telemetryrecord/dashboard/`
   (Chart.js CDN; admin view = staff login + admin IP allowlist). New feedback → Telegram admin group via
   `NotificationService.log_service_feedback` (message capped at 500 chars, no e-mail); a new bug report →
-  `log_service_bug_report`: summary (versions, connection mode, chosen mic / headphones, message ≤ 500, no e-mail) plus
-  `livebridge-report-<id>.txt` (devices + log) via `sendDocument`; owner reads the full report in the admin
+  `log_service_bug_report`: summary (versions, connection mode, chosen mic / headphones, message ≤ 500) plus
+  `livebridge-report-<id>.txt` (devices + log) via `sendDocument` — every e-mail address in both is replaced with `[hidden]` (the app logs the account e-mail in account mode); owner reads the full report in the admin
   "Bug reports" inbox. Retention: `manage.py
   purge_service_telemetry` (raw records > 180 days by `received_at`; installs + feedback kept), daily 04:27 in the
   cron block. Public figures are cached 5 min. Tests: `backend/venv/bin/python backend/manage.py test apptelemetry
